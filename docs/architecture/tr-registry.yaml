@@ -34,7 +34,7 @@ requirements:
       anywhere in the ladder.
     domain: Core
     adr: ADR-0004
-    status: open
+    status: covered
 
   - id: TR-LADDER-002
     source: design/gdd/initiative-ladder.md
@@ -44,7 +44,7 @@ requirements:
       ceiling, champion Ready, cooldown 0, non-empty target set, correct team.
     domain: Core
     adr: ADR-0004
-    status: open
+    status: covered
 
   - id: TR-LADDER-003
     source: design/gdd/initiative-ladder.md
@@ -54,7 +54,7 @@ requirements:
       is what collapses the AI search tree and must not be weakened.
     domain: Core
     adr: ADR-0006
-    status: open
+    status: covered
 
   - id: TR-LADDER-004
     source: design/gdd/initiative-ladder.md
@@ -62,7 +62,7 @@ requirements:
     requirement: "A round is two halves; each team opens exactly one."
     domain: Foundation
     adr: ADR-0006
-    status: open
+    status: covered
 
   - id: TR-LADDER-005
     source: design/gdd/initiative-ladder.md
@@ -72,7 +72,7 @@ requirements:
       boundary. Measured, not assumed — see prototypes/initiative-ladder/.
     domain: Core
     adr: ADR-0006
-    status: open
+    status: covered
 
   - id: TR-LADDER-006
     source: design/gdd/initiative-ladder.md
@@ -82,7 +82,7 @@ requirements:
       which is unanswerable, after which the half ends.
     domain: Core
     adr: ADR-0004
-    status: open
+    status: covered
 
   - id: TR-LADDER-007
     source: design/gdd/initiative-ladder.md
@@ -92,7 +92,7 @@ requirements:
       by event order.
     domain: Foundation
     adr: ADR-0006
-    status: open
+    status: covered
 
   - id: TR-LADDER-008
     source: design/gdd/initiative-ladder.md
@@ -103,7 +103,7 @@ requirements:
       above 0 first.
     domain: Core
     adr: ADR-0006
-    status: open
+    status: covered
 
   - id: TR-LADDER-009
     source: design/gdd/initiative-ladder.md
@@ -113,7 +113,7 @@ requirements:
       tier 4 is fixed hex offsets in absolute board orientation, non-rotatable.
     domain: Core
     adr: ADR-0005
-    status: open
+    status: covered
 
   - id: TR-LADDER-010
     source: design/gdd/initiative-ladder.md
@@ -123,7 +123,7 @@ requirements:
       affected identically to enemies unless the ability declares otherwise.
     domain: Core
     adr: ADR-0005
-    status: open
+    status: covered
 
   - id: TR-LADDER-011
     source: design/gdd/initiative-ladder.md
@@ -133,7 +133,7 @@ requirements:
       An ability never benefits from its own stat change.
     domain: Core
     adr: ADR-0004
-    status: open
+    status: covered
 
   - id: TR-LADDER-012
     source: design/gdd/initiative-ladder.md
@@ -141,7 +141,7 @@ requirements:
     requirement: "Cooldowns decrement once at round close, never at a half boundary."
     domain: Foundation
     adr: ADR-0006
-    status: open
+    status: covered
 
   - id: TR-LADDER-013
     source: design/gdd/initiative-ladder.md
@@ -152,7 +152,7 @@ requirements:
       required for replay and asynchronous PvP.
     domain: Presentation
     adr: ADR-0004
-    status: open
+    status: covered
 
   - id: TR-LADDER-014
     source: design/gdd/initiative-ladder.md
@@ -163,7 +163,7 @@ requirements:
       reference graphs.
     domain: Foundation
     adr: ADR-0003
-    status: open
+    status: covered
 
   - id: TR-LADDER-015
     source: design/gdd/initiative-ladder.md
@@ -173,7 +173,7 @@ requirements:
       byte-identical serialised end state, on any platform. Blocking gate.
     domain: Foundation
     adr: ADR-0002
-    status: open
+    status: covered
 
   - id: TR-LADDER-016
     source: design/gdd/initiative-ladder.md
@@ -183,7 +183,7 @@ requirements:
       runtime.
     domain: Foundation
     adr: ADR-0001
-    status: open
+    status: covered
 
   - id: TR-LADDER-017
     source: design/gdd/initiative-ladder.md
@@ -193,7 +193,7 @@ requirements:
       order, sufficient for Resolution Playback to reconstruct the round.
     domain: Foundation
     adr: ADR-0004
-    status: open
+    status: covered
 
   - id: TR-LADDER-018
     source: design/gdd/initiative-ladder.md
@@ -224,7 +224,7 @@ requirements:
       an ability may be unavailable (cooldown / above ceiling / no target).
     domain: Presentation
     adr: ADR-0004
-    status: open
+    status: covered
 
   # ─── design/gdd/game-concept.md ───────────────────────────────────────────
 
@@ -236,7 +236,7 @@ requirements:
       the simulation at all.
     domain: Foundation
     adr: ADR-0002
-    status: open
+    status: covered
 
   - id: TR-CONCEPT-002
     source: design/gdd/game-concept.md
@@ -247,7 +247,7 @@ requirements:
       Harness, which sweeps tuning values without a rebuild.
     domain: Foundation
     adr: ADR-0007
-    status: open
+    status: covered
 
   - id: TR-CONCEPT-003
     source: design/gdd/game-concept.md
@@ -257,7 +257,7 @@ requirements:
       asynchronous PvP can be added post-launch without a rewrite.
     domain: Foundation
     adr: ADR-0001
-    status: open
+    status: covered
 
   - id: TR-CONCEPT-004
     source: design/gdd/game-concept.md
@@ -267,7 +267,7 @@ requirements:
       occupancy, and area/pattern templates.
     domain: Foundation
     adr: ADR-0005
-    status: open
+    status: covered
 
   - id: TR-CONCEPT-005
     source: design/gdd/game-concept.md
@@ -277,4 +277,4 @@ requirements:
       never be read back by anything affecting game state.
     domain: Foundation
     adr: ADR-0001
-    status: open
+    status: covered

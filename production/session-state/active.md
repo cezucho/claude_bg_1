@@ -4,38 +4,37 @@
 
 ## Current Task
 
-**Architecture written.** `docs/architecture/architecture.md` — Foundation and
-Core specified in full; Feature and Presentation carry contracts only, pending
-their GDDs.
+**Seven Foundation ADRs written**, all Status `Proposed` in `docs/architecture/`:
 
-The load-bearing decision: **two assemblies.** `Augury.Sim` has zero Godot
-references (hex model, ladder, damage, statuses, molding, draft, AI — pure C#,
-fixed-point, value types). `Augury.Game` is the Godot project and consumes an
-event stream. Protocol is command in, events out:
-`(State, Command) -> (State', Event[])`.
+| ADR | Decision |
+|---|---|
+| 0001 | Simulation / presentation assembly boundary — `Augury.Sim` has no Godot reference |
+| 0002 | **Integer-only arithmetic.** No fixed-point type; permille scalars, one floor-rounding rule |
+| 0003 | `MatchState` is one blittable ~400-byte value struct; **cloning is assignment, zero allocation** |
+| 0004 | Command / Event protocol — `Resolve` is the only mutation path |
+| 0005 | Axial hex coordinates; patterns as offset lists, rotation as a pure function |
+| 0006 | Round phase sequencer owns the death-check-then-status ordering |
+| 0007 | Content is JSON loaded into immutable value tables — **not** Godot `Resource` |
 
-That one boundary delivers headless `dotnet test`, byte-identical determinism,
-the ~1,900 state clones per AI decision the prototype measured, and the async
-PvP door — and it is self-policing, because a sim test that needs Godot to run
-has already breached it.
+Two of these overturned assumptions in `architecture.md` v1, which has been
+reconciled:
+- **No fixed-point type is needed.** The game moves units between discrete hexes
+  and deals integer damage; the only fractional values are scaling multipliers,
+  which become permille integers. A numeric library that would have needed its own
+  test suite simply does not get written.
+- **The array-of-structs vs struct-of-arrays question did not apply.** The whole
+  state is ~400 bytes, so it is one struct and cloning is `var copy = state;`.
+  ~7.6 MB of memcpy per round, zero allocations, no GC inside the AI budget.
 
-`docs/architecture/tr-registry.yaml` populated: **25 requirements, zero gaps**,
-each traced to one of 9 required ADRs. Zero gaps reflects only one GDD existing;
-re-check with `/architecture-review` after each new GDD.
+TR registry: **23 of 25 covered**. `TR-LADDER-018` and `TR-LADDER-019` remain open,
+awaiting ADR-0009 (replay format) and ADR-0008 (AI search).
 
-**Next:** write the 7 Foundation ADRs via `/architecture-decision`, in order:
-0001 assembly boundary · 0002 determinism/fixed-point · 0003 state and cloning ·
-0004 command/event protocol · 0005 hex coordinates · 0006 round sequencer ·
-0007 content data format. Then `/create-control-manifest`.
+**All seven are `Proposed`.** Per `docs/CLAUDE.md`, stories citing a `Proposed` ADR
+are auto-blocked — they need explicit acceptance before implementation begins.
 
-**Blocking two of them:** fixed-point width/precision (ADR-0002) and state
-layout, array-of-structs vs struct-of-arrays (ADR-0003).
-
-**Only material engine risk found:** Godot 4.6's dual-focus UI system
-(mouse/touch focus separated from keyboard/gamepad) lands directly on the ladder
-UI, which is keyboard + mouse with QWER hotkeys and hover inspection. Everything
-else in 4.6's risk surface — Jolt default, glow reorder, D3D12, IK — cannot
-reach the simulation, because the simulation has no engine in it.
+**Next:** accept the ADRs, then either `/create-control-manifest` (compiles them
+into the flat programmer rules sheet) or `/design-system` #2 (Champion Data & Stat
+Model + Ability Definition Schema, whose contract ADR-0005 and ADR-0007 now fix).
 
 ## Project
 

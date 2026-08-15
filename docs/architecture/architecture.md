@@ -8,9 +8,9 @@
 | **Last Updated** | 2026-08-14 |
 | **Engine** | Godot 4.6 · C# (.NET 8+) · PC (Steam / Epic) |
 | **GDDs Covered** | `design/gdd/game-concept.md`, `design/gdd/initiative-ladder.md` |
-| **ADRs Referenced** | None yet — 9 required ADRs listed below |
+| **ADRs Referenced** | ADR-0001 … ADR-0007 written (Proposed). ADR-0008, ADR-0009 outstanding |
 | **Scope of this pass** | **Foundation and Core specified in full.** Feature and Presentation layers carry principles and interface contracts only, to be completed as their GDDs are authored (1 of 21 MVP GDDs currently exists) |
-| **Technical Director Sign-Off** | 2026-08-14 — **APPROVED WITH CONDITIONS** (see Open Questions 1 and 2, which block ADR-0002 and ADR-0003) |
+| **Technical Director Sign-Off** | 2026-08-14 — **APPROVED**. The two conditions (Open Questions 1 and 2) were resolved by ADR-0002 and ADR-0003 |
 | **Lead Programmer Feasibility** | LP-FEASIBILITY skipped — Lean review mode |
 
 ---
@@ -51,7 +51,10 @@ ambiguous, these break the tie.
    engine type. This is testable: `Augury.Sim` has no Godot assembly reference, and
    the build fails if one is added.
 2. **No floating point in the simulation.** Determinism is a pillar requirement and a
-   precondition for asynchronous PvP. Fixed-point or integer arithmetic only.
+   precondition for asynchronous PvP. **Integers only** — `int` and `long`, with
+   fractional scaling expressed in permille and one rounding rule (`Arith.FloorDiv`).
+   ADR-0002 examined fixed-point and rejected it: this game moves units between
+   discrete hexes and deals integer damage, so it has no runtime need for fractions.
 3. **Presentation reads events; it never mutates state.** The simulation is a pure
    function `(State, Command) → (State′, Event[])`. Rendering, animation and audio
    consume the event stream.
@@ -79,7 +82,7 @@ This is the load-bearing decision; everything else follows from it.
 ┌──────────────────────────────────────────────────────────────┐
 │  Augury.Sim             (pure C#, NO Godot reference)        │
 │  ───────────────────────────────────────────────────────     │
-│  Foundation: fixed-point math · hex model · state container  │
+│  Foundation: integer arithmetic · hex model · state container│
 │              round sequencer · event stream · content load   │
 │  Core:       initiative ladder · damage · statuses · death   │
 │              molding · movement & targeting                  │
@@ -125,7 +128,7 @@ Godot 4.6 runtime · .NET 8 · OS input, windowing, audio devices.
 
 | Module | Owns | Index # |
 |---|---|---|
-| **Fixed-point math** | `Fixed` value type, all arithmetic used by gameplay | *(new — implied by Principle 2)* |
+| **Integer arithmetic** | `Arith.FloorDiv`, permille scaling — the only rounding in the game | *(new — ADR-0002)* |
 | **Hex Grid & Spatial Model** | `HexCoord`, distance, adjacency, line of sight, occupancy, pattern offset resolution | 1 |
 | **Deterministic Simulation Core** | `MatchState`, cloning, serialisation, replay, the `(State, Command) → (State′, Event[])` contract | 2 |
 | **Round Phase Sequencer** | Round and half boundaries; the death-check-then-status ordering | 3 |
@@ -169,7 +172,7 @@ Balance Simulation Harness (28) · Content Authoring Pipeline (27)
 
 | Module | Exposes | Consumes | Engine APIs |
 |---|---|---|---|
-| Fixed-point math | `Fixed` arithmetic, comparison, conversion | — | **None** |
+| Integer arithmetic | `Arith.FloorDiv`, `Arith.ScalePermille` | — | **None** |
 | Hex Grid | `Distance`, `Neighbours`, `Line`, `ResolvePattern`, `IsOccupied` | Match state occupancy | **None** |
 | Simulation Core | `ISimulation` (below) | All Core modules | **None** |
 | Round Sequencer | `AdvanceHalf`, `CloseRound` | Ladder, Status, Death | **None** |
@@ -276,7 +279,7 @@ contracts programmers implement against.
 // ─── Value types. Structs, not classes: the AI clones these ~19,000×/round. ───
 
 public readonly record struct HexCoord(int Q, int R);
-public readonly record struct Fixed(long Raw);        // fixed-point; no float anywhere
+// No fixed-point type: the simulation is integer-only. See ADR-0002.
 public readonly record struct ChampionId(byte Value);
 public readonly record struct TeamId(byte Value);
 
@@ -355,15 +358,19 @@ session. Nothing to audit; everything below is new.
 
 ### Must exist before any code is written — Foundation
 
+> ✅ = written, Status `Proposed`. All seven require explicit acceptance before
+> stories may reference them — `docs/CLAUDE.md` auto-blocks stories citing a
+> `Proposed` ADR.
+
 | ADR | Decision | Covers |
 |---|---|---|
-| **ADR-0001** | Simulation / presentation assembly boundary | TR-LADDER-016, TR-CONCEPT-003, TR-CONCEPT-005 |
-| **ADR-0002** | Determinism strategy: fixed-point arithmetic, no floats in `Augury.Sim` | TR-LADDER-015, TR-CONCEPT-001 |
-| **ADR-0003** | State representation and cloning: value types, layout, clone cost | TR-LADDER-014 |
-| **ADR-0004** | Command / Event protocol and the mutation contract | TR-LADDER-001, TR-LADDER-017, TR-LADDER-020 |
-| **ADR-0005** | Hex coordinate system, distance metric, pattern offset representation | TR-CONCEPT-004, TR-LADDER-009 |
-| **ADR-0006** | Round phase sequencer: half boundaries, death-check-then-status ordering | TR-LADDER-004, TR-LADDER-007, TR-LADDER-008, TR-LADDER-012 |
-| **ADR-0007** | Content data format and loading — why gameplay data is not a Godot `Resource` | TR-CONCEPT-002 |
+| **ADR-0001** ✅ | Simulation / presentation assembly boundary | TR-LADDER-016, TR-CONCEPT-003, TR-CONCEPT-005 |
+| **ADR-0002** ✅ | Determinism strategy: integer-only arithmetic, permille scalars, no floats in `Augury.Sim` | TR-LADDER-015, TR-CONCEPT-001 |
+| **ADR-0003** ✅ | State representation and cloning: value types, layout, clone cost | TR-LADDER-014 |
+| **ADR-0004** ✅ | Command / Event protocol and the mutation contract | TR-LADDER-001, TR-LADDER-017, TR-LADDER-020 |
+| **ADR-0005** ✅ | Hex coordinate system, distance metric, pattern offset representation | TR-CONCEPT-004, TR-LADDER-009 |
+| **ADR-0006** ✅ | Round phase sequencer: half boundaries, death-check-then-status ordering | TR-LADDER-004, TR-LADDER-007, TR-LADDER-008, TR-LADDER-012 |
+| **ADR-0007** ✅ | Content data format and loading — why gameplay data is not a Godot `Resource` | TR-CONCEPT-002 |
 
 ### Must exist before the relevant system is built — Core
 
@@ -383,8 +390,8 @@ shader techniques · audio bus layout. None of these constrain the simulation.
 
 | # | Question | Blocks | Resolve by |
 |---|---|---|---|
-| 1 | **Fixed-point width and precision.** 32-bit vs 64-bit backing; fractional bits | ADR-0002 | Before first code |
-| 2 | **State layout: array-of-structs or struct-of-arrays?** The prototype clones ~19,000×/round; layout dominates that cost | ADR-0003 | Before first code |
+| 1 | ~~Fixed-point width and precision.~~ **CLOSED by ADR-0002** — there is no fixed-point type. The simulation is integer-only, with permille scalars and floor rounding | — | Closed |
+| 2 | ~~State layout: array-of-structs or struct-of-arrays?~~ **CLOSED by ADR-0003** — neither. The whole state is ~400 bytes, so `MatchState` is one blittable value struct and cloning is assignment, with zero allocation | — | Closed |
 | 3 | **Does the 4.6 dual-focus system disrupt QWER hotkeys alongside hover inspection?** The only material engine risk identified | Ladder UI | Before `/ux-design` on the HUD |
 | 4 | **Is `applicability(i)` achievable with real hex geometry?** F4 assumes tier-4 patterns are legal in ~30% of board states — an assumption about geometry, not a decision | Ability Schema GDD | With the next GDD |
 | 5 | **Where does the AI live at ship time?** In-process is assumed. Asynchronous PvP may want it server-side, which the boundary permits but does not yet specify | ADR-0008 | Before PvP work |
