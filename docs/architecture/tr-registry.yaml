@@ -1,56 +1,280 @@
-# Technical Requirement ID Registry
+# Technical Requirements Registry
 #
-# PURPOSE: Persistent, stable IDs for every GDD technical requirement.
-# Prevents TR-ID renumbering across /architecture-review runs, which would
-# break story references.
+# PURPOSE: Stable IDs linking GDD requirements to the ADRs that satisfy them and
+# the stories that implement them. IDs are permanent — never renumber, never
+# reuse. Deprecate instead of deleting.
 #
-# RULES:
-#   - IDs are PERMANENT. Never renumber, never delete (use status: deprecated).
-#   - Add new entries only at the END of each system's list.
-#   - When a GDD requirement is reworded (same intent): update `requirement`
-#     text and add a `revised` date. The ID stays the same.
-#   - When a requirement is removed from the GDD: set status: deprecated.
-#   - When a requirement is split or replaced: set status: superseded-by with
-#     the new TR-ID(s).
+# WRITTEN BY: /create-architecture (baseline extraction)
+#             /architecture-review (Phase 8 — coverage updates)
+# READ BY:    /create-stories, /story-readiness, /architecture-review,
+#             /propagate-design-change
 #
-# WRITTEN BY: /architecture-review (appends new entries, never overwrites)
-# READ BY:    /create-stories (embed IDs in stories)
-#             /story-done (look up current requirement text at review time)
-#             /story-readiness (validate TR-ID exists and is active)
-#
-# ID FORMAT: TR-[system-slug]-[NNN]
-#   system-slug = short slug matching the GDD system name
-#   NNN = three-digit zero-padded sequence per system, starting at 001
-#
-# STATUS VALUES: active | deprecated | superseded-by: TR-[system]-NNN
+# FIELDS:
+#   id           stable identifier, TR-[SOURCE]-[NNN]
+#   source       the GDD the requirement was extracted from
+#   system       the system that owns it
+#   requirement  what the architecture must support
+#   domain       Foundation | Core | Feature | Presentation | Tools
+#   adr          the ADR that covers it ("" = gap)
+#   status       open | covered | implemented | deprecated
 
 version: 1
-last_updated: ""
+last_updated: "2026-08-14"
 
-requirements: []
+requirements:
 
-# --- EXAMPLE ENTRIES (remove when first real entries are added) ---
-#
-# - id: TR-combat-001
-#   system: combat
-#   gdd: design/gdd/combat-system.md
-#   requirement: "Player takes damage from enemies based on attack power minus defence"
-#   created: 2026-03-10
-#   revised: ""
-#   status: active
-#
-# - id: TR-combat-002
-#   system: combat
-#   gdd: design/gdd/combat-system.md
-#   requirement: "Combo window timing is 0.4 seconds between hits"
-#   created: 2026-03-10
-#   revised: "2026-04-01"
-#   status: active
-#
-# - id: TR-combat-003
-#   system: combat
-#   gdd: design/gdd/combat-system.md
-#   requirement: "Old damage formula using raw stats"
-#   created: 2026-03-10
-#   revised: ""
-#   status: superseded-by: TR-combat-001
+  # ─── design/gdd/initiative-ladder.md ──────────────────────────────────────
+
+  - id: TR-LADDER-001
+    source: design/gdd/initiative-ladder.md
+    system: Initiative Ladder
+    requirement: >
+      Resolution is strictly sequential. Every ability resolves fully — damage,
+      statuses, molding — before the next action is chosen. No simultaneity
+      anywhere in the ladder.
+    domain: Core
+    adr: ADR-0004
+    status: open
+
+  - id: TR-LADDER-002
+    source: design/gdd/initiative-ladder.md
+    system: Initiative Ladder
+    requirement: >
+      Legal action predicate (F1) evaluated per decision point: initiative <=
+      ceiling, champion Ready, cooldown 0, non-empty target set, correct team.
+    domain: Core
+    adr: ADR-0004
+    status: open
+
+  - id: TR-LADDER-003
+    source: design/gdd/initiative-ladder.md
+    system: Initiative Ladder
+    requirement: >
+      Ceiling is monotonically non-increasing within a half (F2). This property
+      is what collapses the AI search tree and must not be weakened.
+    domain: Core
+    adr: ADR-0006
+    status: open
+
+  - id: TR-LADDER-004
+    source: design/gdd/initiative-ladder.md
+    system: Round Phase Sequencer
+    requirement: "A round is two halves; each team opens exactly one."
+    domain: Foundation
+    adr: ADR-0006
+    status: open
+
+  - id: TR-LADDER-005
+    source: design/gdd/initiative-ladder.md
+    system: Initiative Ladder
+    requirement: >
+      One action per champion per HALF. Availability resets at the half
+      boundary. Measured, not assumed — see prototypes/initiative-ladder/.
+    domain: Core
+    adr: ADR-0006
+    status: open
+
+  - id: TR-LADDER-006
+    source: design/gdd/initiative-ladder.md
+    system: Initiative Ladder
+    requirement: >
+      A pass grants the opponent exactly one further action at <= ceiling,
+      which is unanswerable, after which the half ends.
+    domain: Core
+    adr: ADR-0004
+    status: open
+
+  - id: TR-LADDER-007
+    source: design/gdd/initiative-ladder.md
+    system: Round Phase Sequencer
+    requirement: >
+      Round closes in exact order: death check, then status phase. Verifiable
+      by event order.
+    domain: Foundation
+    adr: ADR-0006
+    status: open
+
+  - id: TR-LADDER-008
+    source: design/gdd/initiative-ladder.md
+    system: Death, Dying Round & Respawn
+    requirement: >
+      A champion driven to <=0 HP by the status phase enters Dying, acts for one
+      more round at a penalty, and dies at the next death check unless healed
+      above 0 first.
+    domain: Core
+    adr: ADR-0006
+    status: open
+
+  - id: TR-LADDER-009
+    source: design/gdd/initiative-ladder.md
+    system: Ability Definition Schema
+    requirement: >
+      Targeting rigidity tier 1-4. Tier 3 is a rotatable pattern (six facings);
+      tier 4 is fixed hex offsets in absolute board orientation, non-rotatable.
+    domain: Core
+    adr: ADR-0005
+    status: open
+
+  - id: TR-LADDER-010
+    source: design/gdd/initiative-ladder.md
+    system: Movement & Targeting
+    requirement: >
+      Patterns are indiscriminate by default — allies within a pattern are
+      affected identically to enemies unless the ability declares otherwise.
+    domain: Core
+    adr: ADR-0005
+    status: open
+
+  - id: TR-LADDER-011
+    source: design/gdd/initiative-ladder.md
+    system: Molding
+    requirement: >
+      An ability's effect resolves first; its molding delta applies afterwards.
+      An ability never benefits from its own stat change.
+    domain: Core
+    adr: ADR-0004
+    status: open
+
+  - id: TR-LADDER-012
+    source: design/gdd/initiative-ladder.md
+    system: Round Phase Sequencer
+    requirement: "Cooldowns decrement once at round close, never at a half boundary."
+    domain: Foundation
+    adr: ADR-0006
+    status: open
+
+  - id: TR-LADDER-013
+    source: design/gdd/initiative-ladder.md
+    system: Blitz Clock
+    requirement: >
+      A blitz-clock timeout is converted into a Pass command at the
+      presentation boundary. The simulation has no concept of wall-clock time —
+      required for replay and asynchronous PvP.
+    domain: Presentation
+    adr: ADR-0004
+    status: open
+
+  - id: TR-LADDER-014
+    source: design/gdd/initiative-ladder.md
+    system: Deterministic Simulation Core
+    requirement: >
+      State must be cheaply cloneable. The prototype measured ~1,900 clones per
+      AI decision and ~19,000 per round at depth 3. Compact value types, no
+      reference graphs.
+    domain: Foundation
+    adr: ADR-0003
+    status: open
+
+  - id: TR-LADDER-015
+    source: design/gdd/initiative-ladder.md
+    system: Deterministic Simulation Core
+    requirement: >
+      Identical initial state plus identical action sequence yields
+      byte-identical serialised end state, on any platform. Blocking gate.
+    domain: Foundation
+    adr: ADR-0002
+    status: open
+
+  - id: TR-LADDER-016
+    source: design/gdd/initiative-ladder.md
+    system: Deterministic Simulation Core
+    requirement: >
+      The simulation runs headless via `dotnet test` without loading the Godot
+      runtime.
+    domain: Foundation
+    adr: ADR-0001
+    status: open
+
+  - id: TR-LADDER-017
+    source: design/gdd/initiative-ladder.md
+    system: Event Stream
+    requirement: >
+      Exactly one ability-resolved event per resolved ability, in resolution
+      order, sufficient for Resolution Playback to reconstruct the round.
+    domain: Foundation
+    adr: ADR-0004
+    status: open
+
+  - id: TR-LADDER-018
+    source: design/gdd/initiative-ladder.md
+    system: Event Stream
+    requirement: >
+      Round history reports actions taken AND legal actions that were available
+      and unused, for Post-Match Review.
+    domain: Foundation
+    adr: ADR-0009
+    status: open
+
+  - id: TR-LADDER-019
+    source: design/gdd/initiative-ladder.md
+    system: AI Opponent
+    requirement: >
+      AI returns a decision within 1.5 s (hard ceiling 3 s). Prototype measured
+      ~1,900 nodes per decision at depth 3, so headroom is expected.
+    domain: Feature
+    adr: ADR-0008
+    status: open
+
+  - id: TR-LADDER-020
+    source: design/gdd/initiative-ladder.md
+    system: Initiative Ladder UI
+    requirement: >
+      All ladder state is inspectable without a menu: ceiling, legal set,
+      Spent champions, Last Word availability, and the three distinct reasons
+      an ability may be unavailable (cooldown / above ceiling / no target).
+    domain: Presentation
+    adr: ADR-0004
+    status: open
+
+  # ─── design/gdd/game-concept.md ───────────────────────────────────────────
+
+  - id: TR-CONCEPT-001
+    source: design/gdd/game-concept.md
+    system: Deterministic Simulation Core
+    requirement: >
+      No randomness anywhere in the game (Pillar 1, Chess Not Dice). No RNG in
+      the simulation at all.
+    domain: Foundation
+    adr: ADR-0002
+    status: open
+
+  - id: TR-CONCEPT-002
+    source: design/gdd/game-concept.md
+    system: Content Loading
+    requirement: >
+      Gameplay values are data-driven and externally configurable, never
+      hardcoded. Required by coding-standards.md and by the Balance Simulation
+      Harness, which sweeps tuning values without a rebuild.
+    domain: Foundation
+    adr: ADR-0007
+    status: open
+
+  - id: TR-CONCEPT-003
+    source: design/gdd/game-concept.md
+    system: Deterministic Simulation Core
+    requirement: >
+      Architecture must keep simulation and presentation separable so
+      asynchronous PvP can be added post-launch without a rewrite.
+    domain: Foundation
+    adr: ADR-0001
+    status: open
+
+  - id: TR-CONCEPT-004
+    source: design/gdd/game-concept.md
+    system: Hex Grid & Spatial Model
+    requirement: >
+      Hex grid spatial model: coordinates, distance, adjacency, line of sight,
+      occupancy, and area/pattern templates.
+    domain: Foundation
+    adr: ADR-0005
+    status: open
+
+  - id: TR-CONCEPT-005
+    source: design/gdd/game-concept.md
+    system: Deterministic Simulation Core
+    requirement: >
+      Physics is presentation-only. Jolt may drive cosmetic effects and must
+      never be read back by anything affecting game state.
+    domain: Foundation
+    adr: ADR-0001
+    status: open

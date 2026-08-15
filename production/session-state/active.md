@@ -4,25 +4,38 @@
 
 ## Current Task
 
-Concept phase complete. One MVP GDD authored and validated by prototype.
+**Architecture written.** `docs/architecture/architecture.md` — Foundation and
+Core specified in full; Feature and Presentation carry contracts only, pending
+their GDDs.
 
-**Done:** `/start`, `/brainstorm`, `/setup-engine`, `/map-systems`,
-`/prototype initiative-ladder` (3 rounds), `/design-system initiative-ladder`.
+The load-bearing decision: **two assemblies.** `Augury.Sim` has zero Godot
+references (hex model, ladder, damage, statuses, molding, draft, AI — pure C#,
+fixed-point, value types). `Augury.Game` is the Godot project and consumes an
+event stream. Protocol is command in, events out:
+`(State, Command) -> (State', Event[])`.
 
-**`design/gdd/initiative-ladder.md` is COMPLETE** — 8 required sections plus
-Visual/Audio, UI Requirements, Open Questions. Status: Designed, pending an
-independent review.
+That one boundary delivers headless `dotnet test`, byte-identical determinism,
+the ~1,900 state clones per AI decision the prototype measured, and the async
+PvP door — and it is self-policing, because a sim test that needs Godot to run
+has already breached it.
 
-**Both blocking open questions are now CLOSED:**
-- Q1 passing survives the Last Word rule (7.7% strategic passing, vs 8.6% before)
-- Q1b the "70% first-mover advantage" was two harness bugs, not a design
-  property. Retracted. Mirror matches now run 43-50%.
+`docs/architecture/tr-registry.yaml` populated: **25 requirements, zero gaps**,
+each traced to one of 9 required ADRs. Zero gaps reflects only one GDD existing;
+re-check with `/architecture-review` after each new GDD.
 
-**Next, in recommended order:**
-1. `/design-review design/gdd/initiative-ladder.md` — **fresh session only**
-2. `/create-architecture` — the prototype produced hard constraints (state
-   cloned ~2,000x per AI decision; determinism required)
-3. `/design-system` #2 — Champion Data & Stat Model + Ability Definition Schema
+**Next:** write the 7 Foundation ADRs via `/architecture-decision`, in order:
+0001 assembly boundary · 0002 determinism/fixed-point · 0003 state and cloning ·
+0004 command/event protocol · 0005 hex coordinates · 0006 round sequencer ·
+0007 content data format. Then `/create-control-manifest`.
+
+**Blocking two of them:** fixed-point width/precision (ADR-0002) and state
+layout, array-of-structs vs struct-of-arrays (ADR-0003).
+
+**Only material engine risk found:** Godot 4.6's dual-focus UI system
+(mouse/touch focus separated from keyboard/gamepad) lands directly on the ladder
+UI, which is keyboard + mouse with QWER hotkeys and hover inspection. Everything
+else in 4.6's risk surface — Jolt default, glow reorder, D3D12, IK — cannot
+reach the simulation, because the simulation has no engine in it.
 
 ## Project
 
