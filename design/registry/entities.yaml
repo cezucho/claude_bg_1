@@ -148,7 +148,7 @@ formulas:
     referenced_by:
       - design/gdd/initiative-ladder.md
     variables: [decisions_per_round, t_decide, resolutions_per_round, t_resolve]
-    output: "54 s per round at defaults; 17 rounds per 15-minute match"
+    output: "55 s per round at defaults; 16 rounds per 15-minute match"
     added: 2026-08-14
     revised: ""
     # F5. Binding constraint: ladder length is the match-length dial as well as
@@ -259,7 +259,7 @@ constants:
     source: design/gdd/initiative-ladder.md
     referenced_by:
       - design/gdd/initiative-ladder.md
-    value: 54
+    value: 55
     unit: seconds
     added: 2026-08-14
     revised: ""

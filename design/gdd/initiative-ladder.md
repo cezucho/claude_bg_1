@@ -11,8 +11,9 @@
 A round of combat resolves as a **descending exchange**. Every ability carries an
 initiative value; an ability played at initiative *N* may be answered by any ability
 at initiative *N* or lower, from any champion on the answering team. The exchange
-walks down the scale until someone passes — and a pass ends the round for both
-sides. This is where the moment-to-moment game lives: not in choosing a best move,
+walks down the scale until someone passes — and passing concedes the opponent one
+final, unanswerable action before the half closes. This is where the moment-to-moment
+game lives: not in choosing a best move,
 but in judging what your move lets them do to you, and whether your answer is worth
 spending now or holding.
 
@@ -26,19 +27,21 @@ any initiative; it resolves immediately, on the board, before anything else happ
 The opposing team may then answer with any ability at equal or lower initiative —
 drawn from *any* of their five champions, not only the one that was targeted. That
 answer resolves, and the first team may answer it in turn, at equal or lower
-initiative again. The exchange descends until one side chooses to pass, and a pass
-ends the round for both players.
+initiative again. The exchange descends until one side chooses to pass — which
+concedes the opponent one final unanswerable action, and closes the half. A round is
+two such halves, each opened by a different team.
 
 The consequence is that an ability's initiative is a second cost, paid separately
 from its cooldown. Opening at initiative 4 with a devastating strike invites an
 answer from the opponent's entire remaining kit; opening at initiative 1 is nearly
-unanswerable but forfeits everything above it for the rest of the round. The player
+unanswerable but forfeits everything above it for the rest of the half. The player
 is never choosing simply the strongest available action. They are choosing what they
 are willing to let the opponent do in response, and deciding whether an answer they
 hold is worth spending now or keeping in reserve to threaten with.
 
-Because a pass closes the round for both sides, declining to act is not passivity —
-it is a way to deny the opponent the rest of their turn. The five champions are
+Because a pass closes the half, declining to act is not passivity — it is a way to
+deny the opponent the rest of the exchange, at the price of one unanswered blow. The
+five champions are
 therefore all live at every moment: any of them may hold the answer that matters,
 and the opponent has to account for all twenty abilities on the board rather than
 the one champion currently under attack.
@@ -105,9 +108,9 @@ in the second. A team therefore has at most 5 actions per half and 10 per round.
 > *round*, on the theory that allocating five champions across two halves was an
 > interesting decision. It is not — it is a trap. `prototypes/initiative-ladder/`
 > ran both: under per-round, a team entered the half it opens with **zero available
-> champions in 54.9% of rounds**, 54% of halves ended by exhaustion rather than
-> choice, and the median half was three resolutions. Under per-half, halves end by a
-> deliberate pass 68% of the time and the median half is nine resolutions. Because
+> champions in 61.8% of rounds**, 62% of halves ended by exhaustion rather than
+> choice, and the median half was four resolutions. Under per-half, halves end by a
+> deliberate pass 61% of the time and the median half is nine resolutions. Because
 > the ladder alternates, you can only play as many abilities as your opponent is able
 > to answer — so an exhausted opponent does not merely lose the exchange, it
 > *cancels* yours.
@@ -273,12 +276,12 @@ geometry produces the assumed `applicability` values.
 | `resolutions_per_round` | int | 8–20 | Abilities resolved per round, both teams, both halves |
 | `t_resolve` | seconds | 1.0–2.0 | Playback time per resolved ability |
 
-**Example, using the measured per-half economy:** 5 × 6s + 16 × 1.5s = **54 seconds
-per round** → 900s ÷ 54 = **17 rounds** in a 15-minute match.
+**Example, using the measured per-half economy:** 5 × 6s + 16.6 × 1.5s = **55 seconds
+per round** → 900s ÷ 55 = **16 rounds** in a 15-minute match.
 
-**Measured:** `prototypes/initiative-ladder/ladder_v2.py` records 16.2 resolutions
-per round under the per-half economy (8.9 under per-round). The per-half rule is
-therefore the more expensive of the two in match-length terms — 17 rounds rather than
+**Measured:** `prototypes/initiative-ladder/ladder_v2.py` records 16.6 resolutions
+per round under the per-half economy (9.1 under per-round). The per-half rule is
+therefore the more expensive of the two in match-length terms — 16 rounds rather than
 21 — and it was still the correct choice, because per-round produced halves that
 ended by exhaustion rather than decision.
 
@@ -615,7 +618,7 @@ criteria run in xUnit with no Godot boot (see `.claude/docs/technical-preference
 | # | Question | Why it matters | Owner | Resolve by |
 |---|---|---|---|---|
 | 1 | ~~Does passing survive the Last Word rule?~~ **RESOLVED 2026-08-14.** Re-measured in `ladder_v2.py` with two halves *and* the Last Word: passing with options held at 7.7%, versus 8.6% under the original single-half rule. 68% of halves end by a deliberate pass rather than exhaustion | Passing remains a decision; the ladder does not run to exhaustion | — | Closed |
-| 1b | **Is the mirror-match win asymmetry a rule property or a harness artefact?** Team 0 wins ~72–77% of mirror matches, and this does **not** move when the match opener is alternated. Damage dealt is symmetric (10238 vs 9726), so the divergence is in scoring or agent tie-breaking, not in combat | The 70% figure was originally read as a first-mover advantage and partly motivated the two-half rule. That reading is now doubtful. The two-half rule is still justified — it makes the initiative-1 ceiling lockout symmetric — but on different grounds | Design + prototype | **Before implementation.** Isolate the asymmetry before trusting any balance number from this harness |
+| 1b | ~~Is the mirror-match win asymmetry a rule property or a harness artefact?~~ **RESOLVED 2026-08-14 — harness artefact, two bugs.** (a) `targets_for` truncated move options to the first six of an ordered direction list, so one team could never move toward the objectives; (b) `winner()` checked team 0 first, awarding every simultaneous threshold crossing to team 0. After both fixes, mirror matches run 43–50% across every variant | **There is no first-mover advantage in the ladder.** The two-half rule stands on its remaining justification: it makes the initiative-1 ceiling lockout symmetric | — | Closed. See `prototypes/initiative-ladder/asymmetry_hunt.py` |
 | 2 | **Is `applicability(i)` achievable with real hex geometry?** F4 assumes tier-4 patterns are legal in ~30% of board states. That is an assumption about geometry, not a decision | If real patterns are legal 60% of the time, tier 4 dominates; at 10%, the tier is decoration | Design + Balance Harness | During Ability Definition Schema |
 | 3 | **Is movement an initiative-1 action costing the champion's round action?** Assumed here. Under Core Rule 5, positioning is now expensive and strategically central | Movement cost directly determines how often tier-4 abilities can be set up — it is the other half of question 2 | Movement & Targeting GDD | Before Movement GDD is approved |
 | 4 | **What is the Dying penalty?** Referenced but not defined here | Determines whether the dying round is a real tactical window or a formality | Death, Dying Round & Respawn GDD | Before Death GDD is approved |

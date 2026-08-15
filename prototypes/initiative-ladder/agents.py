@@ -18,7 +18,9 @@ def evaluate(state, team):
             if c.dying:
                 v -= 12
             # objective proximity
-            v += max(0.0, 6.0 - min(hex_dist(c.pos, o) for o in OBJECTIVES)) * 1.2
+            if OBJECTIVES:
+                v += max(0.0, 6.0 - min(hex_dist(c.pos, o)
+                                        for o in OBJECTIVES)) * 1.2
         else:
             v -= 15
         if c.team == team:

@@ -38,9 +38,15 @@ labelled as such.
 
 ## Result
 
+> **Read the Round 3 addendum at the end of this file before trusting anything here.**
+> Findings 1 and 2 below were measured against the *single-half* rules that predate
+> the GDD, and are superseded by Round 2 (`ladder_v2.py`). Finding 6 is **retracted**
+> — it was two bugs in this harness, not a design property.
+
 ### Structural findings — these follow from the rules and should hold
 
-**1. Action economy: one action per champion per round is the right rule.**
+**1. Action economy: capping actions per champion is the right rule.**
+*(Superseded in part — Round 2 established the cap is per **half**, not per round.)*
 
 | Variant | Ladder length mean/max | Rounds/match | Pass-with-options |
 |---|---|---|---|
@@ -58,8 +64,9 @@ to hold anything back. Only the per-champion rule produces a *distribution*
 (4 through 10, mean 8.2), which means length is emerging from decisions rather than
 from the rule. **XCOM's discipline is the correct answer, and this is the evidence.**
 
-**2. "A pass ends the round" is the load-bearing rule — and it's the one you
-already specified.** This is the single most important result.
+**2. Denial is what makes passing a decision.** This is the single most important
+result. *(The rule has since become "a pass concedes one unanswerable Last Word and
+ends the half"; re-measured in Round 2, strategic passing survives at 7.7%.)*
 
 | Pass rule | Search depth | Strategic passes (search declined where greedy acted) |
 |---|---|---|
@@ -108,11 +115,9 @@ built at initiative 4 who must open and eat the response — is not merely weak 
 unplayable. High-initiative abilities need to be *substantially* stronger than
 their answer window costs, or the design needs a structural reason to open high.
 
-**6. First-mover advantage is severe: 70%.** In 150 mirror matches — identical
-drafts, identical policies, opener alternating every round — the team that opens
-round one won **70.0%** of the time. With random agents it was 66.7% of decided
-matches. This is not draft asymmetry; it is structural, and it is far too large for
-a competitive game.
+**6. ~~First-mover advantage is severe: 70%.~~ RETRACTED — this was two bugs in the
+harness, not a property of the design.** See the Round 3 addendum below. There is no
+measurable first-mover advantage in the ladder.
 
 ### Tuning-dependent findings — directionally interesting, numerically meaningless
 
@@ -142,11 +147,12 @@ not just an aspiration — the mechanic does diverge.
 - Ladder length (per-champion rule): mean 8.2, median 8, max 10
 - Branching factor: mean 27.5, max 83
 - Nodes/decision: 314 (d2) · 1,932 (d3)
-- First-mover win rate, mirror drafts: 70.0% (n=150)
+- First-mover win rate, mirror drafts: **43–50% after the Round 3 harness fixes**
+  (the 70.0% originally reported here was the bug, not the game)
 - Same-draft molding divergence: 99–100% (n=402 pairs)
-- Iterations to working sim: 2 (one action-economy bug, one pass-value bug in the
-  search agent — it initially mis-valued passing under the "pass ends round" rule,
-  which inverted finding #2 until fixed)
+- Iterations to working sim: 4 (an action-economy bug; a pass-value bug in the search
+  agent that inverted finding 2 until fixed; and the two Round 3 harness bugs —
+  truncated move targets and an index-ordered win condition)
 
 **Not measured, and not measurable this way:** whether the ladder is *fun*, whether
 it is legible, whether a player can hold "what can I answer with" in their head.
@@ -226,3 +232,61 @@ first-mover advantage in about a minute of compute — something that would othe
 have surfaced months into playtest as an unexplained sense that "going first feels
 better." Building the real harness early is likely to be worth more than its
 priority tier suggests.
+
+
+---
+
+# Round 3 addendum (2026-08-14) — retraction and root cause
+
+`asymmetry_hunt.py` was written to isolate the "70% first-mover advantage" reported
+in finding 6. **It was not a first-mover effect and not a design property. It was two
+bugs in this harness**, and finding 6 is retracted in full.
+
+The clue that forced the investigation: alternating which team opened the match did
+not move the win rate at all (77.3% either way). A genuine first-mover effect would
+have flipped when the first mover flipped.
+
+### Bug 1 — a capped action set along an ordered axis
+
+`targets_for()` ended with `return out[:6]`, a deliberate shortcut with the comment
+"cap fan-out; movement detail is not what we measure". `NEIGHBORS` begins
+`[(1,0), (1,-1), (0,-1), ...]`, and each direction contributes two entries, so the
+first six results are always the +q and -r directions. Team 0 spawns at `q = -3` and
+needs `+q` to reach the objectives — permitted. Team 1 spawns at `q = +3` and needs
+`-q` — **never generated**. Team 1 could not walk toward the centre of the map.
+
+Worth roughly **24 points of win rate**.
+
+### Bug 2 — a win condition resolved by player index
+
+`State.winner()` tested `points[0]` before `points[1]`. Points are awarded at round
+close, so both teams frequently crossed the threshold in the same instant, and every
+such match was awarded to team 0.
+
+Worth roughly **15 points of win rate**.
+
+### After both fixes
+
+Mirror matches run **43-50%** across every spawn layout and both action economies.
+Swapping which side of the board each team spawns on changes nothing (65.5% -> 50.7%
+before the second fix; 55.5% and 50.7% after). A separate check confirmed spawn
+positions were also not index-wise mirror-symmetric, but correcting that alone made
+the bias *worse* (90%), because it removed a partial compensation for bug 1.
+
+### Why this matters beyond the prototype
+
+Both bugs were **invisible in aggregate statistics**. In the side-swapped run, the two
+teams recorded points 3925 vs 3921, damage 10386 vs 10390 and actions 14134 vs 14129
+— identical to within 0.1% — while one side won 65% of matches. Any summary metric
+would have reported a fair game.
+
+Two rules for the Balance Simulation Harness, which will inherit this code's job:
+
+1. **Never cap an action set along an ordered axis.** Truncate randomly, or by a
+   symmetric criterion, or not at all.
+2. **Never resolve a win condition, or any tie, by player index.** Simultaneous
+   outcomes must be represented as simultaneous.
+
+And a check worth building in: **run every balance question as a mirror match first.**
+Any deviation from 50% in a mirror match is a bug in the harness until proven
+otherwise. It costs one run and it would have caught both of these immediately.

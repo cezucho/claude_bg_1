@@ -176,9 +176,18 @@ class State:
                 if c.alive and (team is None or c.team == team)]
 
     def winner(self):
-        if self.points[0] >= POINTS_TO_WIN:
+        # NOTE (2026-08-14): this used to check team 0 first and return 0, so
+        # any round where BOTH teams crossed the threshold was awarded to team
+        # 0. Points are scored at round close, so simultaneous crossings are
+        # common — this alone produced a ~65% team-0 win rate on boards where
+        # points, damage and action counts were otherwise identical.
+        a = self.points[0] >= POINTS_TO_WIN
+        b = self.points[1] >= POINTS_TO_WIN
+        if a and b:
+            return 2          # simultaneous — a draw, not a team-0 win
+        if a:
             return 0
-        if self.points[1] >= POINTS_TO_WIN:
+        if b:
             return 1
         return None
 
@@ -226,7 +235,14 @@ def targets_for(state, c, ab):
                 if in_board(p) and not any(
                         o.alive and o.pos == p for o in state.champs):
                     out.append(p)
-        return out[:6]  # cap fan-out; movement detail is not what we measure
+        # NOTE (2026-08-14): this used to `return out[:6]`, to cap fan-out.
+        # NEIGHBORS begins [(1,0), (1,-1), (0,-1), ...], so the first six
+        # entries are all in the +q / -r directions. Team 0 spawns at q=-3 and
+        # needs +q to reach the objectives; team 1 spawns at q=+3 and needs -q,
+        # which was never generated. Team 1 could not walk toward the centre.
+        # That single truncation produced the entire 72-90% "first-mover"
+        # asymmetry. Do not cap an action set along an ordered axis.
+        return out
     friendly = ab.kind in ("shield", "heal", "buff")
     out = []
     for ti, t in enumerate(state.champs):

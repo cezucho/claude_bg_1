@@ -20,11 +20,29 @@ ability at initiative ≤ *N*, from any champion, until someone passes.
   median half 9 resolutions. Cost: 16.2 resolutions per round vs 8.9, so ~17 rounds
   fit a 15-minute match instead of ~21.
 - **Passing survives the Last Word.** Strategic passing held at 7.7% (was 8.6%).
-- **Correction to REPORT.md's "70% first-mover advantage":** the mirror-match bias
-  does *not* move when the match opener is alternated (77.3% either way), and damage
-  dealt is symmetric. It is therefore **not** a first-mover effect — it is an
-  unisolated asymmetry in this harness. Do not trust absolute balance numbers from
-  it until that is found.
+**Round 3 (2026-08-14) — the "70% first-mover advantage" was two harness bugs.**
+`asymmetry_hunt.py` isolated both. **There is no first-mover advantage in the ladder.**
+
+1. `targets_for` capped move options with `out[:6]`. `NEIGHBORS` begins
+   `[(1,0), (1,-1), (0,-1), ...]`, so only +q / -r moves were ever generated. Team 0
+   spawns at q=-3 and needs +q to reach the objectives; team 1 spawns at q=+3 and
+   needs -q. **Team 1 could not walk toward the centre.** Worth ~24 points of win rate.
+2. `State.winner()` tested team 0 first, so every round where *both* teams crossed the
+   point threshold was awarded to team 0. Points are scored at round close, so
+   simultaneous crossings are common. Worth ~15 points of win rate.
+
+After both fixes, mirror matches run **43-50%** across every spawn layout and both
+action economies. Side-swapping the teams changes nothing.
+
+Lesson for the Balance Simulation Harness: **never cap an action set along an ordered
+axis, and never resolve a win condition by player index.** Both bugs were invisible in
+aggregate — points, damage and action counts were near-identical between the teams
+while one side won 65% of matches.
+
+*(Round 2's economy comparison was unaffected: the bias applied to both arms equally.
+Re-measured after the fixes, per-round is worse than first reported — a team enters
+the half it opens with zero available champions in 61.8% of rounds, and 62% of halves
+end by exhaustion.)*
 
 ## Why Python, in a C# project
 
