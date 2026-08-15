@@ -40,10 +40,11 @@ both sides trade down a descending response ladder.
 - [x] `/brainstorm` — `design/gdd/game-concept.md` written
 - [x] `/setup-engine` — Godot 4.6 + C# pinned; `CLAUDE.md`, `technical-preferences.md`, `VERSION.md` updated
 - [x] `/map-systems` — `design/gdd/systems-index.md` written (33 systems, 21 MVP)
-- [ ] `/design-system initiative-ladder` — **next**
-- [ ] Remaining 12 design-owned MVP GDDs
+- [x] `/prototype initiative-ladder` — PROCEED; 3 rounds, 2 harness bugs found and fixed
+- [x] `/design-system initiative-ladder` — 605 lines, complete
+- [ ] `/design-review design/gdd/initiative-ladder.md` — **next, fresh session**
 - [ ] `/create-architecture` — ADRs for the three architecture-owned systems
-- [ ] `/prototype initiative-ladder`
+- [ ] Remaining 12 design-owned MVP GDDs
 
 ## Key Decisions
 
@@ -77,9 +78,13 @@ both sides trade down a descending response ladder.
 
 ## Open Questions
 
-- **Action economy per round** — what limits how many abilities are spent in one
-  ladder? Bounds both match length and AI tractability. Settle in prototype.
+- ~~Action economy~~ **CLOSED**: one action per champion per **half**. Measured —
+  per-round left a team with zero available champions entering the half it opens in
+  61.8% of rounds, and ended 62% of halves by exhaustion rather than choice.
 - Movement's relationship to the ladder — action with initiative, separate phase, or free?
+  *(Assumed initiative-1 costing the champion's action; still unverified.)*
+- **Applicability geometry** — F4 assumes tier-4 fixed patterns are legal in ~30% of
+  board states. That is an assumption about hex geometry, not a decision.
 - Equal-initiative exchanges — what prevents ping-pong at initiative 1?
 - Negative HP and the dying round — what debuffs apply, can healing rescue?
 - Map composition — lanes and minions unresolved (recommendation: cut minions,
@@ -90,7 +95,7 @@ both sides trade down a descending response ladder.
 ## Highest Risks
 
 1. **AI Opponent** — mandatory for ship, hardest technical problem in the project.
-2. **Initiative Ladder** — the whole game rests on it; prototype before finalising.
+2. ~~Initiative Ladder~~ — **de-risked.** Prototyped over 3 rounds; rules hold.
 3. **Determinism** — expensive to retrofit, gates PvP permanently.
 4. **Molding legibility** — Pillars 1 and 5 collide; drift may read as noise.
 
