@@ -4,7 +4,29 @@
 
 ## Current Task
 
-Systems decomposition complete. Next: author MVP system GDDs in design order.
+Authoring `design/gdd/initiative-ladder.md` via `/design-system`.
+
+**Sections written:** Summary, Overview, Player Fantasy, Detailed Design (Core
+Rules, States and Transitions, Interactions).
+**Next section:** Formulas, then Edge Cases, Dependencies, Tuning Knobs,
+Acceptance Criteria, Visual/Audio, UI Requirements, Open Questions.
+
+Key rules settled in Detailed Design:
+- Round has **two halves**; each team opens one. Removes the 70% first-mover
+  advantage the prototype measured.
+- **One action per champion per round**, across both halves — so teams must
+  allocate five champions between the half they open and the half they answer in.
+- **Pass grants the opponent one unanswerable "Last Word"**, then the half ends.
+  Stops passing being a free combo-breaker; makes baiting a pass a real line.
+- **Targeting rigidity scales with initiative**: 1–2 free, 3 rotatable pattern,
+  4 fixed absolute pattern. High initiative is strong but conditional on
+  position, which is what stops play collapsing to low initiative.
+- Round closes: death check, *then* status phase. Status-induced death grants a
+  dying round.
+
+**Needs re-measuring in the prototype before implementation:** the two-half
+structure plus the Last Word both weaken the denial that made passing a real
+decision (measured at 6% strategic passes; 0% when denial was removed entirely).
 
 ## Project
 
