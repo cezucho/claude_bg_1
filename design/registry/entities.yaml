@@ -148,7 +148,7 @@ formulas:
     referenced_by:
       - design/gdd/initiative-ladder.md
     variables: [decisions_per_round, t_decide, resolutions_per_round, t_resolve]
-    output: "45 s per round at defaults; 20 rounds per 15-minute match"
+    output: "54 s per round at defaults; 17 rounds per 15-minute match"
     added: 2026-08-14
     revised: ""
     # F5. Binding constraint: ladder length is the match-length dial as well as
@@ -196,7 +196,7 @@ constants:
     added: 2026-08-14
     revised: ""
 
-  - name: actions_per_champion_per_round
+  - name: actions_per_champion_per_half
     status: active
     source: design/gdd/initiative-ladder.md
     referenced_by:
@@ -204,8 +204,12 @@ constants:
     value: 1
     unit: actions
     added: 2026-08-14
-    revised: ""
-    # Across BOTH halves combined, not per half.
+    revised: "2026-08-14"
+    # Was actions_per_champion_per_ROUND (value 1, across both halves).
+    # Changed after prototypes/initiative-ladder/ladder_v2.py measured that
+    # per-round scoping left a team with zero available champions entering the
+    # half it opens in 54.9% of rounds, and ended 54% of halves by exhaustion
+    # rather than by choice.
 
   - name: halves_per_round
     status: active
@@ -255,7 +259,7 @@ constants:
     source: design/gdd/initiative-ladder.md
     referenced_by:
       - design/gdd/initiative-ladder.md
-    value: 45
+    value: 54
     unit: seconds
     added: 2026-08-14
     revised: ""

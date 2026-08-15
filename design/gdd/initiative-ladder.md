@@ -97,10 +97,20 @@ happened followed from what they chose.
 exchange. In the first half the **round opener** plays first; in the second half the
 other team plays first. The round opener alternates every round.
 
-**2. Action economy.** Each champion may take **one action per round**, across both
-halves combined. A champion that acts in the first half cannot act in the second. A
-team therefore has at most 10 actions per round and must decide how to split five
-champions across two halves.
+**2. Action economy.** Each champion may take **one action per half**. Availability
+resets at the half boundary, so a champion that acted in the first half may act again
+in the second. A team therefore has at most 5 actions per half and 10 per round.
+
+> **This was measured, not assumed.** An earlier draft made it one action per
+> *round*, on the theory that allocating five champions across two halves was an
+> interesting decision. It is not — it is a trap. `prototypes/initiative-ladder/`
+> ran both: under per-round, a team entered the half it opens with **zero available
+> champions in 54.9% of rounds**, 54% of halves ended by exhaustion rather than
+> choice, and the median half was three resolutions. Under per-half, halves end by a
+> deliberate pass 68% of the time and the median half is nine resolutions. Because
+> the ladder alternates, you can only play as many abilities as your opponent is able
+> to answer — so an exhausted opponent does not merely lose the exchange, it
+> *cancels* yours.
 
 **3. The ladder.** The opening team plays one ability at any initiative; it resolves
 immediately and completely before anything else happens. The opposing team may then
@@ -159,8 +169,8 @@ degenerate burst strategy that dominates most tactical games.
 | **Last Word** | A team passed | The opposing team acts once, or declines | Exactly one action, at ≤ ceiling, unanswerable |
 | **Half Closed** | Last Word taken or declined, or no legal answers remain | Next half begins, or round closes | No actions permitted |
 | **Round Closing** | Second half closed | Death check and status phase complete | No player input |
-| **Champion — Ready** | Round begins | The champion takes its action | Eligible to act or to answer |
-| **Champion — Spent** | Champion acted this round | Round closes | Cannot act or answer for the rest of the round |
+| **Champion — Ready** | A half begins | The champion takes its action | Eligible to act or to answer |
+| **Champion — Spent** | Champion acted this half | The half closes | Cannot act or answer for the rest of this half; resets at the half boundary |
 | **Champion — Dying** | Reduced to ≤0 HP by the status phase | Next round's death check | Acts at a penalty; dies at the next death check unless healed above 0 |
 | **Champion — Dead** | At ≤0 HP during a death check | Respawn timer expires | Off board |
 
@@ -258,20 +268,27 @@ geometry produces the assumed `applicability` values.
 
 | Variable | Type | Range | Description |
 |---|---|---|---|
-| `decisions_per_round` | int | 3–7 | Player decision points per round, own team only |
+| `decisions_per_round` | int | 3–8 | Player decision points per round, own team only |
 | `t_decide` | seconds | 4–10 | Mean time spent on the blitz clock per decision |
-| `resolutions_per_round` | int | 4–10 | Abilities resolved per round, both teams, both halves |
+| `resolutions_per_round` | int | 8–20 | Abilities resolved per round, both teams, both halves |
 | `t_resolve` | seconds | 1.0–2.0 | Playback time per resolved ability |
 
-**Example:** 5 × 6s + 10 × 1.5s = **45 seconds per round** → 900s ÷ 45 = **20 rounds**
-in a 15-minute match.
+**Example, using the measured per-half economy:** 5 × 6s + 16 × 1.5s = **54 seconds
+per round** → 900s ÷ 54 = **17 rounds** in a 15-minute match.
+
+**Measured:** `prototypes/initiative-ladder/ladder_v2.py` records 16.2 resolutions
+per round under the per-half economy (8.9 under per-round). The per-half rule is
+therefore the more expensive of the two in match-length terms — 17 rounds rather than
+21 — and it was still the correct choice, because per-round produced halves that
+ended by exhaustion rather than decision.
 
 > **This is a binding constraint, not an observation.** The concept fixes matches at
-> 10–15 minutes. That budget survives only if ladders average **≤10 resolutions per
+> 10–15 minutes. That budget survives only if ladders average **≤16 resolutions per
 > round** and the blitz clock averages **≤6 seconds per decision**. The Last Word
-> rule is designed to lengthen ladders, which raises round duration directly.
+> rule lengthens ladders by design, which raises round duration directly.
 > **Ladder length is therefore the match-length dial as well as a balance dial, and
-> the two cannot be tuned independently.**
+> the two cannot be tuned independently.** There is now less headroom than the
+> earlier draft assumed.
 
 ## Edge Cases
 
@@ -280,10 +297,10 @@ in a 15-minute match.
 - **If the responding team has no legal action at or below the ceiling**: the half
   ends immediately. **No Last Word is granted** — the Last Word follows a *pass*, not
   exhaustion. Running out of options is not a decision and must not be rewarded as one.
-- **If the opening team has no legal action when a half opens** (all five champions
-  Spent): the half is skipped entirely; no Last Word is granted.
-- **If both teams have all champions Spent entering the second half**: the second
-  half is skipped and the round closes normally. Death check and status phase still run.
+- **If the opening team has no legal action when a half opens** (every champion dead,
+  or every ability on cooldown): the half is skipped entirely; no Last Word is granted.
+  Note that Spent status cannot cause this, since availability resets at the half
+  boundary.
 - **If a team passes at half open, before any ability has been played**: the ceiling
   is still 4, so the opponent's Last Word may be an initiative-4 ability, unanswerable.
   Declining to open is severely punished, deliberately.
@@ -396,7 +413,7 @@ All values are data-driven and must never be hardcoded (see
 | Knob | Default | Safe range | Too high | Too low |
 |---|---|---|---|---|
 | `max_initiative` | 4 | 3–6 | More tiers than players can hold in mind; rigidity tiers run out of distinct geometry | At 2 the ladder collapses to a single answer window and the mechanic disappears |
-| `actions_per_champion_per_round` | 1 | 1–2 | At 2, ladders roughly double and F5's 45s round budget breaks | Below 1 is undefined |
+| `actions_per_champion_per_half` | 1 | 1–2 | At 2, ladders roughly double and the F5 round budget breaks | Below 1 is undefined. Scoping this per *round* instead was measured and rejected — see Core Rule 2 |
 | `halves_per_round` | 2 | 1–2 | Above 2 the round becomes long and the opener advantage returns unevenly | At 1 the 70% first-mover advantage returns |
 | `last_word_actions` | 1 | 0–1 | Above 1, passing becomes near-suicidal and nobody ever passes | At 0 passing is a free combo-breaker — the problem this rule exists to fix |
 | `last_word_ceiling_offset` | 0 | −1 to 0 | — | At −1 the Last Word must undercut the ceiling, weakening pass-baiting and making passing safer |
@@ -524,7 +541,9 @@ criteria run in xUnit with no Godot boot (see `.claude/docs/technical-preference
 2. **GIVEN** a ladder with ceiling 3, **WHEN** a team plays an initiative-3 ability,
    **THEN** it resolves and the ceiling becomes 3.
 3. **GIVEN** a champion that acted in the first half, **WHEN** the second half opens,
-   **THEN** that champion is Spent and offers no legal actions.
+   **THEN** that champion is Ready again and offers legal actions, subject to cooldowns.
+3b. **GIVEN** a champion that acted earlier in the *same* half, **WHEN** the ladder
+   returns to its team, **THEN** that champion is Spent and offers no legal actions.
 4. **GIVEN** a half in progress, **WHEN** a team passes, **THEN** the opponent is
    offered exactly one action at ≤ ceiling, and after it resolves the half ends with
    no further action permitted.
@@ -595,7 +614,8 @@ criteria run in xUnit with no Godot boot (see `.claude/docs/technical-preference
 
 | # | Question | Why it matters | Owner | Resolve by |
 |---|---|---|---|---|
-| 1 | **Does passing survive the Last Word rule?** The prototype measured strategic passing at 6% under "a pass ends the round", and 0% when the denial was removed. Two halves plus a Last Word weaken that denial twice over. | If passing collapses to never-correct, the ladder loses a decision layer and rounds always run to exhaustion — which also breaks the F5 round budget | Design + prototype | **Before implementation.** Re-run `prototypes/initiative-ladder/` with both rules |
+| 1 | ~~Does passing survive the Last Word rule?~~ **RESOLVED 2026-08-14.** Re-measured in `ladder_v2.py` with two halves *and* the Last Word: passing with options held at 7.7%, versus 8.6% under the original single-half rule. 68% of halves end by a deliberate pass rather than exhaustion | Passing remains a decision; the ladder does not run to exhaustion | — | Closed |
+| 1b | **Is the mirror-match win asymmetry a rule property or a harness artefact?** Team 0 wins ~72–77% of mirror matches, and this does **not** move when the match opener is alternated. Damage dealt is symmetric (10238 vs 9726), so the divergence is in scoring or agent tie-breaking, not in combat | The 70% figure was originally read as a first-mover advantage and partly motivated the two-half rule. That reading is now doubtful. The two-half rule is still justified — it makes the initiative-1 ceiling lockout symmetric — but on different grounds | Design + prototype | **Before implementation.** Isolate the asymmetry before trusting any balance number from this harness |
 | 2 | **Is `applicability(i)` achievable with real hex geometry?** F4 assumes tier-4 patterns are legal in ~30% of board states. That is an assumption about geometry, not a decision | If real patterns are legal 60% of the time, tier 4 dominates; at 10%, the tier is decoration | Design + Balance Harness | During Ability Definition Schema |
 | 3 | **Is movement an initiative-1 action costing the champion's round action?** Assumed here. Under Core Rule 5, positioning is now expensive and strategically central | Movement cost directly determines how often tier-4 abilities can be set up — it is the other half of question 2 | Movement & Targeting GDD | Before Movement GDD is approved |
 | 4 | **What is the Dying penalty?** Referenced but not defined here | Determines whether the dying round is a real tactical window or a formality | Death, Dying Round & Respawn GDD | Before Death GDD is approved |
