@@ -8,7 +8,7 @@
 | **Last Updated** | 2026-08-14 |
 | **Engine** | Godot 4.6 · C# (.NET 8+) · PC (Steam / Epic) |
 | **GDDs Covered** | `design/gdd/game-concept.md`, `design/gdd/initiative-ladder.md` |
-| **ADRs Referenced** | ADR-0001 … ADR-0007 written (Proposed). ADR-0008, ADR-0009 outstanding |
+| **ADRs Referenced** | **ADR-0001 … ADR-0007 Accepted 2026-08-14.** ADR-0008 (AI search) and ADR-0009 (replay format) outstanding |
 | **Scope of this pass** | **Foundation and Core specified in full.** Feature and Presentation layers carry principles and interface contracts only, to be completed as their GDDs are authored (1 of 21 MVP GDDs currently exists) |
 | **Technical Director Sign-Off** | 2026-08-14 — **APPROVED**. The two conditions (Open Questions 1 and 2) were resolved by ADR-0002 and ADR-0003 |
 | **Lead Programmer Feasibility** | LP-FEASIBILITY skipped — Lean review mode |
@@ -358,9 +358,8 @@ session. Nothing to audit; everything below is new.
 
 ### Must exist before any code is written — Foundation
 
-> ✅ = written, Status `Proposed`. All seven require explicit acceptance before
-> stories may reference them — `docs/CLAUDE.md` auto-blocks stories citing a
-> `Proposed` ADR.
+> ✅ = written and **Accepted (2026-08-14)**. Stories may now reference these
+> seven; `docs/CLAUDE.md` auto-blocks only stories citing a `Proposed` ADR.
 
 | ADR | Decision | Covers |
 |---|---|---|

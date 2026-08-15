@@ -4,37 +4,37 @@
 
 ## Current Task
 
-**Seven Foundation ADRs written**, all Status `Proposed` in `docs/architecture/`:
+**Seven Foundation ADRs ACCEPTED (2026-08-14).** `docs/architecture/`:
 
-| ADR | Decision |
-|---|---|
-| 0001 | Simulation / presentation assembly boundary — `Augury.Sim` has no Godot reference |
-| 0002 | **Integer-only arithmetic.** No fixed-point type; permille scalars, one floor-rounding rule |
-| 0003 | `MatchState` is one blittable ~400-byte value struct; **cloning is assignment, zero allocation** |
-| 0004 | Command / Event protocol — `Resolve` is the only mutation path |
-| 0005 | Axial hex coordinates; patterns as offset lists, rotation as a pure function |
-| 0006 | Round phase sequencer owns the death-check-then-status ordering |
-| 0007 | Content is JSON loaded into immutable value tables — **not** Godot `Resource` |
+| ADR | Decision | Status |
+|---|---|---|
+| 0001 | Simulation / presentation assembly boundary — `Augury.Sim` has no Godot reference | Accepted |
+| 0002 | Integer-only arithmetic; permille scalars, one floor-rounding rule | Accepted |
+| 0003 | `MatchState` is one blittable ~400-byte value struct; cloning is assignment | Accepted |
+| 0004 | Command / Event protocol — `Resolve` is the only mutation path | Accepted |
+| 0005 | Axial hex coordinates; patterns as offset lists, rotation as a pure function | Accepted |
+| 0006 | Round phase sequencer owns the death-check-then-status ordering | Accepted |
+| 0007 | Content is JSON in immutable value tables — not Godot `Resource` | Accepted |
 
-Two of these overturned assumptions in `architecture.md` v1, which has been
-reconciled:
-- **No fixed-point type is needed.** The game moves units between discrete hexes
-  and deals integer damage; the only fractional values are scaling multipliers,
-  which become permille integers. A numeric library that would have needed its own
-  test suite simply does not get written.
-- **The array-of-structs vs struct-of-arrays question did not apply.** The whole
-  state is ~400 bytes, so it is one struct and cloning is `var copy = state;`.
-  ~7.6 MB of memcpy per round, zero allocations, no GC inside the AI budget.
+Stories may now reference these seven. ADR-0008 (AI search) and ADR-0009 (replay
+format) remain unwritten; `TR-LADDER-018` and `TR-LADDER-019` stay open pending them.
 
-TR registry: **23 of 25 covered**. `TR-LADDER-018` and `TR-LADDER-019` remain open,
-awaiting ADR-0009 (replay format) and ADR-0008 (AI search).
+**Four verification items carried by the accepted ADRs** — none block design work,
+all must be checked before or during first implementation:
+1. A Godot 4.6 C# project can reference a plain .NET class library, and `dotnet test`
+   runs without the Godot binary (ADR-0001).
+2. `[InlineArray]` is available in the Godot 4.6 C# toolchain; fall back to explicit
+   fields if not (ADR-0003).
+3. Godot 4.6 export includes plain `.json` under `res://` in packaged builds (ADR-0007).
+4. Godot 4.6's dual-focus UI system versus QWER hotkeys plus hover inspection — the
+   only material engine risk in the project (architecture.md).
 
-**All seven are `Proposed`.** Per `docs/CLAUDE.md`, stories citing a `Proposed` ADR
-are auto-blocked — they need explicit acceptance before implementation begins.
-
-**Next:** accept the ADRs, then either `/create-control-manifest` (compiles them
-into the flat programmer rules sheet) or `/design-system` #2 (Champion Data & Stat
-Model + Ability Definition Schema, whose contract ADR-0005 and ADR-0007 now fix).
+**Next options:**
+- `/create-control-manifest` — compiles the accepted ADRs into the flat
+  Required / Forbidden / Guardrails sheet programmers work from
+- `/design-system` #2 — Champion Data & Stat Model + Ability Definition Schema,
+  whose contract ADR-0005 and ADR-0007 now fix
+- `/design-review design/gdd/initiative-ladder.md` — **fresh session only**
 
 ## Project
 
