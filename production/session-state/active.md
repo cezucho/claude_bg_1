@@ -4,37 +4,36 @@
 
 ## Current Task
 
-**Seven Foundation ADRs ACCEPTED (2026-08-14).** `docs/architecture/`:
+**Architecture phase complete.** `docs/architecture/` now holds:
 
-| ADR | Decision | Status |
-|---|---|---|
-| 0001 | Simulation / presentation assembly boundary — `Augury.Sim` has no Godot reference | Accepted |
-| 0002 | Integer-only arithmetic; permille scalars, one floor-rounding rule | Accepted |
-| 0003 | `MatchState` is one blittable ~400-byte value struct; cloning is assignment | Accepted |
-| 0004 | Command / Event protocol — `Resolve` is the only mutation path | Accepted |
-| 0005 | Axial hex coordinates; patterns as offset lists, rotation as a pure function | Accepted |
-| 0006 | Round phase sequencer owns the death-check-then-status ordering | Accepted |
-| 0007 | Content is JSON in immutable value tables — not Godot `Resource` | Accepted |
+| File | Contents |
+|---|---|
+| `architecture.md` | Master blueprint — layers, ownership, data flow, API boundaries. TD sign-off: APPROVED |
+| `adr-0001` … `adr-0007` | Seven Foundation ADRs, all **Accepted (2026-08-14)** |
+| `control-manifest.md` | Flat programmer rules sheet. **Manifest Version 2026-08-14** |
+| `tr-registry.yaml` | 25 requirements, 23 covered |
 
-Stories may now reference these seven. ADR-0008 (AI search) and ADR-0009 (replay
-format) remain unwritten; `TR-LADDER-018` and `TR-LADDER-019` stay open pending them.
+The manifest marks CI-enforceable rules with 🤖 — no Godot reference in
+`Augury.Sim`, no `float`/`double`, no reference members in `MatchState`, death
+check before status phase. A rule a machine checks is worth more than one a
+human remembers.
 
-**Four verification items carried by the accepted ADRs** — none block design work,
-all must be checked before or during first implementation:
-1. A Godot 4.6 C# project can reference a plain .NET class library, and `dotnet test`
-   runs without the Godot binary (ADR-0001).
-2. `[InlineArray]` is available in the Godot 4.6 C# toolchain; fall back to explicit
-   fields if not (ADR-0003).
-3. Godot 4.6 export includes plain `.json` under `res://` in packaged builds (ADR-0007).
-4. Godot 4.6's dual-focus UI system versus QWER hotkeys plus hover inspection — the
-   only material engine risk in the project (architecture.md).
+**Known gap recorded in the manifest:** ADR-0008 (AI search) and ADR-0009
+(replay format) are unwritten, so the Feature layer is thin and the AI — the
+project's highest-severity risk — is governed only by its 1.5 s budget.
+`TR-LADDER-018` and `TR-LADDER-019` stay `open`.
+
+**Stories created from now on must embed Manifest Version `2026-08-14`.**
+`/story-readiness` compares that date against the manifest to catch stories
+written against stale rules.
 
 **Next options:**
-- `/create-control-manifest` — compiles the accepted ADRs into the flat
-  Required / Forbidden / Guardrails sheet programmers work from
-- `/design-system` #2 — Champion Data & Stat Model + Ability Definition Schema,
-  whose contract ADR-0005 and ADR-0007 now fix
+- `/design-system` #2 — Champion Data & Stat Model + Ability Definition Schema.
+  Contract fixed by ADR-0005 and ADR-0007; the content-velocity bottleneck
 - `/design-review design/gdd/initiative-ladder.md` — **fresh session only**
+- `/architecture-decision` for ADR-0008 (AI search) — closes the Feature gap
+- `/test-setup` — scaffolds the two-assembly solution and the CI checks the
+  manifest's 🤖 rules assume exist
 
 ## Project
 
