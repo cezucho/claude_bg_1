@@ -50,9 +50,11 @@ export_presets.cfg
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
-*.csproj
+# NOTE: *.csproj and *.sln are Unity-oriented ignores — Unity regenerates them.
+# This project is Godot + C# and its .csproj/.sln are HAND-AUTHORED SOURCE:
+# Augury.Sim.csproj is where ADR-0001's "no Godot reference" boundary is declared.
+# They are un-ignored below. Do not re-add them.
 *.unityproj
-*.sln
 *.suo
 *.tmp
 *.user
@@ -139,3 +141,10 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
+
+# === .NET (Godot C#) ===
+TestResults/
+# Un-ignore hand-authored project files (see note in the Unity section above)
+!*.csproj
+!*.sln
+!Augury.sln

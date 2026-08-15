@@ -1,0 +1,103 @@
+name: Automated Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── Simulation tests ────────────────────────────────────────────────────────
+  # Runs headless. No Godot anywhere in this job — that is the point.
+  # technical-preferences.md mandates xUnit for simulation logic with no engine
+  # boot; ADR-0001 makes it possible.
+  sim-tests:
+    name: Simulation tests (xUnit, headless)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Augury.sln
+
+      - name: Build
+        run: dotnet build Augury.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Augury.sln --no-build --configuration Release --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-test-results
+          path: TestResults/
+
+  # ── Manifest guard ──────────────────────────────────────────────────────────
+  # Belt and braces for the rules marked 🤖 in docs/architecture/control-manifest.md.
+  # ManifestRuleTests.cs enforces these by reflection at test time; these greps
+  # catch them at source level, before a build is even attempted.
+  manifest-guard:
+    name: Control manifest guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ADR-0001 — no Godot reference in the simulation
+        run: |
+          if grep -rn --include='*.cs' -E '^\s*(global\s+)?using\s+Godot' src/Augury.Sim/; then
+            echo "::error::ADR-0001 breached — 'using Godot' found in Augury.Sim."
+            exit 1
+          fi
+          if grep -rn -iE '<(Package|Project)Reference[^>]*Godot' src/Augury.Sim/; then
+            echo "::error::ADR-0001 breached — a Godot reference is declared in Augury.Sim.csproj."
+            exit 1
+          fi
+          echo "ADR-0001 OK — no Godot surface in the simulation."
+
+      - name: ADR-0002 — no floating point in the simulation
+        run: |
+          if grep -rn --include='*.cs' -E '(^|[^A-Za-z0-9_])(float|double|decimal)([^A-Za-z0-9_]|$)' src/Augury.Sim/ \
+               | grep -v '^\s*//' | grep -vE '///'; then
+            echo "::error::ADR-0002 breached — floating-point type found in Augury.Sim. Use permille integers via Arith.ScalePermille."
+            exit 1
+          fi
+          echo "ADR-0002 OK — simulation is integer-only."
+
+      - name: No production code imports from prototypes/
+        run: |
+          # Checks real references only. Citing the prototype report in a doc
+          # comment is encouraged — several rules exist because of what it found.
+          if grep -rn --include='*.csproj' -iE '<(Project|Package)Reference[^>]*prototypes' src/ tests/ 2>/dev/null; then
+            echo "::error::.claude/rules/prototype-code.md breached — a project references prototypes/."
+            exit 1
+          fi
+          if grep -rn --include='*.cs' -E '^\s*(global\s+)?using\s+.*[Pp]rototype' src/ 2>/dev/null; then
+            echo "::error::.claude/rules/prototype-code.md breached — production code imports from prototypes/."
+            exit 1
+          fi
+          echo "Prototype isolation OK."
+
+  # ── Engine integration tests ────────────────────────────────────────────────
+  # DISABLED until a Godot project exists at Augury.Game/. Enable by removing
+  # the `if: false` guard once the project is created and gdUnit4 is installed.
+  integration-tests:
+    name: Engine integration tests (gdUnit4)
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Run gdUnit4 tests
+        uses: MikeSchulze/gdUnit4-action@v1
+        with:
+          godot-version: '4.6'
+          paths: tests/integration
+          report-name: integration-results

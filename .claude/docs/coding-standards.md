@@ -60,6 +60,11 @@ All stories must have appropriate test evidence before they can be marked Done:
 - No merge if tests fail — tests are a blocking gate in CI
 - Never disable or skip failing tests to make CI pass — fix the underlying issue
 - Engine-specific CI commands:
-  - **Godot**: `godot --headless --script tests/gdunit4_runner.gd`
+  - **Godot + C# (this project)**: `dotnet test Augury.sln` for the simulation —
+    runs headless with no engine boot — plus a gdUnit4 pass for engine integration
+    once a Godot project exists. See `tests/README.md`. The single-command GDScript
+    form below does not apply here, because ADR-0001 keeps gameplay rules out of
+    the engine entirely.
+  - **Godot + GDScript**: `godot --headless --script tests/gdunit4_runner.gd`
   - **Unity**: `game-ci/unity-test-runner@v4` (GitHub Actions)
   - **Unreal**: headless runner with `-nullrhi` flag

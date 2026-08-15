@@ -4,36 +4,47 @@
 
 ## Current Task
 
-**Architecture phase complete.** `docs/architecture/` now holds:
+**Test infrastructure scaffolded AND VERIFIED — 32 tests passing in 119 ms.**
 
-| File | Contents |
-|---|---|
-| `architecture.md` | Master blueprint — layers, ownership, data flow, API boundaries. TD sign-off: APPROVED |
-| `adr-0001` … `adr-0007` | Seven Foundation ADRs, all **Accepted (2026-08-14)** |
-| `control-manifest.md` | Flat programmer rules sheet. **Manifest Version 2026-08-14** |
-| `tr-registry.yaml` | 25 requirements, 23 covered |
+I installed the .NET 8 SDK in this container (extracted from
+packages.microsoft.com's jammy repo; `dot.net` and the Azure CDN are blocked by
+the egress proxy, `packages.microsoft.com` is not). So this scaffold is
+**compiled and run**, not written blind.
 
-The manifest marks CI-enforceable rules with 🤖 — no Godot reference in
-`Augury.Sim`, no `float`/`double`, no reference members in `MatchState`, death
-check before status phase. A rule a machine checks is worth more than one a
-human remembers.
+```
+Augury.sln
+src/Augury.Sim/          Arith.cs, HexCoord.cs — specified verbatim by ADR-0002/0005
+tests/unit/Augury.Sim.Tests/
+    Architecture/ManifestRuleTests.cs   the manifest's 🤖 rules, executable
+    Foundation/ArithTests.cs            ADR-0002 validation criteria
+    Foundation/HexCoordTests.cs         ADR-0005 validation criteria
+tests/integration/       gdUnit4, empty until Augury.Game exists
+tests/smoke/critical-paths.md
+tests/evidence/
+.github/workflows/tests.yml   sim-tests · manifest-guard · integration (if: false)
+```
 
-**Known gap recorded in the manifest:** ADR-0008 (AI search) and ADR-0009
-(replay format) are unwritten, so the Feature layer is thin and the AI — the
-project's highest-severity risk — is governed only by its 1.5 s budget.
-`TR-LADDER-018` and `TR-LADDER-019` stay `open`.
+**Three real defects the verification caught** — all would have shipped as
+"looks right" documentation:
+1. `ReadOnlySpan<HexCoord>` cannot be backed by a collection expression (CS9203)
+2. Missing XML doc comments are build **errors** here — `TreatWarningsAsErrors`
+   plus `GenerateDocumentationFile` enforces `coding-standards.md` mechanically
+3. The prototype-isolation CI guard false-positived on a doc comment *citing*
+   `prototypes/initiative-ladder/REPORT.md`; narrowed to real references
 
-**Stories created from now on must embed Manifest Version `2026-08-14`.**
-`/story-readiness` compares that date against the manifest to catch stories
-written against stale rules.
+**Two repo-level fixes:**
+- `.gitignore` excluded `*.csproj` and `*.sln` (Unity-oriented, since Unity
+  regenerates them). Ours are hand-authored source — `Augury.Sim.csproj` is
+  where ADR-0001's boundary is declared. Un-ignored, with a note.
+- `coding-standards.md`'s Godot CI command assumed GDScript. Now names
+  `dotnet test Augury.sln` for this project. (The long-standing follow-up.)
 
-**Next options:**
-- `/design-system` #2 — Champion Data & Stat Model + Ability Definition Schema.
-  Contract fixed by ADR-0005 and ADR-0007; the content-velocity bottleneck
-- `/design-review design/gdd/initiative-ladder.md` — **fresh session only**
-- `/architecture-decision` for ADR-0008 (AI search) — closes the Feature gap
-- `/test-setup` — scaffolds the two-assembly solution and the CI checks the
-  manifest's 🤖 rules assume exist
+**Not verified:** anything needing Godot. No engine in this container, so the
+gdUnit4 job is `if: false` and the integration directory is empty by design.
+
+**Next:** `/design-system` #2 (Champion Data & Stat Model + Ability Definition
+Schema) · `/architecture-decision` ADR-0008 (AI search) · `/design-review` on
+the ladder GDD in a **fresh session**.
 
 ## Project
 
