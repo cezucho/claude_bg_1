@@ -4,12 +4,20 @@
 
 ## Current Task
 
-Authoring `design/gdd/initiative-ladder.md` via `/design-system`.
+`design/gdd/initiative-ladder.md` is **COMPLETE** — all 8 required sections plus
+Visual/Audio, UI Requirements and Open Questions. 605 lines, no placeholders.
+Status: Designed, pending review.
 
-**Sections written:** Summary, Overview, Player Fantasy, Detailed Design (Core
-Rules, States and Transitions, Interactions).
-**Next section:** Formulas, then Edge Cases, Dependencies, Tuning Knobs,
-Acceptance Criteria, Visual/Audio, UI Requirements, Open Questions.
+**Next:** run `/design-review design/gdd/initiative-ladder.md` in a **fresh
+session** (never in the authoring session — the reviewer must be independent).
+Then `/design-system` for #2 in the design order: Champion Data & Stat Model +
+Ability Definition Schema.
+
+**Highest-priority follow-up:** Open Question 1 — re-run
+`prototypes/initiative-ladder/` with the two-half structure and the Last Word
+rule. Both weaken the denial that made passing a real decision (6% strategic
+passing measured; 0% when denial was removed). This must be settled before
+implementation.
 
 Key rules settled in Detailed Design:
 - Round has **two halves**; each team opens one. Removes the 70% first-mover

@@ -45,7 +45,7 @@ derived from what the named systems require.
 | 5 | Ability Definition Schema (inferred) | Core | MVP | Not Started | — | Hex Grid, Champion Data, Movement & Targeting |
 | 6 | Movement & Targeting | Gameplay | MVP | Not Started | — | Hex Grid, Deterministic Simulation Core |
 | 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | Not Started | — | Champion Data & Stat Model |
-| 8 | Initiative Ladder & Action Economy | Gameplay | MVP | Not Started | — | Ability Definition Schema, Round Phase Sequencer |
+| 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer |
 | 9 | Status Effects | Gameplay | MVP | Not Started | — | Ability Definition Schema, Round Phase Sequencer, Damage |
 | 10 | Death, Dying Round & Respawn | Gameplay | MVP | Not Started | — | Round Phase Sequencer, Damage, Status Effects |
 | 11 | Molding | Gameplay | MVP | Not Started | — | Champion Data & Stat Model, Ability Definition Schema |
@@ -252,10 +252,10 @@ Concretely: estimate the branching factor *before* committing to an action econo
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 33 |
-| Design docs started | 0 |
+| Design docs started | 1 |
 | Design docs reviewed | 0 |
 | Design docs approved | 0 |
-| MVP systems designed | 0/21 |
+| MVP systems designed | 1/21 |
 | Vertical Slice systems designed | 0/8 |
 
 ---

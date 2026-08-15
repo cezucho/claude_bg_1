@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: ""
+last_updated: "2026-08-14"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -106,7 +106,53 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: legal_action_predicate
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    variables: [ability_initiative, ladder_ceiling, champion_state, cooldown, target_set, active_team]
+    output: boolean
+    added: 2026-08-14
+    revised: ""
+    # F1. A Dying champion IS eligible to act.
+
+  - name: initiative_power_budget
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    variables: [base_power, initiative_tier, power_multiplier]
+    output: "3-13 damage at base_power=3"
+    added: 2026-08-14
+    revised: ""
+    # F3. raw_power(i) = base_power * M(i), where M = [1.0, 1.3, 2.2, 4.4]
+
+  - name: effective_value
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    variables: [raw_power, applicability, exposure, k]
+    output: "0.94-1.02 across all four initiative tiers"
+    added: 2026-08-14
+    revised: ""
+    # F4. The balance target is FLATNESS, not a value — no initiative tier
+    # should be systematically correct to play. `applicability` is a
+    # measurement of pattern geometry, not a free parameter.
+
+  - name: round_duration_budget
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    variables: [decisions_per_round, t_decide, resolutions_per_round, t_resolve]
+    output: "45 s per round at defaults; 20 rounds per 15-minute match"
+    added: 2026-08-14
+    revised: ""
+    # F5. Binding constraint: ladder length is the match-length dial as well as
+    # a balance dial. The two cannot be tuned independently.
 
 # Example:
 #
@@ -139,7 +185,80 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: max_initiative
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 4
+    unit: tier
+    added: 2026-08-14
+    revised: ""
+
+  - name: actions_per_champion_per_round
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 1
+    unit: actions
+    added: 2026-08-14
+    revised: ""
+    # Across BOTH halves combined, not per half.
+
+  - name: halves_per_round
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 2
+    unit: halves
+    added: 2026-08-14
+    revised: ""
+    # Each team opens exactly one half. Removes the 70% first-mover advantage
+    # measured in prototypes/initiative-ladder/REPORT.md.
+
+  - name: last_word_actions
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 1
+    unit: actions
+    added: 2026-08-14
+    revised: ""
+    # Granted to the opponent when a team passes. Unanswerable.
+
+  - name: base_power
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 3
+    unit: damage
+    added: 2026-08-14
+    revised: ""
+
+  - name: exposure_weight_k
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 0.25
+    unit: coefficient
+    added: 2026-08-14
+    revised: ""
+
+  - name: target_round_seconds
+    status: active
+    source: design/gdd/initiative-ladder.md
+    referenced_by:
+      - design/gdd/initiative-ladder.md
+    value: 45
+    unit: seconds
+    added: 2026-08-14
+    revised: ""
 
 # Example:
 #
