@@ -4,37 +4,25 @@
 
 ## Current Task
 
-`design/gdd/initiative-ladder.md` is **COMPLETE** — all 8 required sections plus
-Visual/Audio, UI Requirements and Open Questions. 605 lines, no placeholders.
-Status: Designed, pending review.
+Concept phase complete. One MVP GDD authored and validated by prototype.
 
-**Next:** run `/design-review design/gdd/initiative-ladder.md` in a **fresh
-session** (never in the authoring session — the reviewer must be independent).
-Then `/design-system` for #2 in the design order: Champion Data & Stat Model +
-Ability Definition Schema.
+**Done:** `/start`, `/brainstorm`, `/setup-engine`, `/map-systems`,
+`/prototype initiative-ladder` (3 rounds), `/design-system initiative-ladder`.
 
-**Highest-priority follow-up:** Open Question 1 — re-run
-`prototypes/initiative-ladder/` with the two-half structure and the Last Word
-rule. Both weaken the denial that made passing a real decision (6% strategic
-passing measured; 0% when denial was removed). This must be settled before
-implementation.
+**`design/gdd/initiative-ladder.md` is COMPLETE** — 8 required sections plus
+Visual/Audio, UI Requirements, Open Questions. Status: Designed, pending an
+independent review.
 
-Key rules settled in Detailed Design:
-- Round has **two halves**; each team opens one. Removes the 70% first-mover
-  advantage the prototype measured.
-- **One action per champion per round**, across both halves — so teams must
-  allocate five champions between the half they open and the half they answer in.
-- **Pass grants the opponent one unanswerable "Last Word"**, then the half ends.
-  Stops passing being a free combo-breaker; makes baiting a pass a real line.
-- **Targeting rigidity scales with initiative**: 1–2 free, 3 rotatable pattern,
-  4 fixed absolute pattern. High initiative is strong but conditional on
-  position, which is what stops play collapsing to low initiative.
-- Round closes: death check, *then* status phase. Status-induced death grants a
-  dying round.
+**Both blocking open questions are now CLOSED:**
+- Q1 passing survives the Last Word rule (7.7% strategic passing, vs 8.6% before)
+- Q1b the "70% first-mover advantage" was two harness bugs, not a design
+  property. Retracted. Mirror matches now run 43-50%.
 
-**Needs re-measuring in the prototype before implementation:** the two-half
-structure plus the Last Word both weaken the denial that made passing a real
-decision (measured at 6% strategic passes; 0% when denial was removed entirely).
+**Next, in recommended order:**
+1. `/design-review design/gdd/initiative-ladder.md` — **fresh session only**
+2. `/create-architecture` — the prototype produced hard constraints (state
+   cloned ~2,000x per AI decision; determinism required)
+3. `/design-system` #2 — Champion Data & Stat Model + Ability Definition Schema
 
 ## Project
 
