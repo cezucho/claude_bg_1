@@ -6,23 +6,27 @@ namespace Augury.Tools;
 /// Renders the AUGURY board and asserts its geometric invariants.
 /// </summary>
 /// <remarks>
+/// <para>Teams face each other across opposite <b>edges</b> of the hexagon, not
+/// opposite corners. A radius-4 edge is exactly five hexes — one per champion — and
+/// an edge has eight off-board neighbours to hold a spawn row, where a corner has
+/// only three. A corner would also funnel five respawning champions through two or
+/// three hexes, reintroducing the single-file problem that removing lanes solved.</para>
 /// <para>Symmetry is 180-degree rotation about the origin — <c>(q,r) → (-q,-r)</c>.
 /// Mirror symmetry is rejected: a mirrored tier-4 pattern is a chirally different
 /// shape that the six-facing rotation system cannot express, so the two teams would
-/// not have access to the same abilities. Rotation preserves chirality; mirroring
-/// does not.</para>
-/// <para>Routes were considered and rejected. On a hexagon the outer edge is a
-/// single ring, so any edge-hugging lane is one hex wide at every board radius —
-/// which forces two champions sharing a lane into single file. That formation
-/// problem is created by lanes, not by one-champion-per-hex occupancy.</para>
+/// not have access to the same abilities.</para>
+/// <para>Coordinates are read as <b>rank</b> <c>R</c> (toward the enemy edge) and
+/// <b>file</b> <c>Q - S</c> (across the board). File is zero along the axis joining
+/// the two edge midpoints and reaches +/-8 at the side corners; both negate under
+/// the symmetry map, so every zone rule is written on the absolute value.</para>
 /// </remarks>
 public static class BoardLayout
 {
-    /// <summary>Board radius in hexes. 61 hexes total, 6.1 per champion.</summary>
+    /// <summary>Board radius in hexes. 61 playable hexes, 6.1 per champion.</summary>
     public const int Radius = 4;
 
-    /// <summary>Jungle is the two deep wedges either side of the base diagonal.</summary>
-    public const int JungleDepth = 3;
+    /// <summary>Jungle is every playable hex with <c>|file|</c> at or beyond this.</summary>
+    public const int JungleFile = 5;
 
     /// <summary>What a hex is for.</summary>
     private enum Zone
@@ -30,63 +34,77 @@ public static class BoardLayout
         Open,
         Jungle,
         Tower,
-        Base
+        Front,
+        Spawn
     }
 
     private static readonly HexCoord CentreTower = new(0, 0);
 
-    /// <summary>Team A's two towers. Team B's are the antipodes of these.</summary>
-    private static readonly HexCoord[] TeamATowers = { new(3, -1), new(1, -3) };
-
-    private static readonly HexCoord BaseA = new(Radius, -Radius);
+    /// <summary>Team A's towers. Team B's are the antipodes.</summary>
+    private static readonly HexCoord[] TeamATowers = { new(0, -2), new(2, -2) };
 
     public static void Run()
     {
-        HexCoord[] board = BuildBoard(Radius);
-        Dictionary<HexCoord, Zone> zones = Zones(board);
+        HexCoord[] play = BuildBoard(Radius);
+        HexCoord[] spawn = SpawnRow().Concat(SpawnRow().Select(Antipode)).ToArray();
+        Dictionary<HexCoord, Zone> zones = Zones(play, spawn);
 
         Console.WriteLine();
-        Console.WriteLine($"AUGURY BOARD — radius {Radius}, {board.Length} hexes, "
-                          + $"{(double)board.Length / 10:F1} per champion");
+        Console.WriteLine($"AUGURY BOARD — radius {Radius}, {play.Length} playable hexes "
+                          + $"({(double)play.Length / 10:F1} per champion) "
+                          + $"+ {spawn.Length} off-board spawn hexes");
         Console.WriteLine();
 
-        for (int r = -Radius; r <= Radius; r++)
+        for (int r = -Radius - 1; r <= Radius + 1; r++)
         {
-            var line = new char[4 * Radius + 2];
+            var line = new char[4 * Radius + 4];
             Array.Fill(line, ' ');
-            for (int q = -Radius; q <= Radius; q++)
+            for (int q = -Radius - 1; q <= Radius + 1; q++)
             {
                 var h = new HexCoord(q, r);
-                if (!Hex.InBoard(h, Radius)) continue;
-                line[2 * q + r + 2 * Radius] = Glyph(zones[h]);
+                if (!zones.TryGetValue(h, out Zone z)) continue;
+                line[2 * q + r + 2 * Radius] = Glyph(z);
             }
 
             Console.WriteLine("    " + new string(line).TrimEnd());
         }
 
         Console.WriteLine();
-        Console.WriteLine("    B base    T tower    . jungle    · open ground");
+        Console.WriteLine("    S spawn (off-board)   F front line   T tower   . jungle   · open");
         Console.WriteLine();
 
         var counts = new Dictionary<Zone, int>();
         foreach (Zone z in zones.Values) counts[z] = counts.GetValueOrDefault(z) + 1;
-
         Console.WriteLine($"    open {counts.GetValueOrDefault(Zone.Open),3}"
-                          + $"    jungle {counts.GetValueOrDefault(Zone.Jungle),3}"
-                          + $" ({(double)counts.GetValueOrDefault(Zone.Jungle) / board.Length,3:P0})"
-                          + $"    towers {counts.GetValueOrDefault(Zone.Tower),2}"
-                          + $"    bases {counts.GetValueOrDefault(Zone.Base),2}");
+                          + $"   jungle {counts.GetValueOrDefault(Zone.Jungle),3}"
+                          + $" ({(double)counts.GetValueOrDefault(Zone.Jungle) / play.Length,3:P0} of play)"
+                          + $"   front {counts.GetValueOrDefault(Zone.Front),3}"
+                          + $"   towers {counts.GetValueOrDefault(Zone.Tower),2}"
+                          + $"   spawn {counts.GetValueOrDefault(Zone.Spawn),2}");
         Console.WriteLine();
 
-        Invariants(board, zones);
+        Invariants(play, spawn, zones);
     }
 
-    private static Dictionary<HexCoord, Zone> Zones(HexCoord[] board)
+    /// <summary>Team A's spawn row: the off-board hexes behind its front edge.</summary>
+    private static HexCoord[] SpawnRow()
+    {
+        var row = new List<HexCoord>();
+        for (int q = 0; q <= Radius + 1; q++) row.Add(new HexCoord(q, -Radius - 1));
+        return row.ToArray();
+    }
+
+    private static Dictionary<HexCoord, Zone> Zones(HexCoord[] play, HexCoord[] spawn)
     {
         var zones = new Dictionary<HexCoord, Zone>();
-        foreach (HexCoord h in board)
+        foreach (HexCoord h in play)
         {
-            zones[h] = Math.Abs(h.S) >= JungleDepth ? Zone.Jungle : Zone.Open;
+            zones[h] = Math.Abs(File(h)) >= JungleFile ? Zone.Jungle : Zone.Open;
+        }
+
+        foreach (HexCoord h in play)
+        {
+            if (Math.Abs(h.R) == Radius) zones[h] = Zone.Front;
         }
 
         zones[CentreTower] = Zone.Tower;
@@ -96,42 +114,63 @@ public static class BoardLayout
             zones[Antipode(t)] = Zone.Tower;
         }
 
-        zones[BaseA] = Zone.Base;
-        zones[Antipode(BaseA)] = Zone.Base;
+        foreach (HexCoord h in spawn) zones[h] = Zone.Spawn;
         return zones;
     }
 
-    private static void Invariants(HexCoord[] board, Dictionary<HexCoord, Zone> zones)
+    /// <summary>Position across the board. Zero on the centre axis, +/-8 at the sides.</summary>
+    private static int File(HexCoord h) => h.Q - h.S;
+
+    private static void Invariants(HexCoord[] play, HexCoord[] spawn,
+                                   Dictionary<HexCoord, Zone> zones)
     {
         Console.WriteLine("    INVARIANTS");
 
-        int asym = board.Count(h => zones[h] != zones[Antipode(h)]);
-        Report("180-degree rotational symmetry", asym == 0, $"{asym} mismatched hexes");
+        int asym = play.Concat(spawn).Count(h => zones[h] != zones[Antipode(h)]);
+        Report("180-degree rotational symmetry, spawn rows included", asym == 0,
+               $"{asym} mismatched hexes");
 
-        bool towersEquidistant = TeamATowers.All(t =>
-            HexCoord.Distance(BaseA, t) == HexCoord.Distance(Antipode(BaseA), Antipode(t)));
-        Report("each team's towers equidistant from its own base", towersEquidistant,
-               $"{string.Join(", ", TeamATowers.Select(t => HexCoord.Distance(BaseA, t)))} hexes");
+        HexCoord[] frontA = play.Where(h => h.R == -Radius).ToArray();
+        Report("front edge holds exactly one hex per champion", frontA.Length == 5,
+               $"{frontA.Length} hexes for 5 champions");
 
-        int dA = HexCoord.Distance(BaseA, CentreTower);
-        int dB = HexCoord.Distance(Antipode(BaseA), CentreTower);
-        Report("centre tower equidistant from both bases", dA == dB, $"{dA} hexes each");
+        HexCoord[] rowA = SpawnRow();
+        Report("spawn row seats every champion with a spare", rowA.Length >= 5,
+               $"{rowA.Length} hexes — 5 champions, jungler takes two");
+
+        bool allAdjacent = rowA.All(s => Hex.Directions.ToArray()
+            .Any(d => Hex.InBoard(s + d, Radius)));
+        Report("every spawn hex touches the playable board", allAdjacent,
+               "no champion is stranded off-board");
+
+        bool spawnOffBoard = spawn.All(s => !Hex.InBoard(s, Radius));
+        Report("no spawn hex is playable", spawnOffBoard,
+               "spawn rows cost zero playable hexes, so density is unchanged");
 
         bool towersOpen = TeamATowers.Append(CentreTower)
-            .All(t => Math.Abs(t.S) < JungleDepth);
-        Report("no tower sits inside jungle", towersOpen, "towers are contestable in the open");
+            .All(t => Math.Abs(File(t)) < JungleFile);
+        Report("no tower sits inside jungle", towersOpen, "every tower is contestable");
 
-        // Two champions must be able to stand abreast anywhere they can walk, or the
-        // single-file problem returns. Every open hex needs an open neighbour.
-        HexCoord[] open = board.Where(h => zones[h] != Zone.Jungle).ToArray();
-        bool abreast = open.All(h => Hex.Directions.ToArray()
-            .Any(d => zones.TryGetValue(h + d, out Zone z) && z != Zone.Jungle));
+        int[] fromFront = TeamATowers
+            .Select(t => frontA.Min(f => HexCoord.Distance(f, t))).ToArray();
+        Report("both of a team's towers equidistant from its own front",
+               fromFront.Distinct().Count() == 1, $"{string.Join(", ", fromFront)} hexes");
+
+        int dA = play.Where(h => h.R == -Radius).Min(h => HexCoord.Distance(h, CentreTower));
+        int dB = play.Where(h => h.R == Radius).Min(h => HexCoord.Distance(h, CentreTower));
+        Report("centre tower equidistant from both fronts", dA == dB, $"{dA} hexes each");
+
+        HexCoord[] walkable = play.Where(h => zones[h] != Zone.Jungle).ToArray();
+        bool abreast = walkable.All(h => Hex.Directions.ToArray()
+            .Any(d => zones.TryGetValue(h + d, out Zone z)
+                      && z != Zone.Jungle && z != Zone.Spawn));
         Report("every walkable hex has a walkable neighbour (no single file)", abreast,
-               "champions can always pair up");
+               "champions can always stand abreast");
 
-        int span = HexCoord.Distance(BaseA, Antipode(BaseA));
-        Console.WriteLine($"      · base-to-base distance: {span} hexes "
-                          + $"(respawn walk-back; Movement & Targeting sets the round cost)");
+        int span = play.Where(h => h.R == -Radius)
+            .Min(a => play.Where(h => h.R == Radius).Min(b => HexCoord.Distance(a, b)));
+        Console.WriteLine($"      · front-to-front distance: {span} hexes "
+                          + "(Movement & Targeting sets the round cost)");
     }
 
     private static void Report(string name, bool ok, string detail)
@@ -141,7 +180,8 @@ public static class BoardLayout
 
     private static char Glyph(Zone zone) => zone switch
     {
-        Zone.Base => 'B',
+        Zone.Spawn => 'S',
+        Zone.Front => 'F',
         Zone.Tower => 'T',
         Zone.Jungle => '.',
         _ => '·'

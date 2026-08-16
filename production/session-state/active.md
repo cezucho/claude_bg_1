@@ -4,9 +4,29 @@
 
 ## Current Task
 
-**Map & Terrain GDD written** — `design/gdd/map-and-terrain.md`. The board is fixed:
-radius-4 hexagon, 61 hexes, 180-degree rotational symmetry, one champion per hex,
-**no lanes**, 5 towers, 2 jungle wedges, bases at opposite corners 8 hexes apart.
+**Map & Terrain GDD written** — `design/gdd/map-and-terrain.md`. Board fixed:
+radius-4 hexagon, 61 playable hexes, teams facing across opposite **edges**, 12
+off-board spawn hexes, 180-degree rotational symmetry, one champion per hex, **no
+lanes**, 5 towers, 2 jungle flanks, front-to-front 8 hexes.
+
+**Spawn rows (user's idea, adopted).** Six off-board hexes per team behind each front
+line. Every champion owns a designated hex; the jungler owns two and picks a flank.
+Untargetable — outside the game entirely, so spawn camping is impossible by
+construction. Entering play costs the champion's action (tunable to free).
+
+*Why they exist:* ADR-0006 batches every death to round close, so multi-death rounds
+are the normal shape of a good exchange, not a rare ace. A single shared respawn hex
+would have broken in ordinary play. Dedicated per-champion hexes make simultaneous
+respawn collision-free with no tie-break and no fallback placement path.
+
+**Board flipped corner-facing to edge-facing** to fit them: a corner has only 3
+off-board neighbours (cannot seat 5), an edge has 8. A radius-4 edge is exactly 5
+hexes — one per champion — and radius 4 is therefore the *smallest* board that seats
+a team abreast. A corner base would also have funnelled 5 respawning champions through
+2-3 hexes, reintroducing the single-file problem that removing lanes solved.
+
+Coordinates now read as **rank** (`R`, toward the enemy) and **file** (`Q - S`, across).
+Both negate under the symmetry map, so every zone rule is written on absolute value.
 
 The finding that decided it: on a hexagon the outer edge is a single ring, so any
 edge-hugging lane is **1 hex wide at every radius** (verified at radius 4 and 6 with
@@ -22,9 +42,15 @@ fixed relative to **the owning team's forward direction**, not world-absolute as
 ADR-0005 currently says. Must land before any tier-4 ability is authored.
 
 **User decisions this session:** 61 hexes (over my 91 recommendation) · towers both
-damage and score · 5 towers, 2 per team plus a neutral centre · respawn at own base
-corner · jungle is a **road for the jungler**, not an obstacle — extra jungle effects
-explicitly deferred.
+damage and score · 5 towers, 2 per team plus a neutral centre · jungle is a **road for
+the jungler**, not an obstacle, extra jungle effects explicitly deferred · edge-facing
+board · spawn hexes fully untargetable · entering play costs the champion's action.
+
+**Timing principle agreed for "decide now vs defer to vertical slice":** decide now
+what changes the *shape of the data*; defer what changes only a *number*. A structural
+choice deferred gets built twice; a numeric choice decided early was going to be tuned
+anyway. Third category worth naming: questions play cannot answer at all (e.g. "are
+spawn hexes targetable?" is rules-consistency, not feel) — those must be decided now.
 
 **Next:** re-run `applicability` with the real tower positions as contested points
 (acceptance criterion 11, blocking before abilities), then Movement & Targeting, then
