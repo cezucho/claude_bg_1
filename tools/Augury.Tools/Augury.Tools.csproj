@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Balance Simulation Harness. ADR-0001 says this exists from day one, not at
+    Vertical Slice: the prototype demonstrated that a harness finds structural
+    bugs which aggregate metrics hide.
+
+    References Augury.Sim only. No Godot, ever.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Augury.Tools</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Augury.Sim\Augury.Sim.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -228,17 +228,21 @@ AI is tractable (see `prototypes/initiative-ladder/REPORT.md`).
 
 ### F3 — Initiative Power Budget
 
-`raw_power(i) = base_power × M(i)` where `M = [1.0, 1.3, 2.2, 4.4]`
+`raw_power(i) = base_power × M(i)` where `M = [1.0, 1.3, 2.0, 4.0]`
 
 | Variable | Type | Range | Description |
 |---|---|---|---|
 | `base_power` | int | 3–5 | Reference damage of a tier-1 ability |
 | `i` | int | 1–4 | Initiative tier |
-| `M(i)` | fixed-point | 1.0–4.4 | Power multiplier for tier `i` |
+| `M(i)` | fixed-point | 1.0–4.0 | Power multiplier for tier `i` |
 
-**Output range:** 3 → 13 damage at `base_power = 3`.
-**Example:** a tier-4 ability at base 3 deals 13 damage — roughly 43% of a 30 HP
-champion — from a single strike that is unanswerable if played as a Last Word.
+**Output range:** 3 → 12 damage at `base_power = 3`.
+**Example:** a tier-4 ability at base 3 deals 12 damage — 40% of a 30 HP champion —
+from a single strike that is unanswerable if played as a Last Word.
+
+> `M` was `[1.0, 1.3, 2.2, 4.4]` until applicability was measured (see F4). The curve
+> barely moved, which is the interesting part: the shape was right, the top two tiers
+> were about 10% hot.
 
 ### F4 — Effective Value (the balance target)
 
@@ -247,22 +251,75 @@ where `exposure(i) = i / 4`
 
 | Variable | Type | Range | Description |
 |---|---|---|---|
-| `applicability(i)` | fixed-point | 0.30–1.00 | Fraction of board states in which the ability can legally target. **A measurement of pattern geometry, not a free parameter** |
+| `applicability(i)` | fixed-point | 0.30–1.00 | Fraction of board states in which the ability can legally hit an enemy. **Measured from pattern geometry, not a free parameter** — see below |
 | `exposure(i)` | fixed-point | 0.25–1.00 | Fraction of the opponent's kit that may legally answer |
 | `k` | fixed-point | 0.20–0.30 | Weight of the answer-window cost. Start at 0.25 |
 
-| i | applicability | M(i) | exposure | effective_value |
-|---|---|---|---|---|
-| 1 | 1.00 | 1.0 | 0.25 | **0.94** |
-| 2 | 0.90 | 1.3 | 0.50 | **1.02** |
-| 3 | 0.55 | 2.2 | 0.75 | **0.98** |
-| 4 | 0.30 | 4.4 | 1.00 | **0.99** |
+| i | reference pattern | applicability | M(i) | exposure | effective_value |
+|---|---|---|---|---|---|
+| 1 | free targeting, range 4 | 0.99 | 1.0 | 0.25 | **0.93** |
+| 2 | free targeting, range 2 | 0.81 | 1.3 | 0.50 | **0.92** |
+| 3 | rotatable 2-hex arc at range 2 | 0.59 | 2.0 | 0.75 | **0.95** |
+| 4 | fixed 5-hex pattern | 0.31 | 4.0 | 1.00 | **0.92** |
 
-**Output range: 0.94–1.02 — flat within ±4%.** That flatness *is* the design target:
+**Output range: 0.92–0.95 — flat within ±2%.** That flatness *is* the design target:
 no initiative tier should be systematically correct to play. The prototype measured
 agents choosing a mean initiative of 1.9–2.4 out of 4 under a flat power curve; this
-formula exists to correct that. The Balance Harness must verify that real pattern
-geometry produces the assumed `applicability` values.
+formula exists to correct that.
+
+#### The applicability measurement
+
+`applicability` is no longer assumed. `tools/Augury.Tools` samples 20,000 board
+configurations on the radius-4 board (61 hexes, 5v5, 100,000 actor-samples, seed
+20260814) and counts how often each pattern can reach at least one **enemy**. It runs
+two placement models: **uniform** (champions scattered anywhere — a floor) and
+**contested** (placement weighted toward three objective hexes — an approximation of
+real play). The contested figures are the ones in the table above, because uniform
+placement systematically understates every proximity-dependent pattern.
+
+| Pattern | Tier | uniform | contested |
+|---|---|---|---|
+| free, range 1 (melee) | 1 | 36.8% | **50.1%** |
+| free, range 2 | 1–2 | 72.2% | **80.8%** |
+| free, range 3 | 1–2 | 90.7% | **94.7%** |
+| free, range 4 | 1–2 | 97.8% | **99.2%** |
+| rotatable 1 hex at range 2 | 3 | 31.4% | **34.6%** |
+| rotatable 2-hex arc at range 2 | 3 | 53.6% | **58.7%** |
+| rotatable line, range 1–2 | 3 | 57.8% | **68.7%** |
+| rotatable wedge-3, range 1–2 | 3 | 57.8% | **68.7%** |
+| fixed 2 hex | 4 | 11.6% | **12.6%** |
+| fixed 3 hex | 4 | 16.8% | **18.8%** |
+| fixed 4 hex | 4 | 21.9% | **24.4%** |
+| fixed 5 hex | 4 | 26.7% | **30.5%** |
+| fixed 6 hex | 4 | 31.3% | **35.8%** |
+
+Three results change how abilities must be authored:
+
+1. **Melee is not the baseline.** A range-1 ability reaches an enemy in only half of
+   contested board states — less often than a *rotatable tier-3 pattern*. The
+   assumption that tier 1 is "always applicable" was false by a factor of two. Tier-1
+   abilities are therefore **ranged by default**; a range-1 tier-1 ability is
+   underpowered at `M = 1.0` and needs either a compensating multiplier or a movement
+   component. This is the single biggest correction the measurement produced, and it
+   lands on the tier nobody was worried about.
+2. **Rotatable pattern size does not matter — radial coverage does.** The 2-hex line
+   and the 3-hex wedge measure *identically* (68.7%), because with six facings
+   available, adding a hex to a shape almost never changes whether *some* facing
+   connects. What changes applicability is which distance rings the pattern touches:
+   confined to range 2 it is 34.6%, spanning ranges 1–2 it is 68.7%. **The tier-3
+   authoring dial is reach, not area.** Extra hexes on a tier-3 pattern are free
+   splash damage and must be priced as damage, never as applicability.
+3. **Fixed pattern size matters, and linearly.** Each hex added to a tier-4 fixed
+   pattern buys ≈6 percentage points of applicability (12.6 → 18.8 → 24.4 → 30.5 →
+   35.8). Rotation being unavailable is exactly what makes area count. This is a clean
+   authoring rule: **tier-4 patterns are 5 hexes ± 1**, and a designer trading a hex
+   away owes ≈6pp of applicability back in power.
+
+Clustering helps the tiers unevenly, and helpfully so: moving from uniform to
+contested placement lifts melee by 13 points but tier-4 fixed patterns by only 2–4.
+Crowding the objectives does **not** make heavy abilities reliable — a fixed pattern
+needs a specific *relative offset*, which a scrum does not supply. Tier 4 stays an
+opportunity the board grants rather than a reward for fighting where everyone else is.
 
 ### F5 — Round Duration Budget
 
@@ -421,9 +478,11 @@ All values are data-driven and must never be hardcoded (see
 | `last_word_actions` | 1 | 0–1 | Above 1, passing becomes near-suicidal and nobody ever passes | At 0 passing is a free combo-breaker — the problem this rule exists to fix |
 | `last_word_ceiling_offset` | 0 | −1 to 0 | — | At −1 the Last Word must undercut the ceiling, weakening pass-baiting and making passing safer |
 | `base_power` | 3 | 3–5 | Champions die in two exchanges; the ladder never descends far | Exchanges never resolve; matches run past the round budget |
-| `M(i)` power multipliers | [1.0, 1.3, 2.2, 4.4] | see F3 | High tiers dominate whenever the board lines up | Play collapses to low initiative, as the prototype measured |
+| `M(i)` power multipliers | [1.0, 1.3, 2.0, 4.0] | see F3 | High tiers dominate whenever the board lines up | Play collapses to low initiative, as the prototype measured |
 | `k` (exposure weight) | 0.25 | 0.20–0.30 | Over-penalises high initiative; tier 4 becomes unplayable | Under-values the answer window; high initiative becomes free |
-| `applicability(i)` targets | [1.00, 0.90, 0.55, 0.30] | see F4 | Tier 4 usable too often, becoming a default rather than an opportunity | Tier 4 effectively never legal; the tier is decoration |
+| `applicability(i)` targets | [0.99, 0.81, 0.59, 0.31] | see F4 | Tier 4 usable too often, becoming a default rather than an opportunity | Tier 4 effectively never legal; the tier is decoration |
+| tier-4 pattern hex count | 5 | 4–6 | Each hex above 5 adds ≈6pp applicability; at 7+ the tier stops being situational | At 2–3 hexes applicability falls to 13–19% and the tier is decoration |
+| tier-3 pattern reach | ranges 1–2 | r2 only – r1–3 | Confined to one ring, applicability halves to 35% | Spanning three rings, tier 3 approaches free targeting |
 | `t_decide` (blitz clock) | 6s | 4–10s | Match exceeds the 15-minute budget | Players cannot evaluate the legal set; decisions become guesses |
 | `cooldown` range | 0–4 | 0–4 | Kits empty out and ladders end by exhaustion | Abilities are spammable and holding a reserve stops mattering |
 
@@ -585,9 +644,13 @@ criteria run in xUnit with no Godot boot (see `.claude/docs/technical-preference
 17. **GIVEN** any half, **WHEN** the sequence of resolved initiatives is recorded,
     **THEN** it is monotonically non-increasing (F2).
 18. **GIVEN** `base_power = 3` and the default `M`, **WHEN** raw power is computed
-    per tier, **THEN** the results are 3, 3.9, 6.6, 13.2 (F3).
+    per tier, **THEN** the results are 3, 3.9, 6.0, 12.0 (F3).
 19. **GIVEN** the default `M`, `applicability` and `k`, **WHEN** effective value is
-    computed per tier, **THEN** all four results fall within 0.94–1.02 (F4).
+    computed per tier, **THEN** all four results fall within 0.92–0.95 (F4).
+19a. **GIVEN** the shipped ability set, **WHEN** `tools/Augury.Tools` measures each
+    ability's pattern under contested placement, **THEN** every ability's measured
+    applicability is within ±0.08 of its tier's F4 reference value — an ability whose
+    geometry misses its tier's applicability band is a balance defect, not a variant.
 20. **GIVEN** 5 decisions at 6s and 10 resolutions at 1.5s, **WHEN** round duration is
     computed, **THEN** it equals 45s, and a 900s match yields 20 rounds (F5).
 
@@ -619,7 +682,7 @@ criteria run in xUnit with no Godot boot (see `.claude/docs/technical-preference
 |---|---|---|---|---|
 | 1 | ~~Does passing survive the Last Word rule?~~ **RESOLVED 2026-08-14.** Re-measured in `ladder_v2.py` with two halves *and* the Last Word: passing with options held at 7.7%, versus 8.6% under the original single-half rule. 68% of halves end by a deliberate pass rather than exhaustion | Passing remains a decision; the ladder does not run to exhaustion | — | Closed |
 | 1b | ~~Is the mirror-match win asymmetry a rule property or a harness artefact?~~ **RESOLVED 2026-08-14 — harness artefact, two bugs.** (a) `targets_for` truncated move options to the first six of an ordered direction list, so one team could never move toward the objectives; (b) `winner()` checked team 0 first, awarding every simultaneous threshold crossing to team 0. After both fixes, mirror matches run 43–50% across every variant | **There is no first-mover advantage in the ladder.** The two-half rule stands on its remaining justification: it makes the initiative-1 ceiling lockout symmetric | — | Closed. See `prototypes/initiative-ladder/asymmetry_hunt.py` |
-| 2 | **Is `applicability(i)` achievable with real hex geometry?** F4 assumes tier-4 patterns are legal in ~30% of board states. That is an assumption about geometry, not a decision | If real patterns are legal 60% of the time, tier 4 dominates; at 10%, the tier is decoration | Design + Balance Harness | During Ability Definition Schema |
+| 2 | ~~Is `applicability(i)` achievable with real hex geometry?~~ **RESOLVED 2026-08-14 — yes, with two corrections.** Measured over 100,000 actor-samples per placement model (`tools/Augury.Tools`). Tiers 3 and 4 were close to the assumed values and are reachable with a rotatable 2-hex arc and a fixed 5-hex pattern respectively. **Tier 1 was wrong by a factor of two**: melee reaches an enemy in 50% of contested states, not 100%, so tier-1 abilities must be ranged. Tier-3 applicability turned out to depend on reach, not area — a 2-hex line and a 3-hex wedge measure identically. `M` revised to `[1.0, 1.3, 2.0, 4.0]`, effective value now flat within ±2% | Tier 4 confirmed situational (31%) and, importantly, *stays* situational when champions cluster — crowding lifts it by only 2–4pp | — | Closed. See F4 |
 | 3 | **Is movement an initiative-1 action costing the champion's round action?** Assumed here. Under Core Rule 5, positioning is now expensive and strategically central | Movement cost directly determines how often tier-4 abilities can be set up — it is the other half of question 2 | Movement & Targeting GDD | Before Movement GDD is approved |
 | 4 | **What is the Dying penalty?** Referenced but not defined here | Determines whether the dying round is a real tactical window or a formality | Death, Dying Round & Respawn GDD | Before Death GDD is approved |
 | 5 | **Should the Last Word be capped below the ceiling** (`last_word_ceiling_offset = −1`)? | Reduces the reward for baiting a pass, making passing safer. Depends entirely on the answer to question 1 | Design | After question 1 is measured |
