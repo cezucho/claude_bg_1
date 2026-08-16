@@ -269,6 +269,15 @@ formula exists to correct that.
 
 #### The applicability measurement
 
+> ⚠ **These numbers are conditional on a board that has not been designed.** The
+> measurement assumed a radius-4 board (61 hexes, 16% occupied) because that was a
+> constant in the tool, not a decision. Re-run across sizes, a fixed 5-hex tier-4
+> pattern measures 41.8% at radius 3 and 23.9% at radius 6 — a spread wider than the
+> conformance band built on top of it. **What is board-independent:** melee is never
+> the most applicable tier; rotatable pattern *area* never matters while *reach* always
+> does; fixed-pattern applicability rises monotonically with hex count. Build on those.
+> Re-derive the decimals once Map & Terrain fixes a board.
+
 `applicability` is no longer assumed. `tools/Augury.Tools` samples 20,000 board
 configurations on the radius-4 board (61 hexes, 5v5, 100,000 actor-samples, seed
 20260814) and counts how often each pattern can reach at least one **enemy**. It runs

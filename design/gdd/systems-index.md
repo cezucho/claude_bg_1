@@ -41,8 +41,8 @@ derived from what the named systems require.
 | 1 | Hex Grid & Spatial Model (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | — |
 | 2 | Deterministic Simulation Core (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | — |
 | 3 | Round Phase Sequencer (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | Deterministic Simulation Core |
-| 4 | Champion Data & Stat Model (inferred) | Core | MVP | **Designed** (pending review) | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Deterministic Simulation Core |
-| 5 | Ability Definition Schema (inferred) | Core | MVP | **Designed** (pending review) | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting |
+| 4 | Champion Data & Stat Model (inferred) | Core | MVP | **Parked** — blocked on Map & Terrain | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Deterministic Simulation Core, **Map & Terrain** |
+| 5 | Ability Definition Schema (inferred) | Core | MVP | **Parked** — blocked on Map & Terrain | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting, **Map & Terrain** |
 | 6 | Movement & Targeting | Gameplay | MVP | Not Started | — | Hex Grid, Deterministic Simulation Core |
 | 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | Not Started | — | Champion Data & Stat Model |
 | 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer |
@@ -119,12 +119,22 @@ derived from what the named systems require.
 
 ### Core Layer (depends on foundation)
 
-1. **Champion Data & Stat Model** — depends on: Deterministic Simulation Core
-2. **Round Phase Sequencer** — depends on: Deterministic Simulation Core
-3. **Movement & Targeting** — depends on: Hex Grid, Deterministic Simulation Core
+> **Reordered 2026-08-16.** Map & Terrain moved ahead of the stat model and the ability
+> schema, out of the Feature layer. It was placed late because it depends on little;
+> that was a mistake, because almost everything else depends on *it*. Board size sets
+> champion density, density sets pattern applicability, and applicability is what prices
+> ability power (ladder F4). Reach, movement speed and ability range are all measured in
+> hexes, and a hex means nothing until the board has a size. Designing the stat model
+> first produced numbers that silently encoded a radius-4 board nobody had chosen.
+
+1. **Map & Terrain** — depends on: Hex Grid. **Design this first.** Board shape and
+   radius, symmetry, tower/objective placement, jungle regions, terrain types
+2. **Movement & Targeting** — depends on: Hex Grid, Map & Terrain, Deterministic Simulation Core
+3. **Champion Data & Stat Model** — depends on: Deterministic Simulation Core, Map & Terrain
 4. **Damage & Combat Resolution** — depends on: Champion Data & Stat Model
-5. **Ability Definition Schema** — depends on: Hex Grid, Champion Data, Movement & Targeting
-6. **Blitz Clock** — depends on: Deterministic Simulation Core
+5. **Ability Definition Schema** — depends on: Hex Grid, Map & Terrain, Champion Data, Movement & Targeting
+6. **Round Phase Sequencer** — depends on: Deterministic Simulation Core
+7. **Blitz Clock** — depends on: Deterministic Simulation Core
 
 ### Feature Layer (depends on core)
 
@@ -132,9 +142,8 @@ derived from what the named systems require.
 2. **Status Effects** — depends on: Ability Definition Schema, Round Phase Sequencer, Damage
 3. **Death, Dying Round & Respawn** — depends on: Round Phase Sequencer, Damage, Status Effects
 4. **Molding** — depends on: Champion Data & Stat Model, Ability Definition Schema
-5. **Map & Terrain** — depends on: Hex Grid
-6. **Objectives & Scoring** — depends on: Map & Terrain
-7. **Jungle & Neutral Powers** — depends on: Map & Terrain, Status Effects
+5. **Objectives & Scoring** — depends on: Map & Terrain
+6. **Jungle & Neutral Powers** — depends on: Map & Terrain, Status Effects
 8. **Economy & Items** — depends on: Champion Data & Stat Model, Objectives & Scoring
 9. **Draft** — depends on: Champion Data & Stat Model, Ability Definition Schema
 10. **Opening Phase** — depends on: Draft, Ability Schema, Movement & Targeting, Map & Terrain

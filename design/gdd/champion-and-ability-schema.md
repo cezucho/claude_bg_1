@@ -1,10 +1,54 @@
 # Champion Data & Ability Definition Schema
 
-> **Status**: Designed (pending review)
+> **Status**: **PARKED (2026-08-16)** — written too early. Do not implement, do not
+> author content against it, do not treat its numbers as decided.
 > **Systems**: #4 Champion Data & Stat Model · #5 Ability Definition Schema
 > **Depends on**: ADR-0002 (integer arithmetic), ADR-0003 (state representation),
 > ADR-0005 (hex coordinates and patterns), ADR-0007 (content data format),
-> `design/gdd/initiative-ladder.md`
+> `design/gdd/initiative-ladder.md`, **and an undesigned Board & Map GDD**
+
+## Why this document is parked
+
+This was authored before the board existed, which was the wrong order. Three
+consequences, all of which must be resolved before it resumes:
+
+**1. Half the stat model depends on undesigned systems.** `SPD` presupposes the
+Movement & Targeting rules; `RES` presupposes Status Effects. Neither GDD exists, so
+both stats are placeholders wearing the costume of decisions. They are candidates for
+deletion, not merely for tuning.
+
+**2. Every applicability number is a statement about board density, not geometry.** The
+measurement hardcoded a radius-4 board — a map decision made by a constant in a tool.
+Re-run across board sizes (`tools/Augury.Tools`), the numbers move further than this
+document's own ±0.08 conformance band:
+
+| Pattern | r3 (37 hex) | r4 (61 hex) | r5 (91 hex) | r6 (127 hex) |
+|---|---|---|---|---|
+| free, range 1 (melee) | 61.7% | 50.1% | 40.8% | 34.6% |
+| free, range 3 | 98.7% | 94.7% | 90.2% | 85.3% |
+| rotatable line r1–2 | 79.8% | 68.7% | 60.2% | 52.6% |
+| fixed 5 hex | 41.8% | 30.5% | 27.5% | 23.9% |
+
+A tier-4 five-hex pattern is a 42% ability on a small board and a 24% ability on a large
+one. The F4 target of 0.31 is not a measurement of that pattern; it is a measurement of
+that pattern *on a board nobody chose*. What survives board size unchanged is the
+qualitative set — melee is never the most applicable tier, rotatable pattern **area**
+never matters while **reach** always does, and fixed-pattern hex count is monotonic.
+Those three findings are safe to build on. The decimals are not.
+
+**3. The kit-shape rule is superseded.** This document's initiative budget of exactly 10
+with ≤2 per tier admits precisely three kit shapes (Ladder / Anvil / Vice). That was
+elegant and too narrow. **Decision (2026-08-16): total initiative is a currency traded
+against stats** — a kit summing to 9 buys a stat bonus, one summing to 11 pays for it,
+so `[1,2,2,4]` is legal and differentiated rather than illegal. Rule 2 and F4 below are
+obsolete and must be rewritten around the trade. The Vice's initiative-1 lockout stays
+worth preserving as *an* archetype; it should not be one of only three.
+
+**What remains sound** and should survive the rewrite: the cross rule (an ability never
+molds the stat it scales from), the continuous/threshold stat split, `Displace` being
+the release valve on rigidity, and load-time validation as a hard gate.
+
+---
 
 ## Overview
 

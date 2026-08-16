@@ -4,9 +4,29 @@
 
 ## Current Task
 
-**Champion Data & Ability Definition Schema GDD written** —
-`design/gdd/champion-and-ability-schema.md`, covering systems #4 and #5 together.
-Awaiting `/design-review` in a fresh session.
+**Champion/Ability schema GDD PARKED. Board & Map is next, and the process changed.**
+
+User pushback, 2026-08-16, and it was correct on every point:
+
+1. **Wrong order.** The stat model was designed before the board. Board size sets
+   champion density → density sets pattern applicability → applicability prices ability
+   power. Every number in the schema silently encoded a radius-4 board nobody chose.
+   Verified by sweeping radii: a tier-4 5-hex pattern is 41.8% applicable at radius 3
+   and 23.9% at radius 6, a spread wider than the ±0.08 conformance band built on it.
+   Only the qualitative findings survive (melee never most applicable; tier-3 reach
+   matters and area does not; tier-4 hex count monotonic).
+2. **Too many stats, some premature.** Six was not derived. `SPD` presupposes Movement
+   & Targeting, `RES` presupposes Status Effects — neither designed. Both are deletion
+   candidates, not tuning candidates.
+3. **Kit shapes too narrow.** *Decision: initiative total is a currency traded against
+   stats* — `[1,2,2,4]` (sum 9) buys a stat bonus, sum 11 pays for it. Replaces the
+   "exactly three shapes" rule, which is now obsolete.
+4. **Prototypes ran on unstated assumptions** (a damage model nobody had agreed).
+
+**Process change in force — see "Collaboration Process" below.**
+
+**Board decisions already given:** jungle · towers/defended points · symmetric and
+chess-like. Lane corridors *not* selected.
 
 Preceded by a real measurement rather than an assumption. `tools/Augury.Tools` (the
 Balance Simulation Harness ADR-0001 says exists from day one) sampled 100,000
@@ -75,6 +95,31 @@ gdUnit4 job is `if: false` and the integration directory is empty by design.
 **Next:** `/design-system` #2 (Champion Data & Stat Model + Ability Definition
 Schema) · `/architecture-decision` ADR-0008 (AI search) · `/design-review` on
 the ladder GDD in a **fresh session**.
+
+## Collaboration Process
+
+`.claude/rules/design-docs.md` already required section-by-section authoring with
+approval between sections. It was not followed for the ladder GDD or the schema GDD —
+both were written in one pass. The cause was over-correcting on earlier feedback about
+asking the same question twice: the fix for *asking twice* was taken as *not asking*.
+
+**The four rules that apply from here:**
+
+1. **Decisions listed before drafting.** Before writing any GDD section, state the
+   decisions it will make, split into **yours** (vision, feel, identity) and **mine**
+   (derivable from decisions already made, or purely technical). Only the vision list
+   gets asked, once, in one batch.
+2. **Assumptions are marked in the document, never buried.** Any value not derived from
+   a stated decision carries a visible marker so it can be scanned for and challenged.
+3. **Prototypes state their model before they run.** The ladder prototype used a damage
+   model nobody had agreed to. The model gets confirmed *before* CPU is spent, so the
+   numbers describe the intended game.
+4. **Dependency order is enforced, not assumed.** If a GDD needs a quantity another
+   undesigned GDD owns, that is a blocker — write the dependency first or mark the
+   number provisional. This is what parking the schema GDD is for.
+
+Challenging a written document is always cheap. Markdown costs nothing to revise;
+what gets expensive is code and content built on it, and none exists yet.
 
 ## Project
 
