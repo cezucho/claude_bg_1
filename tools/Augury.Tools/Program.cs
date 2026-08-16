@@ -8,8 +8,11 @@ switch (command)
     case "applicability":
         ApplicabilityMeasurement.Run();
         break;
+    case "board":
+        BoardLayout.Run();
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board");
         return 1;
 }
 
