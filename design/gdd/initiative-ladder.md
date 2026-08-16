@@ -181,7 +181,7 @@ degenerate burst strategy that dominates most tactical games.
 
 | System | Data in | Data out | Interface owner |
 |---|---|---|---|
-| **Ability Definition Schema** | initiative (1–4), cooldown, targeting rigidity tier, pattern offsets | — | Ability Schema *(provisional — undesigned; this GDD defines the required fields)* |
+| **Ability Definition Schema** | initiative (1–4), cooldown, targeting rigidity tier, pattern offsets | applicability bands per tier, consumed as authoring constraints | [`design/gdd/champion-and-ability-schema.md`](champion-and-ability-schema.md) |
 | **Round Phase Sequencer** | — | `half-opened`, `ability-resolved`, `last-word`, `half-closed`, `round-closed` events | Round Phase Sequencer (ADR) |
 | **Damage & Combat Resolution** | resolved ability + target set | HP deltas, applied before the next ladder step | Damage GDD |
 | **Status Effects** | — | status list evaluated during the round-closure status phase | Status Effects GDD |

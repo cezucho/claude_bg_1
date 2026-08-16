@@ -41,8 +41,8 @@ derived from what the named systems require.
 | 1 | Hex Grid & Spatial Model (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | — |
 | 2 | Deterministic Simulation Core (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | — |
 | 3 | Round Phase Sequencer (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | Deterministic Simulation Core |
-| 4 | Champion Data & Stat Model (inferred) | Core | MVP | Not Started | — | Deterministic Simulation Core |
-| 5 | Ability Definition Schema (inferred) | Core | MVP | Not Started | — | Hex Grid, Champion Data, Movement & Targeting |
+| 4 | Champion Data & Stat Model (inferred) | Core | MVP | **Designed** (pending review) | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Deterministic Simulation Core |
+| 5 | Ability Definition Schema (inferred) | Core | MVP | **Designed** (pending review) | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting |
 | 6 | Movement & Targeting | Gameplay | MVP | Not Started | — | Hex Grid, Deterministic Simulation Core |
 | 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | Not Started | — | Champion Data & Stat Model |
 | 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer |

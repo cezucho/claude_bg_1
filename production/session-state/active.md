@@ -1,10 +1,40 @@
 # Active Session State
 
-*Last updated: 2026-08-14*
+*Last updated: 2026-08-16*
 
 ## Current Task
 
-**Test infrastructure scaffolded AND VERIFIED — 32 tests passing in 119 ms.**
+**Champion Data & Ability Definition Schema GDD written** —
+`design/gdd/champion-and-ability-schema.md`, covering systems #4 and #5 together.
+Awaiting `/design-review` in a fresh session.
+
+Preceded by a real measurement rather than an assumption. `tools/Augury.Tools` (the
+Balance Simulation Harness ADR-0001 says exists from day one) sampled 100,000
+actor-positions per placement model to close ladder Open Question 2:
+
+- **Melee is not the baseline.** A range-1 ability reaches an enemy in 50% of contested
+  board states, not the 100% ladder F4 assumed. Tier-1 abilities must be ranged.
+- **Rotatable pattern size is irrelevant; reach is the dial.** 2-hex line and 3-hex
+  wedge measure identically (68.7%) — six facings make area nearly meaningless.
+- **Fixed pattern size matters linearly**, ≈6pp per hex → 5 hexes is the tier-4 target.
+
+`M` revised `[1.0, 1.3, 2.2, 4.4]` → `[1.0, 1.3, 2.0, 4.0]`; effective value now flat
+within ±2%. The curve barely moved — the shape was right, the top tiers ~10% hot.
+
+**Key schema decisions:** six permille stats (VIT/POW/ARM/RCH/SPD/RES), split into
+continuous (drift invisibly) and threshold (floored, snap visibly); the **cross rule**
+(an ability never molds the stat it scales from, so a kit is a rotation not a button);
+and an **initiative budget** of 10 with ≤2 per tier, which admits exactly three kit
+shapes — Ladder `1-2-3-4`, Anvil `1-1-4-4`, Vice `2-2-3-3`. The Vice cannot answer at
+initiative 1 at all, which is a deliberate exploitable weakness.
+
+**Owed to ADR-0007:** `AbilityDef` needs `MoldUp`/`MoldDown` pairs plus `ScalesFrom` to
+enforce the cross rule. Additive change, no implementation exists yet, but it must land
+before content authoring.
+
+---
+
+**Earlier: test infrastructure scaffolded AND VERIFIED — 32 tests passing.**
 
 I installed the .NET 8 SDK in this container (extracted from
 packages.microsoft.com's jammy repo; `dot.net` and the Azure CDN are blocked by
@@ -63,10 +93,14 @@ both sides trade down a descending response ladder.
 - [x] `/setup-engine` — Godot 4.6 + C# pinned; `CLAUDE.md`, `technical-preferences.md`, `VERSION.md` updated
 - [x] `/map-systems` — `design/gdd/systems-index.md` written (33 systems, 21 MVP)
 - [x] `/prototype initiative-ladder` — PROCEED; 3 rounds, 2 harness bugs found and fixed
-- [x] `/design-system initiative-ladder` — 605 lines, complete
-- [ ] `/design-review design/gdd/initiative-ladder.md` — **next, fresh session**
-- [ ] `/create-architecture` — ADRs for the three architecture-owned systems
-- [ ] Remaining 12 design-owned MVP GDDs
+- [x] `/design-system initiative-ladder` — complete; Open Question 2 now closed
+- [x] `/create-architecture` — master blueprint + ADR-0001..0007 accepted
+- [x] `/test-setup` — 32 tests passing, CI in `.github/workflows/tests.yml`
+- [x] Applicability measurement — `tools/Augury.Tools`, ladder F3/F4 revised
+- [x] `/design-system` champion + ability schema
+- [ ] `/design-review` on both GDDs — **next, fresh session**
+- [ ] ADR-0007 amendment for the mold pair; ADR-0008 (AI search); ADR-0009 (replay)
+- [ ] Remaining 11 design-owned MVP GDDs
 
 ## Key Decisions
 
