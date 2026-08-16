@@ -3,166 +3,146 @@ using Augury.Sim;
 namespace Augury.Tools;
 
 /// <summary>
-/// Renders candidate board layouts so a board can be judged by looking at it
-/// rather than by arguing about hex counts.
+/// Renders the AUGURY board and asserts its geometric invariants.
 /// </summary>
 /// <remarks>
-/// <para>Two candidates are rendered because the choice between them is the whole
-/// board design. <b>Laned</b> imports MOBA topology directly: two bases at opposite
-/// corners, a mid route on the diagonal, flank routes, jungle in the leftovers.
-/// <b>Open</b> drops routes entirely and keeps only what was actually asked for —
-/// symmetry, towers, and jungle.</para>
 /// <para>Symmetry is 180-degree rotation about the origin — <c>(q,r) → (-q,-r)</c>.
 /// Mirror symmetry is rejected: a mirrored tier-4 pattern is a chirally different
 /// shape that the six-facing rotation system cannot express, so the two teams would
 /// not have access to the same abilities. Rotation preserves chirality; mirroring
 /// does not.</para>
+/// <para>Routes were considered and rejected. On a hexagon the outer edge is a
+/// single ring, so any edge-hugging lane is one hex wide at every board radius —
+/// which forces two champions sharing a lane into single file. That formation
+/// problem is created by lanes, not by one-champion-per-hex occupancy.</para>
 /// </remarks>
 public static class BoardLayout
 {
+    /// <summary>Board radius in hexes. 61 hexes total, 6.1 per champion.</summary>
+    public const int Radius = 4;
+
+    /// <summary>Jungle is the two deep wedges either side of the base diagonal.</summary>
+    public const int JungleDepth = 3;
+
     /// <summary>What a hex is for.</summary>
     private enum Zone
     {
         Open,
         Jungle,
-        Flank,
-        Mid,
         Tower,
         Base
     }
 
+    private static readonly HexCoord CentreTower = new(0, 0);
+
+    /// <summary>Team A's two towers. Team B's are the antipodes of these.</summary>
+    private static readonly HexCoord[] TeamATowers = { new(3, -1), new(1, -3) };
+
+    private static readonly HexCoord BaseA = new(Radius, -Radius);
+
     public static void Run()
     {
-        Console.WriteLine();
-        Console.WriteLine("CANDIDATE A — LANED (MOBA topology imported directly)");
-        Render(4, laned: true);
-        Render(6, laned: true);
+        HexCoord[] board = BuildBoard(Radius);
+        Dictionary<HexCoord, Zone> zones = Zones(board);
 
         Console.WriteLine();
-        Console.WriteLine("CANDIDATE B — OPEN (symmetry + towers + jungle, no routes)");
-        Render(4, laned: false);
-        Render(5, laned: false);
-
+        Console.WriteLine($"AUGURY BOARD — radius {Radius}, {board.Length} hexes, "
+                          + $"{(double)board.Length / 10:F1} per champion");
         Console.WriteLine();
-        Console.WriteLine("  B base   T tower   = mid route   - flank route   . jungle   · open");
-    }
 
-    private static void Render(int radius, bool laned)
-    {
-        HexCoord[] board = BuildBoard(radius);
-        var zones = new Dictionary<HexCoord, Zone>();
-
-        foreach (HexCoord h in board)
+        for (int r = -Radius; r <= Radius; r++)
         {
-            zones[h] = laned ? LanedZone(h, radius) : OpenZone(h);
-        }
-
-        foreach (HexCoord t in TowerSites(radius, laned))
-        {
-            zones[t] = Zone.Tower;
-            zones[new HexCoord(-t.Q, -t.R)] = Zone.Tower;
-        }
-
-        if (laned) zones[new HexCoord(0, 0)] = Zone.Mid;
-        else zones[new HexCoord(0, 0)] = Zone.Tower;
-
-        zones[new HexCoord(radius, -radius)] = Zone.Base;
-        zones[new HexCoord(-radius, radius)] = Zone.Base;
-
-        int asymmetric = board.Count(h => zones[h] != zones[new HexCoord(-h.Q, -h.R)]);
-
-        var counts = new Dictionary<Zone, int>();
-        foreach (Zone z in zones.Values)
-        {
-            counts[z] = counts.GetValueOrDefault(z) + 1;
-        }
-
-        Console.WriteLine();
-        Console.WriteLine($"  ─── radius {radius} · {board.Length} hexes · "
-                          + $"{(double)board.Length / 10:F1} per champion ───");
-        Console.WriteLine();
-
-        for (int r = -radius; r <= radius; r++)
-        {
-            var line = new char[4 * radius + 2];
+            var line = new char[4 * Radius + 2];
             Array.Fill(line, ' ');
-            for (int q = -radius; q <= radius; q++)
+            for (int q = -Radius; q <= Radius; q++)
             {
                 var h = new HexCoord(q, r);
-                if (!Hex.InBoard(h, radius)) continue;
-                line[2 * q + r + 2 * radius] = Glyph(zones[h]);
+                if (!Hex.InBoard(h, Radius)) continue;
+                line[2 * q + r + 2 * Radius] = Glyph(zones[h]);
             }
 
-            Console.WriteLine("   " + new string(line).TrimEnd());
+            Console.WriteLine("    " + new string(line).TrimEnd());
         }
 
-        int widest = WidestCorridor(zones, radius);
         Console.WriteLine();
-        Console.WriteLine($"   jungle {counts.GetValueOrDefault(Zone.Jungle),3} "
-                          + $"({(double)counts.GetValueOrDefault(Zone.Jungle) / board.Length,3:P0})"
-                          + $"   towers {counts.GetValueOrDefault(Zone.Tower),2}"
-                          + $"   asymmetry {asymmetric}"
-                          + $"   narrowest route {widest} hex wide");
+        Console.WriteLine("    B base    T tower    . jungle    · open ground");
+        Console.WriteLine();
+
+        var counts = new Dictionary<Zone, int>();
+        foreach (Zone z in zones.Values) counts[z] = counts.GetValueOrDefault(z) + 1;
+
+        Console.WriteLine($"    open {counts.GetValueOrDefault(Zone.Open),3}"
+                          + $"    jungle {counts.GetValueOrDefault(Zone.Jungle),3}"
+                          + $" ({(double)counts.GetValueOrDefault(Zone.Jungle) / board.Length,3:P0})"
+                          + $"    towers {counts.GetValueOrDefault(Zone.Tower),2}"
+                          + $"    bases {counts.GetValueOrDefault(Zone.Base),2}");
+        Console.WriteLine();
+
+        Invariants(board, zones);
     }
 
-    /// <summary>
-    /// Laned zoning. Mid is 3 wide because it must be symmetric in <c>S</c>, and
-    /// 180-degree rotation maps <c>S</c> to <c>-S</c> — so a 2-wide mid is
-    /// geometrically impossible on a rotationally symmetric board.
-    /// </summary>
-    private static Zone LanedZone(HexCoord h, int radius)
+    private static Dictionary<HexCoord, Zone> Zones(HexCoord[] board)
     {
-        if (h.Magnitude == radius) return Zone.Flank;
-        return Math.Abs(h.S) <= 1 ? Zone.Mid : Zone.Jungle;
-    }
-
-    /// <summary>
-    /// Open zoning. Jungle is the two deep pockets either side of the base-to-base
-    /// diagonal; everything else is open ground. Rotation maps <c>S</c> to
-    /// <c>-S</c>, so a rule on <c>|S|</c> is symmetric by construction.
-    /// </summary>
-    private static Zone OpenZone(HexCoord h) => Math.Abs(h.S) >= 3 ? Zone.Jungle : Zone.Open;
-
-    private static HexCoord[] TowerSites(int radius, bool laned)
-    {
-        int d = Math.Max(1, radius / 2);
-        return laned
-            ? [new HexCoord(d + 1, -(d + 1)), new HexCoord(radius, -d)]
-            : [new HexCoord(d + 1, -1), new HexCoord(1, -(d + 1))];
-    }
-
-    /// <summary>
-    /// The narrowest point of any traversable corridor, in hexes. A corridor 1 hex
-    /// wide cannot hold two champions abreast — one is always behind the other,
-    /// which is the formation problem that prompted this whole layout question.
-    /// </summary>
-    private static int WidestCorridor(Dictionary<HexCoord, Zone> zones, int radius)
-    {
-        int narrowest = int.MaxValue;
-        for (int s = -radius; s <= radius; s++)
+        var zones = new Dictionary<HexCoord, Zone>();
+        foreach (HexCoord h in board)
         {
-            int run = 0, best = 0;
-            for (int q = -radius; q <= radius; q++)
-            {
-                var h = new HexCoord(q, -q - s);
-                bool passable = Hex.InBoard(h, radius) && zones.TryGetValue(h, out Zone z)
-                                && z != Zone.Jungle;
-                run = passable ? run + 1 : 0;
-                best = Math.Max(best, run);
-            }
-
-            if (best > 0) narrowest = Math.Min(narrowest, best);
+            zones[h] = Math.Abs(h.S) >= JungleDepth ? Zone.Jungle : Zone.Open;
         }
 
-        return narrowest == int.MaxValue ? 0 : narrowest;
+        zones[CentreTower] = Zone.Tower;
+        foreach (HexCoord t in TeamATowers)
+        {
+            zones[t] = Zone.Tower;
+            zones[Antipode(t)] = Zone.Tower;
+        }
+
+        zones[BaseA] = Zone.Base;
+        zones[Antipode(BaseA)] = Zone.Base;
+        return zones;
     }
+
+    private static void Invariants(HexCoord[] board, Dictionary<HexCoord, Zone> zones)
+    {
+        Console.WriteLine("    INVARIANTS");
+
+        int asym = board.Count(h => zones[h] != zones[Antipode(h)]);
+        Report("180-degree rotational symmetry", asym == 0, $"{asym} mismatched hexes");
+
+        bool towersEquidistant = TeamATowers.All(t =>
+            HexCoord.Distance(BaseA, t) == HexCoord.Distance(Antipode(BaseA), Antipode(t)));
+        Report("each team's towers equidistant from its own base", towersEquidistant,
+               $"{string.Join(", ", TeamATowers.Select(t => HexCoord.Distance(BaseA, t)))} hexes");
+
+        int dA = HexCoord.Distance(BaseA, CentreTower);
+        int dB = HexCoord.Distance(Antipode(BaseA), CentreTower);
+        Report("centre tower equidistant from both bases", dA == dB, $"{dA} hexes each");
+
+        bool towersOpen = TeamATowers.Append(CentreTower)
+            .All(t => Math.Abs(t.S) < JungleDepth);
+        Report("no tower sits inside jungle", towersOpen, "towers are contestable in the open");
+
+        // Two champions must be able to stand abreast anywhere they can walk, or the
+        // single-file problem returns. Every open hex needs an open neighbour.
+        HexCoord[] open = board.Where(h => zones[h] != Zone.Jungle).ToArray();
+        bool abreast = open.All(h => Hex.Directions.ToArray()
+            .Any(d => zones.TryGetValue(h + d, out Zone z) && z != Zone.Jungle));
+        Report("every walkable hex has a walkable neighbour (no single file)", abreast,
+               "champions can always pair up");
+
+        int span = HexCoord.Distance(BaseA, Antipode(BaseA));
+        Console.WriteLine($"      · base-to-base distance: {span} hexes "
+                          + $"(respawn walk-back; Movement & Targeting sets the round cost)");
+    }
+
+    private static void Report(string name, bool ok, string detail)
+        => Console.WriteLine($"      {(ok ? "PASS" : "FAIL")}  {name} — {detail}");
+
+    private static HexCoord Antipode(HexCoord h) => new(-h.Q, -h.R);
 
     private static char Glyph(Zone zone) => zone switch
     {
         Zone.Base => 'B',
         Zone.Tower => 'T',
-        Zone.Mid => '=',
-        Zone.Flank => '-',
         Zone.Jungle => '.',
         _ => '·'
     };

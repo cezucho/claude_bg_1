@@ -49,7 +49,7 @@ derived from what the named systems require.
 | 9 | Status Effects | Gameplay | MVP | Not Started | — | Ability Definition Schema, Round Phase Sequencer, Damage |
 | 10 | Death, Dying Round & Respawn | Gameplay | MVP | Not Started | — | Round Phase Sequencer, Damage, Status Effects |
 | 11 | Molding | Gameplay | MVP | Not Started | — | Champion Data & Stat Model, Ability Definition Schema |
-| 12 | Map & Terrain | Gameplay | MVP | Not Started | — | Hex Grid |
+| 12 | Map & Terrain | Gameplay | MVP | **Designed** (pending review) | [design/gdd/map-and-terrain.md](map-and-terrain.md) | Hex Grid |
 | 13 | Objectives & Scoring | Gameplay | MVP | Not Started | — | Map & Terrain |
 | 14 | Draft | Gameplay | MVP | Not Started | — | Champion Data, Ability Definition Schema |
 | 15 | Opening Phase | Gameplay | MVP | Not Started | — | Draft, Ability Schema, Movement & Targeting, Map & Terrain |

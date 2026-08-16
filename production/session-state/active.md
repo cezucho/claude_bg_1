@@ -4,7 +4,35 @@
 
 ## Current Task
 
-**Champion/Ability schema GDD PARKED. Board & Map is next, and the process changed.**
+**Map & Terrain GDD written** — `design/gdd/map-and-terrain.md`. The board is fixed:
+radius-4 hexagon, 61 hexes, 180-degree rotational symmetry, one champion per hex,
+**no lanes**, 5 towers, 2 jungle wedges, bases at opposite corners 8 hexes apart.
+
+The finding that decided it: on a hexagon the outer edge is a single ring, so any
+edge-hugging lane is **1 hex wide at every radius** (verified at radius 4 and 6 with
+`tools/Augury.Tools board`). Lanes therefore *create* the bot/support single-file
+problem rather than solving it — and lanes were never asked for. Removing them makes
+the problem vanish and lets one-champion-per-hex stand, which the rigidity tiers need.
+
+**Constraint discovered — owed to ADR-0005 as an amendment.** Symmetry must be
+180-degree rotational, never mirror. A mirrored tier-4 pattern is *chirally* different
+and no rotation produces it, so under a mirrored board the two teams would have
+differently-shaped versions of the same ability. Consequently tier-4 patterns must be
+fixed relative to **the owning team's forward direction**, not world-absolute as
+ADR-0005 currently says. Must land before any tier-4 ability is authored.
+
+**User decisions this session:** 61 hexes (over my 91 recommendation) · towers both
+damage and score · 5 towers, 2 per team plus a neutral centre · respawn at own base
+corner · jungle is a **road for the jungler**, not an obstacle — extra jungle effects
+explicitly deferred.
+
+**Next:** re-run `applicability` with the real tower positions as contested points
+(acceptance criterion 11, blocking before abilities), then Movement & Targeting, then
+unpark the champion/ability schema.
+
+---
+
+**Earlier: champion/ability schema GDD PARKED; process changed.**
 
 User pushback, 2026-08-16, and it was correct on every point:
 
