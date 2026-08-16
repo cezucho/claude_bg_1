@@ -15,7 +15,7 @@ namespace Augury.Tools;
 /// </remarks>
 public static class ApplicabilityMeasurement
 {
-    private const int BoardRadius = 4;
+    private static int[] Radii => new[] { 3, 4, 5, 6 };
     private const int PerTeam = 5;
     private const int Trials = 20_000;
     private const int Seed = 20260814;
@@ -48,12 +48,15 @@ public static class ApplicabilityMeasurement
     public static void Run()
     {
         Console.WriteLine();
-        Console.WriteLine($"Applicability — board radius {BoardRadius} "
-                          + $"({BuildBoard(BoardRadius).Length} hexes), {PerTeam}v{PerTeam}, "
-                          + $"{Trials * PerTeam:N0} samples per mode, seed {Seed}");
+        Console.WriteLine($"Applicability — {PerTeam}v{PerTeam}, "
+                          + $"{Trials * PerTeam:N0} samples per cell, seed {Seed}");
+        Console.WriteLine("CONTESTED placement (champions drawn toward 3 objectives), "
+                          + "'useful' = reaches >=1 enemy");
 
-        Measure(Placement.Uniform);
-        Measure(Placement.Contested);
+        foreach (int radius in Radii)
+        {
+            Measure(Placement.Contested, radius);
+        }
 
         Console.WriteLine();
         Console.WriteLine("legal  = at least one champion in the target set (F1 legality;");
@@ -62,9 +65,9 @@ public static class ApplicabilityMeasurement
         Console.WriteLine("         actually belongs in F4's applicability(i)");
     }
 
-    private static void Measure(Placement placement)
+    private static void Measure(Placement placement, int radius)
     {
-        HexCoord[] board = BuildBoard(BoardRadius);
+        HexCoord[] board = BuildBoard(radius);
         int[] weights = BuildWeights(board, placement);
         var rng = new Random(Seed);   // same seed per mode — modes differ only by placement
 
@@ -111,7 +114,7 @@ public static class ApplicabilityMeasurement
                 samples++;
                 for (int p = 0; p < patterns.Length; p++)
                 {
-                    (bool anyChampion, bool anyEnemy) = Evaluate(patterns[p], origin, occupied);
+                    (bool anyChampion, bool anyEnemy) = Evaluate(patterns[p], origin, occupied, radius);
                     if (anyChampion) legal[p]++;
                     if (anyEnemy) useful[p]++;
                 }
@@ -119,15 +122,14 @@ public static class ApplicabilityMeasurement
         }
 
         Console.WriteLine();
-        Console.WriteLine(placement == Placement.Uniform
-            ? "── UNIFORM placement — champions scattered anywhere ─────────────"
-            : "── CONTESTED placement — champions drawn toward 3 objectives ────");
-        Console.WriteLine($"{"Pattern",-38} {"Tier",4} {"legal",8} {"useful",8}");
+        Console.WriteLine($"── radius {radius} — {board.Length} hexes, "
+                          + $"{(double)(PerTeam * 2) / board.Length,4:P0} occupied ──────────");
+        Console.WriteLine($"{"Pattern",-38} {"Tier",4} {"useful",8}");
         Console.WriteLine(new string('-', 62));
         for (int p = 0; p < patterns.Length; p++)
         {
             Console.WriteLine($"{patterns[p].Name,-38} {patterns[p].Tier,4} "
-                              + $"{(double)legal[p] / samples,8:P1} {(double)useful[p] / samples,8:P1}");
+                              + $"{(double)useful[p] / samples,8:P1}");
         }
     }
 
@@ -188,7 +190,7 @@ public static class ApplicabilityMeasurement
     }
 
     private static (bool AnyChampion, bool AnyEnemy) Evaluate(
-        Pattern pattern, HexCoord origin, Dictionary<HexCoord, int> occupied)
+        Pattern pattern, HexCoord origin, Dictionary<HexCoord, int> occupied, int radius)
     {
         if (pattern.IsFree)
         {
@@ -214,7 +216,7 @@ public static class ApplicabilityMeasurement
             foreach (HexCoord offset in pattern.Offsets)
             {
                 HexCoord target = origin + Hex.Rotate(offset, f);
-                if (!Hex.InBoard(target, BoardRadius)) continue;   // off-board hexes dropped
+                if (!Hex.InBoard(target, radius)) continue;   // off-board hexes dropped
                 if (occupied.TryGetValue(target, out int team))
                 {
                     anyChampion = true;
