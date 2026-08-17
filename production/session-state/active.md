@@ -52,6 +52,30 @@ choice deferred gets built twice; a numeric choice decided early was going to be
 anyway. Third category worth naming: questions play cannot answer at all (e.g. "are
 spawn hexes targetable?" is rules-consistency, not feel) — those must be decided now.
 
+**Objectives brainstorm — decisions taken 2026-08-16:**
+- **Towers are captured (reversible, flip, tick score); only the NEXUS is destroyed**,
+  and destroying it ends the match. Reversible towers are the main brake on snowball.
+- **Nexus = the middle three hexes of each front line.** Reaching it means standing on
+  the enemy's own front rank. This closed board Open Question 7 — the front line now
+  matters in every round instead of only the first.
+- **Defenders scale structure damage down, never to zero** (user chose this over my
+  "immune while defended"). Their version is better: full immunity lets one parked
+  champion veto a siege forever and the match stalls. Scaling guarantees progress, so
+  defence buys rounds rather than denying outright — and after an ace, nothing is
+  adjacent, so structures fall at full rate. That is the ace-capitalisation answer.
+- **Minion waves deferred to Vertical Slice.** MVP must not depend on them; they plug
+  in later as the tempo layer (windows when a tower is takeable). Nothing else
+  currently supplies rhythm — recorded as Map open question 8.
+
+**Geometric finding — the board already had lanes.** Exactly **two** straight
+front-to-front lines exist on a radius-4 hexagon: `(0,-4)` going `(0,+1)`, and
+`(4,-4)` going `(-1,+1)`. They cross at the centre tower and **carry all five towers**
+— unplanned; the towers were placed for symmetry and landed on the two natural axes.
+A square map affords three lanes, a hexagon exactly two, which suits five champions
+better anyway: **two per lane plus a jungler**, so every lane is a pair. Lanes are
+minion routes only — champions are never obliged to use them, so they carry none of
+the single-file cost that movement corridors do.
+
 **Next:** re-run `applicability` with the real tower positions as contested points
 (acceptance criterion 11, blocking before abilities), then Movement & Targeting, then
 unpark the champion/ability schema.

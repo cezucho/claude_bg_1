@@ -33,12 +33,44 @@ public static class BoardLayout
     {
         Open,
         Jungle,
-        Tower,
+        Lane,
         Front,
+        Tower,
+        Nexus,
         Spawn
     }
 
     private static readonly HexCoord CentreTower = new(0, 0);
+
+    /// <summary>
+    /// The two straight front-to-front lines. These are the only two that exist on a
+    /// radius-4 hexagon, and all five towers sit on them — a square map affords three
+    /// lanes, a hexagon exactly two. Minion waves advance along these; champions are
+    /// never obliged to, so no corridor constrains movement.
+    /// </summary>
+    private static HexCoord[][] Lanes =>
+    [
+        Line(new HexCoord(0, -Radius), new HexCoord(0, 1)),
+        Line(new HexCoord(Radius, -Radius), new HexCoord(-1, 1))
+    ];
+
+    private static HexCoord[] Line(HexCoord start, HexCoord step)
+    {
+        var path = new List<HexCoord> { start };
+        HexCoord cur = start;
+        while (true)
+        {
+            cur += step;
+            if (!Hex.InBoard(cur, Radius)) break;
+            path.Add(cur);
+        }
+
+        return path.ToArray();
+    }
+
+    /// <summary>Team A's nexus: the middle three hexes of its front line.</summary>
+    private static HexCoord[] NexusA =>
+        [new(1, -Radius), new(2, -Radius), new(3, -Radius)];
 
     /// <summary>Team A's towers. Team B's are the antipodes.</summary>
     private static readonly HexCoord[] TeamATowers = { new(0, -2), new(2, -2) };
@@ -70,7 +102,8 @@ public static class BoardLayout
         }
 
         Console.WriteLine();
-        Console.WriteLine("    S spawn (off-board)   F front line   T tower   . jungle   · open");
+        Console.WriteLine("    S spawn (off-board)   N nexus   F lane mouth   T tower");
+        Console.WriteLine("    = minion lane        . jungle  · open ground");
         Console.WriteLine();
 
         var counts = new Dictionary<Zone, int>();
@@ -102,6 +135,11 @@ public static class BoardLayout
             zones[h] = Math.Abs(File(h)) >= JungleFile ? Zone.Jungle : Zone.Open;
         }
 
+        foreach (HexCoord[] lane in Lanes)
+        {
+            foreach (HexCoord h in lane) zones[h] = Zone.Lane;
+        }
+
         foreach (HexCoord h in play)
         {
             if (Math.Abs(h.R) == Radius) zones[h] = Zone.Front;
@@ -112,6 +150,12 @@ public static class BoardLayout
         {
             zones[t] = Zone.Tower;
             zones[Antipode(t)] = Zone.Tower;
+        }
+
+        foreach (HexCoord n in NexusA)
+        {
+            zones[n] = Zone.Nexus;
+            zones[Antipode(n)] = Zone.Nexus;
         }
 
         foreach (HexCoord h in spawn) zones[h] = Zone.Spawn;
@@ -167,6 +211,27 @@ public static class BoardLayout
         Report("every walkable hex has a walkable neighbour (no single file)", abreast,
                "champions can always stand abreast");
 
+        Report("nexus is three hexes per team", NexusA.Length == 3,
+               $"{NexusA.Length} hexes, middle of the front line");
+
+        bool nexusSym = NexusA.All(n => zones[Antipode(n)] == Zone.Nexus);
+        Report("nexus symmetric under rotation", nexusSym, "both teams identical");
+
+        bool lanesConnect = Lanes.All(l => Math.Abs(l[0].R) == Radius
+                                           && Math.Abs(l[^1].R) == Radius);
+        Report("both lanes join the two front lines", lanesConnect,
+               $"{Lanes.Length} lanes of {string.Join(" and ", Lanes.Select(l => l.Length))} hexes");
+
+        var laneHexes = Lanes.SelectMany(l => l).ToHashSet();
+        bool towersOnLanes = TeamATowers.Append(CentreTower)
+            .Concat(TeamATowers.Select(Antipode)).All(laneHexes.Contains);
+        Report("every tower sits on a lane", towersOnLanes,
+               "5 of 5 — minion waves reach all of them");
+
+        bool nexusOffLane = NexusA.All(n => !laneHexes.Contains(n));
+        Report("nexus hexes are not lane mouths", nexusOffLane,
+               "lanes enter at the front-line corners, nexus is the middle three");
+
         int span = play.Where(h => h.R == -Radius)
             .Min(a => play.Where(h => h.R == Radius).Min(b => HexCoord.Distance(a, b)));
         Console.WriteLine($"      · front-to-front distance: {span} hexes "
@@ -181,8 +246,10 @@ public static class BoardLayout
     private static char Glyph(Zone zone) => zone switch
     {
         Zone.Spawn => 'S',
+        Zone.Nexus => 'N',
         Zone.Front => 'F',
         Zone.Tower => 'T',
+        Zone.Lane => '=',
         Zone.Jungle => '.',
         _ => '·'
     };

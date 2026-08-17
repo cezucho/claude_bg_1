@@ -16,30 +16,32 @@
 The board is a hexagon of 61 playable hexes, radius 4, with the two teams facing each
 other across opposite **edges** rather than from opposite corners. Each edge is exactly
 five hexes — one per champion — and behind each sits a six-hex **spawn row** that is
-off the playable board entirely. There are five towers, two jungle flanks, one champion
-per hex, and no lanes.
+off the playable board entirely. There are five towers, three nexus hexes per team, two jungle
+flanks, one champion per hex, and no movement corridors.
 
-Two decisions carry the design. First, **routes were tried and rejected**: a lane
-running along a hexagon's outer ring is one hex wide at every board radius, so two
-champions sharing it are permanently in single file — lanes create the formation
-problem they exist to represent. Second, **spawn hexes are dedicated per champion and
+Three decisions carry the design. First, **movement corridors were tried and
+rejected**: a lane running along a hexagon's outer ring is one hex wide at every board
+radius, so two champions sharing it are permanently in single file — corridors create
+the formation problem they exist to represent. Champions therefore move freely, and the
+two lanes on this board are *minion routes*, not walls. Second, **spawn hexes are dedicated per champion and
 sit off-board**, which makes simultaneous respawn structurally impossible to break.
 That is not an edge case: the initiative ladder batches every death to round close, so
 whole-team wipes and three-champion trades resolve through the same code path as a
-single kill.
+single kill. Third, **towers are captured and only the nexus is destroyed**, so the
+match stays reversible until someone commits to the enemy's front rank.
 
 ```
        S S S S S S      S  spawn row   off-board, 6 hexes per team
-        F F F F F       F  front line  5 hexes per team — one per champion
-       . · · · · .      T  tower       5: two per team, one neutral centre
-      . · T · T · .     .  jungle      20 hexes (33% of play), two flanks
-     . . · · · · . .    ·  open ground 26 hexes
-    . . · · T · · . .
-     . . · · · · . .    61 playable hexes · 6.1 per champion
-      . · T · T · .     front-to-front 8 hexes · towers 2 from own front
-       . · · · · .      centre tower 4 from each front
-        F F F F F
-       S S S S S S
+        F N N N F       N  nexus       middle 3 of the front line
+       . = · · = .      F  lane mouth  the other 2 front hexes
+      . · T · T · .     T  tower       5: two per team, one neutral centre
+     . . · = = · . .    =  minion lane 2 lanes of 9, crossing at centre
+    . . · · T · · . .   .  jungle      20 hexes (33% of play), two flanks
+     . . · = = · . .    ·  open ground
+      . · T · T · .
+       . = · · = .      61 playable hexes · 6.1 per champion
+        F N N N F       front-to-front 8 · towers 2 from own front
+       S S S S S S      centre tower 4 from each front
 ```
 
 ## Player Fantasy
@@ -103,22 +105,36 @@ reasons, in order of weight:
 3. **It taxes every action.** Single-target abilities would need two-step targeting —
    pick hex, then pick champion — on every use, under a blitz clock.
 
-### 3. No lanes
+### 3. No movement corridors — but two minion lanes
 
-There are no lane corridors. The playable board is open ground plus jungle.
+**No hex constrains champion movement.** The playable board is open ground plus jungle,
+and a champion may walk anywhere.
 
-The reason is geometric rather than aesthetic. A lane joining the two teams would run
-along the hexagon's outer ring, and that ring is one hex wide — at radius 4, and still
-at radius 6. Two champions assigned to such a lane are permanently in single file, one
-behind the other. Since the whole point of a bottom-lane pair is that the two champions
-stand *beside* one another, lanes actively prevent the formation they exist to
-represent.
+Corridors were tried and rejected on geometry. A lane joining the two teams along the
+hexagon's outer ring is one hex wide — at radius 4, and still at radius 6. Two champions
+assigned to it are permanently in single file, one behind the other, so a corridor
+actively prevents the side-by-side pair formation it exists to represent. Any two
+adjacent open hexes are a pair formation instead, asserted as an invariant: **every
+walkable hex has at least one walkable neighbour**.
 
-The five-hex front line is **not** a lane. It is a starting edge, five wide, that opens
-directly onto open ground.
+**Two lanes nevertheless exist as geometry**, because minion waves need routes even
+though champions do not. They are the only two straight front-to-front lines on a
+radius-4 hexagon:
 
-Without corridors, any two adjacent open hexes are a pair formation. This is asserted as
-an invariant: **every walkable hex has at least one walkable neighbour**.
+| Lane | From | Direction | Hexes | Structures on it |
+|---|---|---|---|---|
+| 1 | `(0,−4)` | `(0,+1)` | 9 | `(0,−2)` A tower · `(0,0)` centre · `(0,2)` B tower |
+| 2 | `(4,−4)` | `(−1,+1)` | 9 | `(2,−2)` A tower · `(0,0)` centre · `(−2,2)` B tower |
+
+They cross at the centre tower, and between them they carry **all five** towers. This was
+not arranged: the towers were placed for symmetry and equidistance and landed on the
+board's two natural axes. A square map affords three lanes; a hexagon affords exactly
+two, which is also a better fit for five champions — **two per lane plus a jungler**,
+so every lane is a pair.
+
+Because no champion is ever obliged to use a lane, lanes carry none of the single-file
+cost that corridors do. ▸ Minion waves themselves are owned by **Objectives & Scoring**
+and deferred to Vertical Slice; this document fixes only where the routes run.
 
 ### 4. Symmetry is rotational, and must be
 
@@ -150,10 +166,11 @@ Each team's **front line** is the five playable hexes on its edge of the board:
 | A | `(0,−4) (1,−4) (2,−4) (3,−4) (4,−4)` | −4 |
 | B | `(0,4) (−1,4) (−2,4) (−3,4) (−4,4)` | +4 |
 
-Front lines are ordinary playable hexes with no special properties. They are where the
-board begins, not a zone. ▸ Where champions actually stand when tactical combat starts
-is owned by the **Opening Phase**, which moves them off the front line before the first
-round.
+The front line is not merely a starting edge — it is **where a team's nexus stands**
+(rule 7). Its five hexes divide into the **middle three, which are the nexus**, and the
+**two outer hexes, which are the lane mouths** where the minion routes begin. ▸ Where
+champions actually stand when tactical combat starts is owned by the **Opening Phase**,
+which moves them forward before the first round.
 
 Behind each front line sits a **spawn row of six hexes, off the playable board**:
 
@@ -209,6 +226,11 @@ Each tower does two things:
 - **It threatens.** A tower damages enemy champions within range of it.
 - **It scores.** A tower generates points for whichever team holds it, continuously.
 
+**Towers are captured, never destroyed.** Ownership flips, and a flipped tower can be
+flipped back. This is deliberate: a reversible objective keeps the match live, which is
+the main brake available against the snowball risk that a lengthening respawn timer and
+a points race would otherwise compound. Only the nexus is permanent (rule 7).
+
 Together these make a tower a place you must stand to profit and would rather not stand.
 ▸ Tower damage magnitude and range are owned by **Damage & Combat Resolution**;
 ▸ scoring rate, capture rules, and the match-winning threshold are owned by
@@ -224,7 +246,38 @@ The two inner towers of a team sit on files −2 and +2, straddling the centre a
 team cannot cover both from one position, which is what forces a five-champion team to
 split rather than move as a single mass.
 
-### 7. Jungle
+### 7. The nexus, and how structures are attacked
+
+Each team's **nexus** is the middle three hexes of its front line:
+
+| Team | Nexus hexes |
+|---|---|
+| A | `(1,−4)` `(2,−4)` `(3,−4)` |
+| B | `(−1,4)` `(−2,4)` `(−3,4)` |
+
+**The nexus is destroyed, not captured, and destroying it ends the match.** It is the
+only irreversible objective in the game. Reaching it means standing on the enemy's own
+front rank, which is the deepest commitment the board allows and leaves your own nexus
+eight hexes behind you.
+
+**Defenders reduce structure damage but never stop it.** Damage dealt to a tower or
+nexus is scaled down for each enemy champion adjacent to it, and the scaling never
+reaches zero. The alternative — full immunity while defended — was considered and
+rejected because a single parked champion could then veto a siege indefinitely and the
+match could stall with neither side able to close. A siege under defence is slow, not
+impossible, so pressure always converts eventually and the defenders' real job is to buy
+the rounds their team needs.
+
+This is also what makes a won fight convert. After an ace there is nobody adjacent to
+anything, so structures fall at full rate for as long as the respawn timers hold — which
+is exactly the capitalisation a decisive exchange should earn.
+
+▸ The damage scaling curve, the nexus HP pool, tower capture rules and the scoring rate
+are all owned by **Objectives & Scoring**. ▸ Structure damage magnitude is owned by
+**Damage & Combat Resolution**. This document fixes only *where* the structures are,
+*which* are reversible, and that defence scales rather than vetoes.
+
+### 8. Jungle
 
 The jungle is every playable hex with **`|file| ≥ 5`** — **20 hexes, 33% of play**,
 forming two flanks either side of the centre axis. No front-line hex falls inside it, so
@@ -297,16 +350,22 @@ why rules 6 and 7 are written on `|rank|` and `|file|`.
 
 ```
 zone(h) = Spawn   if h ∈ SpawnRowA ∪ SpawnRowB
+        else Nexus   if h ∈ {(1,−4), (2,−4), (3,−4), (−1,4), (−2,4), (−3,4)}
         else Tower   if h ∈ {(0,0), (0,−2), (2,−2), (0,2), (−2,2)}
-        else Front   if |rank(h)| = 4
+        else Front   if |rank(h)| = 4          (the two lane mouths)
+        else Lane    if h ∈ Lane1 ∪ Lane2
         else Jungle  if |file(h)| ≥ 5
         else Open
 ```
 
-**Output:** one of five zones. Counts: 12 spawn, 5 tower, 10 front, 20 jungle, 26
-open — 61 playable plus 12 off-board.
+**Output:** one of seven zones. Counts: 12 spawn, 6 nexus, 5 tower, 4 lane mouth, 12
+remaining lane, 20 jungle, 14 open — 61 playable plus 12 off-board.
 **Example:** `(3,−3)` is rank −3, file 3 → open ground. `(4,−2)` is rank −2, file 6 →
-jungle. `(3,−4)` is rank −4 → front line, and its file of 2 keeps it clear of jungle.
+jungle. `(2,−4)` is rank −4 with file 0 → nexus. `(0,−4)` is rank −4 with file −4 → a
+lane mouth, not nexus.
+
+Lane membership is a *route* marker, not terrain: it changes nothing about movement,
+targeting or cover. It exists so minion waves have somewhere to walk (rule 3).
 
 ### F6 — Distance
 
@@ -334,7 +393,12 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 | 11 | A champion stands on a tower hex | Permitted. Towers are terrain, not blockers — a tower must be stood on to be contested. ▸ Whether standing on it is *required* to hold it is owned by Objectives & Scoring |
 | 12 | A non-jungler enters the jungle | Permitted, at normal movement cost. The jungle is not restricted terrain; it is merely faster for one champion |
 | 13 | A champion dies in jungle | No special handling. Death and respawn are unaffected by terrain |
-| 14 | Two champions attempt to move into the same hex in one resolution | Cannot arise. The initiative ladder resolves one action at a time, so the second mover sees the first already placed (ADR-0006). Noted here so it is not re-solved elsewhere |
+| 14 | A champion stands on its own nexus hex | Permitted, and it is the strongest defensive position in the game — adjacency to all three nexus hexes reduces incoming structure damage (rule 7) |
+| 15 | A tower is attacked with defenders adjacent on both sides | Damage is reduced by the scaling, never to zero, so the siege progresses. ▸ Whether reduction stacks per defender or caps is owned by Objectives & Scoring |
+| 16 | The last nexus hex is destroyed | The match ends immediately, at the moment of resolution, without waiting for round close. This is the one exception to the ladder's rule that consequences resolve at round close, and it exists because a destroyed nexus cannot be undone by a later action in the same round |
+| 17 | Both teams' nexuses would be destroyed in the same round | Cannot arise. Destruction resolves immediately (edge case 16), so the first to resolve ends the match. Resolution order within a ladder is strictly sequential (ADR-0006), never simultaneous |
+| 18 | A tower is captured while an enemy champion stands on it | ▸ Owned by Objectives & Scoring. This document notes only that towers are reversible and the nexus is not |
+| 19 | Two champions attempt to move into the same hex in one resolution | Cannot arise. The initiative ladder resolves one action at a time, so the second mover sees the first already placed (ADR-0006). Noted here so it is not re-solved elsewhere |
 
 ## Dependencies
 
@@ -362,9 +426,15 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 | `jungle_file_threshold` | 5 | 5–6 | At 6 the jungle is 12 hexes and the flanks are too thin to rotate through | At 4 the jungle swallows four front-line hexes and both teams start inside it |
 | `spawn_row_size` | 6 | 5–7 | Above 6 the extra hexes go unused unless more champions get a choice | At 5 the jungler loses its flank choice and every respawn is fully predetermined |
 | `spawn_entry_cost` | 1 action | 0–1 action | At 1 action, respawning costs a full half of participation on top of the timer — the two penalties compound | At 0 death costs only the timer, and dying near the enemy front stops being punished |
+| `nexus_size` | 3 hexes | 2–5 | At 5 the whole front line is nexus and the lane mouths vanish | At 2 a single tier-4 pattern can cover the entire nexus, so one lucky alignment ends the match |
+| `lane_count` | 2 | 1–2 | Fixed by geometry — only two straight front-to-front lines exist on a hexagon, so 3 is unavailable without bent routes | At 1 the map has a single axis and the jungler's flanking role collapses |
 | `tower_count` | 5 | 3–7 | At 7 the score ticks from too many sources and holding ground beats fighting | At 3 the map has a single flashpoint |
 | `tower_rank` | ±2 | ±1 – ±3 | At ±3 a team's towers sit near the centre and are hard to defend, so leads snowball | At ±1 towers hug the front and are nearly uncontestable; the centre becomes the only real objective |
 | `tower_file_spread` | ±2 | ±2 – ±4 | Above ±4 the two towers sit in jungle and stop being contestable in the open | At 0 both towers occupy the centre axis and a team can cover both from one position, so the team never splits |
+
+> ▸ The defender damage-reduction curve is a knob, but it belongs to **Objectives &
+> Scoring** along with nexus HP and capture rules. It is named here only because rule 7
+> fixes its *shape* — scaling, never immunity.
 
 ### Knobs that interact
 
@@ -383,6 +453,11 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 - **`jungle_file_threshold` × `tower_file_spread`.** Towers must stay out of jungle
   (rule 6). At threshold 4 the current tower files of ±2 are still clear, but any wider
   spread collides.
+- **`nexus_size` × tier-4 pattern size.** A tier-4 fixed pattern covers 4–6 hexes. If the
+  nexus is smaller than that, a single well-aligned tier-4 ability covers all of it at
+  once, and the game's most decisive moment becomes a geometry lottery. Three hexes is
+  the smallest nexus that a 5-hex pattern cannot fully blanket while the attacker also
+  stands clear of the front rank.
 
 ## Acceptance Criteria
 
@@ -427,16 +502,35 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 17. **GIVEN** a `Displace` directed at a champion standing on a front-line hex, **WHEN**
     it resolves, **THEN** the champion is never pushed into a spawn row (edge case 6).
 
+### Lanes and structures
+
+18. **GIVEN** the board, **WHEN** straight front-to-front lines are enumerated, **THEN**
+    exactly two exist, each 9 hexes long, and they intersect only at `(0,0)` (rule 3).
+19. **GIVEN** the five towers, **WHEN** lane membership is checked, **THEN** all five lie
+    on a lane — every tower is reachable by a minion route.
+20. **GIVEN** each team's nexus, **WHEN** its hexes are counted, **THEN** there are
+    exactly 3, they are the middle of the front line, and they are antipodal to the
+    enemy's (rule 7).
+21. **GIVEN** a nexus hex, **WHEN** lane membership is checked, **THEN** it is not a lane
+    mouth — lanes begin at the two outer front-line hexes.
+22. **GIVEN** a structure under attack with one or more adjacent enemy champions,
+    **WHEN** damage resolves, **THEN** the amount applied is reduced but strictly greater
+    than zero (rule 7). A siege must never be reducible to no progress.
+23. **GIVEN** a structure with no adjacent enemy champion, **WHEN** damage resolves,
+    **THEN** no reduction applies — an ace converts at full rate.
+24. **GIVEN** the final nexus hex being destroyed, **WHEN** it resolves, **THEN** the
+    match ends at that instant rather than at round close (edge case 16).
+
 ### Cross-system
 
-18. **GIVEN** the board and its tower positions, **WHEN**
+25. **GIVEN** the board and its tower positions, **WHEN**
     `tools/Augury.Tools applicability` is re-run using towers as the contested points,
     **THEN** the measured applicability table is regenerated and ladder F4's reference
     values are updated to match. **Blocking gate before any ability is authored.**
-19. **GIVEN** an identical starting board, **WHEN** it is constructed twice, **THEN** the
+26. **GIVEN** an identical starting board, **WHEN** it is constructed twice, **THEN** the
     serialised hex ordering is byte-identical — construction must not depend on
     dictionary iteration order or any other unstable source.
-20. **GIVEN** a tier-4 pattern owned by each team, **WHEN** both resolve from antipodal
+27. **GIVEN** a tier-4 pattern owned by each team, **WHEN** both resolve from antipodal
     positions, **THEN** they cover antipodal hex sets — the team-relative orientation
     amendment (rule 4) is in effect and neither team has a shape the other cannot express.
 
@@ -450,4 +544,6 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 | 4 | **What else is the jungle for?** Deliberately unanswered — neutral objectives, buffs, line-of-sight blocking all open | A jungle that is only a speed lane may not justify a dedicated role | Jungle & Neutral Powers | Vertical Slice |
 | 5 | **Do five towers produce a points race or a stalemate?** Two defended towers each plus a contested centre could settle into neither side attacking | The 10–15 minute match target depends on the score actually moving | Objectives & Scoring | Before Objectives GDD is approved |
 | 6 | **Should the board have impassable terrain?** Every playable hex is currently walkable. Walls would create the corridors rule 3 rejects, but might make tier-4 patterns more setup-able | Interacts directly with `Displace` as the tier-4 release valve | Design | Vertical Slice |
-| 7 | **Is the front line the right starting position?** The Opening Phase moves champions before round 1, so the front line may only ever be a respawn destination | If nothing ever happens on the front line, the board is effectively radius 3.5 | Opening Phase | Before Opening Phase GDD is approved |
+| 7 | ~~**Is the front line the right starting position?**~~ **RESOLVED 2026-08-16.** The front line is now permanently load-bearing: its middle three hexes are the nexus and its outer two are the lane mouths. It is the thing you must reach to win, so it matters in every round of the match rather than only the first | — | — | Closed. See rule 7 |
+| 8 | **Do minion waves belong in the game at all?** Deferred to Vertical Slice. The lanes exist as geometry, but nothing walks them yet, and towers are capturable without them | Waves supply *tempo* — windows when a tower is takeable — which nothing else currently provides. If MVP play feels rhythmless, this is the first thing to add | Objectives & Scoring | Vertical Slice |
+| 9 | **Can a siege actually finish under defence?** Reduction scales rather than vetoes, so progress is guaranteed — but if the curve is too steep, "slow" becomes "never" in practice within a 16-round match | The match-length target depends on structures actually falling | Objectives & Scoring + Balance Harness | Before Objectives GDD is approved |
