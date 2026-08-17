@@ -60,12 +60,21 @@ spawn hexes targetable?" is rules-consistency, not feel) — those must be decid
 - **Towers are captured (reversible, flip, tick score); only the NEXUS is destroyed.**
   Reversible towers are the main brake on snowball. The nexus is the largest single
   point source, not a separate way to win — a team can win without ever touching it.
-- **Nexus as win condition is OPEN**, and the user's reasoning gives the test: you
-  cannot reach the nexus without already having the kills and tower control that put
-  you ahead, so "nexus wins" and "nexus = N points" should be the *same rule*. Stated
-  as a falsifiable invariant (Map criterion 24): **no team may destroy the enemy nexus
-  while behind on points.** If the harness finds a counterexample, the nexus is a
-  cheese route and the scoring weights are wrong.
+- **NEXUS = PURE TERMINATOR, awards no points, ends the match at any score.**
+  Two endings only: target score (the large majority) or nexus destroyed (rare).
+  No round limit needed — towers tick, so the target is always approached.
+- **The comeback is a DESIGN GOAL, not a leak.** *(Corrected 2026-08-17 — I had
+  written the invariant "no team may destroy the nexus while behind on points". That
+  is the exact opposite of the intent. The user wants a behind team that lands an ace
+  and capitalises to win. Do not reintroduce that invariant.)* Criteria 24-26 now test
+  the inverse: nexus endings must be non-zero, some must come from behind, and the
+  nexus must be destructible in ~one ace window.
+- **The calibration that makes it work:** nexus durability ≈ *most but not all* of one
+  ace window for a full unopposed team. Too durable → comeback never happens, nexus is
+  decoration. Too fragile → every ace ends the match, points race is irrelevant.
+- Meshes with defender scaling for free: after an ace nothing is adjacent, so the nexus
+  takes full-rate damage. The window when it is attackable and the window when the
+  enemy is dead are the same window — neither rule was written to produce that.
 - **Nexus = the middle three hexes of each front line.** Reaching it means standing on
   the enemy's own front rank. This closed board Open Question 7 — the front line now
   matters in every round instead of only the first.
