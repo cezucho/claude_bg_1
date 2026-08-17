@@ -27,8 +27,8 @@ two lanes on this board are *minion routes*, not walls. Second, **spawn hexes ar
 sit off-board**, which makes simultaneous respawn structurally impossible to break.
 That is not an edge case: the initiative ladder batches every death to round close, so
 whole-team wipes and three-champion trades resolve through the same code path as a
-single kill. Third, **towers are captured and only the nexus is destroyed**, so the
-match stays reversible until someone commits to the enemy's front rank.
+single kill. Third, **the board is a points race**: kills, towers and the nexus all
+score, and the nexus is the largest single source rather than a separate way to win.
 
 ```
        S S S S S S      S  spawn row   off-board, 6 hexes per team
@@ -255,10 +255,27 @@ Each team's **nexus** is the middle three hexes of its front line:
 | A | `(1,−4)` `(2,−4)` `(3,−4)` |
 | B | `(−1,4)` `(−2,4)` `(−3,4)` |
 
-**The nexus is destroyed, not captured, and destroying it ends the match.** It is the
-only irreversible objective in the game. Reaching it means standing on the enemy's own
-front rank, which is the deepest commitment the board allows and leaves your own nexus
-eight hexes behind you.
+**The nexus is destroyed, not captured** — the only irreversible objective in the game.
+Reaching it means standing on the enemy's own front rank, which is the deepest commitment
+the board allows and leaves your own nexus eight hexes behind you. It is therefore the
+**largest single point source in the game**.
+
+**The match is won on points, not by destroying the nexus.** Kills score, tower control
+scores, and the nexus scores; a team that never touches the enemy nexus can still win by
+holding towers and winning fights. ▸ Whether nexus destruction *additionally* ends the
+match immediately, or is simply a large lump of points, is owned by **Objectives &
+Scoring** and is not decided here.
+
+**The design constraint that makes that choice safe** — and the reason the two options
+may collapse into one — is stated as an invariant:
+
+> A team must not be able to destroy the enemy nexus while behind on points.
+
+If that holds, then "nexus destruction wins" and "nexus destruction awards N points" are
+the *same rule wearing different clothes*, because reaching the nexus already required
+the kills and the tower control that put you ahead. If it does not hold, the nexus is a
+bypass — a losing team's cheese route — and the scoring weights are wrong. This is
+falsifiable and belongs in the balance harness, not in prose (criterion 24).
 
 **Defenders reduce structure damage but never stop it.** Damage dealt to a tower or
 nexus is scaled down for each enemy champion adjacent to it, and the scaling never
@@ -395,8 +412,8 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 | 13 | A champion dies in jungle | No special handling. Death and respawn are unaffected by terrain |
 | 14 | A champion stands on its own nexus hex | Permitted, and it is the strongest defensive position in the game — adjacency to all three nexus hexes reduces incoming structure damage (rule 7) |
 | 15 | A tower is attacked with defenders adjacent on both sides | Damage is reduced by the scaling, never to zero, so the siege progresses. ▸ Whether reduction stacks per defender or caps is owned by Objectives & Scoring |
-| 16 | The last nexus hex is destroyed | The match ends immediately, at the moment of resolution, without waiting for round close. This is the one exception to the ladder's rule that consequences resolve at round close, and it exists because a destroyed nexus cannot be undone by a later action in the same round |
-| 17 | Both teams' nexuses would be destroyed in the same round | Cannot arise. Destruction resolves immediately (edge case 16), so the first to resolve ends the match. Resolution order within a ladder is strictly sequential (ADR-0006), never simultaneous |
+| 16 | The last nexus hex is destroyed | ▸ Owned by Objectives & Scoring. If the nexus awards points, this needs no special handling — it resolves at round close like everything else. Only if it *also* ends the match does it need an exception to round-close resolution |
+| 17 | Both teams' nexuses would be destroyed in the same round | Possible only under the points reading, and harmless there: both awards apply and the higher total wins. Under an instant-win reading, resolution order within a ladder is strictly sequential (ADR-0006), never simultaneous, so the first to resolve settles it |
 | 18 | A tower is captured while an enemy champion stands on it | ▸ Owned by Objectives & Scoring. This document notes only that towers are reversible and the nexus is not |
 | 19 | Two champions attempt to move into the same hex in one resolution | Cannot arise. The initiative ladder resolves one action at a time, so the second mover sees the first already placed (ADR-0006). Noted here so it is not re-solved elsewhere |
 
@@ -518,8 +535,11 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
     than zero (rule 7). A siege must never be reducible to no progress.
 23. **GIVEN** a structure with no adjacent enemy champion, **WHEN** damage resolves,
     **THEN** no reduction applies — an ace converts at full rate.
-24. **GIVEN** the final nexus hex being destroyed, **WHEN** it resolves, **THEN** the
-    match ends at that instant rather than at round close (edge case 16).
+24. **GIVEN** simulated matches across the balance harness, **WHEN** every match in
+    which a nexus was destroyed is examined, **THEN** in none of them was the destroying
+    team behind on points at the moment of destruction (rule 7). This is the invariant
+    that lets nexus destruction double as a win condition without becoming a bypass — if
+    it fails, the scoring weights are wrong, not the map.
 
 ### Cross-system
 
@@ -545,5 +565,7 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 | 5 | **Do five towers produce a points race or a stalemate?** Two defended towers each plus a contested centre could settle into neither side attacking | The 10–15 minute match target depends on the score actually moving | Objectives & Scoring | Before Objectives GDD is approved |
 | 6 | **Should the board have impassable terrain?** Every playable hex is currently walkable. Walls would create the corridors rule 3 rejects, but might make tier-4 patterns more setup-able | Interacts directly with `Displace` as the tier-4 release valve | Design | Vertical Slice |
 | 7 | ~~**Is the front line the right starting position?**~~ **RESOLVED 2026-08-16.** The front line is now permanently load-bearing: its middle three hexes are the nexus and its outer two are the lane mouths. It is the thing you must reach to win, so it matters in every round of the match rather than only the first | — | — | Closed. See rule 7 |
-| 8 | **Do minion waves belong in the game at all?** Deferred to Vertical Slice. The lanes exist as geometry, but nothing walks them yet, and towers are capturable without them | Waves supply *tempo* — windows when a tower is takeable — which nothing else currently provides. If MVP play feels rhythmless, this is the first thing to add | Objectives & Scoring | Vertical Slice |
-| 9 | **Can a siege actually finish under defence?** Reduction scales rather than vetoes, so progress is guaranteed — but if the curve is too steep, "slow" becomes "never" in practice within a 16-round match | The match-length target depends on structures actually falling | Objectives & Scoring + Balance Harness | Before Objectives GDD is approved |
+| 8 | **Does the match end on a round limit, a target score, or both?** With the nexus no longer an assumed win condition, nothing currently terminates a match. A round limit bounds match length for a blitz-paced game; a target score ends it when someone is decisively ahead | Determines whether trailing teams get a guaranteed number of rounds to come back, and whether stalling is ever correct | Objectives & Scoring | Before Objectives GDD is approved |
+| 9 | **Do towers have a destroyed state as well as a captured one?** Capture is reversible and ticks score; destruction would be a lump sum that removes the tower from play. Both were raised as possible point sources | Two states per tower is more design surface but gives a held tower somewhere to go — a reason to keep pressing after capture | Objectives & Scoring | Before Objectives GDD is approved |
+| 10 | **Do minion waves belong in the game at all?** Deferred to Vertical Slice. The lanes exist as geometry, but nothing walks them yet, and towers are capturable without them | Waves supply *tempo* — windows when a tower is takeable — which nothing else currently provides. If MVP play feels rhythmless, this is the first thing to add | Objectives & Scoring | Vertical Slice |
+| 11 | **Can a siege actually finish under defence?** Reduction scales rather than vetoes, so progress is guaranteed — but if the curve is too steep, "slow" becomes "never" in practice within a 16-round match | The match-length target depends on structures actually falling | Objectives & Scoring + Balance Harness | Before Objectives GDD is approved |

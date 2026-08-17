@@ -53,8 +53,19 @@ anyway. Third category worth naming: questions play cannot answer at all (e.g. "
 spawn hexes targetable?" is rules-consistency, not feel) — those must be decided now.
 
 **Objectives brainstorm — decisions taken 2026-08-16:**
-- **Towers are captured (reversible, flip, tick score); only the NEXUS is destroyed**,
-  and destroying it ends the match. Reversible towers are the main brake on snowball.
+- **THE MATCH IS A POINTS RACE.** Everything scores: kills, tower control, possibly
+  tower destruction, and the nexus. *(Corrected 2026-08-17 — I had wrongly written
+  "destroying the nexus ends the match" as decided; the user was only asking how
+  destruction could work. Do not reintroduce this.)*
+- **Towers are captured (reversible, flip, tick score); only the NEXUS is destroyed.**
+  Reversible towers are the main brake on snowball. The nexus is the largest single
+  point source, not a separate way to win — a team can win without ever touching it.
+- **Nexus as win condition is OPEN**, and the user's reasoning gives the test: you
+  cannot reach the nexus without already having the kills and tower control that put
+  you ahead, so "nexus wins" and "nexus = N points" should be the *same rule*. Stated
+  as a falsifiable invariant (Map criterion 24): **no team may destroy the enemy nexus
+  while behind on points.** If the harness finds a counterexample, the nexus is a
+  cheese route and the scoring weights are wrong.
 - **Nexus = the middle three hexes of each front line.** Reaching it means standing on
   the enemy's own front rank. This closed board Open Question 7 — the front line now
   matters in every round instead of only the first.
