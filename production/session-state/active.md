@@ -99,9 +99,31 @@ and stacks a second economy of restraint on the ladder). Rage-meter-on-death (re
 being killed; we already have an *earned* comeback in the nexus terminator, and two
 comeback systems make trading badly correct). Declared chains (user disliked; heaviest).
 
-*Still open:* beacon placement (opening phase vs ability during play) · beacon radius
-(1 hex = 7 hexes ≈ 11% of board, likely right) · whether both chain champions must be in
-range or only the slotted one · beacon count/duration/destructibility · chain length cap.
+*Beacon decisions taken 2026-08-17:* **placement is mostly OPENING PHASE, with mid-match
+placement possible via an ability and deliberately harder.** **Radius 1** (beacon hex +
+6 neighbours).
+
+*Measured — `dotnet run --project tools/Augury.Tools beacon`:*
+- **The edge penalty makes the user's placement rule self-enforcing.** A radius-1 zone is
+  7 hexes in the interior but clips against the board edge: 5 on a nexus hex, **4 on a
+  lane mouth**. So a beacon planted safely at home controls 6.6% of the board versus
+  11.5% in the middle — a **43% coverage penalty for playing safe**. Walking a beacon
+  forward is rewarded by geometry alone; no extra rule needed to make late placement
+  "harder but better".
+- **On-tower vs beside-tower is a real placement decision, not a formality.** A tower has
+  6 playable approaches. Beacon ON it → all 6 inside the zone, contesting is unavoidable.
+  Beacon BESIDE it → the tower hex is still in the zone but **3 of 6 approaches stay
+  free**. So beside-placement taxes *occupying* the tower while leaving *contesting* it
+  possible; on-placement taxes both. Same for all five towers.
+- Max coverage 11.5% of board, so refusing a zone is never ruinous — beacons shape ground
+  without dominating it.
+
+*Recommended, not yet confirmed:* only the **slotted** ability's champion need stand in
+the zone, not both. Follows from the mechanic's own logic — the beacon fills a slot, and
+the other ability has no slot for it to fill. Requiring both would make the zone a huddle.
+
+*Still open:* beacon count per team · duration/destructibility · chain length cap
+(start at 2) · whether a beacon may sit on a tower hex at all.
 
 **Objectives brainstorm — decisions taken 2026-08-16:**
 - **THE MATCH IS A POINTS RACE.** Everything scores: kills, tower control, possibly

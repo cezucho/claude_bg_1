@@ -14,8 +14,11 @@ switch (command)
     case "sigils":
         SigilDensity.Run();
         break;
+    case "beacon":
+        BeaconGeometry.Run();
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon");
         return 1;
 }
 
