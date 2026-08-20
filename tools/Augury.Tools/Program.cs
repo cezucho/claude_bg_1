@@ -11,8 +11,11 @@ switch (command)
     case "board":
         BoardLayout.Run();
         break;
+    case "sigils":
+        SigilDensity.Run();
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils");
         return 1;
 }
 

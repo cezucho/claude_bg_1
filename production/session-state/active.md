@@ -52,6 +52,57 @@ choice deferred gets built twice; a numeric choice decided early was going to be
 anyway. Third category worth naming: questions play cannot answer at all (e.g. "are
 spawn hexes targetable?" is rules-consistency, not feel) — those must be decided now.
 
+**COMBO PROBLEM — sigils & beacons (brainstorm 2026-08-17, not yet written to GDD).**
+
+*Problem:* a player sets up a combo over rounds, and the opponent denies it procedurally
+for free. Two distinct denial mechanisms, found by re-reading the ladder rules:
+1. **Pass cuts turn count.** Play alternates, so you only get the actions the opponent
+   grants by answering. A 3-piece combo needs two answers; they just pass. (2-piece
+   combos already survive — the Last Word covers them.)
+2. **Ceiling crash — the sharper one.** Answers must be ≤ last initiative played. Open
+   Vortex at 3, they answer with a **1**, and your init-3 Meteor is now *illegal for the
+   rest of the half*. Symmetric (they capped themselves too) but asymmetrically good for
+   whoever has less to do — always the defender.
+
+*Principle adopted:* counterplay to a combo must be **spatial and anticipatory**, not
+**procedural and reactive**. Passing costs no position, no read, no commitment — that is
+why it feels cheap.
+
+*Mechanic converged on (USER'S refinement of my proposal, and better):*
+- Abilities carry **0 or 1 printed sigil** and **0 or 1 typed slot**. Most have neither.
+- Sigils are **fixed per ability, never generated** — also forced by Pillar 1 (no randomness).
+- A **beacon** is a visible board object that **fills matching slots** in its area. It does
+  NOT grant sigils on top of existing ones — my version did, and the harness shows that
+  floods the board. The ability holds the *potential*; the beacon is the key.
+- **Chain** = two same-active-sigil abilities on two different champions, resolving in ONE
+  ladder step. Uninterruptible, so both denials die at once.
+- **Chains may ASCEND** — the ladder never otherwise allows it, so today a combo's payoff
+  must be weaker than its setup, which is backwards. Ceiling afterwards = highest
+  initiative in the chain, so a big finisher still invites a full-power answer.
+- Brake is action economy: a 2-chain spends 2 of 5 champions in one beat.
+
+*Measured — `dotnet run --project tools/Augury.Tools sigils`:*
+- Unit is the **champion duo** (5 champions = 10 duos), not the ability pair; a half has
+  room for ~2 chains, so duo coverage binds.
+- **WILD slots (take any beacon's sigil) are too generous** — one beacon reaches 4.7-9.7
+  of 10 duos in every config. Confirms the user's instinct exactly.
+- **TYPED slots behave.** Recommended: **3 sigils, 15% printed, 25% slots** → 1.01 duos
+  natural, **4.08 with one beacon**, 1.1% dead drafts. Beacon lift 4x, so beacons are
+  load-bearing rather than decorative.
+- In kit terms that is **3 printed / 5 slotted / 12 plain** out of 20 abilities — which
+  also answers the legibility worry, since most abilities carry no iconography at all.
+- Caveat: bounds *draft-level potential* only. Live usage is lower (position, cooldown,
+  availability, both champions unacted); random draft makes it a floor for skilled drafters.
+
+*Rejected, with reasons:* combo meter (ambient/procedural — fights the spatial principle,
+and stacks a second economy of restraint on the ladder). Rage-meter-on-death (rewards
+being killed; we already have an *earned* comeback in the nexus terminator, and two
+comeback systems make trading badly correct). Declared chains (user disliked; heaviest).
+
+*Still open:* beacon placement (opening phase vs ability during play) · beacon radius
+(1 hex = 7 hexes ≈ 11% of board, likely right) · whether both chain champions must be in
+range or only the slotted one · beacon count/duration/destructibility · chain length cap.
+
 **Objectives brainstorm — decisions taken 2026-08-16:**
 - **THE MATCH IS A POINTS RACE.** Everything scores: kills, tower control, possibly
   tower destruction, and the nexus. *(Corrected 2026-08-17 — I had wrongly written
