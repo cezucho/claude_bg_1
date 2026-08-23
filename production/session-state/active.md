@@ -118,12 +118,42 @@ placement possible via an ability and deliberately harder.** **Radius 1** (beaco
 - Max coverage 11.5% of board, so refusing a zone is never ruinous — beacons shape ground
   without dominating it.
 
-*Recommended, not yet confirmed:* only the **slotted** ability's champion need stand in
-the zone, not both. Follows from the mechanic's own logic — the beacon fills a slot, and
-the other ability has no slot for it to fill. Requiring both would make the zone a huddle.
+*Decisions 2026-08-17, second pass:*
+- **THE CHAIN RULE MUST NOT MENTION BEACONS.** The rule is only: *two abilities with the
+  same **active** sigil, on two different champions, resolve in one ladder step.* Printed
+  sigils are always active; a slot is active only inside a matching beacon's zone. Beacons
+  are a *source* of active sigils, not a term in the rule. This resolves the "must both
+  champions be in range?" question automatically — each ability independently needs its
+  own sigil live, so printed+slot needs one champion in the zone and slot+slot needs both.
+  Not a choice; it falls out.
+- **Beacon count is not a fixed number** — only certain abilities grant beacons, and they
+  are rare because a beacon is powerful. An opening-phase beacon ability pays for itself
+  with a cooldown carried into the action phase.
+- **Action-phase beacon abilities are rarer still than opening-phase ones.** Rationale is
+  an information argument: an opening-phase beacon is placed *in the dark*, before anyone
+  knows where the fight goes; an action-phase beacon is placed knowing exactly where every
+  champion stands. The same object is worth far more with information, so the price scales
+  with information rather than with the object.
+- **Beacons are DESTROYABLE, never expiring.** Intent is a race: two champions converging
+  to use a beacon while two converge to break it.
 
-*Still open:* beacon count per team · duration/destructibility · chain length cap
-(start at 2) · whether a beacon may sit on a tower hex at all.
+*Measured — the huddle tax (`beacon` command):* a slot+slot chain forces both champions
+inside one 7-hex zone, which is close to a fixed tier-4's 5-hex footprint.
+- Compact tier-4 (blob/wedge): **81% of in-zone pairs catchable vs 16% of board pairs** —
+  roughly **5x more exposed**. That is the "something for something", quantified.
+- **But 4 of 21 in-zone pairs are still safe**, so positioning inside the zone is its own
+  game, not a death sentence.
+- **Pattern shape is the lever**: a *line* tier-4 catches only 24% of in-zone pairs. If
+  beacons should be riskier, print more compact tier-4 shapes. Ability schema owns this.
+
+*Flagged for Objectives/Ability schema — the trap to avoid:* **beacon destruction must not
+be cheap or low-initiative.** A 1-action, initiative-1 "break beacon" would recreate
+exactly the cheap-procedural-denial-of-expensive-setup problem that beacons exist to
+escape — the whole design folding back on itself. Destruction should cost roughly what
+the chain it denies costs (~2 champion-actions), which also matches the intended race.
+
+*Still open:* whether a beacon may sit on a tower hex (user undecided) · chain length cap
+(start at 2) · exact beacon durability in actions.
 
 **Objectives brainstorm — decisions taken 2026-08-16:**
 - **THE MATCH IS A POINTS RACE.** Everything scores: kills, tower control, possibly

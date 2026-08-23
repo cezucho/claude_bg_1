@@ -77,6 +77,8 @@ public static class BeaconGeometry
                               + $"  {(bestFree == 0 ? "unavoidable" : "avoidable")}");
         }
 
+        HuddleRisk(play);
+
         Console.WriteLine();
         Draw(play, new HexCoord(0, 0), "Beacon ON the centre tower — every approach is inside");
         Draw(play, new HexCoord(0, 1), "Beacon BESIDE it — the far approaches stay open");
@@ -89,6 +91,72 @@ public static class BeaconGeometry
         Console.WriteLine("    Either way the refusal is never free: the ground given up is the");
         Console.WriteLine("    ground that ticks score.");
         Console.WriteLine();
+    }
+
+    /// <summary>
+    /// Prices the cost of a slot+slot chain: both champions must stand inside one 7-hex
+    /// zone, which is very close to the footprint of a fixed tier-4 pattern.
+    /// </summary>
+    private static void HuddleRisk(HexCoord[] play)
+    {
+        // Fixed (non-rotatable) 5-hex tier-4 patterns. Shapes are illustrative — the
+        // Ability Definition Schema owns the real ones; 5 hexes is the measured target.
+        (string Name, HexCoord[] Cells)[] patterns =
+        [
+            ("line",  [new(0, 0), new(1, 0), new(2, 0), new(3, 0), new(4, 0)]),
+            ("blob",  [new(0, 0), new(1, 0), new(1, -1), new(0, -1), new(-1, 0)]),
+            ("wedge", [new(0, 0), new(1, 0), new(2, 0), new(1, -1), new(2, -1)])
+        ];
+
+        HexCoord[] zone = Zone(new HexCoord(0, 0)).ToArray();
+        var zonePairs = Pairs(zone).ToArray();
+        var boardPairs = Pairs(play).ToArray();
+
+        Console.WriteLine();
+        Console.WriteLine("  THE HUDDLE TAX — what a slot+slot chain costs");
+        Console.WriteLine("  A printed-sigil chain lets both champions stand anywhere. A slot+slot");
+        Console.WriteLine("  chain forces both inside one 7-hex zone. A fixed tier-4 pattern is 5");
+        Console.WriteLine("  hexes. So: how much easier are they to catch, and is anywhere safe?");
+        Console.WriteLine();
+        Console.WriteLine("    tier-4 shape   pairs in zone caught   pairs anywhere caught   safe spots");
+        Console.WriteLine("    ─────────────  ────────────────────   ─────────────────────   ──────────");
+
+        foreach ((string name, HexCoord[] cells) in patterns)
+        {
+            int inZone = zonePairs.Count(p => Catchable(p.A, p.B, cells));
+            int anywhere = boardPairs.Count(p => Catchable(p.A, p.B, cells));
+            int safe = zonePairs.Length - inZone;
+            Console.WriteLine($"    {name,-13}  {inZone,6} / {zonePairs.Length,-3} {(double)inZone / zonePairs.Length,8:P0}"
+                              + $"   {anywhere,6} / {boardPairs.Length,-4} {(double)anywhere / boardPairs.Length,7:P0}"
+                              + $"   {safe,4} of {zonePairs.Length}");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("    A pair standing anywhere on the board is rarely catchable, because most");
+        Console.WriteLine("    pairs are simply far apart. Inside a beacon zone they never are — which");
+        Console.WriteLine("    is the price of manufacturing a chain, and it is paid in exposure.");
+        Console.WriteLine("    'safe spots' says whether positioning still matters INSIDE the zone.");
+    }
+
+    private static IEnumerable<(HexCoord A, HexCoord B)> Pairs(HexCoord[] hexes)
+    {
+        for (int i = 0; i < hexes.Length; i++)
+        {
+            for (int j = i + 1; j < hexes.Length; j++) yield return (hexes[i], hexes[j]);
+        }
+    }
+
+    /// <summary>True when some translation of the fixed pattern covers both hexes.</summary>
+    private static bool Catchable(HexCoord a, HexCoord b, HexCoord[] cells)
+    {
+        foreach (HexCoord anchor in cells)
+        {
+            // Place the pattern so that 'anchor' lands on 'a', then test for 'b'.
+            HexCoord offset = a - anchor;
+            if (cells.Any(c => c + offset == b)) return true;
+        }
+
+        return false;
     }
 
     private static bool InZone(HexCoord h, HexCoord beacon) =>
