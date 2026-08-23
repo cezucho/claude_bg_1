@@ -52,7 +52,7 @@ choice deferred gets built twice; a numeric choice decided early was going to be
 anyway. Third category worth naming: questions play cannot answer at all (e.g. "are
 spawn hexes targetable?" is rules-consistency, not feel) — those must be decided now.
 
-**COMBO PROBLEM — sigils & beacons (brainstorm 2026-08-17, not yet written to GDD).**
+**COMBO PROBLEM — sigils & beacons. GDD WRITTEN 2026-08-17: `design/gdd/sigils-and-beacons.md` (system #30, Drafted, pending review). Bidirectional deps wired into systems-index, initiative-ladder and map-and-terrain. Notes below are the working record.**
 
 *Problem:* a player sets up a combo over rounds, and the opponent denies it procedurally
 for free. Two distinct denial mechanisms, found by re-reading the ladder rules:

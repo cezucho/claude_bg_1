@@ -4,7 +4,8 @@
 > **System**: #12 Map & Terrain — first in the Core layer design order
 > **Depends on**: ADR-0005 (hex coordinates and patterns)
 > **Blocks**: Movement & Targeting · Champion Data & Stat Model · Ability Definition
-> Schema · Objectives & Scoring · Jungle & Neutral Powers · Opening Phase
+> Schema · Objectives & Scoring · Jungle & Neutral Powers · Opening Phase ·
+> Sigils & Beacons
 >
 > **Reading the markers.** ⚠ marks a value or claim that is assumed rather than
 > derived. ▸ marks something this document deliberately does **not** decide, naming
@@ -588,6 +589,7 @@ from the front-line hex it opens onto. ▸ Converting distance into rounds is ow
 | 3 | **Does the jungler's speed advantage need terrain, or only a rule?** A third of the playable board is currently dedicated to giving one champion a road | If the advantage can be expressed without the terrain, open ground could grow by 20 hexes | Design | With Movement & Targeting |
 | 4 | **What else is the jungle for?** Deliberately unanswered — neutral objectives, buffs, line-of-sight blocking all open | A jungle that is only a speed lane may not justify a dedicated role | Jungle & Neutral Powers | Vertical Slice |
 | 5 | **Do five towers produce a points race or a stalemate?** Two defended towers each plus a contested centre could settle into neither side attacking | The 10–15 minute match target depends on the score actually moving | Objectives & Scoring | Before Objectives GDD is approved |
+| 13 | **Do beacons replace minion waves as the tempo layer?** `sigils-and-beacons.md` puts a player-placed board object at a chosen hex, creating a place and a moment where a fight is favourable. That is the tempo question 10 says waves would supply, except player-generated | If yes, minion waves never need building at all | Objectives & Scoring | Vertical Slice |
 | 6 | **Should the board have impassable terrain?** Every playable hex is currently walkable. Walls would create the corridors rule 3 rejects, but might make tier-4 patterns more setup-able | Interacts directly with `Displace` as the tier-4 release valve | Design | Vertical Slice |
 | 7 | ~~**Is the front line the right starting position?**~~ **RESOLVED 2026-08-16.** The front line is now permanently load-bearing: its middle three hexes are the nexus and its outer two are the lane mouths. It is the thing you must reach to win, so it matters in every round of the match rather than only the first | — | — | Closed. See rule 7 |
 | 8 | ~~**Does the match end on a round limit, a target score, or both?**~~ **RESOLVED 2026-08-17.** Target score is the primary ending; nexus destruction is a second, rare one. No round limit is needed — towers tick continuously, so the target is always approached and no match can stall | — | — | Closed. See rule 7 |

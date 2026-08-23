@@ -120,6 +120,14 @@ immediately and completely before anything else happens. The opposing team may t
 play any ability at initiative **≤ the initiative just played**, from any eligible
 champion. Play alternates, each ability at or below the previous, until the half ends.
 
+> **Modified by Sigils & Beacons.** The combo system (`design/gdd/sigils-and-beacons.md`)
+> lets two champions resolve two abilities as a **single ladder step** when both abilities
+> share an active sigil. That changes three things here: a chain's second ability may
+> **ascend** above the current ceiling, the ceiling afterwards becomes the highest
+> initiative in the chain, and a chain may be played as the Last Word. It exists because
+> a pass and a ceiling crash could otherwise deny a multi-round setup for free — see that
+> document's rule 1.
+
 **4. Passing and the Last Word.** A team may pass instead of playing an ability. A
 pass does not end the half immediately: the opposing team may take **exactly one
 further action**, at initiative ≤ the current ceiling, and the half then ends. That

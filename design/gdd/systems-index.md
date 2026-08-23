@@ -45,14 +45,14 @@ derived from what the named systems require.
 | 5 | Ability Definition Schema (inferred) | Core | MVP | **Parked** — blocked on Map & Terrain | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting, **Map & Terrain** |
 | 6 | Movement & Targeting | Gameplay | MVP | Not Started | — | Hex Grid, Deterministic Simulation Core |
 | 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | Not Started | — | Champion Data & Stat Model |
-| 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer |
+| 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer · *modified by* **Sigils & Beacons** |
 | 9 | Status Effects | Gameplay | MVP | Not Started | — | Ability Definition Schema, Round Phase Sequencer, Damage |
 | 10 | Death, Dying Round & Respawn | Gameplay | MVP | Not Started | — | Round Phase Sequencer, Damage, Status Effects |
 | 11 | Molding | Gameplay | MVP | Not Started | — | Champion Data & Stat Model, Ability Definition Schema |
 | 12 | Map & Terrain | Gameplay | MVP | **Designed** (pending review) | [design/gdd/map-and-terrain.md](map-and-terrain.md) | Hex Grid |
-| 13 | Objectives & Scoring | Gameplay | MVP | Not Started | — | Map & Terrain |
+| 13 | Objectives & Scoring | Gameplay | MVP | Not Started | — | Map & Terrain, **Sigils & Beacons** (beacon destruction cost) |
 | 14 | Draft | Gameplay | MVP | Not Started | — | Champion Data, Ability Definition Schema |
-| 15 | Opening Phase | Gameplay | MVP | Not Started | — | Draft, Ability Schema, Movement & Targeting, Map & Terrain |
+| 15 | Opening Phase | Gameplay | MVP | Not Started | — | Draft, Ability Schema, Movement & Targeting, Map & Terrain, **Sigils & Beacons** (beacon placement) |
 | 16 | AI Opponent | Gameplay | MVP | Not Started | — | Effectively the entire simulation |
 | 17 | Board & Unit Presentation | UI | MVP | Not Started | — | Hex Grid, Map & Terrain, Champion Data |
 | 18 | Combat HUD & State Inspection | UI | MVP | Not Started | — | Champion Data, Molding, Status Effects |
@@ -67,6 +67,7 @@ derived from what the named systems require.
 | 27 | Content Authoring Pipeline (inferred) | Meta | Vertical Slice | Not Started | — | Ability Definition Schema, Champion Data |
 | 28 | Balance Simulation Harness (inferred) | Meta | Vertical Slice | Not Started | — | AI Opponent, full simulation |
 | 29 | Audio | Audio | Vertical Slice | Not Started | — | Resolution Playback |
+| 30 | **Sigils & Beacons** (combo system) | Gameplay | MVP | **Drafted** (pending review) | [design/gdd/sigils-and-beacons.md](sigils-and-beacons.md) | Initiative Ladder, Ability Definition Schema, Map & Terrain, Opening Phase |
 | 30 | Tutorial & Onboarding | Meta | Alpha | Not Started | — | Nearly everything |
 | 31 | Persistence & Settings (inferred) | Persistence | Alpha | Not Started | — | Deterministic Simulation Core |
 | 32 | Accessibility (inferred) | Meta | Alpha | Not Started | — | All UI systems |
