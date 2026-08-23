@@ -95,6 +95,8 @@ public static class MobilityCost
         Console.WriteLine("    A radius-4 board cannot express a reach of 4 as a meaningful limit —");
         Console.WriteLine("    a champion holding the middle with RCH 4 threatens every hex there is.");
 
+        TwoEconomies();
+
         Console.WriteLine();
         Console.WriteLine("  DO BODIES BLOCK? — the cost of path-based movement");
         Console.WriteLine("  With one champion per hex and no impassable terrain, champions are the");
@@ -102,6 +104,50 @@ public static class MobilityCost
         Console.WriteLine();
         BlockingWall(play);
         Console.WriteLine();
+    }
+
+    /// <summary>
+    /// Compares the abandoned economy (every champion may act each half) against the
+    /// adopted one (the TEAM takes 2 basic actions per half, abilities run separately).
+    /// </summary>
+    private static void TwoEconomies()
+    {
+        const int BasicsPerHalf = 2;
+        const int Team = 5;
+        int basicsPerRound = BasicsPerHalf * 2;
+
+        Console.WriteLine();
+        Console.WriteLine("  TWO ECONOMIES COMPARED");
+        Console.WriteLine("  OLD: a move consumed a champion's one action, so all 5 could move each half.");
+        Console.WriteLine($"  NEW: the TEAM gets {BasicsPerHalf} basic actions per half"
+                          + $" ({basicsPerRound} per round), whoever uses them.");
+        Console.WriteLine();
+        Console.WriteLine("    SPD   task                              old        new");
+        Console.WriteLine("    ───   ────────────────────────────────  ─────────  ─────────");
+
+        foreach (int spd in new[] { 2, 3 })
+        {
+            int crossMoves = Ceil(FrontToFront, spd);
+
+            // One champion crossing: old = 1 move per half. New = may take every basic.
+            double oldCross = crossMoves / 2.0;
+            double newCross = (double)crossMoves / basicsPerRound;
+            Console.WriteLine($"    {spd,3}   one champion crosses the board     "
+                              + $"{oldCross,4:F1} rds  {newCross,4:F1} rds");
+
+            // Whole team repositions one step each.
+            double oldTeam = 0.5;
+            double newTeam = (double)Team / basicsPerRound;
+            Console.WriteLine($"    {spd,3}   all 5 champions move once          "
+                              + $"{oldTeam,4:F1} rds  {newTeam,4:F1} rds");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"    A champion now moves {(double)basicsPerRound / Team:F1} times per round on average,"
+                          + $" against 2.0 before.");
+        Console.WriteLine("    The economy inverts: ONE champion can cross the board faster than before");
+        Console.WriteLine("    by eating the whole budget, but the TEAM repositions far more slowly.");
+        Console.WriteLine("    Fast or broad — never both. That is the decision the budget creates.");
     }
 
     /// <summary>
