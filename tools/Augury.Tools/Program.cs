@@ -17,8 +17,11 @@ switch (command)
     case "beacon":
         BeaconGeometry.Run();
         break;
+    case "mobility":
+        MobilityCost.Run();
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility");
         return 1;
 }
 
