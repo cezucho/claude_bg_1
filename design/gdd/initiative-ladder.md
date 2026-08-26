@@ -199,7 +199,12 @@ degenerate burst strategy that dominates most tactical games.
 | **AI Opponent** | legal action set at each ladder step | chosen action, or pass | AI GDD |
 | **Initiative Ladder UI** | legal action set, current ceiling, spent champions, Last Word availability | player selection | Ladder UI spec |
 
-> **Provisional assumption.** Movement is treated as an initiative-1 action that
+> **RESOLVED by Movement & Targeting.** Movement is **not on the ladder at all**. A team
+> spends two basic actions per half — move a champion, or basic-attack — before the ladder
+> opens, and positions are locked for the rest of the half. The ability economy below is
+> unchanged. The superseded assumption is kept for the record:
+>
+> > **Provisional assumption.** Movement is treated as an initiative-1 action that
 > consumes the champion's action for the round. Under rule 5 positioning is now
 > expensive and strategically central, so the Movement & Targeting GDD may need to
 > revisit this. Recorded in Open Questions.
@@ -700,7 +705,7 @@ criteria run in xUnit with no Godot boot (see `.claude/docs/technical-preference
 | 1 | ~~Does passing survive the Last Word rule?~~ **RESOLVED 2026-08-14.** Re-measured in `ladder_v2.py` with two halves *and* the Last Word: passing with options held at 7.7%, versus 8.6% under the original single-half rule. 68% of halves end by a deliberate pass rather than exhaustion | Passing remains a decision; the ladder does not run to exhaustion | — | Closed |
 | 1b | ~~Is the mirror-match win asymmetry a rule property or a harness artefact?~~ **RESOLVED 2026-08-14 — harness artefact, two bugs.** (a) `targets_for` truncated move options to the first six of an ordered direction list, so one team could never move toward the objectives; (b) `winner()` checked team 0 first, awarding every simultaneous threshold crossing to team 0. After both fixes, mirror matches run 43–50% across every variant | **There is no first-mover advantage in the ladder.** The two-half rule stands on its remaining justification: it makes the initiative-1 ceiling lockout symmetric | — | Closed. See `prototypes/initiative-ladder/asymmetry_hunt.py` |
 | 2 | ~~Is `applicability(i)` achievable with real hex geometry?~~ **RESOLVED 2026-08-14 — yes, with two corrections.** Measured over 100,000 actor-samples per placement model (`tools/Augury.Tools`). Tiers 3 and 4 were close to the assumed values and are reachable with a rotatable 2-hex arc and a fixed 5-hex pattern respectively. **Tier 1 was wrong by a factor of two**: melee reaches an enemy in 50% of contested states, not 100%, so tier-1 abilities must be ranged. Tier-3 applicability turned out to depend on reach, not area — a 2-hex line and a 3-hex wedge measure identically. `M` revised to `[1.0, 1.3, 2.0, 4.0]`, effective value now flat within ±2% | Tier 4 confirmed situational (31%) and, importantly, *stays* situational when champions cluster — crowding lifts it by only 2–4pp | — | Closed. See F4 |
-| 3 | **Is movement an initiative-1 action costing the champion's round action?** Assumed here. Under Core Rule 5, positioning is now expensive and strategically central | Movement cost directly determines how often tier-4 abilities can be set up — it is the other half of question 2 | Movement & Targeting GDD | Before Movement GDD is approved |
+| 3 | ~~**Is movement an initiative-1 action costing the champion's round action?**~~ **RESOLVED 2026-08-17 — no.** Movement left the ladder entirely for a separate basic-action economy resolved before the exchange. Consequence for question 2: positions are **locked** during the ladder, so a fixed pattern can no longer be dodged mid-exchange and the 31% static-position applicability figure becomes achievable rather than optimistic | — | — | Closed. See `movement-and-targeting.md` |
 | 4 | **What is the Dying penalty?** Referenced but not defined here | Determines whether the dying round is a real tactical window or a formality | Death, Dying Round & Respawn GDD | Before Death GDD is approved |
 | 5 | **Should the Last Word be capped below the ceiling** (`last_word_ceiling_offset = −1`)? | Reduces the reward for baiting a pass, making passing safer. Depends entirely on the answer to question 1 | Design | After question 1 is measured |
 | 6 | **How is a Last Word communicated under time pressure?** The player has seconds to understand that an unanswerable action is available | The onboarding cliff is steepest at exactly this moment | `/ux-design` | Pre-Production |

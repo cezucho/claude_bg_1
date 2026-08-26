@@ -108,7 +108,8 @@ public static class MobilityCost
 
     /// <summary>
     /// Compares the abandoned economy (every champion may act each half) against the
-    /// adopted one (the TEAM takes 2 basic actions per half, abilities run separately).
+    /// adopted one: the TEAM takes 2 basic actions per half, and they must be taken by
+    /// TWO DIFFERENT champions, so no champion ever takes more than one basic per half.
     /// </summary>
     private static void TwoEconomies()
     {
@@ -119,8 +120,8 @@ public static class MobilityCost
         Console.WriteLine();
         Console.WriteLine("  TWO ECONOMIES COMPARED");
         Console.WriteLine("  OLD: a move consumed a champion's one action, so all 5 could move each half.");
-        Console.WriteLine($"  NEW: the TEAM gets {BasicsPerHalf} basic actions per half"
-                          + $" ({basicsPerRound} per round), whoever uses them.");
+        Console.WriteLine($"  NEW: the TEAM gets {BasicsPerHalf} basics per half, by two DIFFERENT champions,");
+        Console.WriteLine("       so a champion still moves at most once per half — same as before.");
         Console.WriteLine();
         Console.WriteLine("    SPD   task                              old        new");
         Console.WriteLine("    ───   ────────────────────────────────  ─────────  ─────────");
@@ -128,26 +129,34 @@ public static class MobilityCost
         foreach (int spd in new[] { 2, 3 })
         {
             int crossMoves = Ceil(FrontToFront, spd);
-
-            // One champion crossing: old = 1 move per half. New = may take every basic.
-            double oldCross = crossMoves / 2.0;
-            double newCross = (double)crossMoves / basicsPerRound;
+            double cross = crossMoves / 2.0;                       // 1 basic per half, either way
             Console.WriteLine($"    {spd,3}   one champion crosses the board     "
-                              + $"{oldCross,4:F1} rds  {newCross,4:F1} rds");
+                              + $"{cross,4:F1} rds  {cross,4:F1} rds   unchanged");
 
-            // Whole team repositions one step each.
-            double oldTeam = 0.5;
             double newTeam = (double)Team / basicsPerRound;
             Console.WriteLine($"    {spd,3}   all 5 champions move once          "
-                              + $"{oldTeam,4:F1} rds  {newTeam,4:F1} rds");
+                              + $"{0.5,4:F1} rds  {newTeam,4:F1} rds   {newTeam / 0.5:F1}x slower");
         }
 
         Console.WriteLine();
-        Console.WriteLine($"    A champion now moves {(double)basicsPerRound / Team:F1} times per round on average,"
-                          + $" against 2.0 before.");
-        Console.WriteLine("    The economy inverts: ONE champion can cross the board faster than before");
-        Console.WriteLine("    by eating the whole budget, but the TEAM repositions far more slowly.");
-        Console.WriteLine("    Fast or broad — never both. That is the decision the budget creates.");
+        Console.WriteLine("  WHAT IT ACTUALLY COSTS TO REPOSITION");
+        Console.WriteLine("  Individual speed is unchanged. What the budget takes away is BREADTH.");
+        Console.WriteLine();
+        foreach (int spd in new[] { 2, 3 })
+        {
+            int moves = Ceil(FrontToFront, spd);
+            double rounds = moves / 2.0;
+            double budget = moves / (rounds * basicsPerRound);
+            Console.WriteLine($"    SPD {spd}: crossing the board costs {moves} basics over {rounds:F1} rounds"
+                              + $" = {budget,4:P0} of the");
+            Console.WriteLine($"           team's entire basic economy for that whole stretch.");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"    A champion averages {(double)basicsPerRound / Team:F1} basics per round"
+                          + $" against 2.0 before — the team");
+        Console.WriteLine("    now chooses WHICH two champions act each half rather than moving freely.");
+        Console.WriteLine("    The price of walking one champion across is the other four standing still.");
     }
 
     /// <summary>

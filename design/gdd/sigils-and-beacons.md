@@ -78,6 +78,15 @@ defender.
 
 Denial B is the sharper of the two and the one this system principally addresses.
 
+> **Partly superseded, 2026-08-17.** `movement-and-targeting.md` moved movement off the
+> ladder into a basic-action phase that closes before the exchange begins, so **positions
+> are locked during a ladder exchange**. The cheapest and most universal ceiling crash —
+> stepping a champion out of the pattern — no longer exists, because nobody can step
+> anywhere. Denial B survives only through deliberate low-initiative *abilities*, which is
+> a chosen cost rather than something every champion holds for free. Denial A is
+> untouched. This system remains necessary for both, but the problem it faces is smaller
+> and sharper than when it was designed.
+
 ### 2. Sigils
 
 There are ⚠ **3 sigils** in the game. A sigil is an opaque tag; it carries no effect of

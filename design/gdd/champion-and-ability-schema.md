@@ -12,6 +12,19 @@
 This was authored before the board existed, which was the wrong order. Three
 consequences, all of which must be resolved before it resumes:
 
+> **AMENDMENTS OWED, 2026-08-17.** `movement-and-targeting.md` is now drafted and
+> requires two changes here before this document is unparked:
+> 1. **`RCH` must cap at 3, not 4.** Measured, a reach of 4 covers the entire board from
+>    the centre and 59% of it on average, so a radius-4 board cannot express 4 as a limit.
+> 2. **Champions gain a fifth ability slot: one passive.** Passives exist so that basic
+>    attacks — which resolve before the ladder and cannot be answered on it — have an
+>    automatic answer. Passives carry no sigil and no slot, so the 20-ability chain figure
+>    in `sigils-and-beacons.md` is unaffected. The schema must define the trigger
+>    vocabulary and a deterministic ordering for simultaneous triggers.
+>
+> `SPD` is now settled: it limits **path length** through unoccupied hexes, spent from the
+> team's basic-action budget rather than the champion's ability action.
+
 **1. Half the stat model depends on undesigned systems.** `SPD` presupposes the
 Movement & Targeting rules; `RES` presupposes Status Effects. Neither GDD exists, so
 both stats are placeholders wearing the costume of decisions. They are candidates for

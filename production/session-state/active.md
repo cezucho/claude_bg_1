@@ -4,6 +4,59 @@
 
 ## Current Task
 
+**MOVEMENT & TARGETING GDD WRITTEN 2026-08-17** — `design/gdd/movement-and-targeting.md`
+(system #6, Drafted). **Two economies, and movement is off the ladder entirely.**
+
+- **Basic economy:** 2 basic actions per team per half, by **two DIFFERENT champions**,
+  **compulsory**. A basic = move one champion, or one basic attack.
+- **Ability economy:** unchanged — 1 ability per champion per half, on the ladder.
+- **Independent.** A champion that took a basic MAY also use an ability that half.
+- **Basics resolve BEFORE the ladder. Positions are then LOCKED for the half.**
+- **Champions block movement**, friendly included. Path length, not distance, is what SPD
+  limits. **No line of sight** for targeting.
+- **NEW: every champion has a passive ability** (4 actives + 1 passive). Passives exist so
+  basic attacks — unanswerable on the ladder, since they resolve before it — have an
+  automatic answer. Passives carry no sigil, so the 20-ability chain figure is unaffected.
+
+*Measured (`dotnet run --project tools/Augury.Tools mobility`) — and I had to correct
+myself here.* I first reported "one champion crosses in 1.0 round, the economy inverts,
+fast or broad". That assumed one champion could take both basics. With the
+different-champions rule the true picture is:
+- Individual crossing speed is **unchanged** (2.0 rounds at SPD 2).
+- Team-wide repositioning is **2.5x slower** (1.2 rounds vs 0.5).
+- Crossing costs **50% of the team's basic economy** for its whole duration, and that
+  share is **invariant in SPD** — speed buys time, never budget.
+- A champion averages **0.8 basics/round** against 2.0 before.
+- **Breadth is the scarce resource, not speed.**
+
+*Closed three open questions across other GDDs:*
+- Ladder Q3 (is movement an initiative-1 action?) → **no**, off the ladder.
+- Map Q6 (impassable terrain?) → **no — the terrain is the other players.** A 5-champion
+  wall adds 3 hexes of detour and leaves no hex unreachable, so bodies tax movement
+  without recreating corridors.
+- Sigils denial B is **partly superseded**: the universal cheap dodge no longer exists,
+  because nobody can move during an exchange. Denial B survives only via deliberate
+  low-initiative abilities; denial A untouched.
+
+*Amendments owed to `champion-and-ability-schema.md` (noted in that file):*
+1. **RCH must cap at 3, not 4** — reach 4 covers the whole board from the centre (100%),
+   59% averaged. A radius-4 board cannot express 4 as a limit.
+2. **Fifth ability slot for the passive**, plus trigger vocabulary and deterministic
+   ordering for simultaneous triggers.
+
+*Open:* one-champion-alive case (2 distinct champions unsatisfiable) · can basic attacks
+damage structures (stalling risk) · should friendlies block (most likely to feel bad) ·
+basic alternation order · shortest-path tie-break for determinism.
+
+*Risk to watch — criterion 12:* the two-economy split makes **the ladder opt-in**. A team
+ahead on points can basic-attack and decline abilities. Partly self-solving, since molding
+comes from ability use so passivity forfeits stat growth. Harness bound: ladder opened in
+≥70% of halves.
+
+---
+
+## Earlier Task
+
 **Map & Terrain GDD written** — `design/gdd/map-and-terrain.md`. Board fixed:
 radius-4 hexagon, 61 playable hexes, teams facing across opposite **edges**, 12
 off-board spawn hexes, 180-degree rotational symmetry, one champion per hex, **no
