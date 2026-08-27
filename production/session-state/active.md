@@ -4,6 +4,28 @@
 
 ## Current Task
 
+**STEP 1 of 3 DONE — ADR-0005 AMENDED 2026-08-17 (team-relative tier-4 patterns).**
+Tier-4 patterns were specified as applied *verbatim* (world space). Because the board's
+symmetry is a 180-degree rotation, the two teams face opposite ways, so a verbatim wedge
+aimed at the enemy for team A aimed at team B's own nexus. Now: tier-4 offsets are
+authored in a **canonical frame with forward = +R** and reoriented per team.
+- Added `Hex.HalfTurn` and `Hex.ForForward` to `src/Augury.Sim/HexCoord.cs`.
+- **The fix needed no new geometry**: a half-turn is exactly `Rotate(offset, 3)` — a
+  rotation the six-facing system already expresses — and it is the same map that defines
+  board symmetry, so the far team's pattern covers exactly the antipodal hexes.
+- **Why rotational symmetry was load-bearing all along:** a chiral pattern's *mirror* is
+  reachable by NONE of the six facings. On a mirror-symmetric board the two teams would
+  hold different-shaped versions of the same ability and no orientation rule could fix it
+  — every chiral tier-4 would need authoring twice. Asserted in
+  `PatternOrientationTests.MirroredPattern_IsReachableByNoRotation`.
+- 8 new tests, 40 passing. ADR validation criteria now checked off rather than open.
+- Cross-referenced from Map & Terrain rule 4.
+
+*Remaining: step 2 = re-run applicability against real tower positions; step 3 = unpark
+the champion/ability schema.*
+
+---
+
 **MOVEMENT & TARGETING GDD WRITTEN 2026-08-17** — `design/gdd/movement-and-targeting.md`
 (system #6, Drafted). **Two economies, and movement is off the ladder entirely.**
 

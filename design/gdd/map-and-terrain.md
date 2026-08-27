@@ -140,6 +140,15 @@ and deferred to Vertical Slice; this document fixes only where the routes run.
 
 ### 4. Symmetry is rotational, and must be
 
+> **ADR-0005 amended 2026-08-17, and this rule is why.** Tier-4 patterns were originally
+> resolved in world space, which would have given the two teams differently-aimed versions
+> of the same ability. They are now authored in a canonical forward frame and half-turned
+> for the far team. That fix is only available *because* this symmetry is rotational: a
+> half-turn is `Rotate(·, 3)`, one of the six facings the engine already has. Under mirror
+> symmetry the transform would be a reflection, which no rotation reproduces, and every
+> chiral tier-4 pattern would have to be authored twice.
+
+
 The board — spawn rows included — maps onto itself under **180° rotation about the
 origin**: `(Q,R) → (−Q,−R)`. Every hex has the same zone as its antipode, so the two
 teams play identical geometry.

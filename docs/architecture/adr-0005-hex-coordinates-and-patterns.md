@@ -2,7 +2,15 @@
 
 ## Status
 
-Accepted (2026-08-14)
+Accepted (2026-08-14) · **Amended 2026-08-17 — tier-4 pattern orientation**
+
+> **Amendment summary.** Tier-4 patterns were specified as applied *verbatim*, i.e. in
+> world space. Map & Terrain subsequently fixed the board's symmetry as a 180-degree
+> rotation, which means the two teams face opposite directions — so a verbatim pattern
+> points at the enemy for one team and at its own nexus for the other. Tier-4 offsets are
+> now authored in a **canonical forward frame** and reoriented to the acting team. See
+> *Amendment: team-relative tier-4 patterns* below. This had to land before any tier-4
+> ability was authored, and does.
 
 ## Date
 
@@ -97,8 +105,10 @@ public readonly record struct HexCoord(int Q, int R)
 ```
 
 **Patterns are stored as an ordered list of offsets** relative to the acting champion,
-in a canonical orientation. Tier 3 rotates the offset list through any of six facings;
-tier 4 applies it verbatim.
+in a canonical orientation **whose forward direction is +R**. Tier 3 rotates the offset
+list through any of six facings; tier 4 does not rotate, but **is reoriented to the acting
+team's forward direction** — identity for the team advancing toward +R, a half-turn for
+the team advancing toward −R.
 
 ```csharp
 public static HexCoord RotateClockwise(HexCoord offset)   // 60°, exact, integer
@@ -142,6 +152,13 @@ public static class Hex
     public static int Distance(HexCoord a, HexCoord b);
     public static bool InBoard(HexCoord h, int radius);
     public static HexCoord Rotate(HexCoord offset, int steps);   // steps mod 6
+
+    /// Half-turn about the origin, (q,r) → (−q,−r). The board's symmetry map, and
+    /// exactly Rotate(offset, 3). See the amendment below.
+    public static HexCoord HalfTurn(HexCoord h);
+
+    /// Reorients a canonical-frame pattern offset for the acting team. Tier 4 only.
+    public static HexCoord ForForward(HexCoord offset, bool forwardIsPositiveR);
 }
 
 public static class Targeting
@@ -154,6 +171,35 @@ public static class Targeting
         RigidityTier tier, int facing, Span<HexCoord> results, out int count);
 }
 ```
+
+### Amendment: team-relative tier-4 patterns
+
+**The problem.** Map & Terrain places the two teams across opposite *edges* and fixes the
+board's symmetry as a 180-degree rotation, `(q,r) → (−q,−r)`. Team A advances toward `+R`;
+team B advances toward `−R`. Under the original rule a tier-4 pattern resolved to the same
+world-space shape for both, so a wedge that opened toward the enemy for team A opened
+toward its own nexus for team B. The ability would not be the same ability.
+
+**The fix.** Tier-4 offsets are authored in a canonical frame with forward `= +R`, and
+`ForForward` applies a half-turn for the team facing the other way.
+
+**Why this works, and why it barely required anything.** The half-turn is *exactly*
+`Rotate(offset, 3)` — it is a rotation, already expressible by the six-facing machinery
+tier 3 uses, integer-exact, and shape-preserving. It is also the same map that defines the
+board's symmetry, so a pattern played by the far team at the antipodal origin covers
+exactly the antipodal hexes. No new geometry was needed; the amendment is a frame change,
+not a mechanism.
+
+**Why a mirrored board would have made this impossible.** A reflection is not a rotation.
+A chiral pattern's mirror image is reachable by *none* of the six facings, so on a
+mirror-symmetric board the two teams would hold genuinely different-shaped versions of the
+same ability, and no orientation rule could fix it — the content itself would have to be
+authored twice. **Rotational symmetry is therefore not an aesthetic choice about the map;
+it is what makes a shared ability library possible at all.** This is asserted directly in
+`PatternOrientationTests.MirroredPattern_IsReachableByNoRotation`.
+
+**Scope.** Tier 4 only. Tiers 1–2 target freely and tier 3 chooses among all six facings,
+so both teams already reach the same set; neither is affected.
 
 ### Implementation Guidelines
 
@@ -257,7 +303,15 @@ would be mechanical but would touch every spatial call site. Not expected.
 
 - [ ] `Distance(a, b) == Distance(b, a)` for all board pairs.
 - [ ] `Rotate(offset, 6) == offset` for all offsets.
-- [ ] A tier-4 pattern produces identical absolute hexes regardless of champion facing.
+- [x] A tier-4 pattern produces identical absolute hexes regardless of champion *facing*
+      — but **not** regardless of team; see the next three.
+- [x] `HalfTurn(h) == Rotate(h, 3)` for every offset, and `HalfTurn` is an involution that
+      preserves distance. *(`PatternOrientationTests`)*
+- [x] A tier-4 pattern played by the far team at the antipodal origin covers exactly the
+      antipodal hex set. *(`TeamRelativePattern_CoversAntipodalHexes`)*
+- [x] A chiral pattern's **half-turn** is reachable by one of the six facings; its
+      **mirror** is reachable by none. *(`HalfTurnedPattern_IsReachableByRotation`,
+      `MirroredPattern_IsReachableByNoRotation`)*
 - [ ] A tier-3 pattern produces exactly six distinct target sets across facings, unless
       the pattern is rotationally symmetric.
 - [ ] **Mirror-match test**: two teams with identical drafts on a mirrored board win

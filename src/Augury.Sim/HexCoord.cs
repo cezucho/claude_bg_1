@@ -56,12 +56,34 @@ public static class Hex
     public static bool InBoard(HexCoord h, int radius) => h.Magnitude <= radius;
 
     /// <summary>
+    /// Half-turn about the origin: <c>(q,r) → (−q,−r)</c>. This is the board's own
+    /// symmetry map and also the transform that reorients a tier-4 pattern into the
+    /// far team's forward frame (ADR-0005, amended).
+    /// </summary>
+    /// <remarks>
+    /// <para>It is exactly <c>Rotate(offset, 3)</c>. That equivalence is the whole
+    /// reason team-relative tier-4 patterns are possible: the transform is a
+    /// <b>rotation</b>, so the six-facing system already expresses it and the shape is
+    /// preserved. Had the board been mirror-symmetric, the transform would have been a
+    /// reflection, which no rotation reproduces — the two teams would then hold
+    /// chirally different versions of the same ability.</para>
+    /// </remarks>
+    public static HexCoord HalfTurn(HexCoord h) => new(-h.Q, -h.R);
+
+    /// <summary>
+    /// Reorients a pattern offset authored in the canonical frame (forward = +R) into
+    /// the acting team's frame. Tier 4 only; tiers 1–3 choose their own orientation.
+    /// </summary>
+    public static HexCoord ForForward(HexCoord offset, bool forwardIsPositiveR)
+        => forwardIsPositiveR ? offset : HalfTurn(offset);
+
+    /// <summary>
     /// Rotates an offset clockwise by 60 degrees per step. Integer-exact.
     /// Six steps return the identity.
     /// </summary>
     /// <remarks>
     /// Tier-3 abilities rotate their pattern to any of six facings; tier-4
-    /// abilities never rotate at all (ADR-0005).
+    /// abilities apply theirs in the owning team's forward frame (ADR-0005, amended).
     /// </remarks>
     public static HexCoord Rotate(HexCoord offset, int steps)
     {
