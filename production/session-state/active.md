@@ -4,6 +4,38 @@
 
 ## Current Task
 
+**STEP 2 of 3 DONE — APPLICABILITY RE-MEASURED against the real board, 2026-08-17.**
+The harness weighted champion placement toward **three placeholder hexes** `(0,0) (0,-3)
+(0,3)` invented before Map & Terrain existed. Now weighted toward the **five real towers**
+`(0,0) (0,-2) (2,-2) (0,2) (-2,2)`.
+
+*What moved.* Real towers sit **2 hexes apart** where placeholders sat **3 apart**, so
+champions cluster tighter and patterns line up more often:
+- Tier 3 (rot. 2-hex arc @ r2): 0.587 → **0.673**
+- Tier 4 (fixed 5-hex): 0.305 → **0.363**
+- Melee r1: 0.501 → **0.469** (fell — 5 attractors spread champions across more sites)
+
+*Consequence — ladder F4 went OUT OF CONFORMANCE at ±9.7% against a ±2% target.* Tiers 3
+and 4 were being paid for a scarcity they do not have. **`M` revised
+`[1.0, 1.3, 2.0, 4.0]` → `[1.00, 1.23, 1.64, 3.30]`** (tiers 3-4 down ~18%), restoring
+flatness to ±0.2% (0.897-0.900). The harness now prints the F4 conformance check itself,
+so this cannot silently drift again.
+
+*Also:* **tier 1's reference pattern changed** from "free targeting, range 4" to range 3,
+because Movement & Targeting caps RCH at 3 and the old reference is no longer a legal
+ability.
+
+*What survived unchanged — all three qualitative findings.* Melee is still never the most
+applicable tier; rotatable **reach** still dominates rotatable **area** (43.0% confined to
+r2 vs 71.1% spanning r1-2); fixed-pattern applicability still rises ≈6pp per hex
+(16.3 → 23.3 → 29.5 → 36.3 → 41.8, mean step 6.4pp). **The shape was right; only the
+decimals were wrong.** Ladder GDD updated throughout, and its ⚠ "conditional on a board
+that has not been designed" warning is now resolved.
+
+*Remaining: step 3 = unpark the champion/ability schema.*
+
+---
+
 **STEP 1 of 3 DONE — ADR-0005 AMENDED 2026-08-17 (team-relative tier-4 patterns).**
 Tier-4 patterns were specified as applied *verbatim* (world space). Because the board's
 symmetry is a 180-degree rotation, the two teams face opposite ways, so a verbatim wedge

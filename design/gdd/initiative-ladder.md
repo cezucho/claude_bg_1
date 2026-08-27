@@ -241,21 +241,25 @@ AI is tractable (see `prototypes/initiative-ladder/REPORT.md`).
 
 ### F3 — Initiative Power Budget
 
-`raw_power(i) = base_power × M(i)` where `M = [1.0, 1.3, 2.0, 4.0]`
+`raw_power(i) = base_power × M(i)` where `M = [1.00, 1.23, 1.64, 3.30]`
 
 | Variable | Type | Range | Description |
 |---|---|---|---|
 | `base_power` | int | 3–5 | Reference damage of a tier-1 ability |
 | `i` | int | 1–4 | Initiative tier |
-| `M(i)` | fixed-point | 1.0–4.0 | Power multiplier for tier `i` |
+| `M(i)` | fixed-point | 1.0–3.3 | Power multiplier for tier `i` |
 
-**Output range:** 3 → 12 damage at `base_power = 3`.
-**Example:** a tier-4 ability at base 3 deals 12 damage — 40% of a 30 HP champion —
+**Output range:** 3 → 9.9 damage at `base_power = 3`.
+**Example:** a tier-4 ability at base 3 deals ~10 damage — a third of a 30 HP champion —
 from a single strike that is unanswerable if played as a Last Word.
 
-> `M` was `[1.0, 1.3, 2.2, 4.4]` until applicability was measured (see F4). The curve
-> barely moved, which is the interesting part: the shape was right, the top two tiers
-> were about 10% hot.
+> **Revision history.** `M` was `[1.0, 1.3, 2.2, 4.4]` while applicability was assumed,
+> then `[1.0, 1.3, 2.0, 4.0]` once it was first measured — against three *placeholder*
+> objective hexes invented before the board existed. **Re-measured against the five real
+> towers (2026-08-17) it is now `[1.00, 1.23, 1.64, 3.30]`.** Tiers 3 and 4 fell about
+> 18%, because the real towers sit closer together than the placeholders did, champions
+> cluster harder around them, and patterns therefore line up more often than assumed.
+> They were being paid for a scarcity they do not have.
 
 ### F4 — Effective Value (the balance target)
 
@@ -270,32 +274,43 @@ where `exposure(i) = i / 4`
 
 | i | reference pattern | applicability | M(i) | exposure | effective_value |
 |---|---|---|---|---|---|
-| 1 | free targeting, range 4 | 0.99 | 1.0 | 0.25 | **0.93** |
-| 2 | free targeting, range 2 | 0.81 | 1.3 | 0.50 | **0.92** |
-| 3 | rotatable 2-hex arc at range 2 | 0.59 | 2.0 | 0.75 | **0.95** |
-| 4 | fixed 5-hex pattern | 0.31 | 4.0 | 1.00 | **0.92** |
+| 1 | free targeting, **range 3** | 0.958 | 1.00 | 0.25 | **0.898** |
+| 2 | free targeting, range 2 | 0.836 | 1.23 | 0.50 | **0.900** |
+| 3 | rotatable 2-hex arc at range 2 | 0.673 | 1.64 | 0.75 | **0.897** |
+| 4 | fixed 5-hex pattern | 0.363 | 3.30 | 1.00 | **0.898** |
 
-**Output range: 0.92–0.95 — flat within ±2%.** That flatness *is* the design target:
+> **Tier 1's reference pattern changed.** It was *free targeting, range 4*. Movement &
+> Targeting caps `RCH` at 3 — a reach of 4 threatens the whole board from the centre — so
+> the range-4 reference is no longer a legal ability and range 3 replaces it.
+
+**Output range: 0.897–0.900 — flat within ±0.2%.** That flatness *is* the design target:
 no initiative tier should be systematically correct to play. The prototype measured
 agents choosing a mean initiative of 1.9–2.4 out of 4 under a flat power curve; this
 formula exists to correct that.
 
 #### The applicability measurement
 
-> ⚠ **These numbers are conditional on a board that has not been designed.** The
-> measurement assumed a radius-4 board (61 hexes, 16% occupied) because that was a
-> constant in the tool, not a decision. Re-run across sizes, a fixed 5-hex tier-4
-> pattern measures 41.8% at radius 3 and 23.9% at radius 6 — a spread wider than the
-> conformance band built on top of it. **What is board-independent:** melee is never
-> the most applicable tier; rotatable pattern *area* never matters while *reach* always
-> does; fixed-pattern applicability rises monotonically with hex count. Build on those.
-> Re-derive the decimals once Map & Terrain fixes a board.
+> ✅ **RE-MEASURED AGAINST THE REAL BOARD, 2026-08-17.** This warning previously read
+> "conditional on a board that has not been designed" and asked for the decimals to be
+> re-derived once Map & Terrain fixed one. That is done. Champions are now drawn toward
+> the **five real towers** — `(0,0) (0,−2) (2,−2) (0,2) (−2,2)` — rather than three
+> invented hexes on the `q=0` axis.
+>
+> **What moved:** tier 3 rose 0.59 → 0.673 and tier 4 rose 0.31 → 0.363, because the real
+> towers sit 2 hexes apart where the placeholders sat 3 apart, so champions cluster more
+> tightly and patterns line up more often. Left uncorrected, F4's spread was **±9.7%**
+> against a ±2% target — out of conformance — which is what forced the `M` revision above.
+>
+> **What survived unchanged** — every qualitative finding below. Melee is still never the
+> most applicable tier (46.9%, down from 50.1%). Rotatable *reach* still dominates
+> rotatable *area*. Fixed-pattern applicability still rises ≈6pp per hex. The shape of the
+> design was right; only the decimals were wrong.
 
 `applicability` is no longer assumed. `tools/Augury.Tools` samples 20,000 board
 configurations on the radius-4 board (61 hexes, 5v5, 100,000 actor-samples, seed
 20260814) and counts how often each pattern can reach at least one **enemy**. It runs
 two placement models: **uniform** (champions scattered anywhere — a floor) and
-**contested** (placement weighted toward three objective hexes — an approximation of
+**contested** (placement weighted toward the five tower hexes — an approximation of
 real play). The contested figures are the ones in the table above, because uniform
 placement systematically understates every proximity-dependent pattern.
 
@@ -328,12 +343,12 @@ Three results change how abilities must be authored:
    and the 3-hex wedge measure *identically* (68.7%), because with six facings
    available, adding a hex to a shape almost never changes whether *some* facing
    connects. What changes applicability is which distance rings the pattern touches:
-   confined to range 2 it is 34.6%, spanning ranges 1–2 it is 68.7%. **The tier-3
+   confined to range 2 it is 43.0%, spanning ranges 1–2 it is 71.1%. **The tier-3
    authoring dial is reach, not area.** Extra hexes on a tier-3 pattern are free
    splash damage and must be priced as damage, never as applicability.
 3. **Fixed pattern size matters, and linearly.** Each hex added to a tier-4 fixed
-   pattern buys ≈6 percentage points of applicability (12.6 → 18.8 → 24.4 → 30.5 →
-   35.8). Rotation being unavailable is exactly what makes area count. This is a clean
+   pattern buys ≈6 percentage points of applicability (16.3 → 23.3 → 29.5 → 36.3 →
+   41.8; mean step 6.4pp). Rotation being unavailable is exactly what makes area count. This is a clean
    authoring rule: **tier-4 patterns are 5 hexes ± 1**, and a designer trading a hex
    away owes ≈6pp of applicability back in power.
 
@@ -500,9 +515,9 @@ All values are data-driven and must never be hardcoded (see
 | `last_word_actions` | 1 | 0–1 | Above 1, passing becomes near-suicidal and nobody ever passes | At 0 passing is a free combo-breaker — the problem this rule exists to fix |
 | `last_word_ceiling_offset` | 0 | −1 to 0 | — | At −1 the Last Word must undercut the ceiling, weakening pass-baiting and making passing safer |
 | `base_power` | 3 | 3–5 | Champions die in two exchanges; the ladder never descends far | Exchanges never resolve; matches run past the round budget |
-| `M(i)` power multipliers | [1.0, 1.3, 2.0, 4.0] | see F3 | High tiers dominate whenever the board lines up | Play collapses to low initiative, as the prototype measured |
+| `M(i)` power multipliers | [1.00, 1.23, 1.64, 3.30] | see F3 | High tiers dominate whenever the board lines up | Play collapses to low initiative, as the prototype measured |
 | `k` (exposure weight) | 0.25 | 0.20–0.30 | Over-penalises high initiative; tier 4 becomes unplayable | Under-values the answer window; high initiative becomes free |
-| `applicability(i)` targets | [0.99, 0.81, 0.59, 0.31] | see F4 | Tier 4 usable too often, becoming a default rather than an opportunity | Tier 4 effectively never legal; the tier is decoration |
+| `applicability(i)` targets | [0.96, 0.84, 0.67, 0.36] | see F4 | Tier 4 usable too often, becoming a default rather than an opportunity | Tier 4 effectively never legal; the tier is decoration |
 | tier-4 pattern hex count | 5 | 4–6 | Each hex above 5 adds ≈6pp applicability; at 7+ the tier stops being situational | At 2–3 hexes applicability falls to 13–19% and the tier is decoration |
 | tier-3 pattern reach | ranges 1–2 | r2 only – r1–3 | Confined to one ring, applicability halves to 35% | Spanning three rings, tier 3 approaches free targeting |
 | `t_decide` (blitz clock) | 6s | 4–10s | Match exceeds the 15-minute budget | Players cannot evaluate the legal set; decisions become guesses |
