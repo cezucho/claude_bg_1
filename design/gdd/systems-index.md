@@ -41,8 +41,8 @@ derived from what the named systems require.
 | 1 | Hex Grid & Spatial Model (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | — |
 | 2 | Deterministic Simulation Core (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | — |
 | 3 | Round Phase Sequencer (inferred) | Core | MVP | Not Started | — *(ADR, not GDD)* | Deterministic Simulation Core |
-| 4 | Champion Data & Stat Model (inferred) | Core | MVP | **Parked** — blocked on Map & Terrain | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Deterministic Simulation Core, **Map & Terrain** |
-| 5 | Ability Definition Schema (inferred) | Core | MVP | **Parked** — blocked on Map & Terrain | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting, **Map & Terrain** |
+| 4 | Champion Data & Stat Model (inferred) | Core | MVP | **Revised** (pending review) — unparked 2026-08-17 | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Deterministic Simulation Core, Map & Terrain, Movement & Targeting, Sigils & Beacons |
+| 5 | Ability Definition Schema (inferred) | Core | MVP | **Revised** (pending review) — unparked 2026-08-17 | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting, Map & Terrain, Sigils & Beacons |
 | 6 | Movement & Targeting | Gameplay | MVP | **Drafted** (pending review) | [design/gdd/movement-and-targeting.md](movement-and-targeting.md) | Hex Grid, Map & Terrain, Initiative Ladder, Champion Data |
 | 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | Not Started | — | Champion Data & Stat Model |
 | 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer · *modified by* **Sigils & Beacons** |

@@ -4,6 +4,42 @@
 
 ## Current Task
 
+**STEP 3 of 3 DONE — CHAMPION & ABILITY SCHEMA UNPARKED, 2026-08-17.** All three parking
+reasons resolved; doc now 612 lines, status "Revised (pending review)", index updated.
+
+*Parking reason 1 (stats depend on undesigned systems) — PARTLY resolved, `RES` DELETED.*
+`SPD` is now settled by Movement & Targeting (path length, basic budget). `RES` is not —
+Status Effects still has no GDD. The parking note said both were "candidates for deletion,
+not merely tuning", so applying that honestly means **the model drops to FIVE stats**
+(VIT/POW/ARM/RCH/SPD). `RES` returns via Status Effects with a designed job, or not at
+all. Flagged as open question 1, deliberately easy to reverse.
+
+*Parking reason 2 (applicability conditional on board) — RESOLVED.* Note the irony: the
+tool hardcoded radius 4 and the board turned out to BE radius 4, so the board-size
+assumption was accidentally right. What was wrong was **objective placement**. Targets
+now `[0.96, 0.84, 0.67, 0.36]`.
+
+*Parking reason 3 (kit shapes too narrow) — REWRITTEN as the currency.* Sum 9-11 band,
+≤2 per tier, non-decreasing. `stat_adjustment = (10 − Σ init) × C`, ⚠ C = 150 permille.
+`[1,2,2,4]` now legal. Ladder/Anvil/Vice survive as examples, not as the whole space.
+**Tension flagged (open question 2): ladder F4 already flattens effective value per
+ability, so the trade may DOUBLE-COMPENSATE and C may belong at 0.** The case for C > 0
+is that F4 prices abilities in isolation while kit *distribution* decides how deep into a
+descending ladder a champion can act — which F4 never measures.
+
+*Amendments absorbed:* RCH clamps at +1000 (hard ceiling 3 hexes — the only stat with a
+special clamp) · fifth slot = passive, with 4 triggers, ascending-champion-index ordering,
+cascade depth 1 · `printed_sigil`/`slot_sigil` fields at 15%/25% · tier-4 offsets
+team-relative per amended ADR-0005 · tier-4 SHAPE noted as the huddle-tax lever.
+
+*F2 damage fell:* tier-4 example 12 → **9 damage** (40% → 30% of a champion), because
+M(4) dropped 4.00 → 3.30. Output range 1-21 → 1-17.
+
+*Also new:* RCH gained a second job — basic attacks strike at RCH, so it is the only stat
+improving what a champion does with the team's basic-action budget.
+
+---
+
 **STEP 2 of 3 DONE — APPLICABILITY RE-MEASURED against the real board, 2026-08-17.**
 The harness weighted champion placement toward **three placeholder hexes** `(0,0) (0,-3)
 (0,3)` invented before Map & Terrain existed. Now weighted toward the **five real towers**
