@@ -57,9 +57,42 @@ having only 2 of 4 abilities carry opening instructions). AI search ~123,000 seq
 (4^5 ability choices x 120 orderings) before beacons or targets, inside the same 1.5s
 budget as the ladder.
 
-*Open before a GDD:* do all four abilities carry opening instructions or only some ·
-does an illegal instruction **skip** (modelled) or make the whole ability illegal (risks a
-dead end with no legal ability left).
+*USER DECISIONS 2026-08-17:* **all four abilities carry opening instructions** ·
+availability is **all-or-nothing and highlighted in the UI** · **you MUST play an available
+ability if any exists** (no skipping, no choosing which champion — you choose among legal
+(champion, ability) pairs across all unacted champions) · **fallback only when NO unacted
+champion has any available ability**: then each remaining champion moves one hex in any
+direction. No dead end is possible.
+
+*Measured — the strictness trap (`opening` command).* Under **strict** all-or-nothing
+(every instruction must be legal), the phase collapses as abilities get richer:
+
+| instructions | strict: openings hitting fallback | lenient (first instruction only) |
+|---|---|---|
+| 2 | **45.0%** | 12.1% |
+| 3 | **63.9%** | 7.7% |
+| 4 | **81.8%** | 6.1% |
+
+- **Strictness fights the thing that makes the idea good.** Richer abilities create the
+  sequencing depth (36.8 distinct formations at 4 instructions vs 8.0 at 2), but are less
+  often legal — so 82% of openings degenerate into the fallback, which IS the boring
+  independent design this replaces.
+- Lenient holds availability flat: **6.7 of 20 pairs legal at step 1**, **2.1 of 4** for
+  the last champion at the squeeze.
+- **The constructive puzzle is real and improves with depth:** 23-30% of illegal abilities
+  become legal after someone else moves (22.9% at 2 instructions → 30.0% at 4). "Play X to
+  unlock Y" works.
+- ⚠ Caveat cutting against the strict verdict: instructions were RANDOM, and random
+  directions from a front-line start are illegal far more often than authored ones. Strict
+  may survive careful authoring — but then every ability must be hand-checked against the
+  opening formation, and one careless ability tips a team into the scramble.
+
+*MY PROPOSAL, not yet agreed — the KEY INSTRUCTION rule.* Each ability names **one key
+instruction**; the ability is available iff its key instruction is legal, and the others
+execute if they can and skip if they cannot. Keeps availability **binary and
+highlightable** (what the user asked for), keeps depth free, avoids the collapse, and adds
+an authoring lever: a demanding key = powerful and situational, an easy key = reliable and
+dull.
 
 ---
 

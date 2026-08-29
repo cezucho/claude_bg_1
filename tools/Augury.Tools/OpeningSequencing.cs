@@ -52,6 +52,8 @@ public static class OpeningSequencing
         Report("multi-champion, 3 steps", 3, selfOnly: false);
         Report("multi-champion, 4 steps", 4, selfOnly: false);
 
+        Availability();
+
         Console.WriteLine();
         Console.WriteLine("   'distinct outcomes' = how many of the 120 orderings end in different");
         Console.WriteLine("        final formations. Near 1 means order is irrelevant and the idea");
@@ -99,6 +101,149 @@ public static class OpeningSequencing
         double distinct = (double)distinctTotal / Trials;
         Console.WriteLine($"   {label,-27}  {distinct,7:F1} of 120     {spreadTotal / Trials,5:F2}"
                           + $"   {(double)skipped / issued,6:P1}");
+    }
+
+    /// <summary>
+    /// Tests the adopted rule: an ability is either AVAILABLE or not — no partial
+    /// execution — you MUST play an available one if any exists, and only when no unacted
+    /// champion has any available ability does the fallback apply (move one hex, any
+    /// direction).
+    /// </summary>
+    /// <remarks>
+    /// The failure mode being hunted: if availability is too rare the phase degenerates
+    /// into the fallback, which is the independent one-hex-each design the whole idea
+    /// exists to escape. The opposite failure is availability so common that the
+    /// constraint never bites and ordering stops mattering.
+    /// </remarks>
+    private static void Availability()
+    {
+        const int PerChampion = 4;
+
+        Console.WriteLine();
+        Console.WriteLine("  ALL-OR-NOTHING AVAILABILITY (the adopted rule)");
+        Console.WriteLine("  An ability is available only if EVERY instruction in it can execute.");
+        Console.WriteLine("  'lenient' relaxes that to: available if its FIRST instruction can.");
+        Console.WriteLine($"  4 abilities per champion, {Team} champions, {Trials:N0} openings each.");
+        Console.WriteLine();
+        Console.WriteLine("   steps  rule      avail. at step 1   at step 5   fallback   enabled");
+        Console.WriteLine("   ─────  ────────  ────────────────   ─────────   ────────   ───────");
+
+        foreach (int steps in new[] { 2, 3, 4 })
+        {
+            foreach (bool strict in new[] { true, false })
+            {
+                var rng = new Rng(0x0AE0FF21u);
+                double first = 0, last = 0;
+                int fellBack = 0, enabled = 0, enableChances = 0;
+
+                for (int t = 0; t < Trials; t++)
+                {
+                    Step[][][] kit = new Step[Team][][];
+                    for (int c = 0; c < Team; c++)
+                    {
+                        kit[c] = new Step[PerChampion][];
+                        for (int a = 0; a < PerChampion; a++)
+                        {
+                            var st = new Step[steps];
+                            for (int i = 0; i < steps; i++)
+                                st[i] = new Step(rng.Below(Team), rng.Below(6));
+                            kit[c][a] = st;
+                        }
+                    }
+
+                    var at = new HexCoord[Team];
+                    for (int c = 0; c < Team; c++) at[c] = new HexCoord(c, -Radius);
+                    var acted = new bool[Team];
+                    bool anyFallback = false;
+                    bool[,] wasLegal = new bool[Team, PerChampion];
+
+                    for (int turn = 0; turn < Team; turn++)
+                    {
+                        var options = new List<(int C, int A)>();
+                        for (int c = 0; c < Team; c++)
+                        {
+                            if (acted[c]) continue;
+                            for (int a = 0; a < PerChampion; a++)
+                            {
+                                bool ok = Available(kit[c][a], at, strict);
+                                if (turn > 0 && !wasLegal[c, a])
+                                {
+                                    enableChances++;
+                                    if (ok) enabled++;
+                                }
+
+                                wasLegal[c, a] = ok;
+                                if (ok) options.Add((c, a));
+                            }
+                        }
+
+                        if (turn == 0) first += options.Count;
+                        if (turn == Team - 1) last += options.Count;
+
+                        if (options.Count == 0)
+                        {
+                            anyFallback = true;
+                            // Fallback: every remaining champion takes one free hex.
+                            for (int c = 0; c < Team; c++)
+                            {
+                                if (acted[c]) continue;
+                                acted[c] = true;
+                            }
+
+                            break;
+                        }
+
+                        (int ch, int ab) = options[rng.Below(options.Count)];
+                        Apply(kit[ch][ab], at);
+                        acted[ch] = true;
+                    }
+
+                    if (anyFallback) fellBack++;
+                }
+
+                Console.WriteLine($"   {steps,5}  {(strict ? "strict" : "lenient"),-8}"
+                                  + $"  {first / Trials,7:F1} of 20      {last / Trials,5:F1} of 4"
+                                  + $"   {(double)fellBack / Trials,7:P1}"
+                                  + $"   {(enableChances == 0 ? 0 : (double)enabled / enableChances),7:P1}");
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("   'avail. at step 1' — legal (champion, ability) pairs out of 20 at the start.");
+        Console.WriteLine("   'at step 5'        — out of the last champion's 4. This is where the");
+        Console.WriteLine("                        squeeze lands, and where the fallback gets used.");
+        Console.WriteLine("   'fallback'         — openings in which no unacted champion had ANY legal");
+        Console.WriteLine("                        ability. High means the phase degenerates into");
+        Console.WriteLine("                        move-one-hex, the design this replaces.");
+        Console.WriteLine("   'enabled'          — abilities that were illegal and became legal after");
+        Console.WriteLine("                        someone else moved. This is the constructive half of");
+        Console.WriteLine("                        the puzzle: playing X on purpose to unlock Y.");
+    }
+
+    private static bool Available(Step[] ability, HexCoord[] at, bool strict)
+    {
+        var sim = (HexCoord[])at.Clone();
+        bool firstOk = false;
+        for (int i = 0; i < ability.Length; i++)
+        {
+            Step st = ability[i];
+            HexCoord to = sim[st.Who] + Hex.Directions[st.Direction];
+            bool ok = Hex.InBoard(to, Radius) && !sim.Any(o => o == to);
+            if (i == 0) firstOk = ok;
+            if (!ok && strict) return false;
+            if (ok) sim[st.Who] = to;
+        }
+
+        return strict || firstOk;
+    }
+
+    private static void Apply(Step[] ability, HexCoord[] at)
+    {
+        foreach (Step st in ability)
+        {
+            HexCoord to = at[st.Who] + Hex.Directions[st.Direction];
+            if (Hex.InBoard(to, Radius) && !at.Any(o => o == to)) at[st.Who] = to;
+        }
     }
 
     /// <summary>Plays the five abilities in the given order and returns final positions.</summary>
