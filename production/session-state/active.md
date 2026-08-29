@@ -4,6 +4,66 @@
 
 ## Current Task
 
+**OPENING PHASE — multi-champion instruction sets (user's idea, 2026-08-17). MEASURED,
+NOT YET WRITTEN TO A GDD.**
+
+*The proposal.* Each champion still spends one ability in the opening, but an opening
+ability issues instructions to **several champions at once** — "jungler one north then one
+north-east, top one north, bottom one west" — and may also place beacons or apply hex
+statuses. Replaces the earlier idea of each champion simply moving toward the centre.
+
+*The claim under test:* multi-champion instructions make the opening a **sequencing
+puzzle** rather than five independent choices. Falsifiable — it is only true if the ORDER
+of play changes where everyone ends up.
+
+*Measured (`dotnet run --project tools/Augury.Tools opening`), 2,000 random ability sets,
+all 120 orderings of each:*
+
+| design | distinct outcomes / 120 | spread |
+|---|---|---|
+| independent, 1 self-move each | **1.7** | 0.06 hex |
+| multi-champion, 2 instructions | 8.0 | 0.22 |
+| multi-champion, 3 instructions | 20.5 | 0.37 |
+| multi-champion, 4 instructions | 36.8 | 0.51 |
+
+- **The independent version is 1.7 of 120 — order is essentially irrelevant.** Confirms
+  the problem the user identified: it is a setup script, not a phase.
+- Multi-champion instructions raise it ~20x, to 20-37 genuinely different formations.
+- **The engine is exactly what the user predicted:** order matters *because instructions
+  become illegal* (board edge, occupied hex), and which are illegal depends on what came
+  before. Skips convert sequence into consequence.
+- ⚠ **Caveat:** formations differ by only ~0.5 hex per champion. Many distinct outcomes,
+  clustered close. Whether that is decisive is an inference from tier-4 patterns being
+  fixed 5-hex shapes at 36% applicability, NOT measured.
+- ⚠ Instructions were random, not authored — cuts both ways (authored abilities would
+  interact more deliberately; random directions collide more often).
+
+*My assessment: build it.* Converts the weakest phase into a real decision without adding
+a subsystem. Two consequences worth pricing:
+1. **It implements beacon placement**, which `sigils-and-beacons.md` deferred to the
+   Opening Phase without saying how. An instruction set that includes "place a beacon at
+   X" is the missing mechanism.
+2. **Proposed (mine, not yet agreed): whichever ability a champion spends in the opening
+   starts the match on cooldown.** Generalises the cost that Sigils & Beacons already
+   assumed for beacon-placing abilities, and makes the opening matter in combat rather
+   than only on the board.
+
+*Strongest argument for it (user's):* an imperfect opening leaves chain partners badly
+placed, and fixing it costs **basic actions — 2 per half for the whole team**. Opening
+mistakes do not wash out; they are paid in the scarcest currency in the game.
+
+*Costs.* Double authoring (40 ability definitions per 5 champions, not 20 — mitigable by
+having only 2 of 4 abilities carry opening instructions). AI search ~123,000 sequences
+(4^5 ability choices x 120 orderings) before beacons or targets, inside the same 1.5s
+budget as the ladder.
+
+*Open before a GDD:* do all four abilities carry opening instructions or only some ·
+does an illegal instruction **skip** (modelled) or make the whole ability illegal (risks a
+dead end with no legal ability left).
+
+---
+
+
 **STEP 3 of 3 DONE — CHAMPION & ABILITY SCHEMA UNPARKED, 2026-08-17.** All three parking
 reasons resolved; doc now 612 lines, status "Revised (pending review)", index updated.
 

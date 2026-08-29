@@ -20,8 +20,11 @@ switch (command)
     case "mobility":
         MobilityCost.Run();
         break;
+    case "opening":
+        OpeningSequencing.Run();
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening");
         return 1;
 }
 
