@@ -87,7 +87,45 @@ direction. No dead end is possible.
   may survive careful authoring — but then every ability must be hand-checked against the
   opening formation, and one careless ability tips a team into the scramble.
 
-*MY PROPOSAL, not yet agreed — the KEY INSTRUCTION rule.* Each ability names **one key
+*CORRECTION 2026-08-17 — the strict numbers above were WRONG, and the user caught it.*
+The random generator produced **incoherent** abilities (each instruction pulling a
+different champion a different way) and, worse, a third of its directions pointed
+**backward off the team's own front line** — something no designer would author. Re-run
+with coherent, forward-and-lateral-only abilities whose instructions share one lateral
+intent:
+
+| instructions | strict fallback, RANDOM (wrong) | strict fallback, AUTHORED |
+|---|---|---|
+| 2 | 45.0% | **8.6%** |
+| 3 | 63.9% | **17.2%** |
+| 4 | 81.8% | **24.5%** |
+
+**STRICT ALL-OR-NOTHING IS VIABLE. The user's rule stands as specified — no
+key-instruction relaxation is needed.** My proposal below is withdrawn.
+
+*And the draft axis the user described is REAL, with a threshold nobody predicted.*
+Instructions name a ROLE, not a champion, so an ability's value depends on who was
+drafted into that role. Aligned vs mismatched drafts, identical ability sets:
+
+| instructions | aligned | mismatched | benefit |
+|---|---|---|---|
+| 2 | 2.37 | 2.38 | **none** |
+| 3 | 2.37 | 2.52 | 6% |
+| 4 | 2.51 | 2.71 | 7.4% |
+
+- **At 2 instructions, drafting for opening synergy is worth NOTHING.** The axis switches
+  on at 3. Instruction count is not only sequencing depth — it is what makes the opening
+  kit worth drafting for at all. The user's "draft a weaker endgame champion because he
+  places my team better" trade does not exist below 3.
+- **RECOMMENDED: 3 instructions per opening ability.** Fallback 17.2%, draft axis live,
+  20.5 distinct formations from ordering. At 4, fallback reaches a quarter of openings.
+- ⚠ The alignment proxy is crude (want = sign of net push x 4) and the placement AI plays
+  near-optimally in both conditions, so 6-7% is a **floor**, not an estimate.
+- Small real cost found: aligned drafts fall back slightly MORE (8.6% vs 6.9%) — playing
+  for position sometimes means choosing an ability that serves the formation over one that
+  keeps options open.
+
+*WITHDRAWN — the KEY INSTRUCTION rule.* Each ability names **one key
 instruction**; the ability is available iff its key instruction is legal, and the others
 execute if they can and skip if they cannot. Keeps availability **binary and
 highlightable** (what the user asked for), keeps depth free, avoids the collapse, and adds

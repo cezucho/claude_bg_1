@@ -53,6 +53,7 @@ public static class OpeningSequencing
         Report("multi-champion, 4 steps", 4, selfOnly: false);
 
         Availability();
+        Coherent();
 
         Console.WriteLine();
         Console.WriteLine("   'distinct outcomes' = how many of the 120 orderings end in different");
@@ -219,6 +220,146 @@ public static class OpeningSequencing
         Console.WriteLine("                        someone else moved. This is the constructive half of");
         Console.WriteLine("                        the puzzle: playing X on purpose to unlock Y.");
     }
+
+    /// <summary>
+    /// Re-runs availability with <b>authored-looking</b> abilities instead of random ones,
+    /// and tests whether draft alignment is a real strategic axis.
+    /// </summary>
+    /// <remarks>
+    /// <para>Two corrections to the random model. First, an opening ability has a
+    /// <b>coherent intent</b> — its instructions push in a consistent lateral direction
+    /// rather than contradicting each other. Second, no designer authors a step that walks
+    /// a champion backward off its own front line, so directions are drawn from the
+    /// forward and lateral set only.</para>
+    /// <para>Instructions name a <b>role</b>, not a champion — "bottom moves west" — so
+    /// whether an ability helps depends on which champion was drafted into that role. That
+    /// is the axis under test: a team whose champions want to be where its opening kit
+    /// pushes them should end up measurably better placed than one that drafted for combat
+    /// alone.</para>
+    /// </remarks>
+    private static void Coherent()
+    {
+        const int PerChampion = 4;
+        // Directions by file delta (file = 2q + r): forward-west, forward-east, west, east.
+        int[] forwardWest = [4], forwardEast = [5], west = [3], east = [0];
+
+        Console.WriteLine();
+        Console.WriteLine("  AUTHORED-LOOKING ABILITIES, AND WHETHER THE DRAFT MATTERS");
+        Console.WriteLine("  Instructions now push a consistent lateral intent and never walk a");
+        Console.WriteLine("  champion backward off its own front line. They name ROLES, so an");
+        Console.WriteLine("  ability's value depends on which champion was drafted into that role.");
+        Console.WriteLine();
+        Console.WriteLine("   steps  draft        fallback   avail@1   misplacement");
+        Console.WriteLine("   ─────  ───────────  ────────   ───────   ────────────");
+
+        foreach (int steps in new[] { 2, 3, 4 })
+        {
+            foreach (bool aligned in new[] { true, false })
+            {
+                // Two streams: abilities must be IDENTICAL across the two draft
+                // conditions, or the comparison comes apart. Only 'want' may differ.
+                var rng = new Rng(0xC04E1200u);
+                var wantRng = new Rng(0x5EED0417u);
+                int fellBack = 0;
+                double availFirst = 0, misplace = 0;
+
+                for (int t = 0; t < Trials; t++)
+                {
+                    // Author each champion's four abilities with one lateral intent each.
+                    var kit = new Step[Team][][];
+                    var pushOnRole = new int[Team];
+                    for (int c = 0; c < Team; c++)
+                    {
+                        kit[c] = new Step[PerChampion][];
+                        for (int a = 0; a < PerChampion; a++)
+                        {
+                            int intent = rng.Below(2) == 0 ? -1 : +1;      // west or east
+                            var st = new Step[steps];
+                            for (int i = 0; i < steps; i++)
+                            {
+                                int role = rng.Below(Team);
+                                int[] pool = rng.Below(2) == 0
+                                    ? (intent < 0 ? forwardWest : forwardEast)
+                                    : (intent < 0 ? west : east);
+                                st[i] = new Step(role, pool[0]);
+                                pushOnRole[role] += intent;
+                            }
+
+                            kit[c][a] = st;
+                        }
+                    }
+
+                    // Aligned: each champion wants the file its own kit tends to push it toward.
+                    var want = new int[Team];
+                    for (int c = 0; c < Team; c++)
+                    {
+                        int roll = wantRng.Below(5);
+                        want[c] = aligned
+                            ? Math.Sign(pushOnRole[c]) * 4
+                            : (roll - 2) * 2;
+                    }
+
+                    var at = new HexCoord[Team];
+                    for (int c = 0; c < Team; c++) at[c] = new HexCoord(c, -Radius);
+                    var acted = new bool[Team];
+                    bool anyFallback = false;
+
+                    for (int turn = 0; turn < Team; turn++)
+                    {
+                        var options = new List<(int C, int A)>();
+                        for (int c = 0; c < Team; c++)
+                        {
+                            if (acted[c]) continue;
+                            for (int a = 0; a < PerChampion; a++)
+                            {
+                                if (Available(kit[c][a], at, strict: true)) options.Add((c, a));
+                            }
+                        }
+
+                        if (turn == 0) availFirst += options.Count;
+                        if (options.Count == 0)
+                        {
+                            anyFallback = true;
+                            break;
+                        }
+
+                        // Play the option that best serves the team's positional wants.
+                        (int C, int A) best = options[0];
+                        int bestScore = int.MinValue;
+                        foreach ((int c, int a) in options)
+                        {
+                            var sim = (HexCoord[])at.Clone();
+                            Apply(kit[c][a], sim);
+                            int score = -Enumerable.Range(0, Team)
+                                .Sum(k => Math.Abs(File(sim[k]) - want[k]));
+                            if (score > bestScore) { bestScore = score; best = (c, a); }
+                        }
+
+                        Apply(kit[best.C][best.A], at);
+                        acted[best.C] = true;
+                    }
+
+                    if (anyFallback) fellBack++;
+                    misplace += Enumerable.Range(0, Team)
+                        .Average(k => Math.Abs(File(at[k]) - want[k]));
+                }
+
+                Console.WriteLine($"   {steps,5}  {(aligned ? "aligned" : "mismatched"),-11}"
+                                  + $"  {(double)fellBack / Trials,7:P1}   {availFirst / Trials,5:F1}/20"
+                                  + $"   {misplace / Trials,10:F2}");
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("   'misplacement' = mean file distance between where a champion ended and");
+        Console.WriteLine("        where it wanted to be. Lower is better. If aligned and mismatched");
+        Console.WriteLine("        drafts score the same, the opening kit is NOT a draft axis and");
+        Console.WriteLine("        picking for it would be wasted effort.");
+        Console.WriteLine();
+    }
+
+    /// <summary>Position across the board: 0 on the centre axis, +/-8 at the side corners.</summary>
+    private static int File(HexCoord h) => 2 * h.Q + h.R;
 
     private static bool Available(Step[] ability, HexCoord[] at, bool strict)
     {
