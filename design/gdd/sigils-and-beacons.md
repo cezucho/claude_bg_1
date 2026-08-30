@@ -177,6 +177,11 @@ in this game is.
 beacons as it has abilities that place them, and such abilities are rare because a beacon
 is powerful.
 
+> **The mechanism now exists.** `opening-phase.md` rule 2 defines `PlaceBeacon(role,
+> sigil)` as one of the two opening instruction kinds: the beacon appears on the hex that
+> role occupies *at the moment the instruction resolves*, so placing it before or after
+> moving that role puts it in different places.
+
 **Placement is mostly Opening Phase.** An ability that places a beacon during the Opening
 Phase pays for it with a ⚠ cooldown carried into the action phase — the champion begins
 the match having already spent something.

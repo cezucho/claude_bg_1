@@ -44,7 +44,8 @@ stats**, so `[1,2,2,4]` is now legal and differentiated rather than illegal.
 |---|---|
 | `RCH` caps at **3**, not 4 | Movement & Targeting rule 7 |
 | Fifth slot: one **passive** per champion (rule 8) | Movement & Targeting rule 6 |
-| `printed_sigil` and `slot_sigil` fields (rule 9) | Sigils & Beacons rules 2–3 |
+| `printed_sigil` and `slot_sigil` fields (rule 8) | Sigils & Beacons rules 2–3 |
+| An `OpeningInstructions` field — exactly **3** entries, each naming a **role** | Opening Phase rules 1–2 |
 | Tier-4 pattern shape is the huddle-tax lever (rule 5) | Sigils & Beacons rule 9 |
 | Tier-4 offsets are **team-relative**, not world-absolute | ADR-0005, amended |
 | `M` revised, damage falls ~18% at the top (F2) | Ladder F3, re-measured |

@@ -275,6 +275,7 @@ standing still.**
 | **Ability Definition Schema** | → requires | Passive trigger vocabulary and deterministic trigger ordering. `Move`/`Displace` effects must respect blocking. |
 | **Damage & Combat Resolution** | → requires | Basic attack damage. |
 | **Objectives & Scoring** | → requires | Whether basic attacks may damage structures. |
+| **Opening Phase** | → supplies | Blocking rules only. The opening does **not** use `SPD` or the basic-action budget — its instructions move a fixed one hex each, and it resolves entirely before round 1. |
 | **Sigils & Beacons** | ↔ interacts | Locked positions remove the mid-ladder dodge that made denial B sharp. Beacons do not block. Passives carry no sigils. |
 | **AI Opponent** | → requires | Must search the basic phase and the ladder phase separately; the basic phase alone is ~2 champions × ~19 destinations, before abilities. |
 

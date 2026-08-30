@@ -52,7 +52,7 @@ derived from what the named systems require.
 | 12 | Map & Terrain | Gameplay | MVP | **Designed** (pending review) | [design/gdd/map-and-terrain.md](map-and-terrain.md) | Hex Grid |
 | 13 | Objectives & Scoring | Gameplay | MVP | Not Started | — | Map & Terrain, **Sigils & Beacons** (beacon destruction cost) |
 | 14 | Draft | Gameplay | MVP | Not Started | — | Champion Data, Ability Definition Schema |
-| 15 | Opening Phase | Gameplay | MVP | Not Started | — | Draft, Ability Schema, Movement & Targeting, Map & Terrain, **Sigils & Beacons** (beacon placement) |
+| 15 | Opening Phase | Gameplay | MVP | **Drafted** (pending review) | [design/gdd/opening-phase.md](opening-phase.md) | Draft, Champion & Ability Schema, Map & Terrain, Movement & Targeting, Sigils & Beacons |
 | 16 | AI Opponent | Gameplay | MVP | Not Started | — | Effectively the entire simulation |
 | 17 | Board & Unit Presentation | UI | MVP | Not Started | — | Hex Grid, Map & Terrain, Champion Data |
 | 18 | Combat HUD & State Inspection | UI | MVP | Not Started | — | Champion Data, Molding, Status Effects |
