@@ -59,6 +59,10 @@ namespace Augury.Cli
         private readonly Game _game = game;
         private readonly Renderer _r = new(game);
         private readonly IAgent _ai = new HeuristicAgent(game);
+
+        // The AI drafts at random so matches differ; this is presentation, not simulation,
+        // so a time-based seed is allowed here (ADR-0002 binds Augury.Sim only).
+        private readonly IAgent _drafter = new RandomAgent((uint)Environment.TickCount);
         private readonly List<GameEvent> _log = [];
         private int _shown;
 
@@ -84,7 +88,7 @@ namespace Augury.Cli
                 }
                 else
                 {
-                    cmd = s.Phase == Phase.Draft ? legal[0] : _ai.Choose(s, legal);
+                    cmd = s.Phase == Phase.Draft ? _drafter.Choose(s, legal) : _ai.Choose(s, legal);
                 }
 
                 _game.Apply(ref s, cmd, _log);
@@ -194,7 +198,11 @@ namespace Augury.Cli
                 case Phase.Draft:
                     foreach (Command c in legal)
                     {
-                        result.Add(new Option($"{(Sim.Content.Role)(c.Champion % 5)}: {_game.Content.Champions[c.Ability].Name}", [c]));
+                        var def = _game.Content.Champions[c.Ability];
+                        string kit = string.Join("-", def.Abilities.Select(a => a.Initiative));
+                        result.Add(new Option(
+                            $"{(Sim.Content.Role)(c.Champion % 5),-8} {def.Name,-11} kit {kit}  "
+                            + Ansi.Dim($"{string.Join(", ", def.Abilities.Select(a => a.Name))} · passive {def.Passive.Name}"), [c]));
                     }
 
                     break;

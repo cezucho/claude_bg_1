@@ -1,0 +1,20 @@
+{
+  "targetScore": 60,
+  "roundCap": 30,
+  "killPoints": 3,
+  "towerPoints": 1,
+  "towerHp": 16,
+  "nexusHp": 25,
+  "towerShot": 2,
+  "basicBase": 2,
+  "abilityBase": 3,
+  "defenderWeight": 500,
+  "dyingPowPermille": 500,
+  "beaconDurability": 2,
+  "respawnBase": 1,
+  "respawnEvery": 8,
+  "basicsPerHalf": 2,
+  "friendliesBlock": true,
+  "nexusGateTowers": 1,
+  "roundOneOpener": "B"
+}

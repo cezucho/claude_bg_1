@@ -1,6 +1,6 @@
 # AUGURY — MVP Rules (First Playable)
 
-> **Status**: Authoritative for the first playable build · 2026-09-27
+> **Status**: Authoritative for the first playable build · 2026-09-27 · numbers retuned after 500 self-play matches (D-025, D-026)
 > **Author**: Claude, under standing authority from the project owner
 > **Purpose**: One sheet that states every rule the simulation implements. Where it
 > conflicts with a GDD, **this sheet wins for the first playable** and the conflict is
@@ -128,11 +128,11 @@ Implements `initiative-ladder.md` Core Rules 1–7:
 
 | Structure | HP ⚠ | Start owner |
 |---|---|---|
-| Tower `(0,−2)`, `(2,−2)` | 24 | A |
-| Tower `(0,2)`, `(−2,2)` | 24 | B |
-| Tower `(0,0)` | 24 | neutral |
-| Nexus A (3 hexes) | 60 shared | A |
-| Nexus B (3 hexes) | 60 shared | B |
+| Tower `(0,−2)`, `(2,−2)` | 16 | A |
+| Tower `(0,2)`, `(−2,2)` | 16 | B |
+| Tower `(0,0)` | 16 | neutral |
+| Nexus A (3 hexes) | 25 shared | A |
+| Nexus B (3 hexes) | 25 shared | B |
 
 - Damaged by basic attacks and by **Damage** effects of abilities (free-targeting or a
   pattern covering a structure hex). A nexus takes damage **once** per ability however
@@ -143,8 +143,9 @@ Implements `initiative-ladder.md` Core Rules 1–7:
   never stops.
 - **Towers are captured, not destroyed**: at 0 HP a tower flips to the attacker's team and
   resets to full HP (D-006).
-- **Nexus gate**: a nexus is **invulnerable while its team owns either of its own two home
-  towers** (D-002). Destroying a nexus ends the match immediately, whatever the score.
+- **Nexus gate**: a nexus is **invulnerable until its team has lost at least one of its two
+  home towers** (D-025, loosened from D-002's both-towers gate after measurement). Retaking
+  the tower closes it again. Destroying a nexus ends the match immediately, whatever the score.
 - **Towers shoot**: in the status phase each owned tower deals 2 ⚠ damage to every enemy
   champion within 1 hex.
 - Champions may stand on tower and nexus hexes.
@@ -210,7 +211,7 @@ Strict order (ADR-0006):
 ## 15. Winning
 
 - **Nexus destroyed** → the destroyer wins immediately.
-- **Target score 50** ⚠ reached at round close → the higher score wins; an exact tie plays
+- **Target score 60** ⚠ (D-026) reached at round close → the higher score wins; an exact tie plays
   another round.
 - **Round 30 safety cap** → higher score wins; tie is a draw (D-018).
 
@@ -218,3 +219,60 @@ Strict order (ADR-0006):
 
 Items, gold, minion waves, jungle creeps, hex statuses, enemy-addressed opening
 instructions, action-phase beacon placement, statuses other than poison, a blitz clock.
+
+## 17. Data files
+
+Both live in `assets/data/`, are strict JSON, and are validated on load — a breach fails loudly.
+
+**`rules_config.json`** — every tunable number, keyed exactly as in `RulesConfig`:
+
+| Key | Value | Meaning | Decision |
+|---|---|---|---|
+| `targetScore` | 60 | Points that end the match at round close | D-001, D-026 |
+| `roundCap` | 30 | Safety cap; higher score wins, tie draws | D-018 |
+| `killPoints` | 3 | Points to the other team per death | D-001 |
+| `towerPoints` | 1 | Points per owned tower per round close | D-001 |
+| `towerHp` | 16 | Tower HP; resets when captured | D-026 |
+| `nexusHp` | 25 | One pool across a team's three nexus hexes | D-026 |
+| `nexusGateTowers` | 1 | Home towers a team must lose before its nexus opens | D-025 |
+| `towerShot` | 2 | Damage a tower deals each adjacent enemy in the status phase | D-024 |
+| `basicBase` | 2 | Basic attack damage before POW and ARM | D-008 |
+| `abilityBase` | 3 | Ladder F3 `base_power` | ladder F3 |
+| `defenderWeight` | 500 | Permille added to a structure's damage divisor per defender | D-005 |
+| `dyingPowPermille` | 500 | POW a Dying champion reads, permille | D-007 |
+| `beaconDurability` | 2 | Enemy basic attacks a beacon survives | D-010 |
+| `respawnBase`, `respawnEvery` | 1, 8 | Respawn = base + round ÷ every | D-016 |
+| `basicsPerHalf` | 2 | Basics per team per half | Movement & Targeting |
+| `friendliesBlock` | true | Friendly champions block movement | D-017 |
+| `roundOneOpener` | "B" | Opens round 1; the other team places first in the opening | D-013 |
+
+**`champions/champion_NN_name.json`** — one champion per file, loaded in file-name order
+(the number fixes each champion's index). Schema:
+
+```jsonc
+{
+  "id": "warden", "name": "Warden", "role": "Top|Jungle|Mid|Bottom|Support", "glyph": "W",
+  "stats": { "vit": 34000, "pow": 900, "arm": 1000, "rch": 2000, "spd": 2000 },  // permille
+  "tradeStat": "vit",                      // receives (10 − Σ initiative) × 150
+  "passive": { "name": "...", "trigger": "OnDamaged|OnEnemyEntersReach|OnAllyDies|OnRoundClose",
+               "effect": "Retaliate|Strike|HealSelf|ShieldSelf|EmpowerSelf", "amount": 1, "stat": "pow" },
+  "abilities": [ {                          // exactly four, Q W E R
+    "name": "Rebuke", "initiative": 1, "cooldown": 1,
+    "target": "Enemy|Ally|EmptyHex",        // initiative 1–2 only
+    "rangeBonus": 0,                        // added to RCH, clamped 1–3
+    "pattern": [[1,0],[1,-1]],              // initiative 3–4 only; canonical forward frame
+    "effects": [ { "kind": "Damage|Heal|Shield|Poison|Displace|Dash",
+                   "power": 1000, "amount": 1, "rounds": 2 } ],   // one or two
+    "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+    "printedSigil": 0, "slotSigil": -1,     // 0–2, or −1 for none
+    "opening": ["move top forward-right", "move jungle forward-left", "beacon support 2"]
+  } ]
+}
+```
+
+Directions for `move` are `forward-left`, `forward-right`, `left`, `right`, `back-left`,
+`back-right`, relative to the team's own forward direction. The validator enforces every
+rule in the schema GDD's rule 9: initiatives non-decreasing, total 9–11, at most two per
+tier, patterns only on initiatives 3–4 (4–6 hexes at 4), the cross rule, three opening
+instructions, tier-1 abilities ranged unless they dash.
+

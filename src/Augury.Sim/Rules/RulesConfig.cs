@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Augury.Sim;
 
 /// <summary>
-/// Every tunable rule number, loaded from <c>assets/data/rules.json</c>. Values marked ⚠ in
+/// Every tunable rule number, loaded from <c>assets/data/rules_config.json</c>. Values marked ⚠ in
 /// <c>design/mvp-rules.md</c> live here so the balance pass edits data, not code.
 /// </summary>
 public sealed record RulesConfig
@@ -56,6 +56,12 @@ public sealed record RulesConfig
     /// <summary>Whether friendly champions block movement (D-017).</summary>
     public bool FriendliesBlock { get; init; } = true;
 
+    /// <summary>
+    /// How many of its own home towers a team must have lost before its nexus can be
+    /// damaged: 2 = both (the original D-002), 1 = either, 0 = always open.
+    /// </summary>
+    public int NexusGateTowers { get; init; } = 2;
+
     /// <summary>Team that opens round 1; the other places first in the opening (D-013).</summary>
     public string RoundOneOpener { get; init; } = "B";
 
@@ -65,11 +71,11 @@ public sealed record RulesConfig
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true, ReadCommentHandling = JsonCommentHandling.Skip })
         ?? new RulesConfig();
 
-    /// <summary>Loads <c>assets/data/rules.json</c> found by walking up from the start directory.</summary>
+    /// <summary>Loads <c>assets/data/rules_config.json</c> found by walking up from the start directory.</summary>
     public static RulesConfig LoadDefault()
     {
         string champions = Content.ContentLoader.FindChampionDirectory();
-        string path = Path.Combine(Path.GetDirectoryName(champions)!, "rules.json");
+        string path = Path.Combine(Path.GetDirectoryName(champions)!, "rules_config.json");
         return File.Exists(path) ? Load(path) : new RulesConfig();
     }
 }

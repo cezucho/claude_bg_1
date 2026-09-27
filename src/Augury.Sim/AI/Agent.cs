@@ -165,11 +165,12 @@ public static class Evaluation
             else v += (game.Rules.TowerHp - tower.Hp) * 3;
         }
 
+        // Nexus damage is permanent, so it counts whether or not the gate is open right now;
+        // an earlier version only counted it while open, and forgot its own progress the moment
+        // the defender retook a tower.
         Team enemy = MatchState.Other(t);
-        if (Game.NexusVulnerable(s, enemy))
-        {
-            v += 200 + (game.Rules.NexusHp - s.NexusHp[enemy == Team.A ? 0 : 1]) * 12;
-        }
+        v += (game.Rules.NexusHp - s.NexusHp[enemy == Team.A ? 0 : 1]) * 15;
+        if (Game.NexusVulnerable(s, enemy)) v += 200;
 
         int first = MatchState.FirstSlot(t);
         for (int slot = first; slot < first + 5; slot++)

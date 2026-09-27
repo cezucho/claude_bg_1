@@ -1,0 +1,25 @@
+{
+  "id": "gunner", "name": "Gunner", "role": "Bottom", "glyph": "G",
+  "stats": { "vit": 26000, "pow": 1150, "arm": 0, "rch": 3000, "spd": 2000 },
+  "tradeStat": "pow",
+  "passive": { "name": "Overwatch", "trigger": "OnEnemyEntersReach", "effect": "Strike", "amount": 1 },
+  "abilities": [
+    { "name": "Snipe", "initiative": 1, "cooldown": 1, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1100 } ], "slotSigil": 2,
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move bottom forward-right", "move support forward-right", "move bottom forward-right"] },
+    { "name": "Grenade", "initiative": 2, "cooldown": 2, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1230 }, { "kind": "Poison", "amount": 1, "rounds": 2 } ],
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["rch", 60],
+      "opening": ["move bottom right", "move bottom forward-left", "beacon bottom 2"] },
+    { "name": "Buckshot", "initiative": 3, "cooldown": 1, "pattern": [[1,0],[1,-1],[2,-1]],
+      "effects": [ { "kind": "Damage", "power": 1640 } ],
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["vit", 60],
+      "opening": ["move bottom forward-left", "move mid forward-right", "move support forward-left"] },
+    { "name": "Barrage", "initiative": 4, "cooldown": 3,
+      "pattern": [[1,1],[0,2],[1,2],[2,1],[0,1]],
+      "effects": [ { "kind": "Damage", "power": 3300 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move bottom forward-right", "move bottom forward-left", "move jungle forward-right"] }
+  ]
+}

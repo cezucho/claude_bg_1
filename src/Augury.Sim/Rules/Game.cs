@@ -45,6 +45,7 @@ public sealed partial class Game
             Active = DraftPicker(0),
             RoundOpener = _roundOneOpener,
             Winner = Team.None,
+            NexusGate = (byte)Math.Clamp(Rules.NexusGateTowers, 0, 2),
         };
 
         for (int i = 0; i < 10; i++)

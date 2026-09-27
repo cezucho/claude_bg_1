@@ -274,6 +274,9 @@ public struct MatchState
     /// <summary>Abilities resolved in the current half, both teams.</summary>
     public byte ResolutionsThisHalf;
 
+    /// <summary>Home towers a team must lose before its nexus opens (from rules; D-002).</summary>
+    public byte NexusGate;
+
     /// <summary>The opener of the current half.</summary>
     public readonly Team HalfOpener => Half == 1 ? RoundOpener : Other(RoundOpener);
 

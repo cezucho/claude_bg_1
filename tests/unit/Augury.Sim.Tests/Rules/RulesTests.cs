@@ -166,15 +166,23 @@ public class RulesTests
         Assert.True(s.Champions[AWarden].Has(ChampFlags.Acted) && s.Champions[ARanger].Has(ChampFlags.Acted));
     }
 
-    [Fact]
-    public void Nexus_IsInvulnerableWhileItsTeamHoldsAHomeTower()
+    [Theory]
+    [InlineData(2)]
+    [InlineData(1)]
+    public void Nexus_OpensOnlyOnceTheGatesHomeTowersAreLost(int gate)
     {
         MatchState s = Arena();
+        s.NexusGate = (byte)gate;
         Assert.False(Game.NexusVulnerable(s, Team.B));
+
         s.Towers[3].Owner = Team.A;
-        Assert.False(Game.NexusVulnerable(s, Team.B));
+        Assert.Equal(gate <= 1, Game.NexusVulnerable(s, Team.B));
+
         s.Towers[4].Owner = Team.A;
         Assert.True(Game.NexusVulnerable(s, Team.B));
+
+        s.Towers[3].Owner = Team.B;   // retaking a home tower closes a both-towers gate again
+        Assert.Equal(gate <= 1, Game.NexusVulnerable(s, Team.B));
     }
 
     [Fact]

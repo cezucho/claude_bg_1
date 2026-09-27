@@ -123,15 +123,19 @@ public sealed partial class Game
         }
     }
 
-    /// <summary>A nexus is vulnerable only once its team holds neither home tower (D-002).</summary>
+    /// <summary>
+    /// A nexus is vulnerable once its team has lost <c>NexusGateTowers</c> of its two home
+    /// towers (D-002). The gate count lives in the state so this stays a static read.
+    /// </summary>
     public static bool NexusVulnerable(in MatchState s, Team owner)
     {
+        int lost = 0;
         for (int t = 0; t < 5; t++)
         {
-            if (s.Towers[t].Home == owner && s.Towers[t].Owner == owner) return false;
+            if (s.Towers[t].Home == owner && s.Towers[t].Owner != owner) lost++;
         }
 
-        return true;
+        return lost >= s.NexusGate;
     }
 
     private void ApplyBasicMove(ref MatchState s, in Command cmd, List<GameEvent>? log)

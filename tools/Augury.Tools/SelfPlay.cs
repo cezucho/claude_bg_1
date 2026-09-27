@@ -15,18 +15,22 @@ public static class SelfPlay
     {
         public int Matches, WinsA, WinsB, Draws, Nexus, Score, Cap, NexusFromBehind;
         public long Rounds, Halves, HalvesOpened, HalvesByPass, Resolutions, Chains, Deaths, Captures;
-        public long BasicMoves, BasicAttacks, OpeningFallbackTeams, Decisions;
+        public long BasicMoves, BasicAttacks, OpeningFallbackTeams, Decisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
         public double AiMsTotal, AiMsMax;
         public long AiCalls;
         public readonly List<int> RoundCounts = new();
+        public readonly Dictionary<string, (int Picks, int Wins)> Champs = new();
     }
 
     public static void Run(string[] args)
     {
-        int n = args.Length > 1 ? int.Parse(args[1]) : 100;
-        string aName = args.Length > 2 ? args[2] : "heuristic";
-        string bName = args.Length > 3 ? args[3] : "heuristic";
-        Game game = Game.LoadDefault();
+        // Positional: matches, a-agent, b-agent. Any "key=value" overrides a rules_config.json field.
+        var positional = args.Skip(1).Where(a => !a.Contains('=')).ToList();
+        int n = positional.Count > 0 ? int.Parse(positional[0]) : 100;
+        string aName = positional.Count > 1 ? positional[1] : "heuristic";
+        string bName = positional.Count > 2 ? positional[2] : "heuristic";
+        Game baseline = Game.LoadDefault();
+        Game game = new(baseline.Content, Override(baseline.Rules, args.Where(a => a.Contains('='))));
         var stats = new Stats();
         var sw = Stopwatch.StartNew();
 
@@ -38,6 +42,20 @@ public static class SelfPlay
         }
 
         Report(game, stats, aName, bName, sw.Elapsed.TotalSeconds);
+    }
+
+    private static RulesConfig Override(RulesConfig rules, IEnumerable<string> pairs)
+    {
+        var json = System.Text.Json.JsonSerializer.SerializeToNode(rules)!.AsObject();
+        foreach (string pair in pairs)
+        {
+            string[] kv = pair.Split('=', 2);
+            string key = json.Select(p => p.Key).FirstOrDefault(k => k.Equals(kv[0], StringComparison.OrdinalIgnoreCase))
+                         ?? throw new ArgumentException($"Unknown rule '{kv[0]}'.");
+            json[key] = bool.TryParse(kv[1], out bool b) ? b : int.TryParse(kv[1], out int i) ? i : kv[1];
+        }
+
+        return System.Text.Json.JsonSerializer.Deserialize<RulesConfig>(json)!;
     }
 
     private static IAgent Make(string name, Game game, uint seed) => name switch
@@ -54,6 +72,7 @@ public static class SelfPlay
         MatchState s = game.NewMatch();
         var log = new List<GameEvent>();
         var legal = new List<Command>();
+        bool opened = false;
 
         while (s.Phase != Phase.MatchOver)
         {
@@ -80,9 +99,27 @@ public static class SelfPlay
 
             game.Apply(ref s, c, log);
             st.Decisions++;
+            if (Game.NexusVulnerable(s, Team.A) || Game.NexusVulnerable(s, Team.B))
+            {
+                st.NexusOpenDecisions++;
+                opened = true;
+            }
         }
 
+        if (opened) st.MatchesNexusOpened++;
+        int hits = log.Count(e => e.Kind == EventKind.Structure && e.Text.Contains("NEXUS"));
+        st.NexusHits += hits;
+        if (hits > 0) st.MatchesNexusHit++;
+
         st.Matches++;
+        for (int slot = 0; slot < 10; slot++)
+        {
+            Champion ch = s.Champions[slot];
+            string name = game.Def(ch).Name;
+            var (p, w) = st.Champs.GetValueOrDefault(name);
+            st.Champs[name] = (p + 1, w + (s.Winner == ch.Team ? 1 : 0));
+        }
+
         st.Rounds += s.Round;
         st.RoundCounts.Add(s.Round);
         switch (s.Winner)
@@ -144,7 +181,11 @@ public static class SelfPlay
                 else if (e.Text.Contains("moves") || e.Text.Contains("enters")) st.BasicMoves++;
             }
 
-            if (e.Kind == EventKind.Opening && e.Text.Contains("fallback")) st.OpeningFallbackTeams++;
+        }
+
+        foreach (Team t in new[] { Team.A, Team.B })
+        {
+            if (log.Any(e => e.Kind == EventKind.Opening && e.Text.Contains("fallback") && e.Text.StartsWith($"{t}:"))) st.OpeningFallbackTeams++;
         }
     }
 
@@ -153,18 +194,28 @@ public static class SelfPlay
         double m = st.Matches;
         Console.WriteLine();
         Console.WriteLine($"SELF-PLAY — {st.Matches} matches, A = {a}, B = {b}, {seconds:F1}s");
-        Console.WriteLine($"  rules: target {game.Rules.TargetScore}, kill {game.Rules.KillPoints}, tower {game.Rules.TowerPoints}/round, nexus HP {game.Rules.NexusHp}, tower HP {game.Rules.TowerHp}");
+        Console.WriteLine($"  rules: target {game.Rules.TargetScore}, kill {game.Rules.KillPoints}, tower {game.Rules.TowerPoints}/round, nexus HP {game.Rules.NexusHp}, tower HP {game.Rules.TowerHp}, tower shot {game.Rules.TowerShot}, defender {game.Rules.DefenderWeight}");
         Console.WriteLine();
         Console.WriteLine($"  Results       A {st.WinsA / m,6:P0}   B {st.WinsB / m,6:P0}   draw {st.Draws / m,6:P0}");
-        Console.WriteLine($"  Endings       score {st.Score / m,6:P0}   nexus {st.Nexus / m,6:P0}   round cap {st.Cap / m,6:P0}");
+        Console.WriteLine($"  Endings       score {st.Score / m,6:P1}   nexus {st.Nexus / m,6:P1}   round cap {st.Cap / m,6:P1}");
         st.RoundCounts.Sort();
         Console.WriteLine($"  Rounds        mean {st.Rounds / m,5:F1}   median {st.RoundCounts[st.RoundCounts.Count / 2]}   min {st.RoundCounts[0]}   max {st.RoundCounts[^1]}");
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");
+        Console.WriteLine($"  Nexus open    in {st.MatchesNexusOpened / m,6:P0} of matches, {st.NexusOpenDecisions / (double)st.Decisions,6:P1} of decisions; hit in {st.MatchesNexusHit / m,6:P0} of matches ({st.NexusHits / m:F1} hits/match)");
         Console.WriteLine($"  Basics        moves {st.BasicMoves / (double)(st.BasicMoves + st.BasicAttacks),6:P0}   attacks {st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks),6:P0}");
-        Console.WriteLine($"  Opening       teams hitting fallback {st.OpeningFallbackTeams / (2 * m),6:P0} of champion-plays ÷ 5 ≈ openings");
+        Console.WriteLine($"  Opening       team-openings hitting the fallback {st.OpeningFallbackTeams / (2 * m),6:P0}   (Opening #10 wants 10–25%)");
         if (st.AiCalls > 0)
         {
             Console.WriteLine($"  AI time       mean {st.AiMsTotal / st.AiCalls,6:F1} ms   max {st.AiMsMax,7:F1} ms   (budget 1500 ms)");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("  CHAMPIONS (win rate when picked; mirrors count once per side)");
+        foreach (var (name, (picks, wins)) in st.Champs.OrderByDescending(kv => kv.Value.Wins / (double)kv.Value.Picks))
+        {
+            double wr = wins / (double)picks;
+            string flag = wr > 0.56 ? "  ▲ strong" : wr < 0.44 ? "  ▼ weak" : "";
+            Console.WriteLine($"    {name,-12} {wr,6:P0}  ({picks} picks){flag}");
         }
 
         Console.WriteLine();

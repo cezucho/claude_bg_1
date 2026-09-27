@@ -1,0 +1,25 @@
+{
+  "id": "tempest", "name": "Tempest", "role": "Mid", "glyph": "T",
+  "stats": { "vit": 23000, "pow": 1200, "arm": 0, "rch": 3000, "spd": 2000 },
+  "tradeStat": "pow",
+  "passive": { "name": "Static Skin", "trigger": "OnDamaged", "effect": "ShieldSelf", "amount": 1 },
+  "abilities": [
+    { "name": "Zap", "initiative": 1, "cooldown": 0, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1000 } ],
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["arm", 25],
+      "opening": ["move mid forward-left", "move mid forward-right", "move support forward-left"] },
+    { "name": "Chain Lightning", "initiative": 3, "cooldown": 1, "pattern": [[2,0],[2,-1],[3,-1]],
+      "effects": [ { "kind": "Damage", "power": 1640 } ], "printedSigil": 2,
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["spd", 60],
+      "opening": ["move mid forward-right", "move top forward-right", "beacon mid 0"] },
+    { "name": "Gale", "initiative": 3, "cooldown": 2, "pattern": [[1,0],[2,0]],
+      "effects": [ { "kind": "Damage", "power": 1000 }, { "kind": "Displace", "amount": 2 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["vit", 60],
+      "opening": ["move mid forward-left", "move bottom forward-right", "move jungle forward-right"] },
+    { "name": "Maelstrom", "initiative": 4, "cooldown": 3,
+      "pattern": [[0,2],[-1,2],[-1,3],[0,3],[-2,3]],
+      "effects": [ { "kind": "Damage", "power": 3300 } ],
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["arm", 25],
+      "opening": ["move mid forward-right", "move mid forward-left", "move bottom forward-left"] }
+  ]
+}

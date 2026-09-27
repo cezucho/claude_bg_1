@@ -4,6 +4,34 @@
 
 ## Current Task
 
+**FIRST PLAYABLE BUILT — 2026-09-27.** The owner granted standing authority to finish the
+design and build to a first playable, logging every unilateral decision.
+
+- **Play:** `dotnet run --project src/Augury.Cli` (see `PLAY.md`). Modes: vs AI as A or B,
+  hotseat, watch.
+- **Rules:** `design/mvp-rules.md` (authoritative for the build). **Decisions:**
+  `design/claude-decisions.md` (D-001…D-033, each reversible). **Report:**
+  `design/first-playable-report.md`.
+- **Code:** `src/Augury.Sim` (content loader, blittable MatchState, full rules engine in
+  `Rules/Game*.cs`, AI in `AI/Agent.cs`), `src/Augury.Cli` (terminal client),
+  `tools/Augury.Tools selfplay|trace`. 67 tests pass.
+- **Data:** `assets/data/rules_config.json`, `assets/data/champions/champion_NN_name.json`
+  (10 placeholders, 2 per role).
+- **Self-play (500, final rules):** A/B 48/52; 8.2% nexus endings, 12% of them from behind;
+  13.4 rounds; 7 of 8 GDD acceptance criteria pass. Fails: halves ending by pass 19% vs
+  ≥50% — attributed mostly to the greedy AI.
+- **Key tuning finding:** the both-towers nexus gate never stayed open (home towers sit by
+  the spawn row, defenders retake at once) → loosened to either tower (D-025), tower HP 16,
+  nexus HP 25, target 60 (D-026).
+- **Environment note:** the container recycles; .NET SDK is re-staged by downloading the
+  Ubuntu debs with `apt-get download` into /tmp and `dpkg -x` into /tmp/dotnet-stage
+  (`/tmp/dn.sh` sets DOTNET_ROOT=/tmp/dotnet-stage/usr/lib/dotnet).
+- **Next:** owner playtests; answers to the six questions in the report decide what changes.
+
+---
+
+## Earlier Task
+
 **OPENING PHASE — multi-champion instruction sets (user's idea, 2026-08-17). MEASURED,
 NOT YET WRITTEN TO A GDD.**
 

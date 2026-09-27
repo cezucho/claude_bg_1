@@ -43,7 +43,7 @@ public class ContentLoaderTests
     [InlineData("\"initiative\": 1, \"cooldown\": 9", "cooldown")]
     public void InvalidAbility_FailsLoudly(string replacement, string expectedFragment)
     {
-        string json = File.ReadAllText(Path.Combine(ContentLoader.FindChampionDirectory(), "1-warden.json"));
+        string json = File.ReadAllText(Path.Combine(ContentLoader.FindChampionDirectory(), "champion_01_warden.json"));
         string broken = replacement.StartsWith("\"moldUp\"")
             ? json.Replace("\"moldUp\": [\"arm\", 25]", replacement)
             : json.Replace("\"initiative\": 1, \"cooldown\": 1", replacement);

@@ -1,0 +1,24 @@
+{
+  "id": "shade", "name": "Shade", "role": "Jungle", "glyph": "H",
+  "stats": { "vit": 25000, "pow": 1100, "arm": 0, "rch": 2000, "spd": 3000 },
+  "tradeStat": "pow",
+  "passive": { "name": "Growing Dark", "trigger": "OnRoundClose", "effect": "EmpowerSelf", "amount": 15, "stat": "pow" },
+  "abilities": [
+    { "name": "Venom Dart", "initiative": 2, "cooldown": 0, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1000 }, { "kind": "Poison", "amount": 2, "rounds": 2 } ], "slotSigil": 0,
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["vit", 60],
+      "opening": ["move jungle forward-right", "move jungle right", "move bottom forward-left"] },
+    { "name": "Shadowstep", "initiative": 2, "cooldown": 1, "target": "EmptyHex",
+      "effects": [ { "kind": "Dash", "amount": 3 } ],
+      "scalesFrom": "spd", "moldUp": ["pow", 25], "moldDown": ["vit", 60],
+      "opening": ["move jungle forward-right", "move jungle forward-right", "beacon jungle 1"] },
+    { "name": "Gloom", "initiative": 3, "cooldown": 1, "pattern": [[1,0],[1,-1],[2,-1]],
+      "effects": [ { "kind": "Damage", "power": 1640 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["rch", 60],
+      "opening": ["move jungle forward-left", "move mid forward-right", "move top forward-right"] },
+    { "name": "Nightfall", "initiative": 3, "cooldown": 2, "pattern": [[1,0],[2,-1],[2,0]],
+      "effects": [ { "kind": "Damage", "power": 1640 }, { "kind": "Poison", "amount": 2, "rounds": 2 } ], "slotSigil": 1,
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["arm", 25],
+      "opening": ["move jungle forward-right", "move support forward-left", "move mid forward-left"] }
+  ]
+}

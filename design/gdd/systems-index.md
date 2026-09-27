@@ -44,21 +44,21 @@ derived from what the named systems require.
 | 4 | Champion Data & Stat Model (inferred) | Core | MVP | **Revised** (pending review) — unparked 2026-08-17 | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Deterministic Simulation Core, Map & Terrain, Movement & Targeting, Sigils & Beacons |
 | 5 | Ability Definition Schema (inferred) | Core | MVP | **Revised** (pending review) — unparked 2026-08-17 | [design/gdd/champion-and-ability-schema.md](champion-and-ability-schema.md) | Hex Grid, Champion Data, Movement & Targeting, Map & Terrain, Sigils & Beacons |
 | 6 | Movement & Targeting | Gameplay | MVP | **Drafted** (pending review) | [design/gdd/movement-and-targeting.md](movement-and-targeting.md) | Hex Grid, Map & Terrain, Initiative Ladder, Champion Data |
-| 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | Not Started | — | Champion Data & Stat Model |
+| 7 | Damage & Combat Resolution (inferred) | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §7 | — | Champion Data & Stat Model |
 | 8 | Initiative Ladder & Action Economy | Gameplay | MVP | **Designed** (pending review) | [design/gdd/initiative-ladder.md](initiative-ladder.md) | Ability Definition Schema, Round Phase Sequencer · *modified by* **Sigils & Beacons** |
-| 9 | Status Effects | Gameplay | MVP | Not Started | — | Ability Definition Schema, Round Phase Sequencer, Damage |
-| 10 | Death, Dying Round & Respawn | Gameplay | MVP | Not Started | — | Round Phase Sequencer, Damage, Status Effects |
-| 11 | Molding | Gameplay | MVP | Not Started | — | Champion Data & Stat Model, Ability Definition Schema |
+| 9 | Status Effects | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §12 (poison only) | — | Ability Definition Schema, Round Phase Sequencer, Damage |
+| 10 | Death, Dying Round & Respawn | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §13–14 | — | Round Phase Sequencer, Damage, Status Effects |
+| 11 | Molding | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §11 | — | Champion Data & Stat Model, Ability Definition Schema |
 | 12 | Map & Terrain | Gameplay | MVP | **Designed** (pending review) | [design/gdd/map-and-terrain.md](map-and-terrain.md) | Hex Grid |
-| 13 | Objectives & Scoring | Gameplay | MVP | Not Started | — | Map & Terrain, **Sigils & Beacons** (beacon destruction cost) |
-| 14 | Draft | Gameplay | MVP | Not Started | — | Champion Data, Ability Definition Schema |
+| 13 | Objectives & Scoring | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §8, §13, §15 | — | Map & Terrain, **Sigils & Beacons** (beacon destruction cost) |
+| 14 | Draft | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §2 | — | Champion Data, Ability Definition Schema |
 | 15 | Opening Phase | Gameplay | MVP | **Drafted** (pending review) | [design/gdd/opening-phase.md](opening-phase.md) | Draft, Champion & Ability Schema, Map & Terrain, Movement & Targeting, Sigils & Beacons |
-| 16 | AI Opponent | Gameplay | MVP | Not Started | — | Effectively the entire simulation |
+| 16 | AI Opponent | Gameplay | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` `src/Augury.Sim/AI` | — | Effectively the entire simulation |
 | 17 | Board & Unit Presentation | UI | MVP | Not Started | — | Hex Grid, Map & Terrain, Champion Data |
 | 18 | Combat HUD & State Inspection | UI | MVP | Not Started | — | Champion Data, Molding, Status Effects |
 | 19 | Initiative Ladder UI (inferred) | UI | MVP | Not Started | — | Initiative Ladder, Combat HUD |
 | 20 | Resolution Playback (inferred) | UI | MVP | Not Started | — | Initiative Ladder, Board Presentation, Status Effects |
-| 21 | Draft UI | UI | MVP | Not Started | — | Draft |
+| 21 | Draft UI | UI | MVP | **Implemented from rule sheet** — `design/mvp-rules.md` §2 | — | Draft |
 | 22 | Economy & Items | Economy | Vertical Slice | Not Started | — | Champion Data, Objectives & Scoring |
 | 23 | Jungle & Neutral Powers | Gameplay | Vertical Slice | Not Started | — | Map & Terrain, Status Effects |
 | 24 | Blitz Clock | Core | Vertical Slice | Not Started | — | Deterministic Simulation Core |
