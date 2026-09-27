@@ -1,0 +1,26 @@
+{
+  "id": "oracle", "name": "Oracle", "role": "Mid", "glyph": "O",
+  "stats": { "vit": 24000, "pow": 1150, "arm": 0, "rch": 3000, "spd": 2000 },
+  "tradeStat": "pow",
+  "passive": { "name": "Ward", "trigger": "OnRoundClose", "effect": "ShieldSelf", "amount": 2 },
+  "abilities": [
+    { "name": "Spark", "initiative": 1, "cooldown": 0, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1000 } ],
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["vit", 60],
+      "opening": ["move mid forward-right", "move mid forward-left", "move top forward-right"] },
+    { "name": "Hex", "initiative": 2, "cooldown": 2, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1000 }, { "kind": "Poison", "amount": 3, "rounds": 2 } ],
+      "slotSigil": 2,
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move mid forward-left", "move jungle forward-right", "beacon mid 2"] },
+    { "name": "Arc Lance", "initiative": 3, "cooldown": 1, "pattern": [[1,0],[2,0],[3,0]],
+      "effects": [ { "kind": "Damage", "power": 1640 } ], "printedSigil": 1,
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["arm", 25],
+      "opening": ["move mid forward-right", "move bottom forward-left", "move support forward-right"] },
+    { "name": "Starfall", "initiative": 4, "cooldown": 3,
+      "pattern": [[-1,2],[0,2],[-2,3],[-1,3],[0,3]],
+      "effects": [ { "kind": "Damage", "power": 3300 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move mid forward-right", "move mid forward-right", "beacon mid 2"] }
+  ]
+}

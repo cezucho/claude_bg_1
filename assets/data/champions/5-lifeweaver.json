@@ -1,0 +1,25 @@
+{
+  "id": "lifeweaver", "name": "Lifeweaver", "role": "Support", "glyph": "L",
+  "stats": { "vit": 27000, "pow": 1000, "arm": 1000, "rch": 2000, "spd": 2000 },
+  "tradeStat": "vit",
+  "passive": { "name": "Grace", "trigger": "OnRoundClose", "effect": "HealSelf", "amount": 3 },
+  "abilities": [
+    { "name": "Mend", "initiative": 1, "cooldown": 0, "target": "Ally",
+      "effects": [ { "kind": "Heal", "power": 1000 } ],
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["spd", 60],
+      "opening": ["move support forward-left", "move support forward-left", "move bottom forward-right"] },
+    { "name": "Aegis", "initiative": 2, "cooldown": 1, "target": "Ally",
+      "effects": [ { "kind": "Shield", "amount": 4 } ], "slotSigil": 1,
+      "scalesFrom": "arm", "moldUp": ["pow", 25], "moldDown": ["spd", 60],
+      "opening": ["move support forward-left", "beacon support 1", "move mid forward-right"] },
+    { "name": "Bind", "initiative": 2, "cooldown": 2, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1000 }, { "kind": "Displace", "amount": -1 } ], "slotSigil": 2,
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["rch", 60],
+      "opening": ["move support forward-right", "move bottom forward-right", "beacon support 2"] },
+    { "name": "Holy Smite", "initiative": 4, "cooldown": 3,
+      "pattern": [[0,1],[-1,1],[0,2],[-1,2]],
+      "effects": [ { "kind": "Damage", "power": 3300 } ],
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["spd", 60],
+      "opening": ["move support forward-left", "move bottom forward-left", "move mid forward-left"] }
+  ]
+}

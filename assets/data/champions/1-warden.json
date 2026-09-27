@@ -1,0 +1,25 @@
+{
+  "id": "warden", "name": "Warden", "role": "Top", "glyph": "W",
+  "stats": { "vit": 34000, "pow": 900, "arm": 1000, "rch": 2000, "spd": 2000 },
+  "tradeStat": "vit",
+  "passive": { "name": "Spiked Plate", "trigger": "OnDamaged", "effect": "Retaliate", "amount": 1 },
+  "abilities": [
+    { "name": "Rebuke", "initiative": 1, "cooldown": 1, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1000 }, { "kind": "Displace", "amount": 1 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move top forward-right", "move top forward-right", "move jungle forward-left"] },
+    { "name": "Bulwark", "initiative": 2, "cooldown": 2, "target": "Ally",
+      "effects": [ { "kind": "Shield", "amount": 5 } ],
+      "scalesFrom": "arm", "moldUp": ["vit", 60], "moldDown": ["spd", 60],
+      "opening": ["move top forward-left", "move mid forward-right", "move top right"] },
+    { "name": "Cleave", "initiative": 3, "cooldown": 1, "pattern": [[1,0],[1,-1]],
+      "effects": [ { "kind": "Damage", "power": 1640 } ], "printedSigil": 0,
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["rch", 60],
+      "opening": ["move top forward-right", "move jungle forward-right", "move mid forward-right"] },
+    { "name": "Earthbreaker", "initiative": 4, "cooldown": 3,
+      "pattern": [[-1,1],[0,1],[-2,2],[-1,2],[0,2]],
+      "effects": [ { "kind": "Damage", "power": 3300 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move top forward-left", "move top forward-left", "move bottom forward-left"] }
+  ]
+}

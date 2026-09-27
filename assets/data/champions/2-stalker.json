@@ -1,0 +1,26 @@
+{
+  "id": "stalker", "name": "Stalker", "role": "Jungle", "glyph": "S",
+  "stats": { "vit": 26000, "pow": 1100, "arm": 0, "rch": 2000, "spd": 3000 },
+  "tradeStat": "pow",
+  "passive": { "name": "Ambush", "trigger": "OnEnemyEntersReach", "effect": "Strike", "amount": 1 },
+  "abilities": [
+    { "name": "Lunge", "initiative": 1, "cooldown": 1, "target": "EmptyHex",
+      "effects": [ { "kind": "Dash", "amount": 2 } ],
+      "scalesFrom": "spd", "moldUp": ["pow", 25], "moldDown": ["arm", 25],
+      "opening": ["move jungle forward-right", "move jungle forward-right", "move jungle forward-left"] },
+    { "name": "Rend", "initiative": 2, "cooldown": 1, "target": "Enemy", "rangeBonus": -1,
+      "effects": [ { "kind": "Damage", "power": 1230 }, { "kind": "Poison", "amount": 2, "rounds": 2 } ],
+      "slotSigil": 1,
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["vit", 60],
+      "opening": ["move jungle forward-left", "move jungle left", "beacon jungle 1"] },
+    { "name": "Pounce", "initiative": 2, "cooldown": 2, "target": "Enemy",
+      "effects": [ { "kind": "Damage", "power": 1230 }, { "kind": "Displace", "amount": -1 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["rch", 60],
+      "opening": ["move jungle forward-right", "move top forward-right", "move support forward-left"] },
+    { "name": "Execution", "initiative": 4, "cooldown": 3,
+      "pattern": [[0,1],[-1,1],[-1,2],[0,2],[1,1]],
+      "effects": [ { "kind": "Damage", "power": 3300 } ],
+      "scalesFrom": "pow", "moldUp": ["spd", 60], "moldDown": ["vit", 60],
+      "opening": ["move jungle forward-right", "move jungle right", "move bottom forward-right"] }
+  ]
+}
