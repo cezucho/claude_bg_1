@@ -26,8 +26,11 @@ switch (command)
     case "trace":
         Trace.Run(args);
         break;
+    case "selfplay":
+        SelfPlay.Run(args);
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, trace");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, trace, selfplay");
         return 1;
 }
 
