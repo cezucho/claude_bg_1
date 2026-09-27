@@ -23,8 +23,11 @@ switch (command)
     case "opening":
         OpeningSequencing.Run();
         break;
+    case "trace":
+        Trace.Run(args);
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, trace");
         return 1;
 }
 
