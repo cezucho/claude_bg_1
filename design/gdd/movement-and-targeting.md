@@ -355,7 +355,7 @@ standing still.**
 
 | # | Question | Why it matters | Owner | By when |
 |---|---|---|---|---|
-| 1 | **`RCH` must cap at 3, and the schema says 1–4.** A reach of 4 threatens the entire board from the centre | Position stops conferring safety, which is most of what positioning is for. Requires a Champion Data & Stat Model amendment | Champion Data & Stat Model | Before the schema is unparked |
+| 1 | ~~**`RCH` must cap at 3, and the schema says 1–4.**~~ **RESOLVED 2026-08-17.** The schema was unparked the same day and now clamps `RCH` drift at +1000, a hard ceiling of 3 hexes — the only stat with a special clamp | — | — | Closed |
 | 2 | **What happens when a team has one champion alive?** The "two distinct champions" rule is unsatisfiable | Rare but reachable, especially during the ace windows the comeback design depends on | Design | Before Death & Respawn is authored |
 | 3 | **Can basic attacks damage structures?** | If yes, a team can grind objectives without ever opening the ladder, which is the stalling risk in criterion 12 wearing a different hat | Objectives & Scoring | Before Objectives GDD is approved |
 | 4 | **Should friendly champions block?** Currently yes | Self-blocking is the most likely rule here to feel bad. It prices clustering, but a self-inflicted traffic jam costs basics to untangle and may simply read as clumsiness | Design + playtest | Vertical Slice |
