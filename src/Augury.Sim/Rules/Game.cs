@@ -53,6 +53,7 @@ public sealed partial class Game
             c.Team = i < 5 ? Team.A : Team.B;
             c.Role = (Role)(i % 5);
             c.Def = 255;
+            c.Presence = Presence.Dead;   // not on the board until the Opening Phase places it
         }
 
         for (int t = 0; t < 5; t++)

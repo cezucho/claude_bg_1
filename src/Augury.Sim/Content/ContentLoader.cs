@@ -32,19 +32,25 @@ public static class ContentLoader
     /// </summary>
     public static string FindChampionDirectory(string? start = null)
     {
-        var dir = new DirectoryInfo(start ?? AppContext.BaseDirectory);
-        while (dir is not null)
+        string[] roots = start is not null
+            ? [start]
+            : [Directory.GetCurrentDirectory(), AppContext.BaseDirectory];
+        foreach (string root in roots)
         {
-            string candidate = Path.Combine(dir.FullName, "assets", "data", "champions");
-            if (Directory.Exists(candidate))
+            var dir = new DirectoryInfo(root);
+            while (dir is not null)
             {
-                return candidate;
-            }
+                string candidate = Path.Combine(dir.FullName, "assets", "data", "champions");
+                if (Directory.Exists(candidate))
+                {
+                    return candidate;
+                }
 
-            dir = dir.Parent;
+                dir = dir.Parent;
+            }
         }
 
-        throw new ContentException("Could not locate assets/data/champions above " + (start ?? AppContext.BaseDirectory));
+        throw new ContentException("Could not locate assets/data/champions above " + string.Join(" or ", roots));
     }
 
     /// <summary>Parses and validates one champion document.</summary>

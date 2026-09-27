@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Terminal client for the first playable build. A presentation layer over Augury.Sim,
+    exactly as a Godot client will be later (ADR-0001): it reads state and issues commands,
+    and holds no rules of its own.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Augury.Cli</RootNamespace>
+    <AssemblyName>augury</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Augury.Sim\Augury.Sim.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -267,4 +267,12 @@ public class RulesTests
         int expected = Math.Max(1, 3 * 1000 * powBefore / 1_000_000 - G.Armour(s.Champions[BWarden]));
         Assert.Equal(hpBefore - expected, s.Champions[BWarden].Hp);
     }
+
+    [Fact]
+    public void Draft_UndraftedChampions_AreNotOnTheBoard()
+    {
+        // Regression: undrafted slots defaulted to OnBoard at (0,0) and the client drew them.
+        MatchState s = G.NewMatch();
+        Assert.Equal(-1, Game.ChampionAt(s, new HexCoord(0, 0)));
+    }
 }
