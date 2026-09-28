@@ -1,11 +1,42 @@
 # Playing AUGURY — first playable
 
-A terminal build. Crude to look at, but it plays by the real rules: the same
-simulation a Godot client will sit on later.
+Two clients over the same simulation: a **browser client** laid out like a match
+broadcast (recommended), and the original terminal client. Both play by the real rules —
+the same simulation a Godot client will sit on later.
 
-## Run it
+You need the **.NET 8 SDK**.
 
-You need the **.NET 8 SDK**. From the repository root:
+## Browser client (recommended)
+
+```bash
+dotnet run --project src/Augury.Web                 # then open http://localhost:5080
+dotnet run --project src/Augury.Web -- --port 8080   # another port
+```
+
+Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A**
+(bottom, blue), **vs AI as B** (top, red), **Hotseat**, or **Watch AI**.
+
+- **Left and right panels** are the two teams, ordered top · jungle · mid · bottom ·
+  support. Each card has a portrait, role badge, HP and shield, stats, status chips, and
+  the four abilities.
+- **Ability icons**: the big number is initiative (colour = tier), the corner letter is
+  the key, the small tag is the sigil (solid = printed, dashed = slot, white = lit by a
+  beacon), a dark overlay is the cooldown. Glowing icons are playable now; dimmed ones
+  say why not when you hover them.
+- **Hover an ability** to see its reach (faint) and what it could hit (gold) — for either
+  team. On your turn it also shows exactly where it can be played.
+- **To act**: click a glowing ability, then a gold marker on the map. Tier-3 patterns
+  show one arrow per facing. In the basics, click one of your champions, then a green hex
+  (move) or a gold ring (basic attack).
+- **Hover any marker, chain or Pass to preview the exact outcome** — damage, kills,
+  movement, captures. The engine is deterministic, so the preview is what will happen.
+- **Undo** takes back your last decision. **Pause** stops the AI between moves;
+  **AI speed** sets how fast it plays. **Rules** is a one-screen summary. Esc cancels a
+  selection.
+
+## Terminal client
+
+From the repository root:
 
 ```bash
 dotnet run --project src/Augury.Cli                  # menu

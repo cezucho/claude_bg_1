@@ -13,7 +13,7 @@
 | Simulation | `src/Augury.Sim` | Every rule in the sheet; deterministic, integer-only, blittable state |
 | Content | `assets/data/` | 10 placeholder champions, `rules_config.json` |
 | AI | `src/Augury.Sim/AI` | Evaluation + one-reply search; ≤ 40 ms per decision |
-| Client | `src/Augury.Cli` | vs AI, hotseat, watch |
+| Clients | `src/Augury.Web`, `src/Augury.Cli` | Browser (broadcast layout) and terminal; vs AI, hotseat, watch |
 | Harness | `tools/Augury.Tools selfplay` | Checks the GDDs' own acceptance criteria |
 | Tests | `tests/unit` | 67 passing |
 
@@ -90,8 +90,8 @@ play it.
 3. **Do chains feel like moments?** They occur in a quarter of halves. Is that a
    highlight, or noise?
 4. **Does friendly blocking feel like formation or like clumsiness?** (D-017)
-5. **Is the board readable in text?** If not, that says more about the client than the
-   game — but it's worth knowing before a Godot build.
+5. **Is the board readable?** The terminal board wasn't (2026-09-28), so there is now a
+   browser client. Does it show you what you need to plan a ladder turn?
 6. **Would you ever pass?** See finding 5.
 
 ## Suggested next steps

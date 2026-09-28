@@ -7,10 +7,14 @@
 **FIRST PLAYABLE BUILT — 2026-09-27.** The owner granted standing authority to finish the
 design and build to a first playable, logging every unilateral decision.
 
-- **Play:** `dotnet run --project src/Augury.Cli` (see `PLAY.md`). Modes: vs AI as A or B,
-  hotseat, watch.
+- **Play (browser, 2026-09-28):** `dotnet run --project src/Augury.Web`, open
+  http://localhost:5080. Broadcast layout: team panels left/right, map centre, hover
+  ability → reach/targets, exact previews on hover, undo. Evidence in
+  `production/qa/evidence/browser-client-walkthrough.md`. D-034…D-036 logged.
+- **Play (terminal):** `dotnet run --project src/Augury.Cli` (see `PLAY.md`). Modes: vs AI
+  as A or B, hotseat, watch.
 - **Rules:** `design/mvp-rules.md` (authoritative for the build). **Decisions:**
-  `design/claude-decisions.md` (D-001…D-033, each reversible). **Report:**
+  `design/claude-decisions.md` (D-001…D-036, each reversible). **Report:**
   `design/first-playable-report.md`.
 - **Code:** `src/Augury.Sim` (content loader, blittable MatchState, full rules engine in
   `Rules/Game*.cs`, AI in `AI/Agent.cs`), `src/Augury.Cli` (terminal client),

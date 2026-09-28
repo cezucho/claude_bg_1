@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AUGURY</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="team-block A" id="top-A"></div>
+    <div id="top-centre"></div>
+    <div class="team-block B" id="top-B"></div>
+  </header>
+
+  <main id="stage">
+    <aside class="panel A" id="panel-A"></aside>
+
+    <section id="centre">
+      <div id="toolbar">
+        <div class="group">
+          <span class="lbl">New match</span>
+          <button data-mode="vsai-A">vs AI · play A</button>
+          <button data-mode="vsai-B">vs AI · play B</button>
+          <button data-mode="hotseat">Hotseat</button>
+          <button data-mode="watch">Watch AI</button>
+        </div>
+        <div class="group">
+          <span class="lbl">AI speed</span>
+          <select id="speed">
+            <option value="1400">slow</option>
+            <option value="700" selected>normal</option>
+            <option value="200">fast</option>
+          </select>
+          <button id="pause" title="Pause or resume AI turns">Pause</button>
+          <button id="undo" title="Take back your last decision">Undo</button>
+          <button id="help-btn">Rules</button>
+        </div>
+      </div>
+      <div id="banner"></div>
+      <div id="map-wrap">
+        <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </section>
+
+    <aside class="panel B" id="panel-B"></aside>
+  </main>
+
+  <footer id="bottom">
+    <section id="actions">
+      <div id="prompt"></div>
+      <div id="buttons"></div>
+      <div id="extra"></div>
+    </section>
+    <section id="preview-box">
+      <div class="box-title">Preview</div>
+      <div id="preview"></div>
+    </section>
+    <section id="feed-box">
+      <div class="box-title">Play-by-play</div>
+      <div id="feed"></div>
+    </section>
+  </footer>
+
+  <div id="tooltip"></div>
+  <div id="overlay" class="hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
