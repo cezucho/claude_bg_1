@@ -41,7 +41,7 @@ public sealed partial class Game
 
                 case TargetRule.EmptyHex:
                     int dash = a.Effects[0].Amount;
-                    foreach (HexCoord h in Board.AllHexes)
+                    foreach (HexCoord h in Board.HexesInFrame(c.Team))
                     {
                         int d = HexCoord.Distance(c.Pos, h);
                         if (d >= 1 && d <= dash && !Occupied(s, h)) result.Add(Target.At(h));
@@ -55,8 +55,9 @@ public sealed partial class Game
 
         if (a.Initiative == 3)
         {
-            for (int f = 0; f < 6; f++)
+            for (int k = 0; k < 6; k++)
             {
+                int f = Board.FrameDirection(k, c.Team);   // facings listed in the team's frame
                 if (PatternHasTarget(s, c.Team, PatternCells(c, a, f), a.DealsDamage)) result.Add(Target.Face(f));
             }
         }
@@ -69,15 +70,17 @@ public sealed partial class Game
     }
 
     /// <summary>
-    /// Board hexes a pattern covers. Tier 3 rotates to <paramref name="facing"/>; tier 4 is
-    /// fixed in the caster's team frame (ADR-0005, amended).
+    /// Board hexes a pattern covers. Every pattern is first put in the caster's team frame
+    /// (mirrored for team B); tier 3 then rotates to <paramref name="facing"/>, tier 4 does
+    /// not (ADR-0005, second amendment).
     /// </summary>
     public HexCoord[] PatternCells(in Champion c, AbilityDef a, int facing)
     {
         var cells = new HexCoord[a.Pattern.Count];
         for (int i = 0; i < cells.Length; i++)
         {
-            HexCoord off = a.Initiative == 3 ? Hex.Rotate(a.Pattern[i], facing) : Board.Frame(a.Pattern[i], c.Team);
+            HexCoord framed = Board.Frame(a.Pattern[i], c.Team);
+            HexCoord off = a.Initiative == 3 ? Hex.Rotate(framed, facing) : framed;
             cells[i] = c.Pos + off;
         }
 
@@ -426,6 +429,7 @@ public sealed partial class Game
         bool push = amount > 0;
         int steps = Math.Abs(amount);
         HexCoord start = s.Champions[target].Pos;
+        Team frame = s.Champions[caster].Team;
 
         for (int step = 0; step < steps; step++)
         {
@@ -433,9 +437,11 @@ public sealed partial class Game
             int current = HexCoord.Distance(from, at);
             HexCoord best = at;
             int bestDist = current;
-            foreach (HexCoord d in Hex.Directions)
+            for (int k = 0; k < 6; k++)
             {
-                HexCoord to = at + d;
+                // Ties break by direction order, in the caster's frame, so a push lands the
+                // same way for both teams (ADR-0005, second amendment).
+                HexCoord to = at + Hex.Directions[Board.FrameDirection(k, frame)];
                 if (!Board.Playable(to) || Occupied(s, to)) continue;
                 int dist = HexCoord.Distance(from, to);
                 if (push ? dist > bestDist : dist < bestDist && dist >= 1)

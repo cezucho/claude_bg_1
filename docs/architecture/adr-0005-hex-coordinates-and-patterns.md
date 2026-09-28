@@ -2,7 +2,14 @@
 
 ## Status
 
-Accepted (2026-08-14) · **Amended 2026-08-17 — tier-4 pattern orientation**
+Accepted (2026-08-14) · **Amended 2026-08-17 — tier-4 pattern orientation** · **Amended 2026-09-28 — team symmetry is a mirror**
+
+> **Second amendment summary (2026-09-28, owner's call during playtesting).** Under the
+> half-turn, team A's top started bottom-left and team B's top-right, so roles did not face
+> their counterparts. The team frame is now the reflection `Mirror(q,r) = (q+r, −r)`, and
+> it applies to **tier-3 patterns as well as tier-4**. See *Second amendment* below; it
+> supersedes the claim in the first amendment that a mirrored board makes a shared
+> ability library impossible.
 
 > **Amendment summary.** Tier-4 patterns were specified as applied *verbatim*, i.e. in
 > world space. Map & Terrain subsequently fixed the board's symmetry as a 180-degree
@@ -200,6 +207,37 @@ it is what makes a shared ability library possible at all.** This is asserted di
 
 **Scope.** Tier 4 only. Tiers 1–2 target freely and tier 3 chooses among all six facings,
 so both teams already reach the same set; neither is affected.
+
+### Second amendment: the team frame is a mirror (2026-09-28)
+
+**The problem.** The half-turn places each of team B's roles at the antipode of team A's:
+A's top at `(0,−4)`, bottom-left on the broadcast view; B's top at `(0,4)`, top-right. In
+playtesting the owner ruled that tops must face tops, as in the genre the game borrows its
+roles from.
+
+**The decision.** `Board.Frame` applies `Hex.Mirror(q,r) = (q+r, −r)` for team B — a
+reflection across the board's horizontal axis, in cube terms `(q,r,s) → (−s,−r,−q)`.
+Everything team-relative passes through it: start and spawn hexes, opening move
+directions, tier-4 offsets, and **tier-3 offsets before they are rotated**.
+
+**Why the first amendment's objection does not hold.** It argued that a mirrored board
+gives the teams chirally different abilities, and that no orientation rule could fix it.
+The first half is true — a mirrored chiral pattern is reachable by no rotation — but it
+only breaks fairness if the far team is limited to *rotations of the authored shape*.
+Mirroring the pattern first and then rotating gives team B exactly the mirror image of
+every placement team A can make: `Mirror(p + Rotate(P, f)) = Mirror(p) + Rotate(Mirror(P), −f)`.
+The whole game, not just the board, is then mirror-symmetric, and content is still
+authored once. Asserted for every ability of every champion in
+`TeamSymmetryTests.Patterns_TeamBCoversTheMirrorOfEveryPlacementTeamACanMake`.
+
+**What did not change.** The towers, nexus hexes, spawn rows, lanes and jungle are
+symmetric under both maps, so the board itself is untouched. `file = 2q + r` is invariant
+under the mirror and `rank` negates, so every hex stays on its own side.
+
+**Consequences.** Left and right in opening instructions now mean the same side of the
+board for both teams (the top-lane side is left). The two diagonal lanes each join one
+team's top to the other team's support; they carry no rules in the MVP, but a future
+minion design should revisit lane geometry with this in mind.
 
 ### Implementation Guidelines
 

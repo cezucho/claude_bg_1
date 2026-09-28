@@ -235,8 +235,9 @@ schema**, not advisory targets:
 
 > Re-measured 2026-08-17 against the five real towers. Tier 1's reference dropped from
 > range 4 to range 3 because `RCH` now caps at 3, so the old reference is not a legal
-> ability. Tier 4's offsets are authored in a canonical forward frame and half-turned for
-> the far team (ADR-0005, amended) — the shape is identical for both, the aim is not.
+> ability. Tier 4's offsets are authored in a canonical forward frame and mirrored for
+> the far team (ADR-0005, second amendment; originally half-turned) — tier-3 offsets are
+> mirrored too before rotating, so each team's version is the other's mirror image.
 
 Two authoring rules fall directly out of the measurement and are binding:
 

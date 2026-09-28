@@ -17,7 +17,7 @@ public class RulesTests
     private const int BWarden = 5, BStalker = 6, BOracle = 7;
 
     /// <summary>A round-1 ladder with everyone parked out of each other's reach.</summary>
-    private static MatchState Arena()
+    internal static MatchState Arena()
     {
         MatchState s = G.NewMatch(Picks, Picks);
         HexCoord[] a = [new(-1, -3), new(0, -3), new(1, -3), new(2, -3), new(3, -3)];
@@ -25,7 +25,7 @@ public class RulesTests
         {
             ref Champion c = ref s.Champions[i];
             c.Flags = ChampFlags.OpeningDone;
-            c.Pos = i < 5 ? a[i] : Hex.HalfTurn(a[i - 5]);
+            c.Pos = i < 5 ? a[i] : Hex.Mirror(a[i - 5]);
         }
 
         for (int b = 0; b < 12; b++) s.Beacons[b].Team = Team.None;
@@ -201,7 +201,7 @@ public class RulesTests
     }
 
     [Fact]
-    public void TierFour_FarTeamPattern_IsTheHalfTurnOfTheNearTeams()
+    public void TierFour_FarTeamPattern_IsTheMirrorOfTheNearTeams()
     {
         MatchState s = Arena();
         s.Champions[AWarden].Pos = new HexCoord(0, 0);
@@ -211,7 +211,7 @@ public class RulesTests
         HexCoord[] near = G.PatternCells(s.Champions[AWarden], earthbreaker, 0);
         HexCoord[] far = G.PatternCells(s.Champions[BWarden], earthbreaker, 0);
 
-        Assert.Equal(near.Select(Hex.HalfTurn).OrderBy(h => h.Q).ThenBy(h => h.R), far.OrderBy(h => h.Q).ThenBy(h => h.R));
+        Assert.Equal(near.Select(Hex.Mirror).OrderBy(h => h.Q).ThenBy(h => h.R), far.OrderBy(h => h.Q).ThenBy(h => h.R));
         Assert.All(near, h => Assert.True(h.R > 0));   // A's pattern points toward B
     }
 

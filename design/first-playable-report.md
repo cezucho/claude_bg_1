@@ -21,6 +21,18 @@ How to play: `PLAY.md`.
 
 ## Self-play: 500 AI-vs-AI matches, final rules
 
+> **Re-run 2026-09-28** after two playtest fixes: no mirror picks in the draft, and the team
+> symmetry changed from a half-turn to a mirror so each role faces its counterpart (D-037).
+> Changed numbers: A/B **48/52** (unchanged), nexus endings **10.2%**, from behind **8%** of
+> those, 13.3 rounds. Champion win rates now span **34–66%**, wider than before, because with
+> two champions per role and no mirrors every match is the same five head-to-heads
+> (Stalker beats Shade 66–34). Treat the table below as the pre-fix run.
+>
+> The mirror change first measured **54/46** over 2000 matches: a push that could land on
+> two equally distant hexes chose by absolute direction order, which a rotation had kept
+> fair and a mirror did not. Fixed — ties and enumeration now run in the acting team's
+> frame — and covered by a regression test.
+
 | Measure | Value |
 |---|---|
 | Team A / B wins | 48% / 52% — no structural first-mover edge |

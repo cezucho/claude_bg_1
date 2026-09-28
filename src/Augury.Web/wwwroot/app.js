@@ -696,7 +696,7 @@ function draftView() {
   const modes = [['vsai-A', 'vs AI · play A (bottom)'], ['vsai-B', 'vs AI · play B (top)'], ['hotseat', 'Hotseat'], ['watch', 'Watch AI vs AI']];
   const root = h(`<div class="draft"><h2>Draft</h2>
     <div class="sub mode-row">${modes.map(([m, l]) => `<button data-newmode="${m}" class="${V.mode === m ? 'on' : ''}">${l}</button>`).join(' ')} <button data-help>Rules</button></div>
-    <div class="sub">${who}. Snake order A · B B · A A · B B · A A · B. One champion per role; mirror picks allowed.</div><div class="draft-cols"></div></div>`);
+    <div class="sub">${who}. Snake order A · B B · A A · B B · A A · B. One champion per role; a picked champion is gone for both teams.</div><div class="draft-cols"></div></div>`);
   root.querySelectorAll('[data-newmode]').forEach(b => b.addEventListener('click', () => api('POST', `/api/new?mode=${b.dataset.newmode}`)));
   root.querySelector('[data-help]').addEventListener('click', showHelp);
   const cols = root.querySelector('.draft-cols');
@@ -707,8 +707,9 @@ function draftView() {
       <div class="picks"><span class="A-c">A: ${a.drafted ? esc(a.name) : '—'}</span><span class="B-c">B: ${b.drafted ? esc(b.name) : '—'}</span></div></div>`);
     for (const d of V.roster.filter(x => x.role === role)) {
       const pick = V.humanTurn ? byIndex[d.index] : null;
-      const card = h(`<div class="dcard ${pick ? 'pickable' : ''}">
-        <div class="top">${portrait(d.id, d.glyph, pick ? V.active : 'N')}<div><b>${esc(d.name)}</b><div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div></div></div>
+      const taken = V.champions.find(c => c.drafted && c.id === d.id);
+      const card = h(`<div class="dcard ${pick ? 'pickable' : ''} ${taken ? 'taken' : ''}">
+        <div class="top">${portrait(d.id, d.glyph, taken ? taken.team : pick ? V.active : 'N')}<div><b>${esc(d.name)}</b>${taken ? ` <span class="${taken.team}-c taken-lbl">picked by ${taken.team}</span>` : ''}<div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div></div></div>
         ${d.abilities.map(x => `<div class="dab"><i style="background:var(--t${x.init})">${x.init}</i><span><b>${esc(x.name)}</b> · ${esc(x.effects)} <span class="tt-dim">· cd ${x.cooldown}${x.printedSigil ? ` · sigil ${x.printedSigil}` : ''}${x.slotSigil ? ` · slot ${x.slotSigil}` : ''}</span></span></div>`).join('')}
         <div class="passive">${esc(d.passive.name)} — ${esc(d.passive.text)}</div>
         ${pick ? `<button class="pickbtn primary">Pick for ${V.active}</button>` : ''}

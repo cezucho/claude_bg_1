@@ -138,7 +138,23 @@ Because no champion is ever obliged to use a lane, lanes carry none of the singl
 cost that corridors do. ▸ Minion waves themselves are owned by **Objectives & Scoring**
 and deferred to Vertical Slice; this document fixes only where the routes run.
 
-### 4. Symmetry is rotational, and must be
+### 4. Symmetry is a mirror (revised 2026-09-28)
+
+> **Revised by the owner during playtesting.** This rule originally made the symmetry a
+> 180° rotation and forbade mirroring. Under the rotation each role started at the antipode
+> of its counterpart — team A's top bottom-left, team B's top-right — so roles did not face
+> each other. The team symmetry is now the **mirror** `(Q,R) → (Q+R, −R)`, and the
+> objection below is answered by mirroring tier-3 patterns as well as tier-4 ones
+> (ADR-0005, second amendment). The original text is kept, struck through in spirit, for
+> the record.
+
+The board — spawn rows included — maps onto itself under the mirror, and **also** under the
+half-turn: towers, nexus hexes, lanes and jungle are symmetric under both. The mirror is the
+**team** map: team B's start hexes, spawn hexes, directions and patterns are team A's,
+mirrored. Each role starts on the same side of the board as its counterpart.
+
+*Original rule, superseded:*
+
 
 > **ADR-0005 amended 2026-08-17, and this rule is why.** Tier-4 patterns were originally
 > resolved in world space, which would have given the two teams differently-aimed versions
@@ -381,16 +397,17 @@ change density or measured applicability.
 rank 0, file 8 — the deepest point of the right-hand jungle. Note `file` has the same
 parity as `rank`, so adjacent hexes in a row differ by 2 in file.
 
-### F4 — Team Symmetry Map
+### F4 — Team Symmetry Map (revised 2026-09-28)
 
-`antipode(h) = (−h.Q, −h.R)`
+`mirror(h) = (h.Q + h.R, −h.R)`
 
-**Invariant:** `zone(h) = zone(antipode(h))` across all 61 playable and 12 spawn hexes,
-and `antipode(antipode(h)) = h`.
+**Invariant:** `zone(h) = zone(mirror(h))` across all 61 playable and 12 spawn hexes,
+and `mirror(mirror(h)) = h`. The half-turn `(−h.Q, −h.R)` also preserves zones, but it is
+no longer the team map.
 
-**Example:** team A's front-line hex `(0,−4)` → team B's `(0,4)`. Team A's tower
-`(2,−2)` → team B's `(−2,2)`. Under this map `rank → −rank` and `file → −file`, which is
-why rules 6 and 7 are written on `|rank|` and `|file|`.
+**Example:** team A's front-line hex `(0,−4)` (top's start) → team B's `(−4,4)` (top's
+start). Team A's tower `(2,−2)` → team B's `(0,2)`. Under this map `rank → −rank` and
+`file → file`: every hex stays on its own side of the board.
 
 ### F5 — Zone Predicate
 

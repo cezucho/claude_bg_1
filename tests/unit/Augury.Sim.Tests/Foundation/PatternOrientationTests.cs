@@ -1,17 +1,15 @@
 namespace Augury.Sim.Tests.Foundation;
 
 /// <summary>
-/// ADR-0005 amendment: tier-4 patterns are oriented to the owning team's forward
-/// direction, not to world space.
+/// ADR-0005 amendments: team-relative patterns. Geometry facts about rotation and
+/// reflection that the team frame relies on.
 /// </summary>
 /// <remarks>
-/// <para>Map &amp; Terrain fixes the board's symmetry as a <b>180-degree rotation</b>,
-/// <c>(q,r) → (−q,−r)</c>. The two teams therefore face opposite ways, and a tier-4
-/// pattern applied verbatim in world space would point toward the enemy for one team
-/// and toward its own nexus for the other.</para>
-/// <para>These tests prove the fix is sound and, more importantly, prove <i>why</i> it
-/// only works on a rotationally symmetric board — a mirrored board would need a
-/// reflection, and no rotation reproduces one.</para>
+/// <para>The first amendment made the team symmetry a 180-degree rotation and reoriented
+/// tier-4 patterns by a half-turn. The second (2026-09-28) replaced it with a mirror,
+/// <see cref="Hex.Mirror"/>, so that each role starts opposite the same role. Because a
+/// reflection is not reachable by rotation (proved below), the mirror is applied to
+/// tier-3 patterns as well as tier-4 ones — see <c>TeamSymmetryTests</c>.</para>
 /// </remarks>
 public class PatternOrientationTests
 {
@@ -35,6 +33,13 @@ public class PatternOrientationTests
 
     /// <summary>Reflection across the q axis: in cube terms, swapping y and z.</summary>
     private static HexCoord Mirror(HexCoord h) => new(h.Q, h.S);
+
+    [Fact]
+    public void EngineMirror_IsAlsoUnreachableByRotation()
+    {
+        var mirrored = Normalise(Chiral.Select(Hex.Mirror));
+        Assert.False(Enumerable.Range(0, 6).Any(k => Normalise(Chiral.Select(c => Hex.Rotate(c, k))).SetEquals(mirrored)));
+    }
 
     private static HashSet<HexCoord> Normalise(IEnumerable<HexCoord> cells)
     {
@@ -87,12 +92,11 @@ public class PatternOrientationTests
     }
 
     /// <summary>
-    /// The property that makes the amendment correct: a tier-4 pattern played by the
-    /// far team at the antipodal origin covers exactly the antipodal hexes. The two
-    /// teams get the same ability, seen from opposite ends of the board.
+    /// A pattern played by the far team at the mirrored origin covers exactly the
+    /// mirrored hexes: the same ability, seen from the other end of the board.
     /// </summary>
     [Fact]
-    public void TeamRelativePattern_CoversAntipodalHexes()
+    public void TeamRelativePattern_CoversMirroredHexes()
     {
         foreach (HexCoord origin in Board(4))
         {
@@ -100,12 +104,12 @@ public class PatternOrientationTests
                 .Select(o => origin + Hex.ForForward(o, forwardIsPositiveR: true))
                 .ToHashSet();
 
-            HexCoord farOrigin = Hex.HalfTurn(origin);
+            HexCoord farOrigin = Hex.Mirror(origin);
             var far = Chiral
                 .Select(o => farOrigin + Hex.ForForward(o, forwardIsPositiveR: false))
                 .ToHashSet();
 
-            Assert.Equal(near.Select(Hex.HalfTurn).ToHashSet(), far);
+            Assert.Equal(near.Select(Hex.Mirror).ToHashSet(), far);
         }
     }
 
@@ -124,10 +128,10 @@ public class PatternOrientationTests
     }
 
     /// <summary>
-    /// The counter-case, and the reason the board's symmetry had to be rotational.
-    /// A mirrored chiral pattern is reachable by <b>no</b> rotation, so on a
-    /// mirror-symmetric board the two teams would hold differently-shaped versions of
-    /// the same ability.
+    /// A mirrored chiral pattern is reachable by <b>no</b> rotation. This is why, on the
+    /// mirror-symmetric board, tier-3 patterns are mirrored for team B before rotating
+    /// rather than rotated as authored: otherwise team B could not answer a placement
+    /// with its mirror image.
     /// </summary>
     [Fact]
     public void MirroredPattern_IsReachableByNoRotation()

@@ -331,18 +331,18 @@ public static class ViewBuilder
         if (t.Kind != TargetKind.Facing) return TargetCells(g, s, slot, ability, t);
         Champion c = s.Champions[slot];
         AbilityDef a = g.Def(c).Abilities[ability];
-        int[] lean = Enumerable.Range(0, 6).Select(f => Lean(a, f)).ToArray();
+        int[] lean = Enumerable.Range(0, 6).Select(f => Lean(a, c.Team, f)).ToArray();
         int dir = lean.Distinct().Count() == 6 ? lean[t.Facing] : t.Facing;
         return [c.Pos + Hex.Directions[dir]];
     }
 
-    private static int Lean(AbilityDef a, int facing)
+    private static int Lean(AbilityDef a, Team team, int facing)
     {
         // Presentation only: floating point is fine outside Augury.Sim.
         double x = 0, y = 0;
         foreach (HexCoord off in a.Pattern)
         {
-            HexCoord r = Hex.Rotate(off, facing);
+            HexCoord r = Hex.Rotate(Board.Frame(off, team), facing);
             x += r.Q + r.R / 2.0;
             y += r.R * 0.8660254;
         }

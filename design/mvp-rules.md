@@ -29,7 +29,9 @@ DRAFT → OPENING PHASE → ROUND 1 … ROUND N → MATCH OVER
 ## 2. Draft
 
 - Each champion in the roster has a fixed role. Each team picks **one champion per role**.
-- Pick order is snake: A, B, B, A, A, B, B, A, A, B (D-020). Mirror picks are allowed.
+- Pick order is snake: A, B, B, A, A, B, B, A, A, B (D-020). A picked champion leaves the pool
+  for **both** teams — no mirror picks (owner's call, 2026-09-28). Only if a roster is too small
+  to fill a role that way are mirror picks allowed, so the draft never stalls.
 - With a roster of one champion per role the draft is a formality; it becomes a choice
   when the roster grows.
 
@@ -38,7 +40,10 @@ DRAFT → OPENING PHASE → ROUND 1 … ROUND N → MATCH OVER
 Implements `opening-phase.md` as written, with the open questions answered:
 
 - Starting hexes by role — A: Top `(0,−4)`, Jungle `(1,−4)`, Mid `(2,−4)`, Bottom `(3,−4)`,
-  Support `(4,−4)`; B at the antipodes.
+  Support `(4,−4)`; B at the **mirror images** — Top `(−4,4)`, Jungle `(−3,4)`, Mid `(−2,4)`,
+  Bottom `(−1,4)`, Support `(0,4)`. Each role starts on the same side of the board as its
+  counterpart: both tops on the left, both supports on the right (owner's call, 2026-09-28;
+  ADR-0005, second amendment). The mirror is `(q,r) → (q+r, −r)`.
 - Teams alternate, one opening play each. **The team that does *not* open round 1 plays
   first** — so A plays first, B second (D-013).
 - A play = choose an unacted champion and one of its four abilities. The ability's three
@@ -105,8 +110,8 @@ Implements `initiative-ladder.md` Core Rules 1–7:
 | Initiative | Rigidity | How targets are chosen |
 |---|---|---|
 | 1–2 | Free | One target within range: enemy champion, or damageable structure (Damage abilities); ally champion or self (Heal/Shield); empty hex (Dash) |
-| 3 | Rotatable | Pattern offsets from the caster, rotated to one of six facings |
-| 4 | Fixed | Pattern offsets from the caster in the team's forward frame (ADR-0005 amended) |
+| 3 | Rotatable | Pattern offsets from the caster in the team's frame (mirrored for B), rotated to one of six facings |
+| 4 | Fixed | Pattern offsets from the caster in the team's frame — mirrored for B (ADR-0005, second amendment) |
 
 - Free range = `clamp(RCH + ability.RangeBonus, 1, 3)`.
 - **No friendly fire** (D-004): patterns affect only enemy champions and enemy/neutral
@@ -271,7 +276,9 @@ Both live in `assets/data/`, are strict JSON, and are validated on load — a br
 ```
 
 Directions for `move` are `forward-left`, `forward-right`, `left`, `right`, `back-left`,
-`back-right`, relative to the team's own forward direction. The validator enforces every
+`back-right`. Forward and back are relative to the team's own forward direction; **left and
+right are the same for both teams** — left is the top-lane side of the board, as seen on the
+broadcast view — because team B's frame is a mirror, not a rotation. The validator enforces every
 rule in the schema GDD's rule 9: initiatives non-decreasing, total 9–11, at most two per
 tier, patterns only on initiatives 3–4 (4–6 hexes at 4), the cross rule, three opening
 instructions, tier-1 abilities ranged unless they dash.

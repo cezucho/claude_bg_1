@@ -55,9 +55,9 @@ public sealed partial class Game
             var next = new List<HexCoord>();
             foreach (HexCoord at in frontier)
             {
-                foreach (HexCoord d in Hex.Directions)
+                for (int k = 0; k < 6; k++)
                 {
-                    HexCoord to = at + d;
+                    HexCoord to = at + Hex.Directions[Board.FrameDirection(k, c.Team)];
                     if (!Board.Playable(to) || !seen.Add(to)) continue;
                     int occupant = ChampionAt(s, to);
                     if (occupant >= 0)

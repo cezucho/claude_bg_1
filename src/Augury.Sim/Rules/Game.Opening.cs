@@ -9,6 +9,15 @@ public sealed partial class Game
 
     private void LegalDraft(in MatchState s, List<Command> into)
     {
+        // A champion leaves the pool once either team picks it (D-020, revised). If a
+        // roster is too small for that, mirror picks are allowed rather than stalling.
+        int before = into.Count;
+        AddDraftPicks(s, into, excludeDrafted: true);
+        if (into.Count == before) AddDraftPicks(s, into, excludeDrafted: false);
+    }
+
+    private void AddDraftPicks(in MatchState s, List<Command> into, bool excludeDrafted)
+    {
         Team t = s.Active;
         for (int r = 0; r < 5; r++)
         {
@@ -16,9 +25,20 @@ public sealed partial class Game
             if (s.Champions[slot].Def != 255) continue;
             foreach (int def in Content.ForRole((Role)r))
             {
+                if (excludeDrafted && Drafted(s, def)) continue;
                 into.Add(new Command(CommandKind.Draft, (byte)slot, (byte)def, Target.None));
             }
         }
+    }
+
+    private static bool Drafted(in MatchState s, int def)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (s.Champions[i].Def == def) return true;
+        }
+
+        return false;
     }
 
     private void ApplyDraft(ref MatchState s, in Command cmd, List<GameEvent>? log)
@@ -69,8 +89,9 @@ public sealed partial class Game
         {
             if (s.Champions[slot].Has(ChampFlags.OpeningDone)) continue;
             HexCoord at = s.Champions[slot].Pos;
-            for (int d = 0; d < 6; d++)
+            for (int k = 0; k < 6; k++)
             {
+                int d = Board.FrameDirection(k, t);
                 HexCoord to = at + Hex.Directions[d];
                 if (Board.Playable(to) && !Occupied(s, to))
                 {

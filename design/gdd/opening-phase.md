@@ -115,10 +115,11 @@ opening kit draftable — the same ability is a gift or a nuisance depending on 
 champion was picked into that role.
 
 **Directions are team-relative.** The six hex directions are authored in the canonical
-forward frame (forward = `+R`) and half-turned for the team facing the other way, exactly
-as tier-4 patterns are (ADR-0005, amended). Without this, *"forward"* would mean *"toward
-my own nexus"* for one of the two teams. The transform is `Rotate(offset, 3)`, already in
-the engine.
+forward frame (forward = `+R`) and mirrored for the team facing the other way, exactly
+as patterns are (ADR-0005, second amendment, 2026-09-28 — originally a half-turn). Without
+this, *"forward"* would mean *"toward my own nexus"* for one of the two teams. Because the
+transform is a mirror, *left* and *right* name the same side of the board for both teams:
+left is the top-lane side.
 
 **`PlaceBeacon` interacts with ordering, and this is the good kind of interaction.** A
 beacon lands on the role's hex *at the moment the instruction resolves*, so placing it

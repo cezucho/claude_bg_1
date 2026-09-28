@@ -14,14 +14,30 @@ public static class Board
         new(0, 0), new(0, -2), new(2, -2), new(0, 2), new(-2, 2)
     ];
 
-    /// <summary>Team A's nexus hexes; team B's are the half-turns.</summary>
+    /// <summary>Team A's nexus hexes; team B's are their mirror images.</summary>
     public static readonly HexCoord[] NexusA = [new(1, -4), new(2, -4), new(3, -4)];
 
     /// <summary>True when on the playable board.</summary>
     public static bool Playable(HexCoord h) => Hex.InBoard(h, Radius);
 
-    /// <summary>Reorients a canonical-frame offset for a team (ADR-0005, amended).</summary>
+    /// <summary>
+    /// Reorients a canonical-frame hex or offset for a team: identity for A, the mirror
+    /// for B (ADR-0005, second amendment). Each role starts opposite the same role.
+    /// </summary>
     public static HexCoord Frame(HexCoord offset, Team team) => Hex.ForForward(offset, team == Team.A);
+
+    /// <summary>
+    /// Index into <see cref="Hex.Directions"/> of direction <paramref name="k"/> in a team's
+    /// frame. Anything that iterates directions, and could break a tie by iteration order,
+    /// iterates in the acting team's frame so the tie breaks the same way for both teams.
+    /// </summary>
+    public static int FrameDirection(int k, Team team) => team == Team.B ? (6 - k) % 6 : k;
+
+    /// <summary>
+    /// All playable hexes in a team's frame: team A's order, mirrored for team B. Used where
+    /// enumeration order could break a tie.
+    /// </summary>
+    public static HexCoord[] HexesInFrame(Team team) => team == Team.B ? AllHexesMirrored : AllHexes;
 
     /// <summary>Start hex for a role on the front line.</summary>
     public static HexCoord StartHex(Team team, Role role) => Frame(new HexCoord((int)role, -Radius), team);
@@ -31,14 +47,14 @@ public static class Board
 
     /// <summary>A team's three nexus hexes.</summary>
     public static IEnumerable<HexCoord> NexusHexes(Team team) =>
-        team == Team.A ? NexusA : NexusA.Select(Hex.HalfTurn);
+        NexusA.Select(h => Frame(h, team));
 
     /// <summary>True when the hex is one of a team's nexus hexes.</summary>
     public static bool IsNexusHex(HexCoord h, Team team)
     {
         foreach (HexCoord n in NexusA)
         {
-            if ((team == Team.A ? n : Hex.HalfTurn(n)) == h) return true;
+            if (Frame(n, team) == h) return true;
         }
 
         return false;
@@ -52,6 +68,8 @@ public static class Board
 
     /// <summary>All playable hexes, in a fixed order.</summary>
     public static readonly HexCoord[] AllHexes = Build();
+
+    private static readonly HexCoord[] AllHexesMirrored = AllHexes.Select(Hex.Mirror).ToArray();
 
     private static HexCoord[] Build()
     {

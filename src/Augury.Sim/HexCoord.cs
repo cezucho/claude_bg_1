@@ -56,26 +56,37 @@ public static class Hex
     public static bool InBoard(HexCoord h, int radius) => h.Magnitude <= radius;
 
     /// <summary>
-    /// Half-turn about the origin: <c>(q,r) → (−q,−r)</c>. This is the board's own
-    /// symmetry map and also the transform that reorients a tier-4 pattern into the
-    /// far team's forward frame (ADR-0005, amended).
+    /// Half-turn about the origin: <c>(q,r) → (−q,−r)</c>. Exactly <c>Rotate(h, 3)</c>.
     /// </summary>
     /// <remarks>
-    /// <para>It is exactly <c>Rotate(offset, 3)</c>. That equivalence is the whole
-    /// reason team-relative tier-4 patterns are possible: the transform is a
-    /// <b>rotation</b>, so the six-facing system already expresses it and the shape is
-    /// preserved. Had the board been mirror-symmetric, the transform would have been a
-    /// reflection, which no rotation reproduces — the two teams would then hold
-    /// chirally different versions of the same ability.</para>
+    /// This was the board's team symmetry until 2026-09-28. It placed team B's top lane on
+    /// the opposite side of the board from team A's, so the teams' roles did not face each
+    /// other. The team symmetry is now <see cref="Mirror"/> (ADR-0005, second amendment).
     /// </remarks>
     public static HexCoord HalfTurn(HexCoord h) => new(-h.Q, -h.R);
 
     /// <summary>
-    /// Reorients a pattern offset authored in the canonical frame (forward = +R) into
-    /// the acting team's frame. Tier 4 only; tiers 1–3 choose their own orientation.
+    /// Reflection across the board's horizontal axis: <c>(q,r) → (q+r, −r)</c>, in cube
+    /// terms <c>(q,r,s) → (−s,−r,−q)</c>. The board's team symmetry map (ADR-0005, second
+    /// amendment): it swaps the two front lines, keeps every hex on its own side of the
+    /// board, and so puts each role opposite the same role.
+    /// </summary>
+    /// <remarks>
+    /// <para>A reflection reverses chirality, and no rotation reproduces it. That is why
+    /// <b>every</b> team-relative shape passes through this map — start and spawn hexes,
+    /// opening directions, and tier-3 as well as tier-4 patterns. A chiral pattern the far
+    /// team could only rotate would reach the mirror image of none of the near team's
+    /// placements, and the teams would not play the same game.</para>
+    /// <para>Integer-exact, distance-preserving, and its own inverse.</para>
+    /// </remarks>
+    public static HexCoord Mirror(HexCoord h) => new(h.Q + h.R, -h.R);
+
+    /// <summary>
+    /// Reorients an offset authored in the canonical frame (forward = +R, team A) into the
+    /// acting team's frame: identity for team A, <see cref="Mirror"/> for team B.
     /// </summary>
     public static HexCoord ForForward(HexCoord offset, bool forwardIsPositiveR)
-        => forwardIsPositiveR ? offset : HalfTurn(offset);
+        => forwardIsPositiveR ? offset : Mirror(offset);
 
     /// <summary>
     /// Rotates an offset clockwise by 60 degrees per step. Integer-exact.
