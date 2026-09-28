@@ -246,7 +246,7 @@ function abilityIcon(c, a, i) {
     <span class="nm">${esc(a.name)}</span>
     ${a.cd > 0 ? `<div class="cdo">${a.cd}</div>` : ''}
   </div>`);
-  node.addEventListener('mouseenter', e => { showTip(e, abilityTip(c, a)); if (!sel) showAbilityHover(c, a, i); });
+  node.addEventListener('mouseenter', e => { showTip(e, abilityTip(c, a), 'with-dia'); if (!sel) showAbilityHover(c, a, i); });
   node.addEventListener('mousemove', moveTip);
   node.addEventListener('mouseleave', () => { hideTip(); if (!sel) { clearHighlights(); clearPreview(); } });
   node.addEventListener('click', () => {
@@ -345,20 +345,24 @@ function drawToken(c) {
   if (sel && sel.champ === c.slot) cls.push('selected');
   const g = el('g', { class: cls.join(' '), 'data-slot': c.slot }, layers.tokens);
   el('circle', { cx, cy, r: HEX * 0.62, class: 'body' }, g);
-  el('text', { x: cx, y: cy - 1, class: 'glyph' }, g).textContent = c.glyph;
+  // The role, not the champion: every top looks the same, only the colour says whose.
+  g.appendChild(roleGlyph(c.role, cx, cy, HEX * 0.78, '#fff'));
   const bw = HEX * 1.1, bx = cx - bw / 2, by = cy + HEX * 0.52;
   el('rect', { x: bx, y: by, width: bw, height: 5, class: 'tok-hp-bg', rx: 1 }, g);
   const hpw = bw * Math.max(0, c.hp) / c.maxHp;
   el('rect', { x: bx, y: by, width: hpw, height: 5, class: `tok-hp ${c.team}`, rx: 1 }, g);
   if (c.shield > 0) el('rect', { x: bx + hpw, y: by, width: Math.min(bw - hpw, bw * c.shield / c.maxHp), height: 5, class: 'tok-sh' }, g);
-  // role icon, small, above the token
-  const ri = document.createElementNS(SVGNS, 'g');
-  ri.innerHTML = roleIcon(c.role, c.team === 'A' ? '#9fd3ff' : '#ffb0b8').replace('<svg', `<svg x="${cx + HEX * 0.3}" y="${cy - HEX * 0.95}" width="13" height="13"`);
-  g.appendChild(ri);
   g.addEventListener('mouseenter', e => { showTip(e, champTip(c)); hotChamp(c.slot, true); });
   g.addEventListener('mousemove', moveTip);
   g.addEventListener('mouseleave', () => { hideTip(); hotChamp(c.slot, false); });
   if (basics.length) g.addEventListener('click', () => selectBasic(c.slot));
+}
+
+function roleGlyph(role, cx, cy, size, color) {
+  const g = document.createElementNS(SVGNS, 'g');
+  g.setAttribute('class', 'role-glyph');
+  g.innerHTML = roleIcon(role, color).replace('<svg', `<svg x="${cx - size / 2}" y="${cy - size / 2}" width="${size}" height="${size}"`);
+  return g;
 }
 
 function hotChamp(slot, on) {
@@ -499,7 +503,7 @@ function showPreview(cmd) {
         const d = Math.hypot(x2 - x1, y2 - y1), sh = HEX * 0.62;
         el('line', { x1: x1 + (x2 - x1) * sh / d, y1: y1 + (y2 - y1) * sh / d, x2: x2 - (x2 - x1) * sh / d, y2: y2 - (y2 - y1) * sh / d, class: 'pv-arrow' }, g);
         el('circle', { cx: x2, cy: y2, r: HEX * 0.62, class: 'pv-ghost', stroke: `var(--${c.team})` }, g);
-        el('text', { x: x2, y: y2, class: 'glyph', style: 'fill:rgba(255,255,255,.6);font-weight:900;font-size:17px;text-anchor:middle;dominant-baseline:central' }, g).textContent = c.glyph;
+        g.appendChild(roleGlyph(c.role, x2, y2, HEX * 0.7, 'rgba(255,255,255,.6)'));
       }
     }
     const at = ch.to || [c.q, c.r];
@@ -529,13 +533,14 @@ function showPreview(cmd) {
 // ───────────────────────────── tooltips ─────────────────────────────
 
 const tip = () => document.getElementById('tooltip');
-function showTip(e, html) { const t = tip(); t.innerHTML = html; t.style.display = 'block'; moveTip(e); }
+function showTip(e, html, cls = '') { const t = tip(); t.className = cls; t.innerHTML = html; t.style.display = 'block'; moveTip(e); }
 function moveTip(e) {
   const t = tip();
   const w = t.offsetWidth, hh = t.offsetHeight;
   let x = e.clientX + 16, y = e.clientY + 14;
   if (x + w > innerWidth - 8) x = e.clientX - w - 16;
   if (y + hh > innerHeight - 8) y = innerHeight - hh - 8;
+  x = Math.max(8, x); y = Math.max(8, y);
   t.style.left = `${x}px`; t.style.top = `${y}px`;
 }
 function hideTip() { tip().style.display = 'none'; }
@@ -555,8 +560,15 @@ function abilityTip(c, a) {
     <div class="tt-row"><b>${esc(a.effects)}</b>${amount}</div>
     ${sig ? `<div class="tt-row">${sig}</div>` : ''}
     <div class="tt-row tt-dim">Molds: ${esc(a.mold)}</div>
-    <div class="tt-row tt-dim">Opening: ${a.opening.map(esc).join(' · ')}</div>
-    ${a.state !== 'idle' || a.reason ? `<div class="tt-state">${STATE_TEXT[a.state] || a.state}${a.reason ? ` — ${esc(a.reason)}` : ''}</div>` : ''}`;
+    ${abilityDiagrams(a.kit, c.team, c.role)}
+    ${a.init === 3 && c.presence === 'board' ? '<div class="tt-row tt-dim">On the map: faint = every hex some facing could reach · gold = enemies it could hit now.</div>' : ''}
+    ${a.state !== 'idle' || a.reason ? `<div class="tt-state">${stateLine(a)}</div>` : ''}`;
+}
+
+function stateLine(a) {
+  const label = STATE_TEXT[a.state] ?? a.state;
+  if (!a.reason || a.reason.toLowerCase() === label.toLowerCase()) return esc(label);
+  return label ? `${label} — ${esc(a.reason)}` : esc(a.reason);
 }
 
 function champTip(c) {
@@ -715,12 +727,18 @@ function draftView() {
         ${pick ? `<button class="pickbtn primary">Pick for ${V.active}</button>` : ''}
       </div>`);
       if (pick) card.addEventListener('click', () => play(pick.i));
+      card.addEventListener('mouseenter', e => showTip(e, champDetail(d, draftTeam()), 'detail'));
+      card.addEventListener('mousemove', moveTip);
+      card.addEventListener('mouseleave', hideTip);
       col.appendChild(card);
     }
     cols.appendChild(col);
   }
   return root;
 }
+
+// Whose orientation the draft diagrams use: the human's, or the side picking in hotseat.
+function draftTeam() { return V.humans.length === 1 ? V.humans[0] : V.active; }
 
 function showHelp() {
   helpOpen = true;

@@ -24,7 +24,13 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
   beacon), a dark overlay is the cooldown. Glowing icons are playable now; dimmed ones
   say why not when you hover them.
 - **Hover an ability** to see its reach (faint) and what it could hit (gold) — for either
-  team. On your turn it also shows exactly where it can be played.
+  team. On your turn it also shows exactly where it can be played. The tooltip draws the
+  ability's **shape** in one fixed example — single target or area, which hexes are hit —
+  and its **three opening moves** from the starting line.
+- **Map tokens show the role** (sword top, claws jungle, diamond mid, crosshair bottom,
+  shield support), coloured by team; the champion's name is in the side panel.
+- **In the draft, hover a champion** for a card with every ability's combat shape and
+  opening moves side by side, to compare champions before you pick.
 - **To act**: click a glowing ability, then a gold marker on the map. Tier-3 patterns
   show one arrow per facing. In the basics, click one of your champions, then a green hex
   (move) or a gold ring (basic attack).

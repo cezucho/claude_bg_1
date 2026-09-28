@@ -187,6 +187,7 @@ public static class ViewBuilder
             activeSigils = onBoard ? SigilList(g.ActiveSigils(s, slot, a)) : [],
             mold = Describe.Mold(ab),
             opening = ab.Opening.Select(Describe.Instruction).ToArray(),
+            kit = Kit(ab, s.Phase == Phase.Draft ? Math.Clamp(g.Def(c).Base(Stat.Rch) / 1000 + ab.RangeBonus, 1, 3) : g.Range(c, ab)),
             state,
             reason,
             reach = reach.Distinct().Select(Xy).ToArray(),
@@ -252,6 +253,27 @@ public static class ViewBuilder
             slotSigil = ab.SlotSigil >= 0 ? Game.SigilName(ab.SlotSigil) : null,
             mold = Describe.Mold(ab),
             opening = ab.Opening.Select(Describe.Instruction).ToArray(),
+            kit = Kit(ab, Math.Clamp(d.Base(Stat.Rch) / 1000 + ab.RangeBonus, 1, 3)),
+        }).ToArray(),
+    };
+
+    /// <summary>
+    /// The shape of an ability as data, for the page's small diagrams: pattern offsets in
+    /// the canonical frame (team A, forward = +R), effects, and the three opening steps.
+    /// </summary>
+    private static object Kit(AbilityDef ab, int range) => new
+    {
+        tier = ab.Initiative,
+        target = ab.Target.ToString(),
+        range,
+        pattern = ab.Pattern.Select(Xy).ToArray(),
+        fx = ab.Effects.Select(e => new { kind = e.Kind.ToString(), amount = e.Amount, power = e.Power }).ToArray(),
+        steps = ab.Opening.Select(i => new
+        {
+            kind = i.Kind == InstructionKind.Move ? "move" : "beacon",
+            role = i.Role.ToString(),
+            dir = i.Direction,
+            sigil = Game.SigilName(i.Sigil),
         }).ToArray(),
     };
 
