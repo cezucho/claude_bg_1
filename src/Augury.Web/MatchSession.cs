@@ -15,7 +15,9 @@ public sealed class MatchSession
     private readonly IAgent _ai;
     private IAgent _drafter = new RandomAgent(1);
     private readonly List<GameEvent> _log = [];
-    private readonly Stack<(MatchState State, int LogCount)> _undo = new();
+    private readonly Stack<(MatchState State, int LogCount, LastAction? Last)> _undo = new();
+    private LastAction? _last;
+    private int _actions;
     private MatchState _s;
     private List<Command> _legal = [];
     private HashSet<Team> _humans = [Team.A];
@@ -48,6 +50,7 @@ public sealed class MatchSession
             _drafter = new RandomAgent((uint)Environment.TickCount);
             _log.Clear();
             _undo.Clear();
+            _last = null;
             _s = _game.NewMatch();
             _log.Add(new GameEvent(EventKind.Phase, "Draft — snake order A, B, B, A, A, B, B, A, A, B."));
             Refresh();
@@ -68,9 +71,8 @@ public sealed class MatchSession
         {
             if (!HumanTurn) return Error("It is not a human player's turn.");
             if (index < 0 || index >= _legal.Count) return Error("That action is no longer legal.");
-            _undo.Push((_s, _log.Count));
-            _game.Apply(ref _s, _legal[index], _log);
-            Refresh();
+            _undo.Push((_s, _log.Count, _last));
+            ApplyAndRecord(_legal[index]);
             return ViewLocked();
         }
     }
@@ -82,8 +84,7 @@ public sealed class MatchSession
         {
             if (_s.Phase == Phase.MatchOver || HumanTurn) return ViewLocked();
             Command cmd = _s.Phase == Phase.Draft ? _drafter.Choose(_s, _legal) : _ai.Choose(_s, _legal);
-            _game.Apply(ref _s, cmd, _log);
-            Refresh();
+            ApplyAndRecord(cmd);
             return ViewLocked();
         }
     }
@@ -94,8 +95,9 @@ public sealed class MatchSession
         lock (_lock)
         {
             if (_undo.Count == 0) return Error("Nothing to undo.");
-            (MatchState state, int logCount) = _undo.Pop();
+            (MatchState state, int logCount, LastAction? last) = _undo.Pop();
             _s = state;
+            _last = last;
             _log.RemoveRange(logCount, _log.Count - logCount);
             _log.Add(new GameEvent(EventKind.Phase, "↶ Undone."));
             Refresh();
@@ -103,12 +105,28 @@ public sealed class MatchSession
         }
     }
 
+    private void ApplyAndRecord(Command cmd)
+    {
+        MatchState before = _s;
+        int logStart = _log.Count;
+        _game.Apply(ref _s, cmd, _log);
+        _last = new LastAction(++_actions, before, cmd, logStart);
+        Refresh();
+    }
+
     private bool HumanTurn => _s.Phase != Phase.MatchOver && _humans.Contains(_s.Active);
 
     private void Refresh() => _legal = _s.Phase == Phase.MatchOver ? [] : _game.Legal(_s);
 
     private object ViewLocked(string? error = null) =>
-        ViewBuilder.Build(_game, _s, _legal, _log, _mode, _humans, HumanTurn, _undo.Count > 0, error);
+        ViewBuilder.Build(_game, _s, _legal, _log, _mode, _humans, HumanTurn, _undo.Count > 0, _last, error);
 
     private object Error(string message) => ViewLocked(message);
 }
+
+/// <summary>The most recent action: the state it was played on, the command, and where its events start.</summary>
+/// <param name="Id">Increasing action number, so the page animates each action once.</param>
+/// <param name="Before">The state the command was applied to.</param>
+/// <param name="Command">The command.</param>
+/// <param name="LogStart">Index of the action's first event in the log.</param>
+public sealed record LastAction(int Id, MatchState Before, Command Command, int LogStart);

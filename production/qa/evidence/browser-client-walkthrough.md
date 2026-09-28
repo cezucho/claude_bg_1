@@ -25,5 +25,10 @@ ability's combat shape (one fixed example: single hex vs area) and its opening m
 the starting line; map tokens show role symbols (`browser-client-draft-detail.png`). No
 page errors.
 
+**2026-09-28, last-action cues:** in watch mode, the last basic move, basic attack,
+single-target ability and area ability were each captured paused: actor ring, covered hexes,
+beam to the target, move ghost and arrow, damage numbers, card and icon outline, all in
+magenta (`browser-client-last-action.png`). No page errors.
+
 Screenshots: `browser-client-ladder-1920.png` (a tier-3 ability selected: two facing
 arrows, one hovered, its cells and the exact damage previewed), `browser-client-basics-1600.png` (playing team B in the basics phase).

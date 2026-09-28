@@ -16,7 +16,7 @@ public static class ViewBuilder
     /// <summary>Builds the full view.</summary>
     public static object Build(
         Game g, MatchState s, List<Command> legal, List<GameEvent> log, string mode,
-        HashSet<Team> humans, bool humanTurn, bool canUndo, string? error = null)
+        HashSet<Team> humans, bool humanTurn, bool canUndo, LastAction? last, string? error = null)
     {
         bool ladder = s.Phase is Phase.Ladder or Phase.LastWord;
         var singles = new HashSet<(int, int)>();
@@ -85,6 +85,7 @@ public static class ViewBuilder
             champions = Enumerable.Range(0, 10).Select(i => ChampionView(g, s, i, ladder, singles, chainParts)).ToArray(),
             roster = s.Phase == Phase.Draft ? g.Content.Champions.Select((d, i) => DefView(d, i)).ToArray() : null,
             legal = legal.Select((c, i) => LegalView(g, s, c, i)).ToArray(),
+            last = last is null ? null : LastView(g, last, s, log),
             events = log.Skip(start).Select((e, k) => new { n = start + k, kind = e.Kind.ToString(), text = e.Text }).ToArray(),
         };
     }
@@ -279,10 +280,56 @@ public static class ViewBuilder
 
     // ───────────────────────────── legal commands ─────────────────────────────
 
-    private static object LegalView(Game g, MatchState s, Command c, int index)
+    /// <summary>
+    /// The action just taken, for the page to mark on the board: who acted, what the
+    /// command covered (judged on the board it was played on), and what changed.
+    /// </summary>
+    private static object LastView(Game g, LastAction last, MatchState now, List<GameEvent> log)
+    {
+        Command c = last.Command;
+        MatchState before = last.Before;
+        bool hasActor = c.Champion != 255 && c.Kind != CommandKind.Draft;
+        return new
+        {
+            id = last.Id,
+            team = before.Active.ToString(),
+            kind = c.Kind.ToString(),
+            champ = hasActor ? c.Champion : -1,
+            ability = c.Kind is CommandKind.Ability or CommandKind.OpeningPlay ? c.Ability : -1,
+            champ2 = c.IsChain ? c.Champion2 : -1,
+            ability2 = c.IsChain ? c.Ability2 : -1,
+            actorAt = hasActor ? Xy(before.Champions[c.Champion].Pos) : null,
+            actor2At = c.IsChain ? Xy(before.Champions[c.Champion2].Pos) : null,
+            label = Label(g, before, c),
+            cells = CommandCells(g, before, c, out _).Where(Board.Playable).Distinct().Select(Xy).ToArray(),
+            focus = FocusHexes(before, c),
+            diff = Diff(g, before, now, log.Skip(last.LogStart).ToList()),
+        };
+    }
+
+    /// <summary>Single-target hexes, for a line from the actor to what it hit.</summary>
+    private static int[][] FocusHexes(MatchState s, Command c)
+    {
+        var list = new List<int[]>();
+        void Add(Target t)
+        {
+            switch (t.Kind)
+            {
+                case TargetKind.Champion: list.Add(Xy(s.Champions[t.Index].Pos)); break;
+                case TargetKind.Tower: list.Add(Xy(s.Towers[t.Index].Pos)); break;
+                case TargetKind.Beacon: list.Add(Xy(t.Hex)); break;
+                case TargetKind.Nexus: list.Add(Xy(Board.NexusHexes((Team)t.Index).ElementAt(1))); break;
+            }
+        }
+
+        if (c.Kind is CommandKind.Ability or CommandKind.BasicAttack) Add(c.Target);
+        return list.ToArray();
+    }
+
+    private static List<HexCoord> CommandCells(Game g, MatchState s, Command c, out List<HexCoord> click)
     {
         var cells = new List<HexCoord>();
-        var click = new List<HexCoord>();
+        click = new List<HexCoord>();
         switch (c.Kind)
         {
             case CommandKind.BasicMove:
@@ -310,6 +357,12 @@ public static class ViewBuilder
                 break;
         }
 
+        return cells;
+    }
+
+    private static object LegalView(Game g, MatchState s, Command c, int index)
+    {
+        List<HexCoord> cells = CommandCells(g, s, c, out List<HexCoord> click);
         return new
         {
             i = index,
@@ -431,7 +484,12 @@ public static class ViewBuilder
         MatchState after = before;
         var log = new List<GameEvent>();
         g.Apply(ref after, c, log);
+        return Diff(g, before, after, log);
+    }
 
+    /// <summary>What changed between two states: HP, shields, positions, structures, score.</summary>
+    private static object Diff(Game g, MatchState before, MatchState after, List<GameEvent> log)
+    {
         var champs = new List<object>();
         for (int i = 0; i < 10; i++)
         {

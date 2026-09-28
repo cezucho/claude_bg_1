@@ -1,4 +1,5 @@
 :root {
+  --last: #ff4fd8;
   --bg: #080c18;
   --bg2: #0f1628;
   --bg3: #172038;
@@ -326,6 +327,19 @@ svg.mini { display: block; max-width: 100%; }
 .det-row { padding: 5px 0; border-bottom: 1px solid rgba(38,49,79,.6); font-size: 11.5px; }
 .det-init { font-style: normal; font-weight: 900; padding: 0 4px; border-radius: 3px; color: #000; }
 .role-glyph { pointer-events: none; }
+
+/* ───────────── last action (one fixed colour) ───────────── */
+.last-cell { fill: rgba(255,79,216,.22); stroke: var(--last); stroke-width: 2; pointer-events: none; }
+.last-ring { fill: none; stroke: var(--last); stroke-width: 3; stroke-dasharray: 5 3; pointer-events: none; }
+.last-ghost { fill: none; stroke: var(--last); stroke-width: 2; stroke-dasharray: 3 3; opacity: .8; pointer-events: none; }
+.last-arrow { stroke: var(--last); stroke-width: 3.5; fill: none; marker-end: url(#arrowhead-last); pointer-events: none; }
+.last-beam { stroke: var(--last); stroke-width: 3; stroke-dasharray: 7 4; fill: none; marker-end: url(#arrowhead-last); pointer-events: none; animation: beam 1s linear infinite; }
+.token.last-actor .body { stroke: var(--last); stroke-width: 4; }
+.card.last-actor { border-color: var(--last); box-shadow: 0 0 0 1px var(--last) inset, 0 0 12px rgba(255,79,216,.35); }
+.ab.last-used { outline: 3px solid var(--last); outline-offset: 1px; }
+.last-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--last); vertical-align: middle; box-shadow: 0 0 6px var(--last); }
+#map.previewing .last, #map.previewing .lastUnder { opacity: .25; }
+@keyframes beam { to { stroke-dashoffset: -22; } }
 
 @keyframes pulse { 50% { opacity: .5; } }
 @keyframes flash { from { background: rgba(232,196,106,.25); } to { background: transparent; } }

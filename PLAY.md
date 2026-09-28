@@ -36,6 +36,11 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
   (move) or a gold ring (basic attack).
 - **Hover any marker, chain or Pass to preview the exact outcome** — damage, kills,
   movement, captures. The engine is deterministic, so the preview is what will happen.
+- **Magenta always marks the last action**, yours or the AI's, until the next one: the
+  champion who acted (token, card and the ability icon it used), the hexes it covered, a
+  moving line to what it hit, a dashed ghost where anyone moved from with an arrow to where
+  they went, and the numbers that changed. Moved champions slide from their old hex. The
+  banner under the map names the action.
 - **Undo** takes back your last decision. **Pause** stops the AI between moves;
   **AI speed** sets how fast it plays. **Rules** is a one-screen summary. Esc cancels a
   selection.

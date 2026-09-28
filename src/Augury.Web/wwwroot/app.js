@@ -193,6 +193,7 @@ function card(c) {
   if (c.acted && (V.phase === 'Ladder' || V.phase === 'LastWord')) cls.push('acted');
   if (basics.length) cls.push('selectable');
   if (sel && sel.champ === c.slot) cls.push('selected');
+  if (isLastActor(c.slot)) cls.push('last-actor');
 
   const hpPct = c.presence === 'dead' ? 0 : Math.max(0, 100 * c.hp / c.maxHp);
   const shPct = Math.min(100 - hpPct, 100 * c.shield / c.maxHp);
@@ -238,6 +239,7 @@ function abilityIcon(c, a, i) {
   const humanOwns = V.humanTurn && V.active === c.team;
   const cls = ['ab', `t${a.init}`, a.state];
   if (sel && sel.type === 'ability' && sel.champ === c.slot && sel.ability === i) cls.push('selected');
+  if (V.last && ((V.last.champ === c.slot && V.last.ability === i) || (V.last.champ2 === c.slot && V.last.ability2 === i))) cls.push('last-used');
   const sig = a.printedSigil
     ? `<span class="sig">${a.printedSigil}</span>`
     : a.slotSigil ? `<span class="sig slot ${a.activeSigils.includes(a.slotSigil) ? 'active' : ''}">${a.slotSigil}</span>` : '';
@@ -276,7 +278,9 @@ function renderMap() {
   el('path', { d: 'M0 0 L10 5 L0 10 z', fill: '#fff' }, m);
 
   layers = {};
-  for (const name of ['tiles', 'hl', 'structures', 'tokens', 'preview', 'markers']) layers[name] = el('g', { class: name }, svg);
+  for (const name of ['tiles', 'lastUnder', 'hl', 'structures', 'tokens', 'last', 'preview', 'markers']) layers[name] = el('g', { class: name }, svg);
+  const lm = el('marker', { id: 'arrowhead-last', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 5, markerHeight: 5, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0 0 L10 5 L0 10 z', fill: 'var(--last)' }, lm);
 
   const nexusOf = {};
   for (const n of V.nexus) for (const [q, r] of n.hexes) nexusOf[key(q, r)] = n.team;
@@ -331,6 +335,7 @@ function renderMap() {
     const fb = legalFor(x => x.kind === 'OpeningFallback');
     if (fb.length) drawMarkers(fb, 'fallback');
   }
+  drawLast();
   if (sel) redrawSelection();
 }
 
@@ -343,7 +348,9 @@ function drawToken(c) {
   const basics = V.humanTurn && V.phase === 'Basic' ? basicCommands(c.slot) : [];
   if (basics.length) cls.push('selectable');
   if (sel && sel.champ === c.slot) cls.push('selected');
+  if (isLastActor(c.slot)) cls.push('last-actor');
   const g = el('g', { class: cls.join(' '), 'data-slot': c.slot }, layers.tokens);
+  slideIn(g, c);
   el('circle', { cx, cy, r: HEX * 0.62, class: 'body' }, g);
   // The role, not the champion: every top looks the same, only the colour says whose.
   g.appendChild(roleGlyph(c.role, cx, cy, HEX * 0.78, '#fff'));
@@ -363,6 +370,92 @@ function roleGlyph(role, cx, cy, size, color) {
   g.setAttribute('class', 'role-glyph');
   g.innerHTML = roleIcon(role, color).replace('<svg', `<svg x="${cx - size / 2}" y="${cy - size / 2}" width="${size}" height="${size}"`);
   return g;
+}
+
+// ───────────────────────────── last action ─────────────────────────────
+// The most recent action stays marked in one colour (magenta, --last) until the next:
+// who acted, the hexes it covered, a line to what it hit, where anyone moved from,
+// and every change in numbers. Moved champions slide from their old hex once.
+
+let animatedAction = -1;
+
+function isLastActor(slot) {
+  return !!V.last && V.phase !== 'Draft' && (V.last.champ === slot || V.last.champ2 === slot);
+}
+
+function lastMove(slot) {
+  return V.last?.diff?.champs.find(ch => ch.slot === slot && ch.from && ch.to);
+}
+
+function slideIn(g, c) {
+  const mv = V.last && V.last.id !== animatedAction ? lastMove(c.slot) : null;
+  if (!mv) return;
+  const [x1, y1] = px(mv.from[0], mv.from[1]), [x2, y2] = px(mv.to[0], mv.to[1]);
+  g.style.transform = `translate(${x1 - x2}px, ${y1 - y2}px)`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    g.style.transition = 'transform .55s ease-out';
+    g.style.transform = 'translate(0px, 0px)';
+  }));
+}
+
+function drawLast() {
+  const L = V.last;
+  if (!L || L.kind === 'Draft' || V.phase === 'Draft') return;
+  const under = layers.lastUnder, top = layers.last;
+  for (const [q, r] of L.cells) el('polygon', { points: hexPath(q, r, 0.92), class: 'last-cell' }, under);
+
+  // Where the actor stood when it acted, and a line to each single target.
+  for (const [at, champ] of [[L.actorAt, L.champ], [L.actor2At, L.champ2]]) {
+    if (!at || champ < 0) continue;
+    const [ax, ay] = px(at[0], at[1]);
+    el('circle', { cx: ax, cy: ay, r: HEX * 0.8, class: 'last-ring' }, under);
+    if (champ === L.champ) {
+      for (const [q, r] of L.focus) {
+        const [tx, ty] = px(q, r);
+        const d = Math.hypot(tx - ax, ty - ay) || 1, sh = HEX * 0.7;
+        el('line', { x1: ax + (tx - ax) * sh / d, y1: ay + (ty - ay) * sh / d, x2: tx - (tx - ax) * sh / d, y2: ty - (ty - ay) * sh / d, class: 'last-beam' }, top);
+      }
+    }
+  }
+
+  const stack = {};
+  const num = (q, r, text, cls) => {
+    const k = key(q, r);
+    const n = stack[k] = (stack[k] || 0) + 1;
+    const [cx, cy] = px(q, r);
+    el('text', { x: cx, y: cy - HEX * 0.78 - (n - 1) * 14, class: `pv-num last-num ${cls}` }, top).textContent = text;
+  };
+  for (const ch of L.diff.champs) {
+    const c = champById(ch.slot);
+    if (ch.from && ch.to && (ch.from[0] !== ch.to[0] || ch.from[1] !== ch.to[1])) {
+      const [x1, y1] = px(ch.from[0], ch.from[1]), [x2, y2] = px(ch.to[0], ch.to[1]);
+      const d = Math.hypot(x2 - x1, y2 - y1), sh = HEX * 0.65;
+      el('circle', { cx: x1, cy: y1, r: HEX * 0.55, class: 'last-ghost' }, under);
+      el('line', { x1: x1 + (x2 - x1) * sh / d, y1: y1 + (y2 - y1) * sh / d, x2: x2 - (x2 - x1) * sh / d, y2: y2 - (y2 - y1) * sh / d, class: 'last-arrow' }, top);
+    }
+    const at = ch.to || (c.presence === 'board' ? [c.q, c.r] : ch.from);
+    if (!at) continue;
+    if (ch.dHp < 0) num(at[0], at[1], `${ch.dHp}`, 'bad');
+    if (ch.dHp > 0) num(at[0], at[1], `+${ch.dHp}`, 'good');
+    if (ch.dShield > 0) num(at[0], at[1], `+${ch.dShield} shield`, 'shield');
+    if (ch.dies) num(at[0], at[1], 'KILL', 'bad');
+    if (ch.dying) num(at[0], at[1], 'DYING', 'bad');
+    if (ch.poisoned) num(at[0], at[1], 'poison', 'info');
+  }
+  for (const t of L.diff.towers) {
+    const tw = V.towers[t.i];
+    num(tw.q, tw.r, t.captured ? `CAPTURED → ${t.owner}` : `${t.dHp}`, t.captured ? 'info' : 'bad');
+  }
+  L.diff.nexus.forEach((d, i) => { if (d < 0) { const [q, r] = V.nexus[i].hexes[1]; num(q, r, `NEXUS ${d}`, 'bad'); } });
+  animatedAction = L.id;
+}
+
+function setLastBanner() {
+  const L = V.last;
+  const b = document.getElementById('banner');
+  if (!L || V.phase === 'Draft') { setBanner(lastActionText()); return; }
+  const actor = L.champ >= 0 ? champById(L.champ) : null;
+  b.innerHTML = `<span class="last-dot"></span> <b class="${L.team}-c">${L.team}</b>${actor ? ` · ${esc(actor.name)}` : ''} — ${esc(L.label.replace(/^[AB]:\w+ /, ''))}`;
 }
 
 function hotChamp(slot, on) {
@@ -471,12 +564,14 @@ function unfocusCells() { if (focusGroup) focusGroup.remove(); focusGroup = null
 
 function clearPreview() {
   if (layers.preview) layers.preview.innerHTML = '';
+  document.getElementById('map').classList.remove('previewing');
   const box = document.getElementById('preview');
   box.innerHTML = '<div class="muted">Hover an action — a marker, an ability, a chain, Pass — to see exactly what it does. The engine is deterministic, so the preview is the outcome.</div>';
 }
 
 function showPreview(cmd) {
   clearPreview();
+  document.getElementById('map').classList.add('previewing');
   const p = cmd.preview;
   const box = document.getElementById('preview');
   if (!p) return;
@@ -602,7 +697,7 @@ function renderActions() {
   buttons.innerHTML = '';
   extra.innerHTML = '';
   const T = `<b class="${V.active}">${V.active}</b>`;
-  if (!sel) setBanner(lastActionText());
+  if (!sel) setLastBanner();
 
   if (V.phase === 'MatchOver') {
     prompt.innerHTML = `Match over — ${V.winner === 'None' ? 'a draw' : `<b class="${V.winner}">${V.winner}</b> wins`} by ${V.endReason}. Start a new match from the toolbar.`;
@@ -751,7 +846,7 @@ function showHelp() {
     <h3>Initiative tiers</h3><span style="color:var(--t1)">1</span>–<span style="color:var(--t2)">2</span>: aim freely at a target in range. <span style="color:var(--t3)">3</span>: a pattern you rotate — click the arrow for the facing you want. <span style="color:var(--t4)">4</span>: a big fixed pattern pointing toward the enemy.
     <h3>Chains</h3>Two abilities that share an active sigil (the small I/II/III tag) resolve as one step with no answer between — and the second may exceed the ceiling. Dashed tags are slot sigils: lit (white) when a friendly beacon is within 1 hex.
     <h3>Round close</h3>Champions at 0 HP die → poison and tower shots (dropping to 0 <i>here</i> means <b>Dying</b>: one more round at half power) → towers score → cooldowns tick and the dead respawn.
-    <h3>Reading the screen</h3>Hover anything. Ability icons show initiative (big number), key, sigil and cooldown. Hovering an ability shows its reach (faint) and what it could hit (gold); on your turn, the hexes it can be played on. Hover a marker, a chain or Pass to preview the exact result. <b>Undo</b> takes back your last decision.
+    <h3>Reading the screen</h3>Hover anything. Ability icons show initiative (big number), key, sigil and cooldown. Hovering an ability shows its reach (faint) and what it could hit (gold); on your turn, the hexes it can be played on. Hover a marker, a chain or Pass to preview the exact result. <b>Undo</b> takes back your last decision. <span style="color:var(--last)"><b>Magenta</b> always marks the last action</span> — the champion who acted (and its ability icon), the hexes it covered, a line to what it hit, where anyone moved from, and the numbers that changed.
     <h3>Opening</h3>Each champion plays one ability whose three instructions move your team into formation. Order matters; if none fits, one champion steps one hex.</div>`;
   document.getElementById('help-close').onclick = () => { helpOpen = false; renderOverlay(); };
 }
