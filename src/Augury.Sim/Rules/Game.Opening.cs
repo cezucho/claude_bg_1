@@ -49,6 +49,66 @@ public sealed partial class Game
         if (s.DraftPicks < 10) s.Active = DraftPicker(s.DraftPicks);
     }
 
+    // ───────────────────────────── summoner spells (v2) ─────────────────────────────
+
+    /// <summary>True while a team has a champion with a spell slot and no spell.</summary>
+    private bool NeedsSpells(in MatchState s, Team t)
+    {
+        if (Content.Spells.Count == 0) return false;
+        int first = MatchState.FirstSlot(t);
+        for (int i = first; i < first + 5; i++)
+        {
+            if (s.Champions[i].Def != 255 && Def(s.Champions[i]).HasSpellSlot && s.Champions[i].Spell == 255) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Spells for the active team's next champion without one, in role order: every spell its
+    /// team hasn't already taken (no duplicates within a team).
+    /// </summary>
+    private void LegalSpellPick(in MatchState s, List<Command> into)
+    {
+        int first = MatchState.FirstSlot(s.Active);
+        for (int slot = first; slot < first + 5; slot++)
+        {
+            Champion c = s.Champions[slot];
+            if (!Def(c).HasSpellSlot || c.Spell != 255) continue;
+            for (int sp = 0; sp < Content.Spells.Count; sp++)
+            {
+                bool taken = false;
+                for (int j = first; j < first + 5; j++) taken |= s.Champions[j].Spell == sp;
+                if (!taken) into.Add(new Command(CommandKind.SpellPick, (byte)slot, (byte)sp, Target.None));
+            }
+
+            return;
+        }
+    }
+
+    private void ApplySpellPick(ref MatchState s, in Command cmd, List<GameEvent>? log)
+    {
+        s.Champions[cmd.Champion].Spell = cmd.Ability;
+        // The pick is hidden from the other team until the opening, so the log only says one was made.
+        Log(log, EventKind.Draft, $"{s.Active} chooses a summoner spell for its {s.Champions[cmd.Champion].Role}.");
+    }
+
+    private void RevealSpells(in MatchState s, List<GameEvent>? log)
+    {
+        if (log is null) return;
+        foreach (Team t in new[] { Team.A, Team.B })
+        {
+            int first = MatchState.FirstSlot(t);
+            var names = new List<string>();
+            for (int i = first; i < first + 5; i++)
+            {
+                if (s.Champions[i].Spell < Content.Spells.Count) names.Add($"{Def(s.Champions[i]).Name} {Content.Spells[s.Champions[i].Spell].Name}");
+            }
+
+            Log(log, EventKind.Draft, $"{t} spells revealed: {string.Join(", ", names)}.");
+        }
+    }
+
     // ───────────────────────────── opening ─────────────────────────────
 
     private static bool OpeningComplete(in MatchState s, Team t)
@@ -89,7 +149,7 @@ public sealed partial class Game
         {
             if (s.Champions[slot].Has(ChampFlags.OpeningDone)) continue;
             HexCoord at = s.Champions[slot].Pos;
-            for (int k = 0; k < 6; k++)
+            for (int k = 0; k < 6 && !s.Champions[slot].Rooted; k++)
             {
                 int d = Board.FrameDirection(k, t);
                 HexCoord to = at + Hex.Directions[d];
@@ -106,12 +166,14 @@ public sealed partial class Game
 
     /// <summary>
     /// Opening F2: available iff all three instructions can execute in order, each judged
-    /// against the board the previous one left.
+    /// against the board the previous one left. Moves are strict: off the board, onto a
+    /// champion, tower or wall, or moving a rooted champion, makes the play unavailable.
+    /// Casts never do: with nothing to hit they fizzle (owner, 2026-10-04).
     /// </summary>
     public bool OpeningAvailable(in MatchState s, int slot, int ability)
     {
         Champion caster = s.Champions[slot];
-        AbilityDef a = Def(caster).Abilities[ability];
+        IReadOnlyList<OpeningInstruction> instructions = OpeningOf(caster, ability);
         Span<HexCoord> pos = stackalloc HexCoord[10];
         Span<bool> onBoard = stackalloc bool[10];
         for (int i = 0; i < 10; i++)
@@ -120,12 +182,13 @@ public sealed partial class Game
             onBoard[i] = s.Champions[i].OnBoard;
         }
 
-        foreach (OpeningInstruction ins in a.Opening)
+        foreach (OpeningInstruction ins in instructions)
         {
-            if (ins.Kind == InstructionKind.PlaceBeacon) continue;   // always executes
+            if (ins.Kind != InstructionKind.Move) continue;   // beacons always execute; casts may fizzle
             int who = MatchState.Slot(caster.Team, ins.Role);
+            if (s.Champions[who].Rooted) return false;
             HexCoord to = pos[who] + Board.Frame(Hex.Directions[ins.Direction], caster.Team);
-            if (!Board.Playable(to) || IsSolidTower(to)) return false;
+            if (!Board.Playable(to) || IsSolidTower(to) || WallAt(s, to) >= 0) return false;
             for (int i = 0; i < 10; i++)
             {
                 if (onBoard[i] && pos[i] == to) return false;
@@ -140,26 +203,59 @@ public sealed partial class Game
     private void ApplyOpeningPlay(ref MatchState s, in Command cmd, List<GameEvent>? log)
     {
         Champion caster = s.Champions[cmd.Champion];
-        AbilityDef a = Def(caster).Abilities[cmd.Ability];
-        Log(log, EventKind.Opening, $"{Name(s, cmd.Champion)} plays {a.Name} in the opening.");
+        Log(log, EventKind.Opening, $"{Name(s, cmd.Champion)} plays {OpeningName(caster, cmd.Ability)} in the opening.");
 
-        foreach (OpeningInstruction ins in a.Opening)
+        foreach (OpeningInstruction ins in OpeningOf(caster, cmd.Ability))
         {
             int who = MatchState.Slot(caster.Team, ins.Role);
-            if (ins.Kind == InstructionKind.Move)
+            switch (ins.Kind)
             {
-                HexCoord to = s.Champions[who].Pos + Board.Frame(Hex.Directions[ins.Direction], caster.Team);
-                s.Champions[who].Pos = to;
-                Log(log, EventKind.Opening, $"  {Name(s, who)} → {Fmt(to)}");
-            }
-            else
-            {
-                PlaceBeacon(ref s, caster.Team, s.Champions[who].Pos, (byte)ins.Sigil, log);
+                case InstructionKind.Move:
+                    HexCoord to = s.Champions[who].Pos + Board.Frame(Hex.Directions[ins.Direction], caster.Team);
+                    s.Champions[who].Pos = to;
+                    Log(log, EventKind.Opening, $"  {Name(s, who)} → {Fmt(to)}");
+                    break;
+                case InstructionKind.PlaceBeacon:
+                    PlaceBeacon(ref s, caster.Team, s.Champions[who].Pos, (byte)ins.Sigil, log);
+                    break;
+                case InstructionKind.Cast:
+                    CastInOpening(ref s, who, ins.Slot, log);
+                    break;
             }
         }
 
         s.Champions[cmd.Champion].Flags |= ChampFlags.OpeningDone;
         s.Active = NextOpeningTeam(s, caster.Team);
+    }
+
+    /// <summary>
+    /// An opening cast (v2): the champion fires its ability, aimed by D-043's rules. With
+    /// nothing to hit it fizzles but still goes on cooldown; already on cooldown, nothing
+    /// happens. Opening damage can't kill (D-042).
+    /// </summary>
+    private void CastInOpening(ref MatchState s, int who, int slot, List<GameEvent>? log)
+    {
+        Champion c = s.Champions[who];
+        AbilityDef? a = Kit(c, slot);
+        if (a is null) return;
+        if (c.Cooldowns[slot] > 0)
+        {
+            Log(log, EventKind.Opening, $"  {Name(s, who)}'s {a.Name} is already on cooldown — nothing happens.");
+            return;
+        }
+
+        // Every opening cast costs round 1 at least, even for a cooldown-0 ability (D-044).
+        int cooldown = Math.Max(1, a.Cooldown);
+        Target? aim = OpeningAim(s, who, slot);
+        if (aim is null)
+        {
+            s.Champions[who].Cooldowns[slot] = (byte)cooldown;
+            Log(log, EventKind.Opening, $"  {Name(s, who)} casts {a.Name} — nothing in reach, it fizzles (on cooldown {cooldown}).");
+            return;
+        }
+
+        ResolveOne(ref s, who, slot, aim.Value, log);
+        s.Champions[who].Cooldowns[slot] = (byte)cooldown;
     }
 
     private void ApplyOpeningFallback(ref MatchState s, in Command cmd, List<GameEvent>? log)

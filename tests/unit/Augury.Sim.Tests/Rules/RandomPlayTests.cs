@@ -9,7 +9,7 @@ namespace Augury.Sim.Tests.Rules;
 /// </summary>
 public class RandomPlayTests
 {
-    internal static readonly Game Game = Game.LoadDefault();
+    internal static readonly Game Game = Fixtures.V1;
 
     /// <summary>Deterministic LCG: a fixed seed, never a time-based one.</summary>
     internal sealed class Lcg(uint seed)

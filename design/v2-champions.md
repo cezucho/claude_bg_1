@@ -90,10 +90,23 @@ match on cooldown.
 | Lens | Lance | mid forward-left → **cast** → mid back-right | Poke and retreat: steps in, fires the line, steps back |
 | Oriel | Mend | support forward-left → **cast** → beacon II | A support's cast is the answer: cleanse and heal the ally the enemy just hooked or burned |
 
-**Rules (Claude's proposals, D-041 and D-042; each reversible):**
-1. **The cast needs a legal target when it is played.** Opening plays are strict: all three
-   instructions must execute. With no enemy in reach, the whole opening is unavailable.
-   This makes the attack a question of timing.
+**Owner's revision (2026-10-04): casts are less strict, and may fire other champions' abilities.**
+- **One** ability per champion has an attack opening. Its instructions cast **one** ability
+  usually, **sometimes two**, **rarely three**. A cast names a role and a slot ("mid casts
+  Q"), so it may fire another champion's ability — whichever champion was drafted into that
+  role. This ties the opening to the draft.
+- **A cast never makes the opening unavailable.** With nothing to hit, it **fizzles**: no
+  effect, but the ability **still goes on cooldown**. Movement instructions stay strict.
+- *This supersedes D-041, which made a targetless cast block the opening.*
+
+**Rules (Claude's, each reversible):**
+1. **Opening casts aim themselves (D-043)** by fixed, visible rules, and the preview shows
+   the result before you commit:
+   - enemy abilities: the nearest enemy champion, ties to the lowest HP;
+   - ally abilities: an ally with a status to cleanse, else the most wounded;
+   - rotatable patterns: the facing that hits the most enemies;
+   - dash or wall: the empty hex in reach nearest the closest enemy.
+   An opening stays one decision: which play, in what order.
 2. **The ability starts the match on cooldown.** This is the owner's trade, and it reverses
    D-011 for cast openings only.
 3. **Opening damage can't kill.** It leaves a champion at no less than 1 HP. This guards

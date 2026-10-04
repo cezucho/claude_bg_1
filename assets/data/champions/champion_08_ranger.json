@@ -1,127 +1,132 @@
 {
-  "id": "gunner",
-  "name": "Gunner",
+  "id": "ranger",
+  "name": "Ranger",
   "role": "Bottom",
-  "glyph": "G",
+  "glyph": "R",
   "stats": {
-    "vit": 26000,
-    "pow": 1150,
+    "vit": 25000,
+    "pow": 1100,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
   },
   "passive": {
-    "name": "Overwatch",
-    "trigger": "OnEnemyEntersReach",
-    "effect": "Strike",
-    "amount": 1
+    "name": "Vengeance",
+    "trigger": "OnAllyDies",
+    "effect": "EmpowerSelf",
+    "amount": 50,
+    "stat": "pow"
   },
   "abilities": [
     {
-      "name": "Snipe",
+      "name": "Volley",
       "initiative": 1,
-      "cooldown": 1,
+      "cooldown": 0,
       "effects": [
         {
           "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "power": 1000
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "spd",
+        "vit",
         25
       ],
       "moldDown": [
         "arm",
         25
       ],
-      "slotSigil": 2,
+      "slotSigil": 0,
       "opening": [
-        "cast top w",
-        "cast bottom q",
-        "move bottom forward-right"
+        "move bottom forward-right",
+        "cast mid q",
+        "cast bottom q"
       ]
     },
     {
-      "name": "Recoil",
+      "name": "Pin Shot",
       "initiative": 2,
       "cooldown": 2,
-      "target": "EmptyHex",
       "effects": [
         {
-          "kind": "Dash",
-          "amount": 2
+          "kind": "Damage",
+          "power": 1100
+        },
+        {
+          "kind": "Root",
+          "amount": 1
         }
       ],
-      "scalesFrom": "spd",
+      "scalesFrom": "pow",
       "moldUp": [
-        "pow",
-        25
+        "spd",
+        40
       ],
       "moldDown": [
         "vit",
-        25
+        40
       ],
       "opening": [
         "move bottom forward-left",
-        "move bottom forward-right",
-        "beacon bottom 2"
+        "move support forward-left",
+        "beacon bottom 0"
       ]
     },
     {
-      "name": "Buckshot",
-      "initiative": 3,
-      "cooldown": 1,
+      "name": "Rain of Arrows",
+      "initiative": 4,
+      "cooldown": 3,
       "pattern": [
         [
           0,
-          1
+          2
         ],
         [
           -1,
-          1
+          2
+        ],
+        [
+          -1,
+          3
         ],
         [
           0,
+          3
+        ],
+        [
+          1,
           2
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600
-        },
-        {
-          "kind": "Displace",
-          "amount": 1
+          "power": 2400
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "vit",
+        "arm",
         60
       ],
       "moldDown": [
-        "rch",
+        "spd",
         60
       ],
-      "printedSigil": 0,
       "opening": [
         "move bottom forward-right",
         "move support forward-right",
-        "move mid forward-right"
+        "move jungle forward-left"
       ]
     }
   ],
   "signature": {
-    "name": "Hold Position",
+    "name": "Fall Back",
     "opening": [
       "move bottom forward-left",
-      "move mid forward-left",
-      "move support forward-left"
+      "move bottom right",
+      "move support forward-right"
     ]
   }
 }

@@ -61,6 +61,7 @@ public sealed partial class Game
             c.Team = i < 5 ? Team.A : Team.B;
             c.Role = (Role)(i % 5);
             c.Def = 255;
+            c.Spell = 255;
             c.Presence = Presence.Dead;   // not on the board until the Opening Phase places it
         }
 
@@ -84,13 +85,38 @@ public sealed partial class Game
     /// <summary>A match with the draft already made, positioned at the Opening Phase.</summary>
     /// <param name="picksA">Content index per role for team A.</param>
     /// <param name="picksB">Content index per role for team B.</param>
-    public MatchState NewMatch(IReadOnlyList<int> picksA, IReadOnlyList<int> picksB)
+    public MatchState NewMatch(IReadOnlyList<int> picksA, IReadOnlyList<int> picksB) =>
+        NewMatch(picksA, picksB, null, null);
+
+    /// <summary>
+    /// A match with the draft and spells already chosen, positioned at the Opening Phase.
+    /// Champions with a spell slot and no spell given take the first spells their team hasn't.
+    /// </summary>
+    /// <param name="picksA">Content index per role for team A.</param>
+    /// <param name="picksB">Content index per role for team B.</param>
+    /// <param name="spellsA">Spell pool index per role for team A, or null.</param>
+    /// <param name="spellsB">Spell pool index per role for team B, or null.</param>
+    public MatchState NewMatch(IReadOnlyList<int> picksA, IReadOnlyList<int> picksB, IReadOnlyList<int>? spellsA, IReadOnlyList<int>? spellsB)
     {
         MatchState s = NewMatch();
         for (int r = 0; r < 5; r++)
         {
             s.Champions[r].Def = (byte)picksA[r];
             s.Champions[5 + r].Def = (byte)picksB[r];
+        }
+
+        for (int t = 0; t < 2; t++)
+        {
+            IReadOnlyList<int>? given = t == 0 ? spellsA : spellsB;
+            var used = new HashSet<int>();
+            for (int r = 0; r < 5; r++)
+            {
+                ref Champion c = ref s.Champions[t * 5 + r];
+                if (!Def(c).HasSpellSlot || Content.Spells.Count == 0) continue;
+                int pick = given is not null ? given[r] : Enumerable.Range(0, Content.Spells.Count).First(i => !used.Contains(i));
+                c.Spell = (byte)pick;
+                used.Add(pick);
+            }
         }
 
         s.DraftPicks = 10;
@@ -124,6 +150,32 @@ public sealed partial class Game
 
     /// <summary>The champion's definition.</summary>
     public ChampionDef Def(in Champion c) => Content.Champions[c.Def];
+
+    /// <summary>
+    /// The ability in combat slot 0–3: the champion's own abilities, then — for a v2 champion —
+    /// its summoner spell in slot 3. Null for an empty slot.
+    /// </summary>
+    public AbilityDef? Kit(in Champion c, int slot)
+    {
+        ChampionDef d = Def(c);
+        if (slot < d.Abilities.Count) return d.Abilities[slot];
+        if (slot == 3 && c.Spell < Content.Spells.Count) return Content.Spells[c.Spell];
+        return null;
+    }
+
+    /// <summary>The opening instructions for slot 0–3: each ability's, then a v2 champion's signature.</summary>
+    public IReadOnlyList<OpeningInstruction> OpeningOf(in Champion c, int slot)
+    {
+        ChampionDef d = Def(c);
+        return slot < d.Abilities.Count ? d.Abilities[slot].Opening : d.Signature!.Opening;
+    }
+
+    /// <summary>Display name of the opening in slot 0–3.</summary>
+    public string OpeningName(in Champion c, int slot)
+    {
+        ChampionDef d = Def(c);
+        return slot < d.Abilities.Count ? d.Abilities[slot].Name : d.Signature!.Name;
+    }
 
     /// <summary>Base plus drift, permille.</summary>
     public int StatPermille(in Champion c, Stat s) => Def(c).Base(s) + c.Drift[(int)s];
@@ -169,6 +221,7 @@ public sealed partial class Game
             case CommandKind.Ability: ApplyAbility(ref s, cmd, log); break;
             case CommandKind.Pass: ApplyPass(ref s, log); break;
             case CommandKind.Decline: ApplyDecline(ref s, log); break;
+            case CommandKind.SpellPick: ApplySpellPick(ref s, cmd, log); break;
             default: throw new InvalidOperationException($"Unknown command {cmd.Kind}.");
         }
 
@@ -189,6 +242,7 @@ public sealed partial class Game
         switch (s.Phase)
         {
             case Phase.Draft: LegalDraft(s, into); break;
+            case Phase.SpellPick: LegalSpellPick(s, into); break;
             case Phase.Opening: LegalOpening(s, into); break;
             case Phase.Basic: LegalBasics(s, s.Active, into); break;
             case Phase.Ladder:
@@ -214,12 +268,33 @@ public sealed partial class Game
 
                 case Phase.Draft:
                     if (s.DraftPicks < 10) return;
+                    if (NeedsSpells(s, Team.A) || NeedsSpells(s, Team.B))
+                    {
+                        s.Phase = Phase.SpellPick;
+                        s.Active = Team.A;
+                        Log(log, EventKind.Phase, "Summoner spells — both teams choose, hidden until the opening.");
+                        continue;
+                    }
+
+                    StartOpening(ref s, log);
+                    continue;
+
+                case Phase.SpellPick:
+                    if (NeedsSpells(s, s.Active)) return;
+                    if (NeedsSpells(s, MatchState.Other(s.Active)))
+                    {
+                        s.Active = MatchState.Other(s.Active);
+                        return;
+                    }
+
+                    RevealSpells(s, log);
                     StartOpening(ref s, log);
                     continue;
 
                 case Phase.Opening:
                     if (OpeningComplete(s, Team.A) && OpeningComplete(s, Team.B))
                     {
+                        TickHalf(ref s, log);   // the opening counts as a half for half-based statuses
                         StartRound(ref s, 1, log);
                         continue;
                     }
@@ -290,6 +365,7 @@ public sealed partial class Game
 
     private void EndHalf(ref MatchState s, List<GameEvent>? log)
     {
+        TickHalf(ref s, log);
         if (s.Half == 1)
         {
             s.Half = 2;
@@ -333,8 +409,31 @@ public sealed partial class Game
         return -1;
     }
 
-    /// <summary>A champion or, when <see cref="RulesConfig.TowersBlock"/>, a tower is in the way.</summary>
-    private bool Occupied(in MatchState s, HexCoord h) => ChampionAt(s, h) >= 0 || IsSolidTower(h);
+    /// <summary>A champion, a wall or, when <see cref="RulesConfig.TowersBlock"/>, a tower is in the way.</summary>
+    private bool Occupied(in MatchState s, HexCoord h) => ChampionAt(s, h) >= 0 || IsSolidTower(h) || WallAt(s, h) >= 0;
+
+    /// <summary>v2: wall slot at a hex, or −1.</summary>
+    public static int WallAt(in MatchState s, HexCoord h)
+    {
+        for (int w = 0; w < 4; w++)
+        {
+            if (s.Walls[w].Rounds > 0 && s.Walls[w].Pos == h) return w;
+        }
+
+        return -1;
+    }
+
+    /// <summary>Half-based statuses (root, exhaust, unstoppable) run down at every half's end.</summary>
+    private void TickHalf(ref MatchState s, List<GameEvent>? log)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            ref Champion c = ref s.Champions[i];
+            if (c.RootHalves > 0 && --c.RootHalves == 0) Log(log, EventKind.Phase, $"  {Name(s, i)} is no longer rooted.");
+            if (c.ExhaustHalves > 0) c.ExhaustHalves--;
+            if (c.UnstoppableHalves > 0) c.UnstoppableHalves--;
+        }
+    }
 
     /// <summary>True for a tower hex when towers are impassable (v2).</summary>
     private bool IsSolidTower(HexCoord h) => Rules.TowersBlock && Board.TowerAt(h) >= 0;

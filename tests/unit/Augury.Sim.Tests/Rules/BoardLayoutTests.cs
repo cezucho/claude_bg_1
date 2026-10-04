@@ -16,7 +16,7 @@ public class BoardLayoutTests
     private static readonly Game G = RandomPlayTests.Game;
 
     public static TheoryData<string> Candidates() =>
-        new(Directory.GetFiles(Path.Combine(Path.GetDirectoryName(ContentLoader.FindChampionDirectory())!, "boards"), "board_*.json")
+        new(Directory.GetFiles(Path.Combine(ContentLoader.FindDataDirectory(), "boards"), "board_*.json")
             .Select(f => Path.GetFileNameWithoutExtension(f)["board_".Length..]));
 
     [Fact]

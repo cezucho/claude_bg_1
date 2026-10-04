@@ -1,0 +1,124 @@
+{
+  "id": "viper",
+  "name": "Viper",
+  "role": "Jungle",
+  "glyph": "V",
+  "stats": {
+    "vit": 25000,
+    "pow": 1200,
+    "arm": 0,
+    "rch": 1000,
+    "spd": 3000
+  },
+  "passive": {
+    "name": "Hunger",
+    "trigger": "OnRoundClose",
+    "effect": "EmpowerSelf",
+    "amount": 15,
+    "stat": "pow"
+  },
+  "abilities": [
+    {
+      "name": "Lunge",
+      "initiative": 1,
+      "cooldown": 1,
+      "target": "EmptyHex",
+      "effects": [
+        {
+          "kind": "Dash",
+          "amount": 3
+        }
+      ],
+      "scalesFrom": "spd",
+      "moldUp": [
+        "pow",
+        25
+      ],
+      "moldDown": [
+        "arm",
+        25
+      ],
+      "opening": [
+        "move jungle forward-right",
+        "move jungle forward-right",
+        "beacon jungle 1"
+      ]
+    },
+    {
+      "name": "Fang",
+      "initiative": 2,
+      "cooldown": 1,
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 1200
+        },
+        {
+          "kind": "Poison",
+          "amount": 2,
+          "rounds": 2
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "spd",
+        40
+      ],
+      "moldDown": [
+        "vit",
+        40
+      ],
+      "slotSigil": 1,
+      "opening": [
+        "move jungle forward-left",
+        "cast jungle q",
+        "cast jungle w"
+      ]
+    },
+    {
+      "name": "Ambush",
+      "initiative": 3,
+      "cooldown": 2,
+      "pattern": [
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 1600,
+          "bonusVs": "Poisoned",
+          "bonusFlat": 3
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "spd",
+        60
+      ],
+      "moldDown": [
+        "vit",
+        60
+      ],
+      "opening": [
+        "move jungle forward-right",
+        "move mid forward-right",
+        "move jungle forward-right"
+      ]
+    }
+  ],
+  "signature": {
+    "name": "Stalk",
+    "opening": [
+      "move jungle forward-left",
+      "move jungle forward-right",
+      "move top forward-left"
+    ]
+  }
+}

@@ -13,9 +13,9 @@
   "respawnBase": 1,
   "respawnEvery": 8,
   "basicsPerHalf": 2,
-  "towersBlock": false,
+  "towersBlock": true,
   "friendliesBlock": true,
   "nexusGateTowers": 1,
   "roundOneOpener": "B",
-  "board": "classic"
+  "board": "field7"
 }

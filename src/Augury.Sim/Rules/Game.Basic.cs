@@ -46,7 +46,7 @@ public sealed partial class Game
         Champion c = s.Champions[slot];
         int speed = Speed(c);
         var result = new List<HexCoord>();
-        if (speed <= 0) return result;
+        if (speed <= 0 || c.Rooted) return result;
 
         var seen = new HashSet<HexCoord> { c.Pos };
         var frontier = new List<HexCoord> { c.Pos };
@@ -58,7 +58,7 @@ public sealed partial class Game
                 for (int k = 0; k < 6; k++)
                 {
                     HexCoord to = at + Hex.Directions[Board.FrameDirection(k, c.Team)];
-                    if (!Board.Playable(to) || IsSolidTower(to) || !seen.Add(to)) continue;
+                    if (!Board.Playable(to) || IsSolidTower(to) || WallAt(s, to) >= 0 || !seen.Add(to)) continue;
                     int occupant = ChampionAt(s, to);
                     if (occupant >= 0)
                     {
@@ -171,6 +171,8 @@ public sealed partial class Game
         Team team = c.Team;
         s.BasicsTaken[TeamIndex(team)]++;
         int raw = (int)Arith.FloorDiv((long)Rules.BasicBase * Pow(s.Champions[cmd.Champion]), 1000);
+        if (s.Champions[cmd.Champion].ExhaustHalves > 0) raw = Math.Max(1, raw / 2);
+        BurnOnAct(ref s, cmd.Champion, log);
 
         switch (cmd.Target.Kind)
         {

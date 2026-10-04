@@ -87,8 +87,7 @@ public sealed record RulesConfig
     /// <summary>Loads <c>assets/data/rules_config.json</c> found by walking up from the start directory.</summary>
     public static RulesConfig LoadDefault()
     {
-        string champions = Content.ContentLoader.FindChampionDirectory();
-        string path = Path.Combine(Path.GetDirectoryName(champions)!, "rules_config.json");
+        string path = Path.Combine(Content.ContentLoader.FindDataDirectory(), "rules_config.json");
         return File.Exists(path) ? Load(path) : new RulesConfig();
     }
 }

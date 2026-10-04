@@ -5,10 +5,10 @@ namespace Augury.Sim.Tests.Content;
 /// <summary>Schema load-time invariants (Champion &amp; Ability Schema rule 9).</summary>
 public class ContentLoaderTests
 {
-    private static ContentDb Roster() => ContentLoader.LoadDirectory(ContentLoader.FindChampionDirectory());
+    private static ContentDb Roster() => ContentLoader.LoadDirectory(Fixtures.V1Champions);
 
     [Fact]
-    public void ShippedRoster_LoadsAndCoversEveryRole()
+    public void V1Roster_LoadsAndCoversEveryRole()
     {
         ContentDb db = Roster();
         foreach (Role role in Enum.GetValues<Role>())
@@ -18,7 +18,7 @@ public class ContentLoaderTests
     }
 
     [Fact]
-    public void ShippedRoster_SigilRatesMatchTheMeasuredTarget()
+    public void V1Roster_SigilRatesMatchTheMeasuredTarget()
     {
         // sigils-and-beacons.md rule 8: 3 printed, 5 slotted, 12 plain across one team.
         ContentDb db = Roster();
@@ -43,7 +43,7 @@ public class ContentLoaderTests
     [InlineData("\"initiative\": 1, \"cooldown\": 9", "cooldown")]
     public void InvalidAbility_FailsLoudly(string replacement, string expectedFragment)
     {
-        string json = File.ReadAllText(Path.Combine(ContentLoader.FindChampionDirectory(), "champion_01_warden.json"));
+        string json = File.ReadAllText(Path.Combine(Fixtures.V1Champions, "champion_01_warden.json"));
         string broken = replacement.StartsWith("\"moldUp\"")
             ? json.Replace("\"moldUp\": [\"arm\", 25]", replacement)
             : json.Replace("\"initiative\": 1, \"cooldown\": 1", replacement);

@@ -1,0 +1,138 @@
+{
+  "id": "oriel",
+  "name": "Oriel",
+  "role": "Support",
+  "glyph": "O",
+  "stats": {
+    "vit": 28000,
+    "pow": 1000,
+    "arm": 1000,
+    "rch": 2000,
+    "spd": 2000
+  },
+  "passive": {
+    "name": "Grace",
+    "trigger": "OnRoundClose",
+    "effect": "HealSelf",
+    "amount": 2
+  },
+  "abilities": [
+    {
+      "name": "Mend",
+      "initiative": 1,
+      "cooldown": 1,
+      "target": "Ally",
+      "effects": [
+        {
+          "kind": "Heal",
+          "power": 1000
+        },
+        {
+          "kind": "Cleanse"
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "vit",
+        25
+      ],
+      "moldDown": [
+        "spd",
+        25
+      ],
+      "slotSigil": 1,
+      "opening": [
+        "move support forward-left",
+        "cast support q",
+        "beacon support 1"
+      ]
+    },
+    {
+      "name": "Tether",
+      "initiative": 2,
+      "cooldown": 2,
+      "target": "Ally",
+      "rangeBonus": 1,
+      "effects": [
+        {
+          "kind": "PullAlly",
+          "amount": 2
+        },
+        {
+          "kind": "Shield",
+          "amount": 2
+        }
+      ],
+      "scalesFrom": "spd",
+      "moldUp": [
+        "arm",
+        25
+      ],
+      "moldDown": [
+        "pow",
+        25
+      ],
+      "opening": [
+        "move support forward-right",
+        "move support forward-left",
+        "move bottom forward-right"
+      ]
+    },
+    {
+      "name": "Sanctuary",
+      "initiative": 4,
+      "cooldown": 3,
+      "target": "Ally",
+      "pattern": [
+        [
+          -1,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "effects": [
+        {
+          "kind": "Heal",
+          "power": 1000
+        },
+        {
+          "kind": "Shield",
+          "amount": 3
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "vit",
+        60
+      ],
+      "moldDown": [
+        "rch",
+        60
+      ],
+      "opening": [
+        "move support forward-left",
+        "move bottom forward-left",
+        "move mid forward-left"
+      ]
+    }
+  ],
+  "signature": {
+    "name": "Vigil",
+    "opening": [
+      "move support forward-right",
+      "beacon support 0",
+      "move support left"
+    ]
+  }
+}

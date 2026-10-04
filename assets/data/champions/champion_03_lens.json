@@ -1,78 +1,81 @@
 {
-  "id": "gunner",
-  "name": "Gunner",
-  "role": "Bottom",
-  "glyph": "G",
+  "id": "lens",
+  "name": "Lens",
+  "role": "Mid",
+  "glyph": "L",
   "stats": {
-    "vit": 26000,
+    "vit": 23000,
     "pow": 1150,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
   },
   "passive": {
-    "name": "Overwatch",
-    "trigger": "OnEnemyEntersReach",
-    "effect": "Strike",
-    "amount": 1
+    "name": "Clarity",
+    "trigger": "OnRoundClose",
+    "effect": "ShieldSelf",
+    "amount": 2
   },
   "abilities": [
     {
-      "name": "Snipe",
+      "name": "Mark",
       "initiative": 1,
       "cooldown": 1,
       "effects": [
         {
           "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "power": 500
+        },
+        {
+          "kind": "Mark",
+          "amount": 3
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "spd",
+        "arm",
         25
       ],
       "moldDown": [
-        "arm",
+        "spd",
         25
       ],
       "slotSigil": 2,
       "opening": [
-        "cast top w",
-        "cast bottom q",
+        "move mid forward-right",
+        "beacon mid 2",
         "move bottom forward-right"
       ]
     },
     {
-      "name": "Recoil",
+      "name": "Prism Wall",
       "initiative": 2,
-      "cooldown": 2,
+      "cooldown": 3,
       "target": "EmptyHex",
+      "rangeBonus": -1,
       "effects": [
         {
-          "kind": "Dash",
+          "kind": "Wall",
           "amount": 2
         }
       ],
-      "scalesFrom": "spd",
+      "scalesFrom": "rch",
       "moldUp": [
+        "vit",
+        30
+      ],
+      "moldDown": [
         "pow",
         25
       ],
-      "moldDown": [
-        "vit",
-        25
-      ],
       "opening": [
-        "move bottom forward-left",
-        "move bottom forward-right",
-        "beacon bottom 2"
+        "move mid forward-left",
+        "move mid forward-right",
+        "move support forward-left"
       ]
     },
     {
-      "name": "Buckshot",
+      "name": "Lance",
       "initiative": 3,
       "cooldown": 1,
       "pattern": [
@@ -81,47 +84,43 @@
           1
         ],
         [
-          -1,
-          1
+          0,
+          2
         ],
         [
           0,
-          2
+          3
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
           "power": 1600
-        },
-        {
-          "kind": "Displace",
-          "amount": 1
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
+        "rch",
+        30
+      ],
+      "moldDown": [
         "vit",
         60
       ],
-      "moldDown": [
-        "rch",
-        60
-      ],
-      "printedSigil": 0,
+      "printedSigil": 2,
       "opening": [
-        "move bottom forward-right",
-        "move support forward-right",
-        "move mid forward-right"
+        "move mid forward-left",
+        "cast mid e",
+        "move mid back-right"
       ]
     }
   ],
   "signature": {
-    "name": "Hold Position",
+    "name": "Vantage",
     "opening": [
-      "move bottom forward-left",
       "move mid forward-left",
-      "move support forward-left"
+      "move jungle forward-left",
+      "beacon jungle 2"
     ]
   }
 }

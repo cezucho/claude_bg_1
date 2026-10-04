@@ -1,32 +1,30 @@
 {
-  "id": "gunner",
-  "name": "Gunner",
-  "role": "Bottom",
-  "glyph": "G",
+  "id": "tempest",
+  "name": "Tempest",
+  "role": "Mid",
+  "glyph": "T",
   "stats": {
-    "vit": 26000,
-    "pow": 1150,
+    "vit": 23000,
+    "pow": 1100,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
   },
   "passive": {
-    "name": "Overwatch",
-    "trigger": "OnEnemyEntersReach",
-    "effect": "Strike",
+    "name": "Static Skin",
+    "trigger": "OnDamaged",
+    "effect": "ShieldSelf",
     "amount": 1
   },
   "abilities": [
     {
-      "name": "Snipe",
+      "name": "Zap",
       "initiative": 1,
-      "cooldown": 1,
+      "cooldown": 0,
       "effects": [
         {
           "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "power": 1000
         }
       ],
       "scalesFrom": "pow",
@@ -38,44 +36,52 @@
         "arm",
         25
       ],
-      "slotSigil": 2,
+      "printedSigil": 2,
       "opening": [
-        "cast top w",
-        "cast bottom q",
-        "move bottom forward-right"
+        "move mid forward-right",
+        "move mid forward-left",
+        "move top forward-right"
       ]
     },
     {
-      "name": "Recoil",
+      "name": "Gust",
       "initiative": 2,
-      "cooldown": 2,
-      "target": "EmptyHex",
+      "cooldown": 1,
       "effects": [
         {
-          "kind": "Dash",
+          "kind": "Damage",
+          "power": 700
+        },
+        {
+          "kind": "Displace",
           "amount": 2
         }
       ],
-      "scalesFrom": "spd",
+      "scalesFrom": "pow",
       "moldUp": [
-        "pow",
-        25
+        "rch",
+        30
       ],
       "moldDown": [
         "vit",
-        25
+        30
       ],
+      "slotSigil": 2,
       "opening": [
-        "move bottom forward-left",
-        "move bottom forward-right",
-        "beacon bottom 2"
+        "move mid forward-left",
+        "beacon mid 2",
+        "move bottom forward-left"
       ]
     },
     {
-      "name": "Buckshot",
-      "initiative": 3,
-      "cooldown": 1,
+      "name": "Eye of the Storm",
+      "initiative": 4,
+      "cooldown": 3,
       "pattern": [
+        [
+          1,
+          0
+        ],
         [
           0,
           1
@@ -85,14 +91,22 @@
           1
         ],
         [
+          -1,
+          0
+        ],
+        [
           0,
-          2
+          -1
+        ],
+        [
+          1,
+          -1
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600
+          "power": 2200
         },
         {
           "kind": "Displace",
@@ -105,23 +119,22 @@
         60
       ],
       "moldDown": [
-        "rch",
+        "spd",
         60
       ],
-      "printedSigil": 0,
       "opening": [
-        "move bottom forward-right",
-        "move support forward-right",
-        "move mid forward-right"
+        "cast top q",
+        "cast jungle q",
+        "cast mid q"
       ]
     }
   ],
   "signature": {
-    "name": "Hold Position",
+    "name": "Updraft",
     "opening": [
-      "move bottom forward-left",
+      "move mid forward-right",
       "move mid forward-left",
-      "move support forward-left"
+      "move jungle forward-left"
     ]
   }
 }

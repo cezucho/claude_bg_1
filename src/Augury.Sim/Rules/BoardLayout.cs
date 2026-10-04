@@ -48,8 +48,7 @@ public sealed record BoardLayout
     public static BoardLayout Load(string name)
     {
         if (string.IsNullOrWhiteSpace(name) || name == "classic") return Classic;
-        string champions = Content.ContentLoader.FindChampionDirectory();
-        string path = Path.Combine(Path.GetDirectoryName(champions)!, "boards", $"board_{name}.json");
+        string path = Path.Combine(Content.ContentLoader.FindDataDirectory(), "boards", $"board_{name}.json");
         if (!File.Exists(path)) throw new Content.ContentException($"Board layout '{name}' not found at {path}.");
         return Parse(File.ReadAllText(path), path);
     }

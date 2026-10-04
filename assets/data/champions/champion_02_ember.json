@@ -1,32 +1,31 @@
 {
-  "id": "gunner",
-  "name": "Gunner",
-  "role": "Bottom",
-  "glyph": "G",
+  "id": "ember",
+  "name": "Ember",
+  "role": "Jungle",
+  "glyph": "E",
   "stats": {
     "vit": 26000,
-    "pow": 1150,
+    "pow": 1200,
     "arm": 0,
-    "rch": 3000,
-    "spd": 2000
+    "rch": 2000,
+    "spd": 3000
   },
   "passive": {
-    "name": "Overwatch",
+    "name": "Ambush",
     "trigger": "OnEnemyEntersReach",
     "effect": "Strike",
     "amount": 1
   },
   "abilities": [
     {
-      "name": "Snipe",
+      "name": "Kindle",
       "initiative": 1,
       "cooldown": 1,
       "effects": [
         {
-          "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "kind": "Burn",
+          "amount": 2,
+          "rounds": 2
         }
       ],
       "scalesFrom": "pow",
@@ -38,22 +37,22 @@
         "arm",
         25
       ],
-      "slotSigil": 2,
+      "slotSigil": 1,
       "opening": [
-        "cast top w",
-        "cast bottom q",
-        "move bottom forward-right"
+        "move jungle forward-right",
+        "move jungle forward-right",
+        "cast jungle q"
       ]
     },
     {
-      "name": "Recoil",
+      "name": "Switch",
       "initiative": 2,
       "cooldown": 2,
-      "target": "EmptyHex",
+      "target": "Ally",
+      "rangeBonus": 1,
       "effects": [
         {
-          "kind": "Dash",
-          "amount": 2
+          "kind": "Swap"
         }
       ],
       "scalesFrom": "spd",
@@ -66,62 +65,60 @@
         25
       ],
       "opening": [
-        "move bottom forward-left",
-        "move bottom forward-right",
-        "beacon bottom 2"
+        "move jungle forward-left",
+        "move top forward-left",
+        "move jungle right"
       ]
     },
     {
-      "name": "Buckshot",
+      "name": "Wildfire",
       "initiative": 3,
-      "cooldown": 1,
+      "cooldown": 2,
       "pattern": [
-        [
-          0,
-          1
-        ],
         [
           -1,
           1
         ],
         [
           0,
+          1
+        ],
+        [
+          -1,
           2
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600
-        },
-        {
-          "kind": "Displace",
-          "amount": 1
+          "power": 1500,
+          "bonusVs": "Burning",
+          "bonusDouble": true
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "vit",
+        "spd",
         60
       ],
       "moldDown": [
-        "rch",
+        "vit",
         60
       ],
-      "printedSigil": 0,
+      "printedSigil": 1,
       "opening": [
-        "move bottom forward-right",
-        "move support forward-right",
-        "move mid forward-right"
+        "move jungle forward-right",
+        "move mid forward-right",
+        "move jungle forward-left"
       ]
     }
   ],
   "signature": {
-    "name": "Hold Position",
+    "name": "Smoke Trail",
     "opening": [
-      "move bottom forward-left",
-      "move mid forward-left",
-      "move support forward-left"
+      "move jungle forward-left",
+      "move jungle forward-right",
+      "move bottom forward-left"
     ]
   }
 }

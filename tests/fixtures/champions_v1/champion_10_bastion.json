@@ -1,0 +1,24 @@
+{
+  "id": "bastion", "name": "Bastion", "role": "Support", "glyph": "B",
+  "stats": { "vit": 30000, "pow": 900, "arm": 2000, "rch": 2000, "spd": 2000 },
+  "tradeStat": "vit",
+  "passive": { "name": "Aura", "trigger": "OnRoundClose", "effect": "HealSelf", "amount": 2 },
+  "abilities": [
+    { "name": "Barrier", "initiative": 2, "cooldown": 1, "target": "Ally",
+      "effects": [ { "kind": "Shield", "amount": 5 } ], "slotSigil": 0,
+      "scalesFrom": "arm", "moldUp": ["vit", 60], "moldDown": ["pow", 25],
+      "opening": ["move support forward-left", "beacon support 0", "move bottom forward-left"] },
+    { "name": "Rally", "initiative": 2, "cooldown": 2, "target": "Ally",
+      "effects": [ { "kind": "Heal", "power": 1230 } ],
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move support forward-right", "move support forward-left", "move mid forward-right"] },
+    { "name": "Smite", "initiative": 3, "cooldown": 1, "pattern": [[1,0],[2,0]],
+      "effects": [ { "kind": "Damage", "power": 1640 } ], "printedSigil": 1,
+      "scalesFrom": "pow", "moldUp": ["vit", 60], "moldDown": ["rch", 60],
+      "opening": ["move support forward-left", "move bottom forward-right", "move top forward-right"] },
+    { "name": "Judgement", "initiative": 3, "cooldown": 2, "pattern": [[1,0],[1,-1],[0,1]],
+      "effects": [ { "kind": "Damage", "power": 1640 }, { "kind": "Displace", "amount": 1 } ], "slotSigil": 2,
+      "scalesFrom": "pow", "moldUp": ["arm", 25], "moldDown": ["spd", 60],
+      "opening": ["move support forward-right", "move bottom forward-left", "beacon bottom 2"] }
+  ]
+}

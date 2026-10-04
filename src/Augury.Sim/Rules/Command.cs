@@ -28,7 +28,10 @@ public enum CommandKind : byte
     Pass,
 
     /// <summary>Decline the Last Word.</summary>
-    Decline
+    Decline,
+
+    /// <summary>v2: give champion <see cref="Command.Champion"/> summoner spell <see cref="Command.Ability"/> (a pool index).</summary>
+    SpellPick
 }
 
 /// <summary>What a target refers to.</summary>

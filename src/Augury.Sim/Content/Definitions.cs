@@ -57,7 +57,62 @@ public enum EffectKind : byte
     Displace,
 
     /// <summary>Moves the caster to the target hex, at most <c>Amount</c> hexes away.</summary>
-    Dash
+    Dash,
+
+    /// <summary>v2. Target can't move, dash or be moved for <c>Amount</c> half-ends (2 = this half and the next).</summary>
+    Root,
+
+    /// <summary>v2. Target takes <c>Amount</c> (through shields) whenever it resolves an ability or basic attack, for <c>Rounds</c> rounds.</summary>
+    Burn,
+
+    /// <summary>v2. The next hit on the target, from anyone, deals <c>Amount</c> more. Cleared at round close.</summary>
+    Mark,
+
+    /// <summary>v2. The target empty hex becomes impassable for <c>Amount</c> round-ends.</summary>
+    Wall,
+
+    /// <summary>v2. Caster and the target ally trade places.</summary>
+    Swap,
+
+    /// <summary>v2. The target ally moves up to <c>Amount</c> hexes toward the caster.</summary>
+    PullAlly,
+
+    /// <summary>v2. Target is immune to root and to being moved for <c>Amount</c> half-ends; clears root.</summary>
+    Unstoppable,
+
+    /// <summary>v2. Removes root, burn, poison, mark, exhaust and wound from the target.</summary>
+    Cleanse,
+
+    /// <summary>v2. Target deals half damage for <c>Amount</c> half-ends.</summary>
+    Exhaust,
+
+    /// <summary>v2. Target's healing is halved for <c>Rounds</c> rounds.</summary>
+    Wound,
+
+    /// <summary>v2 spell (Smite). <c>Amount</c> damage to a tower or open nexus, ignoring defenders.</summary>
+    StructureDamage,
+
+    /// <summary>v2 spell (Teleport). Caster moves to the target hex, even from its spawn hex.</summary>
+    Teleport,
+
+    /// <summary>v2 spell (Heal). The most wounded other ally within <c>Rounds</c> hexes heals <c>Amount</c>.</summary>
+    HealWoundedAlly
+}
+
+/// <summary>A status an effect can key a bonus on (v2).</summary>
+public enum StatusKind : byte
+{
+    /// <summary>No condition.</summary>
+    None,
+
+    /// <summary>Rooted.</summary>
+    Rooted,
+
+    /// <summary>Burning.</summary>
+    Burning,
+
+    /// <summary>Poisoned.</summary>
+    Poisoned
 }
 
 /// <summary>What a free-targeting (initiative 1–2) ability may be aimed at.</summary>
@@ -69,8 +124,17 @@ public enum TargetRule : byte
     /// <summary>A friendly champion, including the caster.</summary>
     Ally,
 
-    /// <summary>An unoccupied playable hex (Dash).</summary>
-    EmptyHex
+    /// <summary>An unoccupied playable hex (Dash, Wall).</summary>
+    EmptyHex,
+
+    /// <summary>v2. The caster itself.</summary>
+    Self,
+
+    /// <summary>v2 spell (Smite). A tower the caster's team doesn't own, or an open enemy nexus.</summary>
+    Structure,
+
+    /// <summary>v2 spell (Teleport). An empty hex next to a friendly tower or beacon, any distance.</summary>
+    TeleportHex
 }
 
 /// <summary>Opening instruction kinds (Opening Phase rule 2).</summary>
@@ -80,7 +144,13 @@ public enum InstructionKind : byte
     Move,
 
     /// <summary>Place a friendly beacon of <c>Sigil</c> on the hex <c>Role</c> occupies.</summary>
-    PlaceBeacon
+    PlaceBeacon,
+
+    /// <summary>
+    /// v2. The champion in <c>Role</c> casts its ability in slot <c>Slot</c> (0–2). It aims
+    /// itself (D-043); with nothing to hit it fizzles but still goes on cooldown.
+    /// </summary>
+    Cast
 }
 
 /// <summary>When a passive fires (MVP rules §10).</summary>
@@ -122,15 +192,28 @@ public enum PassiveEffect : byte
 /// <param name="Kind">What the effect does.</param>
 /// <param name="Power">Permille power for Damage and Heal (≈ ladder <c>M(i)</c>).</param>
 /// <param name="Amount">Shield amount, poison per round, displace hexes, or dash distance.</param>
-/// <param name="Rounds">Poison duration.</param>
-public sealed record EffectDef(EffectKind Kind, int Power, int Amount, int Rounds);
+/// <param name="Rounds">Poison, burn or wound duration; range for HealWoundedAlly.</param>
+/// <param name="BonusVs">v2: a status on the target that improves this effect.</param>
+/// <param name="BonusFlat">v2: extra damage against such a target.</param>
+/// <param name="BonusDouble">v2: double damage against such a target.</param>
+public sealed record EffectDef(EffectKind Kind, int Power, int Amount, int Rounds,
+    StatusKind BonusVs = StatusKind.None, int BonusFlat = 0, bool BonusDouble = false);
 
 /// <summary>One of an ability's three opening instructions.</summary>
 /// <param name="Kind">Move or PlaceBeacon.</param>
 /// <param name="Role">The role addressed.</param>
 /// <param name="Direction">Canonical-frame direction index 0–5 (see <see cref="Directions"/>).</param>
 /// <param name="Sigil">Beacon sigil for PlaceBeacon.</param>
-public sealed record OpeningInstruction(InstructionKind Kind, Role Role, int Direction, int Sigil);
+/// <param name="Slot">Ability slot 0–2 for Cast.</param>
+public sealed record OpeningInstruction(InstructionKind Kind, Role Role, int Direction, int Sigil, int Slot = -1);
+
+/// <summary>
+/// v2. A champion's own fourth opening, tied to the summoner slot. The spell fills the slot
+/// in combat but never brings an opening (owner, <c>design/v2-direction.md</c>).
+/// </summary>
+/// <param name="Name">Display name.</param>
+/// <param name="Opening">Exactly three instructions.</param>
+public sealed record SignatureOpening(string Name, IReadOnlyList<OpeningInstruction> Opening);
 
 /// <summary>An ability definition. Immutable content, never copied into match state.</summary>
 public sealed record AbilityDef
@@ -180,8 +263,20 @@ public sealed record AbilityDef
     /// <summary>Exactly three opening instructions.</summary>
     public required IReadOnlyList<OpeningInstruction> Opening { get; init; }
 
-    /// <summary>True for free-targeting tiers (initiative 1–2).</summary>
-    public bool IsFree => Initiative <= 2;
+    /// <summary>
+    /// v2 spells: a fixed range in hexes, instead of the caster's reach plus a bonus. 0 means
+    /// reach-based.
+    /// </summary>
+    public int FixedRange { get; init; }
+
+    /// <summary>True for a summoner spell.</summary>
+    public bool IsSpell { get; init; }
+
+    /// <summary>True for free-targeting abilities: no pattern (initiative 1–2, and spells).</summary>
+    public bool IsFree => Pattern.Count == 0;
+
+    /// <summary>True when an effect moves the caster (Dash, Teleport, Swap): a root stops it.</summary>
+    public bool MovesCaster => Effects.Any(e => e.Kind is EffectKind.Dash or EffectKind.Teleport or EffectKind.Swap);
 
     /// <summary>True when any effect is Damage.</summary>
     public bool DealsDamage => Effects.Any(e => e.Kind == EffectKind.Damage);
@@ -218,6 +313,15 @@ public sealed record ChampionDef
 
     /// <summary>The passive.</summary>
     public required PassiveDef Passive { get; init; }
+
+    /// <summary>
+    /// v2 champions: their own fourth opening. Present means three abilities plus a summoner
+    /// slot; absent means a v1 champion with four abilities.
+    /// </summary>
+    public SignatureOpening? Signature { get; init; }
+
+    /// <summary>True for a v2 champion (three abilities, a signature opening and a spell slot).</summary>
+    public bool HasSpellSlot => Signature is not null;
 
     /// <summary>Base stat by enum.</summary>
     public int Base(Stat s) => BaseStats[(int)s];

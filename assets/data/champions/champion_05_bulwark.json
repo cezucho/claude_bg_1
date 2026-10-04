@@ -1,0 +1,132 @@
+{
+  "id": "bulwark",
+  "name": "Bulwark",
+  "role": "Top",
+  "glyph": "B",
+  "stats": {
+    "vit": 36000,
+    "pow": 900,
+    "arm": 2000,
+    "rch": 1000,
+    "spd": 2000
+  },
+  "passive": {
+    "name": "Spiked Plate",
+    "trigger": "OnDamaged",
+    "effect": "Retaliate",
+    "amount": 1
+  },
+  "abilities": [
+    {
+      "name": "Shove",
+      "initiative": 1,
+      "cooldown": 1,
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 1000
+        },
+        {
+          "kind": "Displace",
+          "amount": 2
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "vit",
+        25
+      ],
+      "moldDown": [
+        "spd",
+        25
+      ],
+      "printedSigil": 0,
+      "opening": [
+        "move top forward-left",
+        "move jungle forward-left",
+        "beacon top 0"
+      ]
+    },
+    {
+      "name": "Rampart",
+      "initiative": 2,
+      "cooldown": 3,
+      "target": "EmptyHex",
+      "effects": [
+        {
+          "kind": "Wall",
+          "amount": 2
+        }
+      ],
+      "scalesFrom": "arm",
+      "moldUp": [
+        "vit",
+        30
+      ],
+      "moldDown": [
+        "pow",
+        25
+      ],
+      "opening": [
+        "move top forward-right",
+        "move jungle forward-right",
+        "move mid forward-right"
+      ]
+    },
+    {
+      "name": "Quake",
+      "initiative": 4,
+      "cooldown": 3,
+      "pattern": [
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 2400
+        },
+        {
+          "kind": "Displace",
+          "amount": 1
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "arm",
+        60
+      ],
+      "moldDown": [
+        "spd",
+        60
+      ],
+      "opening": [
+        "move top forward-right",
+        "move top forward-right",
+        "cast top e"
+      ]
+    }
+  ],
+  "signature": {
+    "name": "Hold the Line",
+    "opening": [
+      "move top forward-left",
+      "move top right",
+      "move jungle forward-right"
+    ]
+  }
+}

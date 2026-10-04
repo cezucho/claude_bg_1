@@ -22,6 +22,12 @@ public enum Phase : byte
     /// <summary>Snake draft, one pick per command.</summary>
     Draft,
 
+    /// <summary>
+    /// v2: each team chooses its five summoner spells. Both choose before either is shown
+    /// (owner: hidden and simultaneous); revealed when the opening begins.
+    /// </summary>
+    SpellPick,
+
     /// <summary>Opening Phase: one ability per champion issues three instructions.</summary>
     Opening,
 
@@ -143,6 +149,39 @@ public struct Champion
     /// <summary>Upkeeps until respawn.</summary>
     public byte RespawnIn;
 
+    /// <summary>v2: content index of the summoner spell in slot 4; 255 for none.</summary>
+    public byte Spell;
+
+    /// <summary>v2: half-ends left while rooted (can't move, dash or be moved).</summary>
+    public byte RootHalves;
+
+    /// <summary>v2: half-ends left while exhausted (deals half damage).</summary>
+    public byte ExhaustHalves;
+
+    /// <summary>v2: half-ends left while unstoppable (immune to root and to being moved).</summary>
+    public byte UnstoppableHalves;
+
+    /// <summary>v2: damage taken each time it acts while burning.</summary>
+    public byte BurnAmount;
+
+    /// <summary>v2: rounds of burning left.</summary>
+    public byte BurnRounds;
+
+    /// <summary>v2: extra damage the next hit on it deals; cleared at round close.</summary>
+    public byte Mark;
+
+    /// <summary>v2: rounds of halved healing left.</summary>
+    public byte WoundRounds;
+
+    /// <summary>True while rooted.</summary>
+    public readonly bool Rooted => RootHalves > 0;
+
+    /// <summary>True while burning.</summary>
+    public readonly bool Burning => BurnRounds > 0;
+
+    /// <summary>True while unstoppable.</summary>
+    public readonly bool Unstoppable => UnstoppableHalves > 0;
+
     /// <summary>True when the champion stands on a playable hex.</summary>
     public readonly bool OnBoard => Presence == Presence.OnBoard;
 
@@ -180,6 +219,23 @@ public struct Beacon
 
     /// <summary>Enemy basic attacks remaining before it breaks.</summary>
     public byte Durability;
+}
+
+/// <summary>v2: a wall raised on an empty hex. <see cref="Rounds"/> = 0 means the slot is empty.</summary>
+public struct Wall
+{
+    /// <summary>Hex.</summary>
+    public HexCoord Pos;
+
+    /// <summary>Round-ends left before it falls.</summary>
+    public byte Rounds;
+}
+
+/// <summary>Wall slots.</summary>
+[InlineArray(4)]
+public struct WallBuffer
+{
+    private Wall _element0;
 }
 
 /// <summary>Ten champions: slots 0–4 team A by role, 5–9 team B by role.</summary>
@@ -231,6 +287,9 @@ public struct MatchState
 
     /// <summary>Beacon slots.</summary>
     public BeaconBuffer Beacons;
+
+    /// <summary>v2: wall slots.</summary>
+    public WallBuffer Walls;
 
     /// <summary>Remaining nexus HP per team.</summary>
     public TeamInts NexusHp;

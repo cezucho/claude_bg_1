@@ -1,0 +1,139 @@
+{
+  "id": "anchor",
+  "name": "Anchor",
+  "role": "Top",
+  "glyph": "A",
+  "stats": {
+    "vit": 34000,
+    "pow": 950,
+    "arm": 1000,
+    "rch": 2000,
+    "spd": 2000
+  },
+  "passive": {
+    "name": "Iron Will",
+    "trigger": "OnDamaged",
+    "effect": "ShieldSelf",
+    "amount": 1
+  },
+  "abilities": [
+    {
+      "name": "Stand Firm",
+      "initiative": 1,
+      "cooldown": 2,
+      "target": "Self",
+      "effects": [
+        {
+          "kind": "Shield",
+          "amount": 4
+        },
+        {
+          "kind": "Unstoppable",
+          "amount": 1
+        }
+      ],
+      "scalesFrom": "arm",
+      "moldUp": [
+        "vit",
+        30
+      ],
+      "moldDown": [
+        "spd",
+        25
+      ],
+      "printedSigil": 0,
+      "opening": [
+        "move top forward-left",
+        "beacon top 0",
+        "move mid forward-right"
+      ]
+    },
+    {
+      "name": "Chain Hook",
+      "initiative": 2,
+      "cooldown": 2,
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 800
+        },
+        {
+          "kind": "Displace",
+          "amount": -1
+        },
+        {
+          "kind": "Root",
+          "amount": 2
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "arm",
+        25
+      ],
+      "moldDown": [
+        "spd",
+        25
+      ],
+      "slotSigil": 0,
+      "opening": [
+        "move top forward-right",
+        "move top forward-right",
+        "cast top w"
+      ]
+    },
+    {
+      "name": "Groundswell",
+      "initiative": 4,
+      "cooldown": 3,
+      "pattern": [
+        [
+          -1,
+          0
+        ],
+        [
+          -1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 2400,
+          "bonusVs": "Rooted",
+          "bonusFlat": 3
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "vit",
+        60
+      ],
+      "moldDown": [
+        "rch",
+        60
+      ],
+      "opening": [
+        "move top forward-right",
+        "move mid forward-left",
+        "move jungle left"
+      ]
+    }
+  ],
+  "signature": {
+    "name": "Iron March",
+    "opening": [
+      "move top forward-right",
+      "move top forward-right",
+      "move top forward-left"
+    ]
+  }
+}

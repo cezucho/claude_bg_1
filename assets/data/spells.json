@@ -1,0 +1,116 @@
+{
+  "spells": [
+    {
+      "name": "Flash",
+      "initiative": 1,
+      "cooldown": 5,
+      "target": "EmptyHex",
+      "range": 2,
+      "effects": [
+        {
+          "kind": "Dash",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "Barrier",
+      "initiative": 1,
+      "cooldown": 4,
+      "target": "Self",
+      "effects": [
+        {
+          "kind": "Shield",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "Ignite",
+      "initiative": 2,
+      "cooldown": 5,
+      "target": "Enemy",
+      "range": 3,
+      "effects": [
+        {
+          "kind": "Burn",
+          "amount": 2,
+          "rounds": 2
+        },
+        {
+          "kind": "Wound",
+          "rounds": 2
+        }
+      ]
+    },
+    {
+      "name": "Heal",
+      "initiative": 1,
+      "cooldown": 5,
+      "target": "Self",
+      "effects": [
+        {
+          "kind": "Heal",
+          "amount": 4
+        },
+        {
+          "kind": "HealWoundedAlly",
+          "amount": 4,
+          "rounds": 2
+        }
+      ]
+    },
+    {
+      "name": "Exhaust",
+      "initiative": 2,
+      "cooldown": 5,
+      "target": "Enemy",
+      "range": 2,
+      "effects": [
+        {
+          "kind": "Exhaust",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "Teleport",
+      "initiative": 4,
+      "cooldown": 6,
+      "target": "TeleportHex",
+      "effects": [
+        {
+          "kind": "Teleport"
+        }
+      ]
+    },
+    {
+      "name": "Smite",
+      "initiative": 1,
+      "cooldown": 5,
+      "target": "Structure",
+      "range": 2,
+      "effects": [
+        {
+          "kind": "StructureDamage",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "Cleanse",
+      "initiative": 1,
+      "cooldown": 4,
+      "target": "Self",
+      "effects": [
+        {
+          "kind": "Cleanse"
+        },
+        {
+          "kind": "Unstoppable",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

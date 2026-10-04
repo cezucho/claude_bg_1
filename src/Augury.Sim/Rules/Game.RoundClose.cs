@@ -32,6 +32,8 @@ public sealed partial class Game
             c.PoisonAmount = 0;
             c.PoisonRounds = 0;
             c.Shield = 0;
+            c.RootHalves = c.ExhaustHalves = c.UnstoppableHalves = 0;
+            c.BurnAmount = c.BurnRounds = c.Mark = c.WoundRounds = 0;
             s.NexusHp[TeamIndex(c.Team)] -= Rules.KillSiege;
             Log(log, EventKind.Death, $"  ✝ {Name(s, i)} dies (respawn in {respawn}). NEXUS {c.Team} −{Rules.KillSiege} → {Math.Max(0, s.NexusHp[TeamIndex(c.Team)])}");
         }
@@ -106,6 +108,9 @@ public sealed partial class Game
             }
 
             c.Shield = 0;
+            c.Mark = 0;
+            if (c.BurnRounds > 0 && --c.BurnRounds == 0) c.BurnAmount = 0;
+            if (c.WoundRounds > 0) c.WoundRounds--;
             if (c.Presence == Presence.Dead && --c.RespawnIn == 0)
             {
                 c.Presence = Presence.InSpawn;
@@ -114,6 +119,11 @@ public sealed partial class Game
                 for (int a = 0; a < 4; a++) c.Cooldowns[a] = 0;
                 Log(log, EventKind.Respawn, $"  {Name(s, i)} respawns in its spawn hex.");
             }
+        }
+
+        for (int w = 0; w < 4; w++)
+        {
+            if (s.Walls[w].Rounds > 0 && --s.Walls[w].Rounds == 0) Log(log, EventKind.Move, $"  The wall at {Fmt(s.Walls[w].Pos)} falls.");
         }
 
         for (int i = 0; i < 10; i++) FirePassive(ref s, i, PassiveTrigger.OnRoundClose, -1, log);
