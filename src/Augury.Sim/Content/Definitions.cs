@@ -323,6 +323,9 @@ public sealed record ChampionDef
     /// <summary>True for a v2 champion (three abilities, a signature opening and a spell slot).</summary>
     public bool HasSpellSlot => Signature is not null;
 
+    /// <summary>v2: how the champion is meant to be played, in one sentence (may be empty).</summary>
+    public string Line { get; init; } = "";
+
     /// <summary>Base stat by enum.</summary>
     public int Base(Stat s) => BaseStats[(int)s];
 }

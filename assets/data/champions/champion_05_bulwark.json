@@ -3,8 +3,9 @@
   "name": "Bulwark",
   "role": "Top",
   "glyph": "B",
+  "line": "Holds the ground in front of its tower: shoves enemies off it and walls the way.",
   "stats": {
-    "vit": 36000,
+    "vit": 33000,
     "pow": 900,
     "arm": 2000,
     "rch": 1000,
@@ -98,7 +99,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 2400
+          "power": 2100
         },
         {
           "kind": "Displace",

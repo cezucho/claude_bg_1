@@ -356,3 +356,40 @@ svg.mini { display: block; max-width: 100%; }
   .panel.B .card { grid-template-columns: 1fr 60px; }
   .portrait, .portrait > svg { width: 60px; height: 60px; }
 }
+
+/* ───────── v2: statuses, walls, spells, opening casts ───────── */
+:root { --burn: #ff8a3d; --root: #c9a36b; --mark: #ffd84a; --exhaust: #8f9bb8; --unstop: #7fe0ff; --wound: #d06b9a; --spell: #e8c46a; }
+.chip.st-root { background: #3d3020; color: var(--root); }
+.chip.st-burn { background: #45230e; color: var(--burn); }
+.chip.st-mark { background: #423a10; color: var(--mark); }
+.chip.st-exhaust { background: #262c3c; color: var(--exhaust); }
+.chip.st-unstop { background: #133844; color: var(--unstop); }
+.chip.st-wound { background: #3c1a2a; color: var(--wound); }
+.st-pip { stroke: #000; stroke-width: 1; }
+.st-pip.st-root { fill: var(--root); } .st-pip.st-burn { fill: var(--burn); } .st-pip.st-mark { fill: var(--mark); }
+.st-pip.st-exhaust { fill: var(--exhaust); } .st-pip.st-unstop { fill: var(--unstop); } .st-pip.st-wound { fill: var(--wound); }
+.st-pip.st-poison { fill: var(--poison); }
+.st-pip-txt { font-size: 7.5px; font-weight: 900; fill: #000; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.st-root-c b { color: var(--root); } .st-burn-c b { color: var(--burn); } .st-mark-c b { color: var(--mark); }
+.st-exhaust-c b { color: var(--exhaust); } .st-unstop-c b { color: var(--unstop); } .st-wound-c b { color: var(--wound); }
+.wall-block { fill: #4a4236; stroke: #a8977a; stroke-width: 2; }
+.wall-txt { font-size: 10px; font-weight: 800; fill: #e8dcc4; text-anchor: middle; pointer-events: none; }
+.mm-wall { fill: #6b5f4c; stroke: #c8b48f; stroke-width: 1; }
+.mm-cast { fill: rgba(255,90,90,.35); stroke: #ff9b9b; stroke-width: 1.2; stroke-dasharray: 2 1.5; }
+.mm-mark.step.cast { fill: #ff9b9b; }
+.mm-mark.tower { font-size: 9px; fill: #cfd6e6; }
+.cast-tag { font-size: 9px; padding: 0 4px; border-radius: 6px; background: #4a1820; color: #ffb3bb; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.cast-txt { color: #ff9b9b; }
+.ab.spell { border-style: dashed; border-color: var(--spell); }
+.ab.hidden-spell { opacity: .55; }
+.ab.hidden-spell .init { color: var(--dim); }
+.dcard .dab i.spell, .det-init.spell { background: var(--spell); color: #000; font-style: normal; }
+.dline, .det-line { font-style: italic; color: var(--text); margin: 3px 0 5px; }
+.spells .spell-team { display: flex; gap: 10px; margin: 8px 0 14px; flex-wrap: wrap; }
+.spell-champ { display: flex; gap: 6px; align-items: center; background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 11.5px; min-width: 150px; }
+.spell-champ.next { border-color: var(--gold); box-shadow: 0 0 10px rgba(232,196,106,.35); }
+.spell-champ .portrait svg { width: 34px; height: 34px; border-radius: 4px; }
+.spell-champ .spell-name { color: var(--spell); font-weight: 700; }
+.spell-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.spell-card .det-init { font-style: normal; font-weight: 900; padding: 0 4px; border-radius: 3px; color: #000; }
+.spell-card .taken-lbl { color: var(--dim); font-size: 10px; }

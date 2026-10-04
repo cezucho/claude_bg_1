@@ -11,7 +11,10 @@ const DIR_NAMES = ['right', 'back-right', 'back-left', 'left', 'forward-left', '
 const mirrorHex = ([q, r]) => [q + r, -r];
 const frameFor = team => (team === 'B' ? mirrorHex : h => h);
 const hexDist = ([q1, r1], [q2, r2]) => (Math.abs(q1 - q2) + Math.abs(r1 - r2) + Math.abs(q1 + r1 - q2 - r2)) / 2;
-const onBoard = h => hexDist(h, [0, 0]) <= 4;
+// The board comes from the server's view (V), so diagrams follow the shipped layout.
+const boardSet = () => new Set((V?.hexes || []).map(x => `${x.q},${x.r}`));
+const towerSet = () => new Set(V?.board?.towersBlock ? (V.towers || []).map(t => `${t.q},${t.r}`) : []);
+const onBoard = h => boardSet().has(`${h[0]},${h[1]}`);
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const same = (a, b) => a[0] === b[0] && a[1] === b[1];
 
@@ -82,7 +85,9 @@ function combatDiagram(kit, team, role) {
   const enemy = team === 'A' ? 'B' : 'A';
   const fx = kit.fx.map(f => f.kind);
   const damages = fx.includes('Damage');
-  const hitCls = damages || fx.includes('Poison') ? 'hit' : 'buff';
+  const hostile = ['Damage', 'Poison', 'Burn', 'Root', 'Mark', 'Exhaust', 'Wound', 'Displace'];
+  const hitCls = kit.target !== 'Ally' && fx.some(k => hostile.includes(k)) ? 'hit' : 'buff';
+  if (kit.tier === 0) return { svg: '', caption: '' };
   const displace = kit.fx.find(f => f.kind === 'Displace');
   const caster = { h: [0, 0], role, team, cls: 'caster' };
 
@@ -101,22 +106,52 @@ function combatDiagram(kit, team, role) {
   }
 
   // Free aim: every hex in range is a possible target, one is chosen.
-  const dash = kit.fx.find(f => f.kind === 'Dash');
-  const range = kit.target === 'EmptyHex' && dash ? dash.amount : kit.range;
+  const range = kit.range;
+  if (kit.target === 'Self') {
+    return {
+      svg: miniSvg({ bg: around(1), cells: [{ h: [0, 0], cls: 'buff' }], tokens: [caster] }),
+      caption: `<b>Self</b> — affects only the caster. No aim.`,
+    };
+  }
+  if (kit.target === 'TeleportHex') {
+    return {
+      svg: miniSvg({ bg: around(2), cells: around(1).filter(h => !same(h, [0, 0])).map(h => ({ h, cls: 'buff' })), tokens: [], marks: [{ h: [0, 0], text: '♜' }] }),
+      caption: `<b>Teleport</b> — to any empty hex beside a friendly tower or beacon (green), from anywhere on the board or from spawn.`,
+    };
+  }
+  if (kit.target === 'Structure') {
+    const at = T([0, range]);
+    return {
+      svg: miniSvg({ bg: around(Math.max(range + 1, 2)), cells: [...around(range).filter(h => !same(h, [0, 0])).map(h => ({ h, cls: 'reach' })), { h: at, cls: 'hit' }], tokens: [caster], marks: [{ h: at, text: '♜' }] }),
+      caption: `<b>A tower or an open nexus</b> up to ${range} away (gold). Example in red.`,
+    };
+  }
   const bg = around(Math.max(range + 1, 2));
   const reach = around(range).filter(h => !same(h, [0, 0]) || kit.target === 'Ally').map(h => ({ h, cls: 'reach' }));
   const ahead = T([0, range]);
+  if (kit.target === 'EmptyHex' && fx.includes('Wall')) {
+    return {
+      svg: miniSvg({ bg, cells: [...reach, { h: ahead, cls: 'wall' }], tokens: [caster] }),
+      caption: `<b>Free aim · empty hex</b> up to ${range} away (gold) becomes a <b>wall</b>: nothing may enter it until it falls. Example shown.`,
+    };
+  }
   if (kit.target === 'EmptyHex') {
     return {
       svg: miniSvg({ bg, cells: [...reach, { h: ahead, cls: 'buff' }], tokens: [caster], arrows: [{ from: [0, 0], to: ahead }] }),
-      caption: `<b>Free aim · single hex</b> — dash to any empty hex up to ${range} away (gold). Example shown.`,
+      caption: `<b>Free aim · single hex</b> — ${fx.includes('Dash') ? 'dash' : 'move'} to any empty hex up to ${range} away (gold). Example shown.`,
     };
   }
   if (kit.target === 'Ally') {
     const ally = T([-1, 1]);
+    const arrows = [];
+    let what = 'Example target in green.';
+    if (fx.includes('Swap')) { arrows.push({ from: [0, 0], to: ally }, { from: ally, to: [0, 0] }); what = 'The caster and the ally <b>swap places</b>.'; }
+    const pull = kit.fx.find(f => f.kind === 'PullAlly');
+    let far = ally;
+    if (pull) { far = T([-1, 1 + pull.amount]); arrows.push({ from: far, to: ally }); what = `The ally is <b>pulled up to ${pull.amount}</b> toward the caster.`; }
     return {
-      svg: miniSvg({ bg, cells: [...reach, { h: ally, cls: 'buff' }], tokens: [caster, { h: ally, role: null, team, cls: 'ghost' }] }),
-      caption: `<b>Free aim · one ally</b> (or itself) within ${range} (gold). Example target in green.`,
+      svg: miniSvg({ bg: around(Math.max(range + 1, 2, hexDist(far, [0, 0]))), cells: [...reach, { h: far, cls: 'buff' }], tokens: [caster, { h: far, role: null, team, cls: 'ghost' }], arrows }),
+      caption: `<b>Free aim · one ally</b>${fx.includes('Swap') || pull ? '' : ' (or itself)'} within ${range} (gold). ${what}`,
     };
   }
   const arrows = [];
@@ -140,9 +175,11 @@ function combatDiagram(kit, team, role) {
 function openingDiagram(kit, team, role) {
   const T = frameFor(team);
   const pos = {};
-  START_ROW.forEach((r, i) => { pos[r] = [i, -4]; });
+  const startA = V?.board?.startA || START_ROW.map((r, i) => [i, -4]);
+  START_ROW.forEach((r, i) => { pos[r] = startA[i]; });
   const start = { ...pos };
-  const arrows = [], beacons = [], marks = [];
+  const towers = towerSet();
+  const arrows = [], beacons = [], marks = [], cells = [];
   let blocked = false;
   kit.steps.forEach((st, i) => {
     if (blocked) return;
@@ -151,8 +188,14 @@ function openingDiagram(kit, team, role) {
       marks.push({ h: T(add(pos[st.role], [0.9, 0.35])), text: `${i + 1}`, cls: 'step' });
       return;
     }
+    if (st.kind === 'cast') {
+      // A cast never blocks: with nothing in reach it fizzles, but the ability still goes on cooldown.
+      cells.push({ h: T(pos[st.role]), cls: 'cast' });
+      marks.push({ h: T(add(pos[st.role], [0.9, 0.35])), text: `${i + 1}`, cls: 'step cast' });
+      return;
+    }
     const to = add(pos[st.role], DIRS[st.dir]);
-    const occupied = Object.values(pos).some(p => same(p, to));
+    const occupied = Object.values(pos).some(p => same(p, to)) || towers.has(`${to[0]},${to[1]}`);
     if (!onBoard(to) || occupied) {
       arrows.push({ from: T(pos[st.role]), to: T(to), label: `${i + 1}`, cls: 'bad' });
       marks.push({ h: T(to), text: '✕', cls: 'bad' });
@@ -163,19 +206,24 @@ function openingDiagram(kit, team, role) {
     pos[st.role] = to;
   });
 
-  const bg = [];
-  for (let r = -4; r <= -1; r++) for (let q = -4; q <= 8; q++) if (onBoard([q, r])) bg.push(T([q, r]));
+  // Our half of the board (rows up to the centre), with any solid towers on it.
+  const bg = (V?.hexes || []).filter(x => x.r <= 0).map(x => T([x.q, x.r]));
+  for (const t of (V?.towers || [])) if (towers.has(`${t.q},${t.r}`) && t.r <= 0) marks.push({ h: T([t.q, t.r]), text: '♜', cls: 'tower' });
   const tokens = [];
   for (const r of START_ROW) {
     if (!same(pos[r], start[r])) tokens.push({ h: T(start[r]), role: r, team, cls: 'ghost' });
     tokens.push({ h: T(pos[r]), role: r, team, cls: r === role ? 'caster' : '' });
   }
   const dir = team === 'B' ? '↓' : '↑';
+  const text = s => s.kind === 'move' ? `${s.role.toLowerCase()} ${DIR_NAMES[s.dir]}`
+    : s.kind === 'cast' ? `<b class="cast-txt">${s.role.toLowerCase()} casts ${s.slot}</b>` : `beacon ${s.sigil} under ${s.role.toLowerCase()}`;
+  const casts = kit.steps.some(s => s.kind === 'cast');
   return {
-    svg: miniSvg({ bg, tokens, arrows, beacons, marks, kind: 'opening' }),
+    svg: miniSvg({ bg, cells, tokens, arrows, beacons, marks, kind: 'opening' }),
     caption: blocked
       ? `<b class="bad-txt">Not playable from the starting line</b> — step ${arrows.length} is blocked. Playable once the team has moved.`
-      : `<b>Opening</b> from the starting line (forward ${dir}): ${kit.steps.map((s, i) => `${i + 1}. ${s.kind === 'move' ? `${s.role.toLowerCase()} ${DIR_NAMES[s.dir]}` : `beacon ${s.sigil} under ${s.role.toLowerCase()}`}`).join(' · ')}.`,
+      : `<b>Opening</b> from the starting line (forward ${dir}): ${kit.steps.map((s, i) => `${i + 1}. ${text(s)}`).join(' · ')}.`
+        + (casts ? ' <span class="tt-dim">A cast fires that role\'s ability at the nearest target; with nothing in reach it fizzles, and either way the ability starts round 1 on cooldown. Opening damage can\'t kill.</span>' : ''),
   };
 }
 
@@ -184,7 +232,7 @@ function openingDiagram(kit, team, role) {
 function abilityDiagrams(kit, team, role) {
   const c = combatDiagram(kit, team, role), o = openingDiagram(kit, team, role);
   return `<div class="dia-pair">
-    <div class="dia"><div class="dia-title">In combat</div>${c.svg}<div class="dia-cap">${c.caption}</div></div>
+    ${c.svg ? `<div class="dia"><div class="dia-title">In combat</div>${c.svg}<div class="dia-cap">${c.caption}</div></div>` : ''}
     <div class="dia"><div class="dia-title">In the opening</div>${o.svg}<div class="dia-cap">${o.caption}</div></div>
   </div>`;
 }
@@ -192,18 +240,20 @@ function abilityDiagrams(kit, team, role) {
 // The draft's hover card: every ability, with both diagrams, so champions can be compared
 // at a glance ("this one hits to the left, that one to the right").
 function champDetail(d, team) {
-  const rows = d.abilities.map(a => {
+  const all = d.signature ? [...d.abilities, { ...d.signature, init: 0, effects: 'Summoner spell — chosen after the draft, hidden until the opening.', targeting: 'any of the eight', cooldown: '—' }] : d.abilities;
+  const rows = all.map(a => {
     const c = combatDiagram(a.kit, team, d.role), o = openingDiagram(a.kit, team, d.role);
     return `<div class="det-row">
-      <div class="det-txt"><div><i class="det-init" style="background:var(--t${a.init})">${a.init}</i> <b>${a.key} · ${esc(a.name)}</b></div>
+      <div class="det-txt"><div>${a.init ? `<i class="det-init" style="background:var(--t${a.init})">${a.init}</i>` : '<i class="det-init spell">✦</i>'} <b>${a.key} · ${esc(a.name)}</b>${a.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</div>
         <div>${esc(a.effects)}</div><div class="tt-dim">${esc(a.targeting)} · cd ${a.cooldown}${a.printedSigil ? ` · sigil ${a.printedSigil}` : ''}${a.slotSigil ? ` · slot ${a.slotSigil}` : ''}</div></div>
-      <div class="dia">${c.svg}<div class="dia-cap">${c.caption}</div></div>
+      <div class="dia">${c.svg || '<div class="tt-dim">Your summoner spell.</div>'}<div class="dia-cap">${c.caption}</div></div>
       <div class="dia">${o.svg}<div class="dia-cap">${o.caption}</div></div>
     </div>`;
   }).join('');
   return `<div class="det-head"><div class="det-port">${portrait(d.id, d.glyph, team)}</div><div>
       <h4>${esc(d.name)} <span class="tt-dim">· ${d.role}</span></h4>
       <div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div>
+      ${d.line ? `<div class="det-line">${esc(d.line)}</div>` : ''}
       <div style="color:var(--t3)">${esc(d.passive.name)} — ${esc(d.passive.text)}</div></div></div>
     <div class="det-cols"><span></span><span>In combat</span><span>In the opening (team ${team}, from the starting line)</span></div>
     ${rows}`;

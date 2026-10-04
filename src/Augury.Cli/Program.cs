@@ -207,6 +207,15 @@ namespace Augury.Cli
 
                     break;
 
+                case Phase.SpellPick:
+                    foreach (Command c in legal)
+                    {
+                        var spell = _game.Content.Spells[c.Ability];
+                        result.Add(new Option($"{_game.Name(s, c.Champion),-15} {spell.Name,-9} {Ansi.Dim(Describe.Ability(spell))}", [c]));
+                    }
+
+                    break;
+
                 case Phase.Opening:
                     var fallback = legal.Where(c => c.Kind == CommandKind.OpeningFallback).ToList();
                     if (fallback.Count > 0)
@@ -217,8 +226,8 @@ namespace Augury.Cli
 
                     foreach (Command c in legal)
                     {
-                        var ab = _game.Def(s.Champions[c.Champion]).Abilities[c.Ability];
-                        result.Add(new Option($"{_game.Name(s, c.Champion),-15} {ab.Name,-14} {Ansi.Dim(Describe.Opening(ab))}", [c]));
+                        Champion oc = s.Champions[c.Champion];
+                        result.Add(new Option($"{_game.Name(s, c.Champion),-15} {_game.OpeningName(oc, c.Ability),-16} {Ansi.Dim(Describe.Opening(_game.OpeningOf(oc, c.Ability)))}", [c]));
                     }
 
                     break;
@@ -236,7 +245,7 @@ namespace Augury.Cli
                 case Phase.LastWord:
                     foreach (var g in legal.Where(c => c.Kind == CommandKind.Ability && !c.IsChain).GroupBy(c => (c.Champion, c.Ability)))
                     {
-                        var ab = _game.Def(s.Champions[g.Key.Champion]).Abilities[g.Key.Ability];
+                        var ab = _game.Kit(s.Champions[g.Key.Champion], g.Key.Ability)!;
                         result.Add(new Option($"{_game.Name(s, g.Key.Champion),-15} {Describe.Ability(ab)}", g.ToList()));
                     }
 
@@ -253,6 +262,7 @@ namespace Augury.Cli
         private string Prompt(in MatchState s) => s.Phase switch
         {
             Phase.Draft => "Draft a champion:",
+            Phase.SpellPick => "Choose a summoner spell (hidden from your opponent until the opening):",
             Phase.Opening => "Opening — play one champion's ability (all three instructions run):",
             Phase.Basic => $"Basic action ({s.BasicsTaken[s.Active == Team.A ? 0 : 1] + 1} of {_game.Rules.BasicsPerHalf}) — move one champion, or basic-attack:",
             Phase.Ladder => $"Ladder — play an ability at initiative ≤ {s.Ceiling}, or pass:",
@@ -264,8 +274,8 @@ namespace Augury.Cli
         {
             if (c.IsChain)
             {
-                var a1 = _game.Def(s.Champions[c.Champion]).Abilities[c.Ability];
-                var a2 = _game.Def(s.Champions[c.Champion2]).Abilities[c.Ability2];
+                var a1 = _game.Kit(s.Champions[c.Champion], c.Ability)!;
+                var a2 = _game.Kit(s.Champions[c.Champion2], c.Ability2)!;
                 return $"{_game.Name(s, c.Champion)} {a1.Name}{Hits(s, c.Champion, c.Ability, c.Target)}  +  "
                        + $"{_game.Name(s, c.Champion2)} {a2.Name} [init {a2.Initiative}]{Hits(s, c.Champion2, c.Ability2, c.Target2)}";
             }
@@ -292,12 +302,12 @@ namespace Augury.Cli
                 case TargetKind.Beacon:
                     return $" → beacon at {Game.Fmt(t.Hex)}";
                 case TargetKind.Hex:
-                    return $" → dash to {Game.Fmt(t.Hex)}";
+                    return $" → {Game.Fmt(t.Hex)}";
             }
 
             // Patterns: say what they hit.
             Champion caster = s.Champions[slot];
-            var ab = _game.Def(caster).Abilities[ability];
+            var ab = _game.Kit(caster, ability)!;
             HexCoord[] cells = _game.PatternCells(caster, ab, t.Kind == TargetKind.Facing ? t.Facing : 0);
             var hit = new List<string>();
             for (int i = 0; i < 10; i++)

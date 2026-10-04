@@ -15,7 +15,7 @@ public static class SelfPlay
     {
         public int Matches, WinsA, WinsB, Draws, Nexus, Siege, Cap, Comebacks;
         public long Rounds, Halves, HalvesOpened, HalvesByPass, Resolutions, Chains, Deaths, Captures;
-        public long BasicMoves, BasicAttacks, OpeningFallbackTeams, Decisions, PlayerDecisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
+        public long BasicMoves, BasicAttacks, OpeningFallbackTeams, OpeningFallbackChamps, Decisions, PlayerDecisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
         public long PatternChecks, PatternLive, GapSamples, GapTotal;
         public readonly long[] ResolvedByTier = new long[5];
         public double AiMsTotal, AiMsMax;
@@ -112,7 +112,7 @@ public static class SelfPlay
                     if (!ch.OnBoard || ch.Has(ChampFlags.Acted)) continue;
                     for (int ab = 0; ab < 4; ab++)
                     {
-                        if (ch.Cooldowns[ab] > 0 || game.Def(ch).Abilities[ab].Initiative < 3) continue;
+                        if (ch.Cooldowns[ab] > 0 || game.Kit(ch, ab) is not { Initiative: >= 3 }) continue;
                         st.PatternChecks++;
                         if (game.AbilityTargets(s, slot, ab).Count > 0) st.PatternLive++;
                     }
@@ -238,7 +238,9 @@ public static class SelfPlay
 
         foreach (Team t in new[] { Team.A, Team.B })
         {
-            if (log.Any(e => e.Kind == EventKind.Opening && e.Text.Contains("fallback") && e.Text.StartsWith($"{t}:"))) st.OpeningFallbackTeams++;
+            int champs = log.Count(e => e.Kind == EventKind.Opening && e.Text.Contains("fallback") && e.Text.StartsWith($"{t}:"));
+            if (champs > 0) st.OpeningFallbackTeams++;
+            st.OpeningFallbackChamps += champs;
         }
     }
 
@@ -262,7 +264,7 @@ public static class SelfPlay
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");
         Console.WriteLine($"  Nexus open    in {st.MatchesNexusOpened / m,6:P0} of matches, {st.NexusOpenDecisions / (double)st.Decisions,6:P1} of decisions; hit in {st.MatchesNexusHit / m,6:P0} of matches ({st.NexusHits / m:F1} hits/match)");
         Console.WriteLine($"  Basics        moves {st.BasicMoves / (double)(st.BasicMoves + st.BasicAttacks),6:P0}   attacks {st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks),6:P0}");
-        Console.WriteLine($"  Opening       team-openings hitting the fallback {st.OpeningFallbackTeams / (2 * m),6:P0}   (Opening #10 wants 10–25%)");
+        Console.WriteLine($"  Opening       team-openings hitting the fallback {st.OpeningFallbackTeams / (2 * m),6:P0}   (Opening #10 wants 10–25%); {(double)st.OpeningFallbackChamps / Math.Max(1, st.OpeningFallbackTeams):0.0} champions left when it does");
         if (st.AiCalls > 0)
         {
             Console.WriteLine($"  AI time       mean {st.AiMsTotal / st.AiCalls,6:F1} ms   max {st.AiMsMax,7:F1} ms   (budget 1500 ms)");

@@ -23,28 +23,19 @@ internal static class Ansi
 /// <summary>Human-readable descriptions of content.</summary>
 internal static class Describe
 {
-    public static string Effect(EffectDef e) => e.Kind switch
-    {
-        EffectKind.Damage => $"damage ×{e.Power / 1000.0:0.##}",
-        EffectKind.Heal => $"heal ×{e.Power / 1000.0:0.##}",
-        EffectKind.Shield => $"shield {e.Amount}",
-        EffectKind.Poison => $"poison {e.Amount}/rd for {e.Rounds}",
-        EffectKind.Displace => e.Amount > 0 ? $"push {e.Amount}" : $"pull {-e.Amount}",
-        EffectKind.Dash => $"dash ≤{e.Amount}",
-        _ => e.Kind.ToString(),
-    };
+    public static string Effect(EffectDef e) => EffectText.Of(e);
 
-    public static string Targeting(AbilityDef a) => a.Initiative switch
-    {
-        <= 2 => a.Target switch
+    public static string Targeting(AbilityDef a) => a.IsFree
+        ? a.Target switch
         {
             TargetRule.Ally => "free, ally",
             TargetRule.EmptyHex => "free, empty hex",
+            TargetRule.Self => "self",
+            TargetRule.Structure => "tower or nexus",
+            TargetRule.TeleportHex => "beside a friendly tower or beacon",
             _ => a.RangeBonus == 0 ? "free, enemy" : $"free, enemy, range {(a.RangeBonus > 0 ? "+" : "")}{a.RangeBonus}",
-        },
-        3 => $"rotatable {a.Pattern.Count}-hex pattern",
-        _ => $"FIXED {a.Pattern.Count}-hex pattern",
-    };
+        }
+        : a.Initiative == 3 ? $"rotatable {a.Pattern.Count}-hex pattern" : $"FIXED {a.Pattern.Count}-hex pattern";
 
     public static string Sigils(AbilityDef a)
     {
@@ -55,15 +46,13 @@ internal static class Describe
     }
 
     public static string Ability(AbilityDef a) =>
-        $"{a.Name} [init {a.Initiative}, cd {a.Cooldown}] {Targeting(a)} — {string.Join(" + ", a.Effects.Select(Effect))}"
+        $"{a.Name} [init {a.Initiative}, cd {a.Cooldown}] {Targeting(a)} — {EffectText.Effects(a)}"
         + Sigils(a)
-        + $" · molds +{a.MoldUp} −{a.MoldDown}";
+        + (a.IsSpell ? " · summoner spell" : $" · molds +{a.MoldUp} −{a.MoldDown}");
 
-    public static string Instruction(OpeningInstruction i) => i.Kind == InstructionKind.Move
-        ? $"{i.Role.ToString().ToLowerInvariant()} {Directions.Names[i.Direction]}"
-        : $"beacon {Game.SigilName(i.Sigil)} on {i.Role.ToString().ToLowerInvariant()}";
+    public static string Instruction(OpeningInstruction i) => EffectText.Instruction(i);
 
-    public static string Opening(AbilityDef a) => string.Join(", ", a.Opening.Select(Instruction));
+    public static string Opening(IEnumerable<OpeningInstruction> ins) => string.Join(", ", ins.Select(Instruction));
 
     public static string Passive(PassiveDef p) => $"{p.Name}: {p.Trigger} → {p.Effect} {p.Amount}"
         + (p.Effect == PassiveEffect.EmpowerSelf ? $" {p.Stat}" : "");

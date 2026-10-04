@@ -75,6 +75,15 @@ public static class ViewBuilder
                 durability = (int)s.Beacons[b].Durability,
             }).ToArray(),
             hexes = Board.AllHexes.Select(h => new { q = h.Q, r = h.R, zone = Zone(h) }).ToArray(),
+            board = new
+            {
+                name = Board.Layout.Name,
+                startA = Enum.GetValues<Role>().Select(r => Xy(Board.StartHex(Team.A, r))).ToArray(),
+                towersBlock = g.Rules.TowersBlock,
+            },
+            walls = Enumerable.Range(0, 4).Where(w => s.Walls[w].Rounds > 0)
+                .Select(w => new { q = s.Walls[w].Pos.Q, r = s.Walls[w].Pos.R, rounds = (int)s.Walls[w].Rounds }).ToArray(),
+            spells = g.Content.Spells.Select((sp, i) => SpellView(g, sp, i)).ToArray(),
             spawns = new[] { Team.A, Team.B }.SelectMany(t => Enum.GetValues<Role>().Select(r =>
             {
                 HexCoord h = Board.SpawnHex(t, r);
@@ -82,7 +91,7 @@ public static class ViewBuilder
             })).ToArray(),
             winner = s.Phase == Phase.MatchOver ? s.Winner.ToString() : null,
             endReason = s.Phase == Phase.MatchOver ? s.EndReason.ToString() : null,
-            champions = Enumerable.Range(0, 10).Select(i => ChampionView(g, s, i, ladder, singles, chainParts)).ToArray(),
+            champions = Enumerable.Range(0, 10).Select(i => ChampionView(g, s, i, ladder, singles, chainParts, humans)).ToArray(),
             roster = s.Phase == Phase.Draft ? g.Content.Champions.Select((d, i) => DefView(d, i)).ToArray() : null,
             legal = legal.Select((c, i) => LegalView(g, s, c, i)).ToArray(),
             last = last is null ? null : LastView(g, last, s, log),
@@ -92,8 +101,15 @@ public static class ViewBuilder
 
     // ───────────────────────────── champions ─────────────────────────────
 
+    /// <summary>
+    /// Spells are chosen hidden (owner, v2): until the opening, a team's spells are shown only
+    /// to that team's own player, and in hotseat only while that team is choosing.
+    /// </summary>
+    private static bool SpellVisible(MatchState s, Team team, HashSet<Team> humans) =>
+        s.Phase is not (Phase.Draft or Phase.SpellPick) || (humans.Contains(team) && (humans.Count == 1 || s.Active == team));
+
     private static object ChampionView(Game g, MatchState s, int slot, bool ladder,
-        HashSet<(int, int)> singles, HashSet<(int, int)> chainParts)
+        HashSet<(int, int)> singles, HashSet<(int, int)> chainParts, HashSet<Team> humans)
     {
         Champion c = s.Champions[slot];
         if (c.Def == 255)
@@ -102,7 +118,7 @@ public static class ViewBuilder
         }
 
         ChampionDef d = g.Def(c);
-        bool placed = s.Phase != Phase.Draft;
+        bool placed = s.Phase is not (Phase.Draft or Phase.SpellPick);
         return new
         {
             slot,
@@ -133,17 +149,52 @@ public static class ViewBuilder
             basicUsed = c.Has(ChampFlags.BasicUsed),
             openingDone = c.Has(ChampFlags.OpeningDone),
             poison = c.PoisonRounds > 0 ? new { amount = (int)c.PoisonAmount, rounds = (int)c.PoisonRounds } : null,
+            status = Statuses(c),
             respawnIn = c.Presence == Presence.Dead && placed ? Math.Max(0, c.RespawnIn - 1) : 0,
             passive = new { name = d.Passive.Name, text = Describe.Passive(d.Passive) },
-            abilities = Enumerable.Range(0, 4).Select(a => AbilityView(g, s, slot, a, ladder, singles, chainParts)).ToArray(),
+            abilities = Enumerable.Range(0, 4).Select(a => AbilityView(g, s, slot, a, ladder, singles, chainParts, SpellVisible(s, c.Team, humans))).ToArray(),
         };
     }
 
     private static object AbilityView(Game g, MatchState s, int slot, int a, bool ladder,
-        HashSet<(int, int)> singles, HashSet<(int, int)> chainParts)
+        HashSet<(int, int)> singles, HashSet<(int, int)> chainParts, bool spellVisible)
     {
         Champion c = s.Champions[slot];
-        AbilityDef ab = g.Def(c).Abilities[a];
+        bool spellSlot = g.Def(c).HasSpellSlot && a == 3;
+        AbilityDef? maybe = spellSlot && !spellVisible ? null : g.Kit(c, a);
+        IReadOnlyList<OpeningInstruction> opening = g.OpeningOf(c, a);
+        if (maybe is null)
+        {
+            // An empty or hidden summoner slot: only its (champion-owned) opening is known.
+            string why = c.Spell == 255 ? "summoner spell not chosen yet" : "summoner spell hidden until the opening";
+            return new
+            {
+                key = Keys[a],
+                name = c.Spell == 255 ? "Spell" : "Hidden",
+                spell = true,
+                hidden = true,
+                openingName = g.OpeningName(c, a),
+                init = 0,
+                cooldown = 0,
+                cd = (int)c.Cooldowns[a],
+                targeting = why,
+                effects = "",
+                amount = 0,
+                printedSigil = (string?)null,
+                slotSigil = (string?)null,
+                activeSigils = Array.Empty<string>(),
+                mold = "",
+                opening = opening.Select(EffectText.Instruction).ToArray(),
+                kit = Kit(null, 0, opening),
+                friendly = false,
+                state = s.Phase == Phase.Opening ? State(g, s, slot, a, null, ladder, singles, chainParts, false).Item1 : "unavailable",
+                reason = why,
+                reach = Array.Empty<int[]>(),
+                targets = Array.Empty<int[]>(),
+            };
+        }
+
+        AbilityDef ab = maybe;
         bool onBoard = c.OnBoard && s.Phase != Phase.Draft;
 
         // Where it can reach, and what it could hit right now ignoring the ceiling and turn.
@@ -151,9 +202,17 @@ public static class ViewBuilder
         var targets = new List<HexCoord>();
         if (onBoard)
         {
-            if (ab.IsFree)
+            if (ab.Target == TargetRule.Self)
             {
-                int range = ab.Target == TargetRule.EmptyHex ? ab.Effects[0].Amount : g.Range(c, ab);
+                reach.Add(c.Pos);
+            }
+            else if (ab.Target == TargetRule.TeleportHex)
+            {
+                // Anywhere beside a friendly tower or beacon: the targets are the reach.
+            }
+            else if (ab.IsFree)
+            {
+                int range = g.AbilityRange(c, ab);
                 reach.AddRange(Board.AllHexes.Where(h => HexCoord.Distance(h, c.Pos) <= range && h != c.Pos || (ab.Target == TargetRule.Ally && h == c.Pos)));
             }
             else if (ab.Initiative == 3)
@@ -169,14 +228,18 @@ public static class ViewBuilder
         }
 
         (string state, string reason) = State(g, s, slot, a, ab, ladder, singles, chainParts, targets.Count > 0);
-        int raw = ab.Effects.Any(e => e.Kind is EffectKind.Damage or EffectKind.Heal) && s.Phase != Phase.Draft
-            ? (int)Arith.FloorDiv((long)g.Rules.AbilityBase * ab.Effects.First(e => e.Kind is EffectKind.Damage or EffectKind.Heal).Power * g.Pow(c), 1_000_000)
+        EffectDef? scaled = ab.Effects.FirstOrDefault(e => e.Kind is EffectKind.Damage or EffectKind.Heal && e.Power > 0);
+        int raw = scaled is not null && s.Phase != Phase.Draft
+            ? (int)Arith.FloorDiv((long)g.Rules.AbilityBase * scaled.Power * g.Pow(c), 1_000_000)
             : 0;
 
         return new
         {
             key = Keys[a],
             name = ab.Name,
+            spell = ab.IsSpell,
+            hidden = false,
+            openingName = g.OpeningName(c, a),
             init = ab.Initiative,
             cooldown = ab.Cooldown,
             cd = (int)c.Cooldowns[a],
@@ -186,9 +249,10 @@ public static class ViewBuilder
             printedSigil = ab.PrintedSigil >= 0 ? Game.SigilName(ab.PrintedSigil) : null,
             slotSigil = ab.SlotSigil >= 0 ? Game.SigilName(ab.SlotSigil) : null,
             activeSigils = onBoard ? SigilList(g.ActiveSigils(s, slot, a)) : [],
-            mold = Describe.Mold(ab),
-            opening = ab.Opening.Select(Describe.Instruction).ToArray(),
-            kit = Kit(ab, s.Phase == Phase.Draft ? Math.Clamp(g.Def(c).Base(Stat.Rch) / 1000 + ab.RangeBonus, 1, 3) : g.Range(c, ab)),
+            mold = ab.IsSpell ? "summoner spells don't mold" : Describe.Mold(ab),
+            opening = opening.Select(EffectText.Instruction).ToArray(),
+            kit = Kit(ab, s.Phase == Phase.Draft ? DraftRange(g.Def(c), ab) : g.AbilityRange(c, ab), opening),
+            friendly = Friendly(ab),
             state,
             reason,
             reach = reach.Distinct().Select(Xy).ToArray(),
@@ -196,7 +260,7 @@ public static class ViewBuilder
         };
     }
 
-    private static (string, string) State(Game g, MatchState s, int slot, int a, AbilityDef ab, bool ladder,
+    private static (string, string) State(Game g, MatchState s, int slot, int a, AbilityDef? ab, bool ladder,
         HashSet<(int, int)> singles, HashSet<(int, int)> chainParts, bool hasTargets)
     {
         Champion c = s.Champions[slot];
@@ -210,7 +274,7 @@ public static class ViewBuilder
         }
 
         if (c.Cooldowns[a] > 0) return ("cooldown", $"on cooldown for {c.Cooldowns[a]} more round{(c.Cooldowns[a] == 1 ? "" : "s")}");
-        if (s.Phase == Phase.Draft) return ("idle", "");
+        if (s.Phase is Phase.Draft or Phase.SpellPick || ab is null) return ("idle", "");
         if (c.Presence == Presence.Dead) return ("unavailable", "dead");
         if (c.Presence == Presence.InSpawn) return ("unavailable", "in spawn — must move onto the board with a basic first");
         if (!ladder) return (hasTargets ? "idle" : "notarget", hasTargets ? "the ladder opens after the basics" : "nothing in range");
@@ -242,6 +306,7 @@ public static class ViewBuilder
             spd = d.Base(Stat.Spd) / 1000,
         },
         passive = new { name = d.Passive.Name, text = Describe.Passive(d.Passive) },
+        line = d.Line,
         abilities = d.Abilities.Select((ab, a) => new
         {
             key = Keys[a],
@@ -253,28 +318,76 @@ public static class ViewBuilder
             printedSigil = ab.PrintedSigil >= 0 ? Game.SigilName(ab.PrintedSigil) : null,
             slotSigil = ab.SlotSigil >= 0 ? Game.SigilName(ab.SlotSigil) : null,
             mold = Describe.Mold(ab),
-            opening = ab.Opening.Select(Describe.Instruction).ToArray(),
-            kit = Kit(ab, Math.Clamp(d.Base(Stat.Rch) / 1000 + ab.RangeBonus, 1, 3)),
+            opening = ab.Opening.Select(EffectText.Instruction).ToArray(),
+            casts = ab.Opening.Any(i => i.Kind == InstructionKind.Cast),
+            kit = Kit(ab, DraftRange(d, ab), ab.Opening),
         }).ToArray(),
+        signature = d.Signature is null ? null : new
+        {
+            key = Keys[3],
+            name = d.Signature.Name,
+            opening = d.Signature.Opening.Select(EffectText.Instruction).ToArray(),
+            casts = d.Signature.Opening.Any(i => i.Kind == InstructionKind.Cast),
+            kit = Kit(null, 0, d.Signature.Opening),
+        },
     };
+
+    /// <summary>A summoner spell in the shared pool.</summary>
+    private static object SpellView(Game g, AbilityDef sp, int index) => new
+    {
+        index,
+        name = sp.Name,
+        init = sp.Initiative,
+        cooldown = sp.Cooldown,
+        targeting = Describe.Targeting(sp),
+        effects = Describe.Effects(sp),
+        kit = Kit(sp, sp.FixedRange > 0 ? sp.FixedRange : sp.Effects.FirstOrDefault(e => e.Kind == EffectKind.Dash)?.Amount ?? 1, []),
+    };
+
+    /// <summary>An ability's range before the match: fixed, a dash's length, or base reach plus bonus.</summary>
+    private static int DraftRange(ChampionDef d, AbilityDef ab)
+    {
+        if (ab.FixedRange > 0) return ab.FixedRange;
+        EffectDef? move = ab.Effects.FirstOrDefault(e => e.Kind == EffectKind.Dash);
+        if (move is not null && ab.Target == TargetRule.EmptyHex) return move.Amount;
+        return Math.Clamp(d.Base(Stat.Rch) / 1000 + ab.RangeBonus, 1, 3);
+    }
+
+    /// <summary>True when the ability helps its own side rather than hitting the enemy.</summary>
+    private static bool Friendly(AbilityDef ab) => ab.Target is TargetRule.Ally or TargetRule.Self or TargetRule.EmptyHex or TargetRule.TeleportHex;
+
+    /// <summary>The v2 statuses a champion carries, as short labels with their detail.</summary>
+    private static object[] Statuses(in Champion c)
+    {
+        var list = new List<object>();
+        void Add(string kind, string label, string text) => list.Add(new { kind, label, text });
+        if (c.Rooted) Add("root", "rooted", $"Can't move, dash or be moved ({c.RootHalves} half{(c.RootHalves == 1 ? "" : "s")} left).");
+        if (c.Burning) Add("burn", $"burn {c.BurnAmount}", $"Takes {c.BurnAmount} each time it uses an ability or basic attack ({c.BurnRounds} round{(c.BurnRounds == 1 ? "" : "s")} left). Shields don't block it.");
+        if (c.Mark > 0) Add("mark", $"marked +{c.Mark}", $"The next hit it takes, from anyone, deals +{c.Mark}.");
+        if (c.ExhaustHalves > 0) Add("exhaust", "exhausted", $"Deals half damage ({c.ExhaustHalves} half{(c.ExhaustHalves == 1 ? "" : "s")} left).");
+        if (c.Unstoppable) Add("unstop", "unstoppable", "Immune to root, push and pull.");
+        if (c.WoundRounds > 0) Add("wound", "wounded", $"Healing on it is halved ({c.WoundRounds} round{(c.WoundRounds == 1 ? "" : "s")} left).");
+        return list.ToArray();
+    }
 
     /// <summary>
     /// The shape of an ability as data, for the page's small diagrams: pattern offsets in
     /// the canonical frame (team A, forward = +R), effects, and the three opening steps.
     /// </summary>
-    private static object Kit(AbilityDef ab, int range) => new
+    private static object Kit(AbilityDef? ab, int range, IReadOnlyList<OpeningInstruction> opening) => new
     {
-        tier = ab.Initiative,
-        target = ab.Target.ToString(),
+        tier = ab?.Initiative ?? 0,
+        target = ab?.Target.ToString() ?? "None",
         range,
-        pattern = ab.Pattern.Select(Xy).ToArray(),
-        fx = ab.Effects.Select(e => new { kind = e.Kind.ToString(), amount = e.Amount, power = e.Power }).ToArray(),
-        steps = ab.Opening.Select(i => new
+        pattern = ab is null ? [] : ab.Pattern.Select(Xy).ToArray(),
+        fx = ab is null ? [] : ab.Effects.Select(e => new { kind = e.Kind.ToString(), amount = e.Amount, power = e.Power }).ToArray(),
+        steps = opening.Select(i => new
         {
-            kind = i.Kind == InstructionKind.Move ? "move" : "beacon",
+            kind = i.Kind switch { InstructionKind.Move => "move", InstructionKind.Cast => "cast", _ => "beacon" },
             role = i.Role.ToString(),
             dir = i.Direction,
             sigil = Game.SigilName(i.Sigil),
+            slot = i.Slot >= 0 ? Keys[i.Slot] : null,
         }).ToArray(),
     };
 
@@ -296,6 +409,7 @@ public static class ViewBuilder
             kind = c.Kind.ToString(),
             champ = hasActor ? c.Champion : -1,
             ability = c.Kind is CommandKind.Ability or CommandKind.OpeningPlay ? c.Ability : -1,
+            spell = -1,
             champ2 = c.IsChain ? c.Champion2 : -1,
             ability2 = c.IsChain ? c.Ability2 : -1,
             actorAt = hasActor ? Xy(before.Champions[c.Champion].Pos) : null,
@@ -395,7 +509,8 @@ public static class ViewBuilder
             label = Label(g, s, c),
             cells = cells.Where(Board.Playable).Distinct().Select(Xy).ToArray(),
             click = click.Distinct().Select(Xy).ToArray(),
-            preview = c.Kind == CommandKind.Draft ? null : Preview(g, s, c),
+            spell = c.Kind == CommandKind.SpellPick ? c.Ability : -1,
+            preview = c.Kind is CommandKind.Draft or CommandKind.SpellPick ? null : Preview(g, s, c),
         };
     }
 
@@ -413,7 +528,8 @@ public static class ViewBuilder
 
         if (ability < 0) return [];
         Champion c = s.Champions[slot];
-        AbilityDef a = g.Def(c).Abilities[ability];
+        AbilityDef? a = g.Kit(c, ability);
+        if (a is null || a.IsFree) return [];
         return g.PatternCells(c, a, t.Kind == TargetKind.Facing ? t.Facing : 0).Where(Board.Playable);
     }
 
@@ -425,7 +541,7 @@ public static class ViewBuilder
     {
         if (t.Kind != TargetKind.Facing) return TargetCells(g, s, slot, ability, t);
         Champion c = s.Champions[slot];
-        AbilityDef a = g.Def(c).Abilities[ability];
+        AbilityDef a = g.Kit(c, ability)!;
         int[] lean = Enumerable.Range(0, 6).Select(f => Lean(a, c.Team, f)).ToArray();
         int dir = lean.Distinct().Count() == 6 ? lean[t.Facing] : t.Facing;
         return [c.Pos + Hex.Directions[dir]];
@@ -460,11 +576,13 @@ public static class ViewBuilder
 
     private static string Label(Game g, MatchState s, Command c)
     {
-        string Ab(int slot, int a) => g.Def(s.Champions[slot]).Abilities[a].Name;
+        string Ab(int slot, int a) => g.Kit(s.Champions[slot], a)?.Name ?? "?";
         return c.Kind switch
         {
             CommandKind.Draft => $"Draft {g.Content.Champions[c.Ability].Name} ({(Role)(c.Champion % 5)})",
-            CommandKind.OpeningPlay => $"{g.Name(s, c.Champion)} opens with {Ab(c.Champion, c.Ability)}",
+            CommandKind.OpeningPlay => $"{g.Name(s, c.Champion)} opens with {g.OpeningName(s.Champions[c.Champion], c.Ability)}",
+            // Never names the spell: the label is also shown to the other side as the last action.
+            CommandKind.SpellPick => $"{g.Name(s, c.Champion)} chooses a summoner spell",
             CommandKind.OpeningFallback => c.Target.Facing == 255
                 ? $"{g.Name(s, c.Champion)} stays (enclosed)"
                 : $"{g.Name(s, c.Champion)} falls back to {Game.Fmt(s.Champions[c.Champion].Pos + Hex.Directions[c.Target.Facing])}",
@@ -515,7 +633,8 @@ public static class ViewBuilder
         {
             Champion a = before.Champions[i], b = after.Champions[i];
             bool moved = a.Pos != b.Pos || a.Presence != b.Presence;
-            if (a.Hp == b.Hp && a.Shield == b.Shield && !moved && a.PoisonRounds == b.PoisonRounds && a.Flags == b.Flags) continue;
+            string[] gained = StatusLabels(b).Except(StatusLabels(a)).ToArray();
+            if (a.Hp == b.Hp && a.Shield == b.Shield && !moved && a.PoisonRounds == b.PoisonRounds && a.Flags == b.Flags && gained.Length == 0) continue;
             champs.Add(new
             {
                 slot = i,
@@ -528,6 +647,7 @@ public static class ViewBuilder
                 dies = a.Presence != Presence.Dead && b.Presence == Presence.Dead,
                 dying = !a.Has(ChampFlags.Dying) && b.Has(ChampFlags.Dying),
                 poisoned = b.PoisonRounds > a.PoisonRounds || b.PoisonAmount > a.PoisonAmount,
+                status = gained,
             });
         }
 
@@ -547,8 +667,13 @@ public static class ViewBuilder
             .Select(b => new { q = after.Beacons[b].Pos.Q, r = after.Beacons[b].Pos.R, team = after.Beacons[b].Team.ToString(), sigil = Game.SigilName(after.Beacons[b].Sigil) })
             .ToArray();
 
+        var walls = Enumerable.Range(0, 4)
+            .Where(w => after.Walls[w].Rounds > 0 && (before.Walls[w].Rounds == 0 || before.Walls[w].Pos != after.Walls[w].Pos))
+            .Select(w => Xy(after.Walls[w].Pos)).ToArray();
+
         return new
         {
+            walls,
             events = log.Take(14).Select(e => e.Text.Trim()).ToArray(),
             more = Math.Max(0, log.Count - 14),
             champs,
@@ -561,6 +686,16 @@ public static class ViewBuilder
     }
 
     // ───────────────────────────── helpers ─────────────────────────────
+
+    private static IEnumerable<string> StatusLabels(Champion c)
+    {
+        if (c.Rooted) yield return "rooted";
+        if (c.Burning) yield return "burning";
+        if (c.Mark > 0) yield return "marked";
+        if (c.ExhaustHalves > 0) yield return "exhausted";
+        if (c.Unstoppable) yield return "unstoppable";
+        if (c.WoundRounds > 0) yield return "wounded";
+    }
 
     private static int[] Xy(HexCoord h) => [h.Q, h.R];
 

@@ -109,8 +109,8 @@ internal sealed class Renderer(Game game)
         };
         string round = s.Round > 0 ? $"Round {s.Round} · Half {s.Half} · " : "";
         string score = $"Siege: each tower held hits the enemy nexus for {_game.Rules.TowerSiege} per round, each death costs your nexus {_game.Rules.KillSiege}";
-        string nexus = $"Nexus {Ansi.A($"A {s.NexusHp[0]}")}{(Game.NexusVulnerable(s, Team.A) ? Ansi.Hi(" OPEN") : "")}"
-                       + $" / {Ansi.B($"B {s.NexusHp[1]}")}{(Game.NexusVulnerable(s, Team.B) ? Ansi.Hi(" OPEN") : "")}";
+        string nexus = $"Nexus {Ansi.A($"A {Math.Max(0, s.NexusHp[0])}")}{(Game.NexusVulnerable(s, Team.A) ? Ansi.Hi(" OPEN") : "")}"
+                       + $" / {Ansi.B($"B {Math.Max(0, s.NexusHp[1])}")}{(Game.NexusVulnerable(s, Team.B) ? Ansi.Hi(" OPEN") : "")}";
         var towers = new StringBuilder("Towers ");
         for (int t = 0; t < 5; t++)
         {
@@ -164,10 +164,21 @@ internal sealed class Renderer(Game game)
         string[] keys = ["Q", "W", "E", "R"];
         for (int a = 0; a < 4; a++)
         {
-            var ab = def.Abilities[a];
-            sb.AppendLine($"  {keys[a]}  {Describe.Ability(ab)}" + (c.Cooldowns[a] > 0 ? Ansi.Dim($"  (cooldown {c.Cooldowns[a]})") : ""));
-            sb.AppendLine(Ansi.Dim($"       opening: {Describe.Opening(ab)}"));
+            var ab = _game.Kit(c, a);
+            string line = ab is null ? "(no spell yet)" : Describe.Ability(ab);
+            sb.AppendLine($"  {keys[a]}  {line}" + (c.Cooldowns[a] > 0 ? Ansi.Dim($"  (cooldown {c.Cooldowns[a]})") : ""));
+            sb.AppendLine(Ansi.Dim($"       opening {_game.OpeningName(c, a)}: {Describe.Opening(_game.OpeningOf(c, a))}"));
         }
+
+        var status = new List<string>();
+        if (c.Rooted) status.Add("ROOTED");
+        if (c.Burning) status.Add($"burning {c.BurnAmount} ({c.BurnRounds} rd)");
+        if (c.PoisonRounds > 0) status.Add($"poisoned {c.PoisonAmount} ({c.PoisonRounds} rd)");
+        if (c.Mark > 0) status.Add($"marked +{c.Mark}");
+        if (c.ExhaustHalves > 0) status.Add("exhausted");
+        if (c.Unstoppable) status.Add("unstoppable");
+        if (c.WoundRounds > 0) status.Add($"wounded ({c.WoundRounds} rd)");
+        if (status.Count > 0) sb.AppendLine($"  Status   {string.Join(", ", status)}");
 
         var drift = Enum.GetValues<Sim.Content.Stat>().Where(st => c.Drift[(int)st] != 0)
             .Select(st => $"{st} {(c.Drift[(int)st] > 0 ? "+" : "")}{c.Drift[(int)st]}");

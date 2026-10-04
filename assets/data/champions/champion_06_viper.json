@@ -3,6 +3,7 @@
   "name": "Viper",
   "role": "Jungle",
   "glyph": "V",
+  "line": "Hunts the isolated: poisons a target, then dives on it.",
   "stats": {
     "vit": 25000,
     "pow": 1200,

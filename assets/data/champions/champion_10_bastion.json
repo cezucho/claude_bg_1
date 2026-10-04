@@ -3,6 +3,7 @@
   "name": "Bastion",
   "role": "Support",
   "glyph": "S",
+  "line": "Shields the team and drains the dive.",
   "stats": {
     "vit": 30000,
     "pow": 900,

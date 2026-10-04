@@ -154,7 +154,7 @@ function renderTop() {
       </div>`;
   }
 
-  const phaseName = { Draft: 'Draft', Opening: 'Opening', Basic: 'Basics', Ladder: 'Ladder', LastWord: 'Last Word', MatchOver: 'Match over' }[V.phase];
+  const phaseName = { Draft: 'Draft', SpellPick: 'Summoner spells', Opening: 'Opening', Basic: 'Basics', Ladder: 'Ladder', LastWord: 'Last Word', MatchOver: 'Match over' }[V.phase];
   const round = V.round > 0 ? `Round ${V.round} / ${V.race.roundCap} · Half ${V.half}` : 'Pre-game';
   let turn = '';
   if (V.phase !== 'MatchOver') {
@@ -203,6 +203,7 @@ function card(c) {
   if (c.presence === 'spawn') chips.push(`<span class="chip">in spawn</span>`);
   if (c.dying) chips.push(`<span class="chip dying">dying · half power</span>`);
   if (c.poison) chips.push(`<span class="chip poison">poison ${c.poison.amount}×${c.poison.rounds}</span>`);
+  for (const st of c.status || []) chips.push(`<span class="chip st-${st.kind}" title="${esc(st.text)}">${esc(st.label)}</span>`);
   if (c.shield > 0) chips.push(`<span class="chip shield">shield ${c.shield}</span>`);
   if (c.acted && (V.phase === 'Ladder' || V.phase === 'LastWord')) chips.push(`<span class="chip acted">acted</span>`);
   if (c.basicUsed && V.phase === 'Basic') chips.push(`<span class="chip acted">basic used</span>`);
@@ -244,9 +245,12 @@ function abilityIcon(c, a, i) {
   const sig = a.printedSigil
     ? `<span class="sig">${a.printedSigil}</span>`
     : a.slotSigil ? `<span class="sig slot ${a.activeSigils.includes(a.slotSigil) ? 'active' : ''}">${a.slotSigil}</span>` : '';
+  if (a.spell) cls.push('spell');
+  if (a.hidden) cls.push('hidden-spell');
+  const shown = V.phase === 'Opening' && a.openingName !== a.name ? a.openingName : a.name;
   const node = h(`<div class="${cls.join(' ')}">
-    <span class="key">${a.key}</span>${sig}<span class="init">${a.init}</span>
-    <span class="nm">${esc(a.name)}</span>
+    <span class="key">${a.key}</span>${sig}<span class="init">${a.hidden ? '?' : a.init}</span>
+    <span class="nm">${esc(shown)}</span>
     ${a.cd > 0 ? `<div class="cdo">${a.cd}</div>` : ''}
   </div>`);
   node.addEventListener('mouseenter', e => { showTip(e, abilityTip(c, a), 'with-dia'); if (!sel) showAbilityHover(c, a, i); });
@@ -316,6 +320,16 @@ function renderMap() {
     g.addEventListener('mouseleave', hideTip);
   }
 
+  for (const w of V.walls || []) {
+    const g = el('g', { class: 'wall' }, layers.structures);
+    el('polygon', { points: hexPath(w.q, w.r, 0.82), class: 'wall-block' }, g);
+    const [cx, cy] = px(w.q, w.r);
+    el('text', { x: cx, y: cy + 4, class: 'wall-txt' }, g).textContent = `▦ ${w.rounds}`;
+    g.addEventListener('mouseenter', e => showTip(e, `<h4>Wall</h4><div class="tt-row">Impassable: nothing may move, dash or be pushed into it.</div><div class="tt-dim">Falls after ${w.rounds} more round close${w.rounds === 1 ? '' : 's'}.</div>`));
+    g.addEventListener('mousemove', moveTip);
+    g.addEventListener('mouseleave', hideTip);
+  }
+
   for (const t of V.towers) {
     const [cx, cy] = px(t.q, t.r);
     const g = el('g', {}, layers.structures);
@@ -360,11 +374,20 @@ function drawToken(c) {
   const hpw = bw * Math.max(0, c.hp) / c.maxHp;
   el('rect', { x: bx, y: by, width: hpw, height: 5, class: `tok-hp ${c.team}`, rx: 1 }, g);
   if (c.shield > 0) el('rect', { x: bx + hpw, y: by, width: Math.min(bw - hpw, bw * c.shield / c.maxHp), height: 5, class: 'tok-sh' }, g);
+  // Statuses as small lettered pips above the token, so the board itself shows who is rooted or burning.
+  const pips = [...(c.poison ? [{ kind: 'poison', label: 'poison' }] : []), ...(c.status || [])];
+  pips.forEach((st, k) => {
+    const sx = cx - (pips.length - 1) * 6 + k * 12, sy = cy - HEX * 0.72;
+    el('circle', { cx: sx, cy: sy, r: 5.5, class: `st-pip st-${st.kind}` }, g);
+    el('text', { x: sx, y: sy + 0.5, class: 'st-pip-txt' }, g).textContent = STATUS_LETTER[st.kind] || '?';
+  });
   g.addEventListener('mouseenter', e => { showTip(e, champTip(c)); hotChamp(c.slot, true); });
   g.addEventListener('mousemove', moveTip);
   g.addEventListener('mouseleave', () => { hideTip(); hotChamp(c.slot, false); });
   if (basics.length) g.addEventListener('click', () => selectBasic(c.slot));
 }
+
+const STATUS_LETTER = { root: 'R', burn: 'B', mark: 'M', exhaust: 'X', unstop: 'U', wound: 'W', poison: 'P' };
 
 function roleGlyph(role, cx, cy, size, color) {
   const g = document.createElementNS(SVGNS, 'g');
@@ -381,10 +404,11 @@ function roleGlyph(role, cx, cy, size, color) {
 let animatedAction = -1;
 
 function isLastActor(slot) {
-  return !!V.last && V.phase !== 'Draft' && (V.last.champ === slot || V.last.champ2 === slot);
+  return !!V.last && V.phase !== 'Draft' && V.phase !== 'SpellPick' && V.last.kind !== 'SpellPick' && (V.last.champ === slot || V.last.champ2 === slot);
 }
 
 function lastMove(slot) {
+  if (!V.last || V.last.kind === 'Draft' || V.last.kind === 'SpellPick') return null;
   return V.last?.diff?.champs.find(ch => ch.slot === slot && ch.from && ch.to);
 }
 
@@ -401,7 +425,7 @@ function slideIn(g, c) {
 
 function drawLast() {
   const L = V.last;
-  if (!L || L.kind === 'Draft' || V.phase === 'Draft') return;
+  if (!L || L.kind === 'Draft' || L.kind === 'SpellPick' || V.phase === 'Draft' || V.phase === 'SpellPick') return;
   const under = layers.lastUnder, top = layers.last;
   for (const [q, r] of L.cells) el('polygon', { points: hexPath(q, r, 0.92), class: 'last-cell' }, under);
 
@@ -442,7 +466,9 @@ function drawLast() {
     if (ch.dies) num(at[0], at[1], 'KILL', 'bad');
     if (ch.dying) num(at[0], at[1], 'DYING', 'bad');
     if (ch.poisoned) num(at[0], at[1], 'poison', 'info');
+    for (const st of ch.status || []) num(at[0], at[1], st, 'info');
   }
+  for (const [q, r] of L.diff.walls || []) num(q, r, 'WALL', 'info');
   for (const t of L.diff.towers) {
     const tw = V.towers[t.i];
     num(tw.q, tw.r, t.captured ? `CAPTURED → ${t.owner}` : `${t.dHp}`, t.captured ? 'info' : 'bad');
@@ -505,7 +531,7 @@ function showAbilityHover(c, a, i) {
   }
 }
 
-function isFriendly(c, a) { return /heal|shield|dash/i.test(a.effects) && !/damage/i.test(a.effects); }
+function isFriendly(c, a) { return !!a.friendly; }
 
 function selectAbility(champ, ability) {
   sel = { type: 'ability', champ, ability };
@@ -616,6 +642,11 @@ function showPreview(cmd) {
     if (ch.dies) num(c.q, c.r, 'KILL', 'bad');
     if (ch.dying) num(at[0], at[1], 'DYING', 'bad');
     if (ch.poisoned) num(at[0], at[1], 'poison', 'info');
+    for (const st of ch.status || []) num(at[0], at[1], st, 'info');
+  }
+  for (const [q, r] of p.walls || []) {
+    el('polygon', { points: hexPath(q, r, 0.82), class: 'wall-block', style: 'opacity:.6' }, g);
+    num(q, r, 'WALL', 'info');
   }
   for (const t of p.towers) {
     const tw = V.towers[t.i];
@@ -653,15 +684,24 @@ const STATE_TEXT = {
 };
 
 function abilityTip(c, a) {
+  if (a.hidden) {
+    return `<h4 class="${c.team}-c">${a.key} · summoner spell</h4>
+      <div class="tt-sub">${esc(c.name)} · ${esc(a.reason)}</div>
+      <div class="tt-row">The opening in this slot is ${esc(c.name)}'s own: <b>${esc(a.openingName)}</b>.</div>
+      ${abilityDiagrams(a.kit, c.team, c.role)}
+      ${a.state !== 'idle' && a.state !== 'unavailable' ? `<div class="tt-state">${stateLine(a)}</div>` : ''}`;
+  }
   const tier = ['', 'free aim', 'free aim', 'rotatable pattern', 'fixed pattern'][a.init];
+  const opening = a.openingName !== a.name ? `<div class="tt-row">Opening in this slot: <b>${esc(a.openingName)}</b> — ${esc(c.name)}'s own; a spell never brings an opening.</div>` : '';
   const amount = a.amount ? ` <span class="tt-dim">(${a.amount} before armour at current POW)</span>` : '';
   const sig = [a.printedSigil && `printed sigil ${a.printedSigil}`, a.slotSigil && `slot sigil ${a.slotSigil}${a.activeSigils.includes(a.slotSigil) ? ' — lit by a beacon' : ' — needs a friendly beacon within 1 hex'}`].filter(Boolean).join(' · ');
   return `<h4 class="${c.team}-c">${a.key} · ${esc(a.name)}</h4>
-    <div class="tt-sub">${esc(c.name)} · initiative ${a.init} (${tier}) · cooldown ${a.cooldown}</div>
+    <div class="tt-sub">${a.spell ? 'Summoner spell · ' : ''}${esc(c.name)} · initiative ${a.init} (${tier}) · cooldown ${a.cooldown}</div>
     <div class="tt-row">${esc(a.targeting)}</div>
     <div class="tt-row"><b>${esc(a.effects)}</b>${amount}</div>
     ${sig ? `<div class="tt-row">${sig}</div>` : ''}
-    <div class="tt-row tt-dim">Molds: ${esc(a.mold)}</div>
+    <div class="tt-row tt-dim">${a.spell ? esc(a.mold) : `Molds: ${esc(a.mold)}`}</div>
+    ${opening}
     ${abilityDiagrams(a.kit, c.team, c.role)}
     ${a.init === 3 && c.presence === 'board' ? '<div class="tt-row tt-dim">On the map: faint = every hex some facing could reach · gold = enemies it could hit now.</div>' : ''}
     ${a.state !== 'idle' || a.reason ? `<div class="tt-state">${stateLine(a)}</div>` : ''}`;
@@ -680,8 +720,9 @@ function champTip(c) {
     <div class="tt-sub">Team ${c.team} · ${c.role} · ${where}</div>
     <div class="tt-row">HP ${c.hp}/${c.maxHp}${c.shield ? ` · shield ${c.shield}` : ''} · POW ${(c.stats.powNow / 1000).toFixed(2)}${c.dying ? ' (halved: dying)' : ''} · ARM ${c.stats.arm} · RCH ${c.stats.rch} · SPD ${c.stats.spd}</div>
     <div class="tt-row" style="color:var(--t3)">Passive — ${esc(c.passive.name)}: ${esc(c.passive.text)}</div>
+    ${(c.status || []).map(st => `<div class="tt-row st-line st-${st.kind}-c"><b>${esc(st.label)}</b> — ${esc(st.text)}</div>`).join('')}
     <div class="tt-row tt-dim">Molding so far (permille): ${drift}</div>
-    ${c.abilities.map(a => `<div class="tt-row"><b>${a.key}</b> ${esc(a.name)} [${a.init}] ${esc(a.effects)}${a.cd ? ` · cd ${a.cd}` : ''}</div>`).join('')}`;
+    ${c.abilities.map(a => `<div class="tt-row"><b>${a.key}</b> ${esc(a.name)}${a.hidden ? '' : ` [${a.init}] ${esc(a.effects)}`}${a.cd ? ` · cd ${a.cd}` : ''}</div>`).join('')}`;
 }
 
 function towerTip(t) {
@@ -719,9 +760,10 @@ function renderActions() {
   const fallback = legalFor(c => c.kind === 'OpeningFallback');
   const texts = {
     Draft: `${T}: draft a champion.`,
+    SpellPick: `${T}: choose a summoner spell for each champion. The other team can't see them until the opening.`,
     Opening: fallback.length
       ? `${T}: no opening ability fits the board. <b>${esc(champById(fallback[0].champ).name)}</b> falls back — click a green marker to step one hex.`
-      : `${T} — Opening: hover an ability (glowing icons) to preview its three instructions; click it to play. Every champion plays one.`,
+      : `${T} — Opening: hover an ability (glowing icons) to preview its three instructions; click it to play. Every champion plays one. A cast that finds no target fizzles but still costs the cooldown.`,
     Basic: `${T} — Basics ${(V.active === 'A' ? V.basics.a : V.basics.b) + 1} of ${V.basics.per}: click one of your champions, then a green hex to move or a gold target to basic-attack.`,
     Ladder: `${T} — Ladder, ceiling <b>${V.ceiling}</b>: click a glowing ability, then a target on the map. Or pass: the opponent gets one Last Word.`,
     LastWord: `${T} — LAST WORD: one unanswerable ability at initiative ≤ <b>${V.ceiling}</b>, or decline. Then the half ends.`,
@@ -787,6 +829,7 @@ function renderOverlay() {
   const ov = document.getElementById('overlay');
   if (helpOpen) return;
   if (V.phase === 'Draft') { ov.classList.remove('hidden'); ov.innerHTML = ''; ov.appendChild(draftView()); return; }
+  if (V.phase === 'SpellPick') { ov.classList.remove('hidden'); ov.innerHTML = ''; ov.appendChild(spellView()); return; }
   if (V.phase === 'MatchOver' && !endDismissed) {
     ov.classList.remove('hidden');
     const w = V.winner;
@@ -824,7 +867,9 @@ function draftView() {
       const taken = V.champions.find(c => c.drafted && c.id === d.id);
       const card = h(`<div class="dcard ${pick ? 'pickable' : ''} ${taken ? 'taken' : ''}">
         <div class="top">${portrait(d.id, d.glyph, taken ? taken.team : pick ? V.active : 'N')}<div><b>${esc(d.name)}</b>${taken ? ` <span class="${taken.team}-c taken-lbl">picked by ${taken.team}</span>` : ''}<div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div></div></div>
-        ${d.abilities.map(x => `<div class="dab"><i style="background:var(--t${x.init})">${x.init}</i><span><b>${esc(x.name)}</b> · ${esc(x.effects)} <span class="tt-dim">· cd ${x.cooldown}${x.printedSigil ? ` · sigil ${x.printedSigil}` : ''}${x.slotSigil ? ` · slot ${x.slotSigil}` : ''}</span></span></div>`).join('')}
+        ${d.line ? `<div class="dline">${esc(d.line)}</div>` : ''}
+        ${d.abilities.map(x => `<div class="dab"><i style="background:var(--t${x.init})">${x.init}</i><span><b>${esc(x.name)}</b> · ${esc(x.effects)} <span class="tt-dim">· cd ${x.cooldown}${x.printedSigil ? ` · sigil ${x.printedSigil}` : ''}${x.slotSigil ? ` · slot ${x.slotSigil}` : ''}</span>${x.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>`).join('')}
+        ${d.signature ? `<div class="dab"><i class="spell">✦</i><span><b>Summoner spell</b> <span class="tt-dim">· chosen after the draft · opening: ${esc(d.signature.name)}</span>${d.signature.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>` : ''}
         <div class="passive">${esc(d.passive.name)} — ${esc(d.passive.text)}</div>
         ${pick ? `<button class="pickbtn primary">Pick for ${V.active}</button>` : ''}
       </div>`);
@@ -835,6 +880,41 @@ function draftView() {
       col.appendChild(card);
     }
     cols.appendChild(col);
+  }
+  return root;
+}
+
+// Summoner spells: each team gives every champion one spell from the shared pool, hidden
+// from the other team until the opening. No spell twice in a team.
+function spellView() {
+  const picks = V.humanTurn ? legalFor(c => c.kind === 'SpellPick') : [];
+  const who = V.humanTurn ? `Team ${V.active} — choose` : `Team ${V.active} (AI) is choosing — hidden from you`;
+  const root = h(`<div class="draft spells"><h2>Summoner spells</h2>
+    <div class="sub">${who}. One spell per champion, no spell twice in a team. Both teams' choices are revealed when the opening begins. Spells have long cooldowns and never mold.</div>
+    <div class="spell-team"></div><div class="spell-grid"></div></div>`);
+  const team = V.humanTurn ? V.active : (V.humans[0] || 'A');
+  const row = root.querySelector('.spell-team');
+  const next = picks.length ? picks[0].champ : -1;
+  for (const c of V.champions.filter(x => x.team === team)) {
+    const sp = c.abilities[3];
+    row.appendChild(h(`<div class="spell-champ ${c.slot === next ? 'next' : ''}"><div class="portrait">${portrait(c.id, c.glyph, c.team)}</div>
+      <div><b>${esc(c.name)}</b><div class="tt-dim">${c.role}</div><div class="${sp.hidden ? 'tt-dim' : 'spell-name'}">${sp.hidden ? (c.slot === next ? '← choosing' : '—') : esc(sp.name)}</div></div></div>`));
+  }
+  const grid = root.querySelector('.spell-grid');
+  const byIndex = {};
+  for (const p of picks) byIndex[p.spell] = p;
+  for (const sp of V.spells) {
+    const pick = byIndex[sp.index];
+    const taken = V.humanTurn && !pick;
+    const card = h(`<div class="dcard spell-card ${pick ? 'pickable' : ''} ${taken ? 'taken' : ''}">
+      <div><i class="det-init" style="background:var(--t${sp.init})">${sp.init}</i> <b>${esc(sp.name)}</b> <span class="tt-dim">· cooldown ${sp.cooldown}</span>${taken ? ' <span class="taken-lbl">taken by your team</span>' : ''}</div>
+      <div>${esc(sp.effects)}</div><div class="tt-dim">${esc(sp.targeting)}</div>
+      ${pick ? `<button class="pickbtn primary">Give to ${esc(champById(pick.champ).name)}</button>` : ''}</div>`);
+    if (pick) card.addEventListener('click', () => play(pick.i));
+    card.addEventListener('mouseenter', e => showTip(e, combatDiagram(sp.kit, team, 'Mid').svg + `<div class="dia-cap">${combatDiagram(sp.kit, team, 'Mid').caption}</div>`, 'with-dia'));
+    card.addEventListener('mousemove', moveTip);
+    card.addEventListener('mouseleave', hideTip);
+    grid.appendChild(card);
   }
   return root;
 }
@@ -854,7 +934,9 @@ function showHelp() {
     <h3>Chains</h3>Two abilities that share an active sigil (the small I/II/III tag) resolve as one step with no answer between — and the second may exceed the ceiling. Dashed tags are slot sigils: lit (white) when a friendly beacon is within 1 hex.
     <h3>Round close</h3>Champions at 0 HP die → poison and tower shots (dropping to 0 <i>here</i> means <b>Dying</b>: one more round at half power) → siege: held towers fire at the enemy nexus → cooldowns tick and the dead respawn.
     <h3>Reading the screen</h3>Hover anything. Ability icons show initiative (big number), key, sigil and cooldown. Hovering an ability shows its reach (faint) and what it could hit (gold); on your turn, the hexes it can be played on. Hover a marker, a chain or Pass to preview the exact result. <b>Undo</b> takes back your last decision. <span style="color:var(--last)"><b>Magenta</b> always marks the last action</span> — the champion who acted (and its ability icon), the hexes it covered, a line to what it hit, where anyone moved from, and the numbers that changed.
-    <h3>Opening</h3>Each champion plays one ability whose three instructions move your team into formation. Order matters; if none fits, one champion steps one hex.</div>`;
+    <h3>Champions and spells</h3>Each champion has three abilities (Q W E) and a fourth slot (R) for a <b>summoner spell</b>, chosen after the draft from a shared pool of eight — hidden from the opponent until the opening, never twice in a team. The R slot's opening belongs to the champion, not the spell.
+    <h3>Opening</h3>Each champion plays one of its four openings, whose three instructions move your team into formation. Moves are strict: an opening that would walk off the board or into a champion, tower or wall can't be played. One opening per champion <b>casts</b>: "mid casts E" fires whatever ability your mid has in E, aimed at the nearest target. With nothing in reach it fizzles — and either way that ability starts round 1 on cooldown. Opening damage can't kill. If no opening fits, one champion steps one hex.
+    <h3>Statuses</h3><b>Root</b> can't move or be moved · <b>Burn</b> takes damage each time it acts · <b>Mark</b> the next hit deals more · <b>Exhaust</b> deals half damage · <b>Unstoppable</b> immune to root, push and pull · <b>Wound</b> healing halved · <b>Wall</b> an impassable hex. Towers are solid: nothing may enter them. Hover a status pip on the board or a chip on a card for the details.</div>`;
   document.getElementById('help-close').onclick = () => { helpOpen = false; renderOverlay(); };
 }
 

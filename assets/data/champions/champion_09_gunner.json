@@ -3,6 +3,7 @@
   "name": "Gunner",
   "role": "Bottom",
   "glyph": "G",
+  "line": "Bursts from safety, hardest on a target that can't move.",
   "stats": {
     "vit": 26000,
     "pow": 1150,

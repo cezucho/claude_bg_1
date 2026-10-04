@@ -1,3 +1,5 @@
+using Augury.Sim.Content;
+
 namespace Augury.Sim.AI;
 
 /// <summary>Anything that chooses a command for the active team.</summary>
@@ -57,6 +59,7 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
     {
         if (legal.Count == 1) return legal[0];
         Team me = s.Active;
+        if (s.Phase == Phase.SpellPick) return PickSpell(s, legal);
 
         bool ladder = s.Phase == Phase.Ladder;
         var scored = new List<(Command Cmd, int Value)>(legal.Count);
@@ -81,6 +84,34 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
         }
 
         return Pick(deep);
+    }
+
+    /// <summary>
+    /// Spell preference by role (v2). The evaluation can't price a spell that hasn't been
+    /// cast, so the agent takes the first free spell on its role's list. ⚠ A guess, like the weights.
+    /// Picks are hidden, so this deliberately ignores the opponent's choices.
+    /// </summary>
+    private static readonly string[][] SpellPreference =
+    [
+        ["Teleport", "Cleanse", "Flash", "Barrier"],          // Top
+        ["Smite", "Flash", "Ignite", "Exhaust"],              // Jungle
+        ["Ignite", "Flash", "Barrier", "Cleanse"],            // Mid
+        ["Heal", "Barrier", "Flash", "Cleanse"],              // Bottom
+        ["Exhaust", "Ignite", "Heal", "Flash"],               // Support
+    ];
+
+    private Command PickSpell(in MatchState s, IReadOnlyList<Command> legal)
+    {
+        Role role = s.Champions[legal[0].Champion].Role;
+        foreach (string name in SpellPreference[(int)role])
+        {
+            foreach (Command c in legal)
+            {
+                if (_game.Content.Spells[c.Ability].Name == name) return c;
+            }
+        }
+
+        return legal[0];
     }
 
     private Command Pick(List<(Command Cmd, int Value)> scored)
@@ -195,6 +226,14 @@ public static class Evaluation
 
             v += Math.Min(c.Hp, game.MaxHp(c)) * 5 + c.Shield * 2;
             v -= c.PoisonAmount * c.PoisonRounds * 3;
+
+            // v2 statuses. ⚠ Guessed weights: a status is worth roughly the damage it threatens.
+            v -= c.BurnAmount * c.BurnRounds * 4;
+            v -= c.Mark * 4;
+            if (c.Rooted) v -= 12;
+            if (c.ExhaustHalves > 0) v -= 15;
+            if (c.Unstoppable) v += 6;
+            v -= c.WoundRounds * 4;
 
             // Pressure: stand close to towers we don't own.
             int nearest = 99;

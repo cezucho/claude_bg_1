@@ -1,4 +1,4 @@
-# Playing AUGURY — first playable
+# Playing AUGURY — v2 (three abilities + summoner spells, Field 7)
 
 Two clients over the same simulation: a **browser client** laid out like a match
 broadcast (recommended), and the original terminal client. Both play by the real rules —
@@ -30,7 +30,14 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
 - **Map tokens show the role** (sword top, claws jungle, diamond mid, crosshair bottom,
   shield support), coloured by team; the champion's name is in the side panel.
 - **In the draft, hover a champion** for a card with every ability's combat shape and
-  opening moves side by side, to compare champions before you pick.
+  opening moves side by side, to compare champions before you pick. Each card says how the
+  champion is meant to be played, and tags its **opening attack**.
+- **Summoner spells** come after the draft: give each of your champions one of eight spells
+  (no spell twice in a team). The other team's spells stay hidden until the opening. A spell
+  sits in slot R with a dashed gold border; slot R's opening is still the champion's own.
+- **Statuses** show twice: as chips on the card (hover for the rule) and as lettered pips
+  above the token — **R**oot, **B**urn, **M**ark, e**X**haust, **U**nstoppable, **W**ound,
+  **P**oison. **Walls** are stone hexes on the map with the round closes they have left.
 - **To act**: click a glowing ability, then a gold marker on the map. Tier-3 patterns
   show one arrow per facing. In the basics, click one of your champions, then a green hex
   (move) or a gold ring (basic attack).
@@ -50,8 +57,10 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
 
 ### Trying another board
 
-Set `"board"` in `assets/data/rules_config.json` to `field7`, `field7base` or `field5` and
-restart. The candidates and their measurements are in `design/board-layouts.md`.
+The shipped board is `field7` with solid towers. `"board"` in `assets/data/rules_config.json`
+also takes `field7base`, `field5` or `classic`. Restart after changing it. The v2 openings are
+written for Field 7, so on another board many of them fall back. The candidates and their
+measurements are in `design/board-layouts.md`.
 
 ## Terminal client
 
@@ -94,9 +103,12 @@ r -2          S   ·   TA  O   TA  ·   R      ← team A, UPPER CASE, bottom
 
 ## A match in one paragraph
 
-**Draft** one champion per role. In the **opening**, each of your champions plays one
-ability whose three instructions move your team into formation — order matters, and if
-nothing is available you fall back to one hex each. Each **half** of a round starts with
+**Draft** one champion per role, then choose a **summoner spell** for each, hidden from the
+opponent. In the **opening**, each of your champions plays one of its four openings, whose
+three instructions move your team into formation — order matters, and if nothing is available
+you fall back to one hex each. One opening per champion **casts** an ability (sometimes a
+teammate's): with nothing in reach it fizzles, and either way that ability starts round 1 on
+cooldown. Opening damage can't kill. Each **half** of a round starts with
 **basics** (two of your champions each move or basic-attack), then the **ladder**: play an
 ability at initiative ≤ the ceiling, the ceiling drops to what you played, and so on;
 **pass** and your opponent gets one unanswerable **Last Word**. **Chains** let two

@@ -122,6 +122,7 @@ public static class ContentLoader
                 Abilities = abilities,
                 Passive = passive,
                 Signature = signature,
+                Line = root.TryGetProperty("line", out JsonElement line) ? line.GetString() ?? "" : "",
             };
         }
         catch (ContentException)

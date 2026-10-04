@@ -3,6 +3,7 @@
   "name": "Oriel",
   "role": "Support",
   "glyph": "O",
+  "line": "Keeps one ally standing, and pulls it out of trouble.",
   "stats": {
     "vit": 28000,
     "pow": 1000,

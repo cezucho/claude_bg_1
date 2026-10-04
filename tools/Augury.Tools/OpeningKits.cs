@@ -37,15 +37,19 @@ internal static class OpeningKits
                 if (w) okOpen++;
                 if (s) okSolid++;
                 string mark = w && !s ? "  ◀ broken by towers" : "";
-                Console.WriteLine($"  {d.Name,-12} {d.Abilities[a].Name,-16} {(w ? "yes" : "no"),9} {(s ? "yes" : "no"),6}   "
-                                  + string.Join(", ", d.Abilities[a].Opening.Select(Text)) + mark);
+                Champion c = sSolid.Champions[slot];
+                Console.WriteLine($"  {d.Name,-12} {solid.OpeningName(c, a),-16} {(w ? "yes" : "no"),9} {(s ? "yes" : "no"),6}   "
+                                  + string.Join(", ", solid.OpeningOf(c, a).Select(Text)) + mark);
             }
         }
 
         Console.WriteLine($"\n  playable from the line: walkable towers {okOpen}/{total}, solid towers {okSolid}/{total}");
     }
 
-    private static string Text(OpeningInstruction i) => i.Kind == InstructionKind.Move
-        ? $"{i.Role.ToString().ToLowerInvariant()} {Directions.Names[i.Direction]}"
-        : $"beacon {i.Sigil + 1} {i.Role.ToString().ToLowerInvariant()}";
+    private static string Text(OpeningInstruction i) => i.Kind switch
+    {
+        InstructionKind.Move => $"{i.Role.ToString().ToLowerInvariant()} {Directions.Names[i.Direction]}",
+        InstructionKind.Cast => $"{i.Role.ToString().ToLowerInvariant()} casts {"QWER"[i.Slot]}",
+        _ => $"beacon {i.Sigil + 1} {i.Role.ToString().ToLowerInvariant()}",
+    };
 }

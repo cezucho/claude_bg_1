@@ -3,6 +3,7 @@
   "name": "Tempest",
   "role": "Mid",
   "glyph": "T",
+  "line": "Throws the enemy line around: knockbacks that set up its allies.",
   "stats": {
     "vit": 23000,
     "pow": 1100,
@@ -24,7 +25,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1000
+          "power": 900
         }
       ],
       "scalesFrom": "pow",
@@ -106,7 +107,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 2200
+          "power": 1900
         },
         {
           "kind": "Displace",

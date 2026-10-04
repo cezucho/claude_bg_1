@@ -3,6 +3,7 @@
   "name": "Ranger",
   "role": "Bottom",
   "glyph": "R",
+  "line": "Shoots from the back line and cashes in the marks its team sets.",
   "stats": {
     "vit": 25000,
     "pow": 1100,

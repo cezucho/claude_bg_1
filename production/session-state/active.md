@@ -1,10 +1,17 @@
 # Active Session State
 
-*Last updated: 2026-08-16*
+*Last updated: 2026-10-04*
 
 ## Current Task
 
-**v2 IN PROGRESS — 2026-10-04.** Direction agreed after playtests: `design/v2-direction.md`. Step 1 done (nexus HP race D-038; solid towers implemented, shipped off D-039). Step 2 measured: `design/board-layouts.md` (recommend Field 7 + base; owner choosing). Owner chose Field 7. Step 3 drafted: `design/v2-champions.md` + sheet (8 spells, 4 sample champions, verbs); owner accepted verbs + pool; spells picked hidden & simultaneous; opening attacks being tried (D-041/D-042). Next: engine verbs + opening casts + spells, then roster rewrite on Field 7.
+**v2 PLAYABLE — 2026-10-04.** Direction: `design/v2-direction.md`. Built on the owner's "design them and build on your own":
+- **Game:** 10 v2 champions (3 abilities + summoner slot + signature opening), 8 spells, hidden simultaneous spell pick, opening casts (role+slot, fizzle, cooldown ≥1, can't kill), status verbs (root, burn, mark, wall, swap, pull ally, unstoppable, cleanse, exhaust, wound), Field 7 with solid towers shipped in `rules_config.json`.
+- **Content source:** `design/v2-champions/roster_v2.py` writes `assets/data/champions/*.json` + `spells.json` after checking every opening (40/40 playable). Roster table + measurements: `design/v2-champions.md`.
+- **Clients:** browser (spell-pick screen, status chips/pips, walls, cast steps in diagrams, hidden spells D-048), CLI (spell pick, statuses), tools (`openings`, `selfplay` with fallback depth).
+- **Tests:** 102 pass (v1 rules on fixture roster `tests/fixtures/champions_v1` + classic; `V2RulesTests` on shipped content, "Board switching" collection).
+- **Self-play (200):** 13.6 rounds, every match ends by nexus, champions 42–58% after balance pass D-047, round-1 opener wins 54–59% (accepted D-045), opening fallback 44% (mostly last champion only).
+- **Decisions:** D-044…D-048 added. Evidence screenshots: `production/qa/evidence/v2/`.
+- **Next:** owner playtests v2; open questions at the end of `design/v2-champions.md`.
 
 **FIRST PLAYABLE BUILT — 2026-09-27.** The owner granted standing authority to finish the
 design and build to a first playable, logging every unilateral decision.

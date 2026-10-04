@@ -108,6 +108,9 @@ or can with small tweaks. It is a direction, not a gate.
    rewrite gives Field 7 openings that fit it; today's openings fall back 85% of the time there.
 3. **Three abilities plus summoner spells** — schema change, then the real work: rewriting
    the roster around distinct verbs. Claude drafts a spell pool for the owner to react to.
+   *Done 2026-10-04:* all ten champions, eight spells, hidden spell picking and opening casts
+   are in the game. Field 7 and solid towers are now the shipped board (`rules_config.json`).
+   Roster and measurements: `design/v2-champions.md`.
 4. **Terrain**, once the board is settled.
 
 ## Idea parking lot

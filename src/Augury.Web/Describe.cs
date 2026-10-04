@@ -7,41 +7,30 @@ namespace Augury.Web;
 public static class Describe
 {
     /// <summary>One effect, e.g. <c>damage ×1.23</c>.</summary>
-    public static string Effect(EffectDef e) => e.Kind switch
-    {
-        EffectKind.Damage => $"damage ×{e.Power / 1000.0:0.##}",
-        EffectKind.Heal => $"heal ×{e.Power / 1000.0:0.##}",
-        EffectKind.Shield => $"shield {e.Amount}",
-        EffectKind.Poison => $"poison {e.Amount}/round for {e.Rounds}",
-        EffectKind.Displace => e.Amount > 0 ? $"push {e.Amount}" : $"pull {-e.Amount}",
-        EffectKind.Dash => $"dash up to {e.Amount}",
-        _ => e.Kind.ToString(),
-    };
+    public static string Effect(EffectDef e) => EffectText.Of(e);
 
     /// <summary>All of an ability's effects.</summary>
-    public static string Effects(AbilityDef a) => string.Join(" + ", a.Effects.Select(Effect));
+    public static string Effects(AbilityDef a) => EffectText.Effects(a);
 
-    /// <summary>How the ability is aimed, by initiative tier.</summary>
-    public static string Targeting(AbilityDef a) => a.Initiative switch
-    {
-        <= 2 => a.Target switch
+    /// <summary>How the ability is aimed.</summary>
+    public static string Targeting(AbilityDef a) => a.IsFree
+        ? a.Target switch
         {
             TargetRule.Ally => "free aim · ally",
             TargetRule.EmptyHex => "free aim · empty hex",
+            TargetRule.Self => "self",
+            TargetRule.Structure => "a tower or open nexus in range",
+            TargetRule.TeleportHex => "beside a friendly tower or beacon, from anywhere",
             _ => a.RangeBonus == 0 ? "free aim · enemy" : $"free aim · enemy · range {(a.RangeBonus > 0 ? "+" : "")}{a.RangeBonus}",
-        },
-        3 => $"rotatable {a.Pattern.Count}-hex pattern",
-        _ => $"fixed {a.Pattern.Count}-hex pattern",
-    };
+        }
+        : a.Initiative == 3 ? $"rotatable {a.Pattern.Count}-hex pattern" : $"fixed {a.Pattern.Count}-hex pattern";
 
     /// <summary>The molding line, e.g. <c>+POW 25 / −ARM 25</c>.</summary>
     public static string Mold(AbilityDef a) =>
         $"+{a.MoldUp.ToString().ToUpperInvariant()} {a.MoldUpDelta} / −{a.MoldDown.ToString().ToUpperInvariant()} {a.MoldDownDelta} (permille)";
 
     /// <summary>One opening instruction.</summary>
-    public static string Instruction(OpeningInstruction i) => i.Kind == InstructionKind.Move
-        ? $"{i.Role.ToString().ToLowerInvariant()} → {Directions.Names[i.Direction]}"
-        : $"beacon {Game.SigilName(i.Sigil)} under {i.Role.ToString().ToLowerInvariant()}";
+    public static string Instruction(OpeningInstruction i) => EffectText.Instruction(i);
 
     /// <summary>A passive.</summary>
     public static string Passive(PassiveDef p)

@@ -3,6 +3,7 @@
   "name": "Ember",
   "role": "Jungle",
   "glyph": "E",
+  "line": "Sets enemies alight so every action they take hurts — then cashes in.",
   "stats": {
     "vit": 26000,
     "pow": 1200,

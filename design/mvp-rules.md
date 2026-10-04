@@ -1,6 +1,6 @@
 # AUGURY — MVP Rules (First Playable)
 
-> **Status**: Authoritative for the first playable build · 2026-09-27 · numbers retuned after 500 self-play matches (D-025, D-026)
+> **Status**: Authoritative for the build · 2026-09-27, **v2 changes 2026-10-04 (next section)** · numbers retuned after 500 self-play matches (D-025, D-026)
 > **Author**: Claude, under standing authority from the project owner
 > **Purpose**: One sheet that states every rule the simulation implements. Where it
 > conflicts with a GDD, **this sheet wins for the first playable** and the conflict is
@@ -11,6 +11,57 @@
 > measurement — the self-play harness exists to replace those.
 
 ---
+
+## v2 — what changed (2026-10-04) · this section wins over the sections below
+
+Agreed with the owner in `design/v2-direction.md`. Roster, spells and measurements are in
+`design/v2-champions.md`; decisions are D-038 to D-048.
+
+- **Board: Field 7** (`assets/data/boards/board_field7.json`), 7 rows, front lines 6 rows
+  apart, nexus on the start line. **Towers are solid**: no champion may enter a tower hex by
+  any means (`towersBlock`).
+- **Winning: the nexus HP race** (D-038). Each nexus has 60 HP. At every round close each
+  tower a team holds fires at the enemy nexus for 1. Every death costs the victim's nexus 3.
+  An open nexus can be attacked directly. The match ends when a nexus falls; the round-30
+  cap is a safety net.
+- **Kit: three abilities (Q W E) plus a summoner slot (R).** Each champion also has a
+  **signature opening** for slot R; a spell never brings an opening.
+- **Summoner spells.** After the draft, each team gives each champion one of eight shared
+  spells, with no spell twice in a team. The picks are hidden from the other team and
+  revealed when the opening begins. Spells sit on the ladder like abilities, have no sigils,
+  never mold, and have cooldowns of 4–6 rounds:
+  - Flash, Barrier, Ignite, Heal;
+  - Exhaust, Teleport (usable from spawn), Smite, Cleanse.
+- **Opening casts.** An instruction may be a cast, e.g. `mid casts E`. It fires the ability
+  in that slot of whoever plays that role, so it may be another champion's ability.
+  - **Aim:** it aims itself by D-043's rules.
+  - **No target:** it fizzles.
+  - **Cost:** either way the ability goes on cooldown for at least one round (D-044). If it is
+    already on cooldown, nothing happens.
+  - **Damage:** opening damage can't kill; it leaves at least 1 HP (D-042).
+  - **Moves stay strict:** an opening that would move a champion off the board, into another
+    champion, a tower or a wall, or move a rooted champion, can't be played.
+  - **Per champion:** exactly one opening casts.
+  - **Statuses:** the opening counts as a half for half-based statuses.
+- **Statuses.** Each verb, then how long it lasts:
+
+  | Verb | Effect | Lasts |
+  |---|---|---|
+  | **Root** | Can't move, dash, swap or be moved; abilities that move the caster can't be played | Halves |
+  | **Burn** | Takes N each time it resolves an ability or basic attack; shields don't block it | Rounds; ticks at upkeep |
+  | **Mark** | The next hit, from anyone, deals +N | Until hit, or cleared at upkeep |
+  | **Exhaust** | Deals half damage | Halves |
+  | **Unstoppable** | Immune to root, push and pull; removes root | Halves |
+  | **Wound** | Healing on it is halved | Rounds |
+  | **Wall** | An empty hex becomes impassable | N round closes; at most 4 walls, the oldest falls first |
+  | **Swap** | Caster and an ally trade places | Instant |
+  | **Pull ally** | An ally moves up to N toward the caster | Instant |
+  | **Cleanse** | Removes root, burn, poison, mark, exhaust and wound | Instant |
+
+  Death clears every status.
+- **Conditional damage.** An effect may deal +N, or double, against a rooted, burning or
+  poisoned target.
+
 
 ## 1. Match flow
 

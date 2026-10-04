@@ -3,8 +3,9 @@
   "name": "Lens",
   "role": "Mid",
   "glyph": "L",
+  "line": "Marks one target for the whole team, and reshapes the board with walls.",
   "stats": {
-    "vit": 23000,
+    "vit": 25000,
     "pow": 1150,
     "arm": 0,
     "rch": 3000,
@@ -24,7 +25,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 500
+          "power": 700
         },
         {
           "kind": "Mark",
@@ -95,7 +96,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600
+          "power": 1800
         }
       ],
       "scalesFrom": "pow",
