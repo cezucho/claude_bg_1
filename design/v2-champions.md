@@ -1,7 +1,7 @@
 # v2 Draft — Summoner Spells and Sample Champions
 
-> **Date**: 2026-10-04 · **Status**: Draft for the owner to react to. Nothing here is in the
-> game yet. · **Picture**: `design/v2-champions/champion-sheet.png`
+> **Date**: 2026-10-04 · **Status**: Owner reviewed 2026-10-04 — verbs and spell pool accepted;
+> spell picking and opening attacks decided (below). Not in the game yet. · **Picture**: `design/v2-champions/champion-sheet.png`
 > **Data and checker**: `design/v2-champions/champions_draft.py`. It validates every opening on
 > Field 7 with solid towers and regenerates the sheet.
 
@@ -26,10 +26,12 @@ One shared pool of eight, learned once.
 | Smite | 1 | 5 | 6 damage to a tower or open nexus within 2; defenders don't reduce it |
 | Cleanse | 1 | 4 | Remove all statuses from yourself; can't be moved this half |
 
-**Proposed rules.**
+**Rules.**
 - **Cooldowns: 4–6 rounds.** At about 12 rounds a match, that is two or three uses.
-- **Picking.** After the draft, teams pick one spell at a time, B first (A drafted first).
-  Picks are visible.
+- **Picking — owner's decision.** After the draft, both teams choose all five spells at the
+  same time, hidden from each other. Both choices are revealed when the opening begins. This
+  is the only hidden information in the game. It lasts only until play starts, so Pillar 1
+  (nothing hidden during play) holds.
 - **No duplicates within a team**, as the owner leans. Both teams may take the same spell.
 - **Spells sit on the ladder like abilities**, bound by the ceiling. They have no sigils.
 
@@ -75,6 +77,46 @@ Conditional bonuses also need support: "+3 to rooted targets" and "doubled on bu
 
 Each champion's card on the sheet says how to play it, who it works with, and what answers it.
 
+## Attacks in the opening — owner's decision: try it with every champion
+
+Each champion turns **one** ability's opening into one that **casts the ability**. The cast
+resolves its combat effect partway through the opening, and the ability then starts the
+match on cooldown.
+
+| Champion | Opening attack | Instructions | What it does in the opening |
+|---|---|---|---|
+| Anchor | Chain Hook | top forward-right → top forward-right → **cast** | Walks up the top lane and hooks an enemy that came forward. The root pins it for the rest of the opening, so any of its team's plays that would move it can't be played |
+| Ember | Kindle | jungle forward-right → jungle forward-right → **cast** | Sets an enemy alight before round 1: every action it takes in the first round burns, opening casts included |
+| Lens | Lance | mid forward-left → **cast** → mid back-right | Poke and retreat: steps in, fires the line, steps back |
+| Oriel | Mend | support forward-left → **cast** → beacon II | A support's cast is the answer: cleanse and heal the ally the enemy just hooked or burned |
+
+**Rules (Claude's proposals, D-041 and D-042; each reversible):**
+1. **The cast needs a legal target when it is played.** Opening plays are strict: all three
+   instructions must execute. With no enemy in reach, the whole opening is unavailable.
+   This makes the attack a question of timing.
+2. **The ability starts the match on cooldown.** This is the owner's trade, and it reverses
+   D-011 for cast openings only.
+3. **Opening damage can't kill.** It leaves a champion at no less than 1 HP. This guards
+   against an alpha strike deciding the match before round 1, which would also kill
+   comebacks.
+4. **Statuses applied in the opening run their normal course into round 1.** Burn
+   triggers on opening casts too.
+
+**What the checker says (opponent ignored, then included):**
+- All 16 openings are still playable from the starting line.
+- The team puzzle now completes in **944 of 6,144 sequences (15%), reaching 68 end
+  formations.** That is up from 8% and 61, because a cast step doesn't move anyone.
+- **Every cast starts on our own half** (rows −1 to −2) and reaches row +1 at most, so it
+  only finds a target once an enemy has advanced.
+- If the opponent has finished its opening, Chain Hook and Kindle find a target in 97% of
+  its possible end formations, and Lance in 71%. **An opening attack wants to be played late,
+  after the opponent has committed.** The team that places second (A, per D-013) has the
+  edge here, which may need watching.
+- The sheet shades each cast's reach in red (green for Mend) on its opening diagram.
+
+**Change made for it:** Mend's cooldown went from 0 to 1, so casting it in the opening costs
+something.
+
 ## Openings on Field 7
 
 Each champion has four openings: three tied to its abilities, plus its own fourth.
@@ -93,15 +135,13 @@ Each champion has four openings: three tied to its abilities, plus its own fourt
 
 ## Not decided — for the owner
 
-1. **The verbs.** Are root, burn, mark, wall, swap and pull-ally the right vocabulary, or are
-   there verbs you want instead?
-2. **The spell pool.** Is eight right, and are any of these wrong for this game?
-3. **Spell picking.** Alternating after the draft, B first? No duplicates within a team?
+1. ~~The verbs~~ — accepted; more to come later.
+2. ~~The spell pool~~ — accepted.
+3. ~~Spell picking~~ — simultaneous and hidden, revealed at the opening.
 4. **Numbers.** Damage multipliers follow today's pricing by initiative, discounted where an
    ability also applies a status. They are first guesses; self-play will tune them once the
    verbs exist in the engine.
-5. **Parked ideas.** Anchor's fourth opening, Iron March, is a natural first test of
-   *attacks in the opening* if you want to try that idea.
+5. ~~Attacks in the opening~~ — trying it with every champion (above).
 
 ## Next, once you've reacted
 

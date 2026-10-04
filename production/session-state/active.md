@@ -4,7 +4,7 @@
 
 ## Current Task
 
-**v2 IN PROGRESS — 2026-10-04.** Direction agreed after playtests: `design/v2-direction.md`. Step 1 done (nexus HP race D-038; solid towers implemented, shipped off D-039). Step 2 measured: `design/board-layouts.md` (recommend Field 7 + base; owner choosing). Owner chose Field 7. Step 3 drafted: `design/v2-champions.md` + sheet (8 spells, 4 sample champions, verbs); awaiting owner's reaction before engine verbs + roster rewrite.
+**v2 IN PROGRESS — 2026-10-04.** Direction agreed after playtests: `design/v2-direction.md`. Step 1 done (nexus HP race D-038; solid towers implemented, shipped off D-039). Step 2 measured: `design/board-layouts.md` (recommend Field 7 + base; owner choosing). Owner chose Field 7. Step 3 drafted: `design/v2-champions.md` + sheet (8 spells, 4 sample champions, verbs); owner accepted verbs + pool; spells picked hidden & simultaneous; opening attacks being tried (D-041/D-042). Next: engine verbs + opening casts + spells, then roster rewrite on Field 7.
 
 **FIRST PLAYABLE BUILT — 2026-09-27.** The owner granted standing authority to finish the
 design and build to a first playable, logging every unilateral decision.
@@ -16,7 +16,7 @@ design and build to a first playable, logging every unilateral decision.
 - **Play (terminal):** `dotnet run --project src/Augury.Cli` (see `PLAY.md`). Modes: vs AI
   as A or B, hotseat, watch.
 - **Rules:** `design/mvp-rules.md` (authoritative for the build). **Decisions:**
-  `design/claude-decisions.md` (D-001…D-040, each reversible). **Report:**
+  `design/claude-decisions.md` (D-001…D-042, each reversible). **Report:**
   `design/first-playable-report.md`.
 - **Code:** `src/Augury.Sim` (content loader, blittable MatchState, full rules engine in
   `Rules/Game*.cs`, AI in `AI/Agent.cs`), `src/Augury.Cli` (terminal client),

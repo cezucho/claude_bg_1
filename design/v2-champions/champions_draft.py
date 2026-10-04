@@ -40,7 +40,8 @@ CHAMPIONS = [
         "abilities": [
             {"key": "Q", "name": "Chain Hook", "init": 2, "cd": 2, "aim": "free", "target": "enemy", "range": 2,
              "verbs": ["pull", "root"], "text": "Pull an enemy 1 hex toward you and ROOT it until the end of the next half (no moves, no dashes, can't be moved). Damage ×0.8.",
-             "opening": [("move", "Top", "forward-right"), ("move", "Top", "forward-right"), ("move", "Jungle", "forward-left")]},
+             "opening": [("move", "Top", "forward-right"), ("move", "Top", "forward-right"), ("cast", "Top", "Q")],
+             "openingAttack": "Walks up the top lane, then hooks the nearest enemy that came forward. The root lasts into round 1 and freezes that champion for the rest of the opening: any of its team's plays that would move it can't be played."},
             {"key": "W", "name": "Stand Firm", "init": 1, "cd": 2, "aim": "free", "target": "self", "range": 0,
              "verbs": ["shield", "unstoppable"], "text": "Shield 4 and UNSTOPPABLE until round close: immune to root, push and pull.",
              "opening": [("move", "Top", "forward-left"), ("beacon", "Top", 1), ("move", "Mid", "forward-right")]},
@@ -61,7 +62,8 @@ CHAMPIONS = [
         "abilities": [
             {"key": "Q", "name": "Kindle", "init": 1, "cd": 1, "aim": "free", "target": "enemy", "range": 2,
              "verbs": ["burn"], "text": "The enemy BURNS for 2 rounds: it takes 2 every time it resolves an ability or basic attack.",
-             "opening": [("move", "Jungle", "forward-right"), ("move", "Jungle", "forward-right"), ("beacon", "Jungle", 2)]},
+             "opening": [("move", "Jungle", "forward-right"), ("move", "Jungle", "forward-right"), ("cast", "Jungle", "Q")],
+             "openingAttack": "Advances through the middle and sets an enemy alight before round 1: it burns for every action it takes in the first round, opening casts included."},
             {"key": "W", "name": "Switch", "init": 2, "cd": 2, "aim": "free", "target": "ally", "range": 3,
              "verbs": ["swap"], "text": "SWAP places with an ally within 3: pull a wounded ally out, or put your diver where you stand.",
              "opening": [("move", "Jungle", "forward-left"), ("move", "Top", "forward-left"), ("move", "Jungle", "right")]},
@@ -88,7 +90,8 @@ CHAMPIONS = [
              "opening": [("move", "Mid", "forward-left"), ("move", "Mid", "forward-right"), ("move", "Support", "forward-left")]},
             {"key": "E", "name": "Lance", "init": 3, "cd": 1, "aim": "rotatable", "pattern": [(0, 1), (0, 2), (0, 3)],
              "verbs": ["line damage"], "text": "A three-hex line you turn to any facing: damage ×1.6 to everyone on it.",
-             "opening": [("move", "Mid", "forward-right"), ("move", "Mid", "forward-left"), ("move", "Top", "forward-right")]},
+             "opening": [("move", "Mid", "forward-left"), ("cast", "Mid", "E"), ("move", "Mid", "back-right")],
+             "openingAttack": "Poke and retreat: steps in, fires the line at whoever has advanced, and steps back to where it started."},
         ],
         "signature": ("Vantage", [("move", "Mid", "forward-left"), ("move", "Jungle", "forward-left"), ("beacon", "Jungle", 3)]),
         "play": "Stay at range 3 behind a wall. Mark whatever your team is about to hit, and use Prism Wall to cut off an escape or a dive. Lance when enemies line up between walls and towers.",
@@ -101,9 +104,10 @@ CHAMPIONS = [
         "stats": {"hp": 28, "pow": 1.00, "arm": 1, "rch": 2, "spd": 2},
         "passive": ("Watchful", "When an adjacent ally takes damage, Oriel gains 1 shield."),
         "abilities": [
-            {"key": "Q", "name": "Mend", "init": 1, "cd": 0, "aim": "free", "target": "ally", "range": 2,
+            {"key": "Q", "name": "Mend", "init": 1, "cd": 1, "aim": "free", "target": "ally", "range": 2,
              "verbs": ["heal", "cleanse"], "text": "Heal an ally (or itself) ×1.0 and CLEANSE it: removes root, burn, poison, mark and exhaust.",
-             "opening": [("move", "Support", "forward-left"), ("beacon", "Support", 2), ("move", "Bottom", "forward-left")]},
+             "opening": [("move", "Support", "forward-left"), ("cast", "Support", "Q"), ("beacon", "Support", 2)],
+             "openingAttack": "A support's opening cast is the answer: cleanse and heal the ally the enemy just hooked or burned, before round 1."},
             {"key": "W", "name": "Tether", "init": 2, "cd": 2, "aim": "free", "target": "ally", "range": 3,
              "verbs": ["pull ally", "shield"], "text": "PULL an ally within 3 up to 2 hexes toward Oriel and shield it 2: the rescue.",
              "opening": [("move", "Support", "forward-right"), ("move", "Support", "forward-left"), ("move", "Bottom", "forward-right")]},
@@ -128,6 +132,12 @@ def run_opening(steps):
         if kind == "beacon":
             path.append(("beacon", role, pos[role], arg))
             continue
+        if kind == "cast":
+            # Resolves the ability's combat effect from where the caster stands now. The
+            # target is chosen when the opening is played; with no legal target, the whole
+            # opening is unavailable (proposed rule, design/v2-champions.md).
+            path.append(("cast", role, pos[role], arg))
+            continue
         d = DIRS[arg]
         to = (pos[role][0] + d[0], pos[role][1] + d[1])
         if to not in HEXES or to in TOWERS or to in pos.values():
@@ -149,6 +159,16 @@ def check():
                 print(f"  BLOCKED  {c['name']:7} {name:12} {steps}  at {path[-1]}")
             assert all(s[1] in ROLES for s in steps)
             assert len(steps) == 3
+            for s in steps:
+                if s[0] == "cast":
+                    assert s[1] == c["role"], f"{c['name']}: a champion can only cast its own ability"
+                    assert s[2] in [a["key"] for a in c["abilities"]]
+        casts = [a for a in c["abilities"] if any(st[0] == "cast" for st in a["opening"])]
+        assert len(casts) == 1, f"{c['name']}: exactly one opening attack"
+        for a in casts:
+            _, path, _ = run_opening(a["opening"])
+            at = next(p[2] for p in path if p[0] == "cast")
+            print(f"  opening attack: {c['name']:7} {a['name']:11} cast from {at} (row {at[1]})")
     print(f"{sum(4 for _ in CHAMPIONS)} openings checked on Field 7 with solid towers; {problems} blocked from the starting line")
     return problems
 

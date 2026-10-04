@@ -90,22 +90,35 @@ function combat(ab, role) {
   if (ab.target === 'self') parts.push(`<circle cx="0" cy="0" r="${S * 0.95}" fill="none" stroke="#57e08a" stroke-width="2"/>`);
   return svgWrap(parts, pts, S);
 }
-function opening(op, me) {
+function reachOf(ab, at) {
+  const cells = [];
+  const rot = ([q, r], k) => { for (let i = 0; i < k; i++) [q, r] = [-r, q + r]; return [q, r]; };
+  if (ab.aim === 'free') { for (let q = -ab.range; q <= ab.range; q++) for (let r = -ab.range; r <= ab.range; r++) if (dist([q, r], [0, 0]) <= ab.range && (q || r || ab.target !== 'enemy')) cells.push([at[0] + q, at[1] + r]); }
+  else if (ab.aim === 'rotatable') { for (let k = 0; k < 6; k++) for (const p of ab.pattern) { const [q, r] = rot(p, k); cells.push([at[0] + q, at[1] + r]); } }
+  else for (const [q, r] of ab.pattern) cells.push([at[0] + q, at[1] + r]);
+  return cells;
+}
+function opening(op, me, champ) {
   const S = 14, { px, poly } = mk(S), parts = [], pts = [], b = DATA.board;
   const tw = new Set(b.towers.map(h => h.join(','))), nx = new Set(b.nexusA.map(h => h.join(',')));
-  for (const h of b.hexes) if (h[1] <= 0) {
-    parts.push(`<polygon points="${poly(...h)}" fill="${nx.has(h.join(',')) ? '#173a5c' : '#1d2744'}" stroke="#0a0f1d" stroke-width="1"/>`);
+  const casts = op.path.filter(p => p[0] === 'cast');
+  const reach = new Set(), friendly = casts.some(p => champ.abilities.find(a => a.key === p[3]).target === 'ally');
+  for (const p of casts) for (const h of reachOf(champ.abilities.find(a => a.key === p[3]), p[2])) reach.add(h.join(','));
+  for (const h of b.hexes) if (h[1] <= (casts.length ? 1 : 0)) {
+    const inReach = reach.has(h.join(','));
+    parts.push(`<polygon points="${poly(...h)}" fill="${inReach ? (friendly ? 'rgba(87,224,138,.45)' : 'rgba(255,90,90,.45)') : nx.has(h.join(',')) ? '#173a5c' : h[1] > 0 ? '#2a1d2c' : '#1d2744'}" stroke="#0a0f1d" stroke-width="1"/>`);
     pts.push(px(...h));
   }
-  b.towers.forEach((t, i) => { if (t[1] > 0) return; const [x, y] = px(...t);
-    parts.push(`<rect x="${x - S * 0.5}" y="${y - S * 0.55}" width="${S}" height="${S * 1.1}" rx="1.5" fill="#0b1020" stroke="${i === 0 ? '#9aa3b5' : '#3fa7ff'}" stroke-width="1.6"/>`); });
+  b.towers.forEach((t, i) => { if (t[1] > (casts.length ? 1 : 0)) return; const [x, y] = px(...t);
+    parts.push(`<rect x="${x - S * 0.5}" y="${y - S * 0.55}" width="${S}" height="${S * 1.1}" rx="1.5" fill="#0b1020" stroke="${i === 0 ? '#9aa3b5' : i <= 2 ? '#3fa7ff' : '#ff4d5e'}" stroke-width="1.6"/>`); });
   const start = Object.fromEntries(DATA.board.startA.map((h, i) => [ROLES[i], h]));
   for (const r of ROLES) {
     const f = op.final[r];
     if (f[0] !== start[r][0] || f[1] !== start[r][1]) parts.push(token(px, start[r], r, 'A', S, 'opacity=".35"'));
   }
   op.path.forEach((p, i) => {
-    if (p[0] === 'beacon') { const [x, y] = px(...p[2]); parts.push(`<polygon points="${x - S * .45},${y - S * .9} ${x},${y - S * 1.35} ${x + S * .45},${y - S * .9} ${x},${y - S * .45}" fill="#3fa7ff88" stroke="#3fa7ff"/>`); }
+    if (p[0] === 'cast') { const [x, y] = px(...p[2]); parts.push(`<circle cx="${x}" cy="${y}" r="${S * 0.95}" fill="none" stroke="${friendly ? '#57e08a' : '#ff5a5a'}" stroke-width="2.2" stroke-dasharray="3 2"/><text x="${x + S * 0.9}" y="${y - S * 0.7}" font-size="8" font-weight="900" fill="${friendly ? '#57e08a' : '#ff5a5a'}">${i + 1}·${p[3]}</text>`); }
+    else if (p[0] === 'beacon') { const [x, y] = px(...p[2]); parts.push(`<polygon points="${x - S * .45},${y - S * .9} ${x},${y - S * 1.35} ${x + S * .45},${y - S * .9} ${x},${y - S * .45}" fill="#3fa7ff88" stroke="#3fa7ff"/>`); }
     else parts.push(arrow(px, p[2], p[3], S, p[0] === 'blocked' ? 'bad' : ''));
   });
   for (const r of ROLES) parts.push(token(px, op.final[r], r, 'A', S, r === me ? 'stroke-width="2"' : ''));
@@ -115,15 +128,15 @@ function opening(op, me) {
 const tc = n => `var(--t${n})`;
 document.getElementById('spells').innerHTML = DATA.spells.map(([n, init, cd, eff, when, ans]) =>
   `<div class="spell"><span class="meta">cooldown ${cd} rounds</span><span class="init" style="background:${tc(init)}">${init}</span><b>${n}</b><div>${eff}</div><div class="when">Take it: ${when}</div><div class="ans">Answer: ${ans}</div></div>`).join('');
-const dirTxt = s => s[0] === 'beacon' ? `beacon ${'I II III'.split(' ')[s[2] - 1]} under ${s[1].toLowerCase()}` : `${s[1].toLowerCase()} ${s[2]}`;
+const dirTxt = s => s[0] === 'cast' ? `<b style="color:var(--bad)">CAST ${s[2]}</b>` : s[0] === 'beacon' ? `beacon ${'I II III'.split(' ')[s[2] - 1]} under ${s[1].toLowerCase()}` : `${s[1].toLowerCase()} ${s[2]}`;
 document.getElementById('champs').innerHTML = DATA.champions.map(c => `<div class="champ">
   <div class="chead"><div class="ico">${icon(c.role, '#fff', 24)}</div><div><h3>${c.name}</h3><div class="role">${c.role}</div></div></div>
   <div class="line">${c.line}</div>
   <div class="stats">HP ${c.stats.hp} · POW ${c.stats.pow.toFixed(2)} · ARM ${c.stats.arm} · RCH ${c.stats.rch} · SPD ${c.stats.spd}</div>
   <div class="passive">Passive — ${c.passive[0]}: ${c.passive[1]}</div>
   ${c.abilities.map(a => `<div class="ab"><div><span class="init" style="background:${tc(a.init)}">${a.init}</span><b>${a.key} · ${a.name}</b> <span style="color:var(--dim)">· ${a.aim === 'free' ? 'free aim' : a.aim} · cooldown ${a.cd}</span>
-    <div class="verbs">${a.verbs.map(v => `<span>${v}</span>`).join('')}</div><div class="txt">${a.text}</div></div>${combat(a, c.role)}</div>`).join('')}
-  <div class="ops">${c.openings.map((o, i) => `<div class="op"><div class="nm">${i < 3 ? c.abilities[i].key + ' · ' : '4th · '}${o.name}</div>${opening(o, c.role)}<div>${o.steps.map(dirTxt).join(' → ')}</div></div>`).join('')}</div>
+    <div class="verbs">${a.verbs.map(v => `<span>${v}</span>`).join('')}</div><div class="txt">${a.text}</div>${a.openingAttack ? `<div class="txt" style="color:#ff8a8a"><b>Opening attack.</b> ${a.openingAttack}</div>` : ''}</div>${combat(a, c.role)}</div>`).join('')}
+  <div class="ops">${c.openings.map((o, i) => `<div class="op"><div class="nm">${i < 3 ? c.abilities[i].key + ' · ' : '4th · '}${o.name}</div>${opening(o, c.role, c)}<div>${o.steps.map(dirTxt).join(' → ')}</div></div>`).join('')}</div>
   <div class="notes"><b>How to play it.</b> ${c.play}<br><b>Works with.</b> ${c.partners}<br><b>Answered by.</b> ${c.answers}</div>
 </div>`).join('');
 </script></body></html>

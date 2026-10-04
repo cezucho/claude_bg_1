@@ -71,6 +71,16 @@ pull against a short match, and the owner chooses the short match. Keep the feel
 mind when measuring: notice whether board, kit or rules changes produce it on their own,
 or can with small tweaks. It is a direction, not a gate.
 
+### Spells, verbs and opening attacks · Owner, 2026-10-04 · *Champion & Ability Schema, Opening Phase, Draft*
+
+- **The status verbs are accepted** (root, burn, mark, wall, swap, pull ally, unstoppable,
+  cleanse, exhaust). More will come later.
+- **The eight-spell pool is accepted.**
+- **Spell picking:** after the draft, both teams choose all five spells at once, hidden.
+  They are revealed when the opening begins.
+- **Attacks in the opening are being tried with every champion.** One ability per champion
+  gets an opening version that casts it. Rules in `design/v2-champions.md`.
+
 ### Rejected · Owner
 
 - **Unlocking abilities over rounds** (two at first, then three, then four): a player
@@ -128,7 +138,7 @@ opponent's turn when a condition is met.*
   - It could also help the failing pass-rate criterion (Sigils #14): holding something back
     becomes a real option.
 
-### Attacks in the opening (owner, 2026-10-04)
+### Attacks in the opening (owner, 2026-10-04) — *promoted: now being tried, see `design/v2-champions.md`*
 
 *Some champions' opening plays include using the ability itself, not only movement.*
 
