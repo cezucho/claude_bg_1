@@ -44,11 +44,11 @@ public enum EndReason : byte
     /// <summary>Not over.</summary>
     None,
 
-    /// <summary>A nexus fell.</summary>
+    /// <summary>A nexus fell to a direct attack.</summary>
     Nexus,
 
-    /// <summary>The target score was reached at round close.</summary>
-    Score,
+    /// <summary>A nexus fell at round close, to tower siege and kills (v2; replaced the target score).</summary>
+    Siege,
 
     /// <summary>The round cap was hit.</summary>
     RoundCap
@@ -231,9 +231,6 @@ public struct MatchState
 
     /// <summary>Beacon slots.</summary>
     public BeaconBuffer Beacons;
-
-    /// <summary>Score per team.</summary>
-    public TeamInts Score;
 
     /// <summary>Remaining nexus HP per team.</summary>
     public TeamInts NexusHp;

@@ -154,8 +154,7 @@ public static class Evaluation
             return s.Winner == t ? 1_000_000 : 0;
         }
 
-        int idx = t == Team.A ? 0 : 1;
-        int v = s.Score[idx] * 100;
+        int v = 0;
 
         // Structures: owned towers score every round; progress on towers we don't own.
         for (int i = 0; i < 5; i++)
@@ -165,11 +164,10 @@ public static class Evaluation
             else v += (game.Rules.TowerHp - tower.Hp) * 3;
         }
 
-        // Nexus damage is permanent, so it counts whether or not the gate is open right now;
-        // an earlier version only counted it while open, and forgot its own progress the moment
-        // the defender retook a tower.
+        // Damage to the enemy nexus is the race itself (v2: it replaced points, which were
+        // weighted 100 each). It is permanent, so it counts whether or not the gate is open.
         Team enemy = MatchState.Other(t);
-        v += (game.Rules.NexusHp - s.NexusHp[enemy == Team.A ? 0 : 1]) * 15;
+        v += (game.Rules.NexusHp - s.NexusHp[enemy == Team.A ? 0 : 1]) * 100;
         if (Game.NexusVulnerable(s, enemy)) v += 200;
 
         int first = MatchState.FirstSlot(t);
@@ -190,8 +188,8 @@ public static class Evaluation
 
             if (c.Hp <= 0)
             {
-                // Will die at the death check: concede the kill points now.
-                v -= game.Rules.KillPoints * 100 + 60;
+                // Will die at the death check: concede the nexus damage now.
+                v -= game.Rules.KillSiege * 100 + 60;
                 continue;
             }
 

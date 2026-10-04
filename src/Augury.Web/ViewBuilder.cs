@@ -46,7 +46,7 @@ public static class ViewBuilder
             halfOpener = s.Round > 0 ? s.HalfOpener.ToString() : null,
             ceiling = s.Ceiling,
             basics = new { a = (int)s.BasicsTaken[0], b = (int)s.BasicsTaken[1], per = g.Rules.BasicsPerHalf },
-            score = new { a = s.Score[0], b = s.Score[1], target = g.Rules.TargetScore, killPoints = g.Rules.KillPoints, roundCap = g.Rules.RoundCap },
+            race = new { nexusHp = g.Rules.NexusHp, killSiege = g.Rules.KillSiege, towerSiege = g.Rules.TowerSiege, roundCap = g.Rules.RoundCap },
             nexus = new[] { Team.A, Team.B }.Select(t => new
             {
                 team = t.ToString(),
@@ -303,8 +303,28 @@ public static class ViewBuilder
             label = Label(g, before, c),
             cells = CommandCells(g, before, c, out _).Where(Board.Playable).Distinct().Select(Xy).ToArray(),
             focus = FocusHexes(before, c),
+            siege = SiegeLines(before, now),
             diff = Diff(g, before, now, log.Skip(last.LogStart).ToList()),
         };
+    }
+
+    /// <summary>
+    /// When the action closed a round, one line per held tower to the enemy nexus it fired
+    /// at, so the siege is something seen on the board rather than a number changing.
+    /// </summary>
+    private static object[] SiegeLines(MatchState before, MatchState now)
+    {
+        bool closed = now.Round != before.Round || (now.Phase == Phase.MatchOver && now.EndReason is EndReason.Siege or EndReason.RoundCap);
+        if (!closed) return [];
+        var lines = new List<object>();
+        for (int t = 0; t < 5; t++)
+        {
+            Team owner = now.Towers[t].Owner;
+            if (owner == Team.None) continue;
+            lines.Add(new { team = owner.ToString(), from = Xy(now.Towers[t].Pos), to = Xy(Board.NexusHexes(MatchState.Other(owner)).ElementAt(1)) });
+        }
+
+        return lines.ToArray();
     }
 
     /// <summary>Single-target hexes, for a line from the actor to what it hit.</summary>
@@ -535,7 +555,6 @@ public static class ViewBuilder
             towers,
             beacons,
             nexus = new[] { after.NexusHp[0] - before.NexusHp[0], after.NexusHp[1] - before.NexusHp[1] },
-            score = new[] { after.Score[0] - before.Score[0], after.Score[1] - before.Score[1] },
             endsHalf = after.Round != before.Round || after.Half != before.Half || after.Phase != before.Phase && after.Phase is Phase.Basic,
             endsMatch = after.Phase == Phase.MatchOver,
         };

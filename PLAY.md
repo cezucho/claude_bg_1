@@ -40,7 +40,10 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
   champion who acted (token, card and the ability icon it used), the hexes it covered, a
   moving line to what it hit, a dashed ghost where anyone moved from with an arrow to where
   they went, and the numbers that changed. Moved champions slide from their old hex. The
-  banner under the map names the action.
+  banner under the map names the action. When a round closes, magenta beams run from every
+  held tower to the enemy nexus it fires at.
+- **The top bar is the nexus race**: each team's nexus HP, whether it is open, and the
+  siege it will take at the next round close.
 - **Undo** takes back your last decision. **Pause** stops the AI between moves;
   **AI speed** sets how fast it plays. **Rules** is a one-screen summary. Esc cancels a
   selection.
@@ -96,8 +99,9 @@ abilities sharing a sigil resolve as one step and exceed the ceiling. At **round
 the dead die, poison and towers bite (going below zero *here* means **Dying**: one more
 round at half power), towers score, cooldowns tick.
 
-**Win** by reaching **60 points** (3 per kill, 1 per tower per round), or by destroying
-the enemy **nexus** — which only opens once you've taken one of their two home towers.
+**Win** by destroying the enemy **nexus** (60 HP). At every round close each tower you hold
+fires at it for 1, and every enemy death costs it 3; once it is **open** — after you've
+taken one of their two home towers — you can also attack it directly.
 
 Full rules: `design/mvp-rules.md`. Every call made without you: `design/claude-decisions.md`.
 

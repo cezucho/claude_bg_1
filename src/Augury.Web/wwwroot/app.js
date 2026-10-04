@@ -137,24 +137,25 @@ function render() {
 function renderTop() {
   for (const t of ['A', 'B']) {
     const i = t === 'A' ? 0 : 1;
-    const score = t === 'A' ? V.score.a : V.score.b;
     const nx = V.nexus[i];
+    const hp = Math.max(0, nx.hp);
     const towers = V.towers.filter(w => w.owner === t).length;
+    const incoming = V.towers.filter(w => w.owner !== t && w.owner !== 'None').length * V.race.towerSiege;
     const who = V.humans.includes(t) ? (V.humans.length === 2 ? `Player ${t === 'A' ? 1 : 2}` : 'You') : 'AI';
-    const pct = Math.min(100, 100 * score / V.score.target);
+    const pct = Math.min(100, 100 * hp / nx.max);
     document.getElementById(`top-${t}`).innerHTML = `
       <div class="team-name"><b>Team ${t}</b>${who} · ${t === 'A' ? 'bottom' : 'top'}</div>
-      <div class="big-score">${score}</div>
+      <div class="big-score" title="Nexus HP">${hp}</div>
       <div class="stat-col">
-        <div class="score-sub">points · first to ${V.score.target}</div>
-        <div class="score-bar"><i style="width:${pct}%;background:var(--${t})"></i></div>
-        <div class="nexus-line">Nexus <div class="nexus-bar"><i style="width:${100 * Math.max(0, nx.hp) / nx.max}%"></i></div> ${Math.max(0, nx.hp)}/${nx.max} ${nx.open ? '<span class="open-badge">OPEN</span>' : ''}</div>
+        <div class="score-sub">nexus HP ${nx.open ? '<span class="open-badge">OPEN</span>' : '· closed to direct attack'}</div>
+        <div class="score-bar nexus-hp"><i style="width:${pct}%;background:var(--${t})"></i></div>
+        <div class="nexus-line plain">Siege at round close: <b class="${incoming ? 'bad-txt' : ''}">−${incoming}</b></div>
         <div class="nexus-line">Towers <span class="towers-line">${V.towers.map(w => `<i class="tw-pip" style="background:${w.owner === t ? `var(--${t})` : '#2a3350'}"></i>`).join('')}</span> ${towers} held</div>
       </div>`;
   }
 
   const phaseName = { Draft: 'Draft', Opening: 'Opening', Basic: 'Basics', Ladder: 'Ladder', LastWord: 'Last Word', MatchOver: 'Match over' }[V.phase];
-  const round = V.round > 0 ? `Round ${V.round} / ${V.score.roundCap} · Half ${V.half}` : 'Pre-game';
+  const round = V.round > 0 ? `Round ${V.round} / ${V.race.roundCap} · Half ${V.half}` : 'Pre-game';
   let turn = '';
   if (V.phase !== 'MatchOver') {
     const human = V.humanTurn;
@@ -447,6 +448,12 @@ function drawLast() {
     num(tw.q, tw.r, t.captured ? `CAPTURED → ${t.owner}` : `${t.dHp}`, t.captured ? 'info' : 'bad');
   }
   L.diff.nexus.forEach((d, i) => { if (d < 0) { const [q, r] = V.nexus[i].hexes[1]; num(q, r, `NEXUS ${d}`, 'bad'); } });
+  // A round closed: every held tower fired at the enemy nexus.
+  for (const sl of L.siege) {
+    const [x1, y1] = px(sl.from[0], sl.from[1]), [x2, y2] = px(sl.to[0], sl.to[1]);
+    const d = Math.hypot(x2 - x1, y2 - y1), sh = HEX * 0.6;
+    el('line', { x1: x1 + (x2 - x1) * sh / d, y1: y1 + (y2 - y1) * sh / d, x2: x2 - (x2 - x1) * sh / d, y2: y2 - (y2 - y1) * sh / d, class: `last-beam siege ${sl.team}` }, under);
+  }
   animatedAction = L.id;
 }
 
@@ -784,7 +791,7 @@ function renderOverlay() {
     ov.classList.remove('hidden');
     const w = V.winner;
     ov.innerHTML = `<div class="endcard"><div class="big ${w}-c">${w === 'None' ? 'DRAW' : `TEAM ${w} WINS`}</div>
-      <p>by ${V.endReason} after ${V.round} rounds · score ${V.score.a} – ${V.score.b}</p>
+      <p>${V.endReason === 'RoundCap' ? 'round cap reached' : `nexus ${w === 'A' ? 'B' : 'A'} destroyed ${V.endReason === 'Siege' ? 'by siege' : 'by a direct attack'}`} after ${V.round} rounds · nexus A ${Math.max(0, V.nexus[0].hp)} – B ${Math.max(0, V.nexus[1].hp)}</p>
       <button id="end-close">Look at the board</button> <button id="end-new" class="primary">New match</button></div>`;
     document.getElementById('end-close').onclick = () => { endDismissed = true; ov.classList.add('hidden'); };
     document.getElementById('end-new').onclick = () => { endDismissed = false; api('POST', `/api/new?mode=${V.mode}`); };
@@ -840,12 +847,12 @@ function showHelp() {
   const ov = document.getElementById('overlay');
   ov.classList.remove('hidden');
   ov.innerHTML = `<div class="help"><button class="close" id="help-close">Close</button><h2>How AUGURY plays</h2>
-    <h3>Winning</h3>First to ${V.score.target} points: <b>${V.score.killPoints} per kill</b>, <b>1 per tower held</b> at each round close. Or destroy the enemy <b>nexus</b> — it opens once that team has lost one of its two home towers.
+    <h3>Winning</h3>Destroy the enemy <b>nexus</b> (${V.race.nexusHp} HP). It is damaged three ways: at every round close <b>each tower you hold fires at it for ${V.race.towerSiege}</b>; <b>each enemy death costs it ${V.race.killSiege}</b>; and once it is <b>open</b> — after that team has lost one of its two home towers — you can attack it directly.
     <h3>A round</h3>Two halves. Each half: <b>basics</b> first — each team moves or basic-attacks with two different champions — then the <b>ladder</b>.
     <h3>The ladder</h3>Teams alternate playing one ability at initiative ≤ the <b>ceiling</b> (the coloured pips at the top). The ceiling drops to what you played. Each champion acts once per half. <b>Pass</b> and your opponent gets one unanswerable <b>Last Word</b>. If a team has nothing legal, the half ends with no Last Word.
     <h3>Initiative tiers</h3><span style="color:var(--t1)">1</span>–<span style="color:var(--t2)">2</span>: aim freely at a target in range. <span style="color:var(--t3)">3</span>: a pattern you rotate — click the arrow for the facing you want. <span style="color:var(--t4)">4</span>: a big fixed pattern pointing toward the enemy.
     <h3>Chains</h3>Two abilities that share an active sigil (the small I/II/III tag) resolve as one step with no answer between — and the second may exceed the ceiling. Dashed tags are slot sigils: lit (white) when a friendly beacon is within 1 hex.
-    <h3>Round close</h3>Champions at 0 HP die → poison and tower shots (dropping to 0 <i>here</i> means <b>Dying</b>: one more round at half power) → towers score → cooldowns tick and the dead respawn.
+    <h3>Round close</h3>Champions at 0 HP die → poison and tower shots (dropping to 0 <i>here</i> means <b>Dying</b>: one more round at half power) → siege: held towers fire at the enemy nexus → cooldowns tick and the dead respawn.
     <h3>Reading the screen</h3>Hover anything. Ability icons show initiative (big number), key, sigil and cooldown. Hovering an ability shows its reach (faint) and what it could hit (gold); on your turn, the hexes it can be played on. Hover a marker, a chain or Pass to preview the exact result. <b>Undo</b> takes back your last decision. <span style="color:var(--last)"><b>Magenta</b> always marks the last action</span> — the champion who acted (and its ability icon), the hexes it covered, a line to what it hit, where anyone moved from, and the numbers that changed.
     <h3>Opening</h3>Each champion plays one ability whose three instructions move your team into formation. Order matters; if none fits, one champion steps one hex.</div>`;
   document.getElementById('help-close').onclick = () => { helpOpen = false; renderOverlay(); };

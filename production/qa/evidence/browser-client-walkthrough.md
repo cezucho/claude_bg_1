@@ -30,5 +30,10 @@ single-target ability and area ability were each captured paused: actor ring, co
 beam to the target, move ghost and arrow, damage numbers, card and icon outline, all in
 magenta (`browser-client-last-action.png`). No page errors.
 
+**2026-10-04, nexus race:** top bar shows nexus HP and the siege forecast; at round close
+magenta beams run from each held tower to the enemy nexus with the damage shown
+(`browser-client-siege.png`); a watched match ended by siege, end card names it. Playing B
+and a full watch run: no page errors.
+
 Screenshots: `browser-client-ladder-1920.png` (a tier-3 ability selected: two facing
 arrows, one hovered, its cells and the exact damage previewed), `browser-client-basics-1600.png` (playing team B in the basics phase).

@@ -13,9 +13,9 @@ public static class SelfPlay
 {
     private sealed class Stats
     {
-        public int Matches, WinsA, WinsB, Draws, Nexus, Score, Cap, NexusFromBehind;
+        public int Matches, WinsA, WinsB, Draws, Nexus, Siege, Cap, Comebacks;
         public long Rounds, Halves, HalvesOpened, HalvesByPass, Resolutions, Chains, Deaths, Captures;
-        public long BasicMoves, BasicAttacks, OpeningFallbackTeams, Decisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
+        public long BasicMoves, BasicAttacks, OpeningFallbackTeams, Decisions, PlayerDecisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
         public double AiMsTotal, AiMsMax;
         public long AiCalls;
         public readonly List<int> RoundCounts = new();
@@ -73,6 +73,7 @@ public static class SelfPlay
         var log = new List<GameEvent>();
         var legal = new List<Command>();
         bool opened = false;
+        int maxLeadA = 0, maxLeadB = 0;
 
         while (s.Phase != Phase.MatchOver)
         {
@@ -97,8 +98,17 @@ public static class SelfPlay
                 }
             }
 
+            int roundBefore = s.Round;
             game.Apply(ref s, c, log);
             st.Decisions++;
+            if (s.Phase != Phase.Draft && legal.Count > 1) st.PlayerDecisions++;
+            if (s.Round != roundBefore || s.Phase == Phase.MatchOver)
+            {
+                // A round closed: who leads the nexus race, and by how much.
+                int lead = s.NexusHp[0] - s.NexusHp[1];
+                maxLeadA = Math.Max(maxLeadA, lead);
+                maxLeadB = Math.Max(maxLeadB, -lead);
+            }
             if (Game.NexusVulnerable(s, Team.A) || Game.NexusVulnerable(s, Team.B))
             {
                 st.NexusOpenDecisions++;
@@ -131,14 +141,13 @@ public static class SelfPlay
 
         switch (s.EndReason)
         {
-            case EndReason.Nexus:
-                st.Nexus++;
-                int w = s.Winner == Team.A ? 0 : 1;
-                if (s.Score[w] < s.Score[1 - w]) st.NexusFromBehind++;
-                break;
-            case EndReason.Score: st.Score++; break;
+            case EndReason.Nexus: st.Nexus++; break;
+            case EndReason.Siege: st.Siege++; break;
             case EndReason.RoundCap: st.Cap++; break;
         }
+
+        // A comeback: the winner trailed the nexus race by at least 5 at some round close.
+        if ((s.Winner == Team.A && maxLeadB >= 5) || (s.Winner == Team.B && maxLeadA >= 5)) st.Comebacks++;
 
         // Walk the event stream for per-half ladder facts.
         bool inLadder = false;
@@ -194,10 +203,11 @@ public static class SelfPlay
         double m = st.Matches;
         Console.WriteLine();
         Console.WriteLine($"SELF-PLAY — {st.Matches} matches, A = {a}, B = {b}, {seconds:F1}s");
-        Console.WriteLine($"  rules: target {game.Rules.TargetScore}, kill {game.Rules.KillPoints}, tower {game.Rules.TowerPoints}/round, nexus HP {game.Rules.NexusHp}, tower HP {game.Rules.TowerHp}, tower shot {game.Rules.TowerShot}, defender {game.Rules.DefenderWeight}");
+        Console.WriteLine($"  rules: nexus HP {game.Rules.NexusHp}, kill siege {game.Rules.KillSiege}, tower siege {game.Rules.TowerSiege}/round, tower HP {game.Rules.TowerHp}, tower shot {game.Rules.TowerShot}, defender {game.Rules.DefenderWeight}");
         Console.WriteLine();
         Console.WriteLine($"  Results       A {st.WinsA / m,6:P0}   B {st.WinsB / m,6:P0}   draw {st.Draws / m,6:P0}");
-        Console.WriteLine($"  Endings       score {st.Score / m,6:P1}   nexus {st.Nexus / m,6:P1}   round cap {st.Cap / m,6:P1}");
+        Console.WriteLine($"  Endings       siege {st.Siege / m,6:P1}   direct nexus kill {st.Nexus / m,6:P1}   round cap {st.Cap / m,6:P1}   comebacks {st.Comebacks / m,6:P1}");
+        Console.WriteLine($"  Decisions     {st.PlayerDecisions / m,5:F0} per match with a real choice (both teams, after the draft)");
         st.RoundCounts.Sort();
         Console.WriteLine($"  Rounds        mean {st.Rounds / m,5:F1}   median {st.RoundCounts[st.RoundCounts.Count / 2]}   min {st.RoundCounts[0]}   max {st.RoundCounts[^1]}");
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");
@@ -222,8 +232,8 @@ public static class SelfPlay
         Console.WriteLine("  ACCEPTANCE CRITERIA (from the GDDs)");
         Check("ladder opened in ≥70% of halves (Movement #12)", st.HalvesOpened / (double)st.Halves, v => v >= 0.70);
         Check("halves ending by deliberate pass ≥50% (Sigils #14)", st.HalvesByPass / (double)st.Halves, v => v >= 0.50);
-        Check("nexus endings a non-zero minority (Map #24)", st.Nexus / m, v => v > 0 && v < 0.5);
-        Check("some nexus endings come from behind (Map #25)", st.Nexus == 0 ? 0 : st.NexusFromBehind / (double)st.Nexus, v => v > 0);
+        Check("every match ends with a nexus falling (v2)", (st.Nexus + st.Siege) / m, v => v >= 0.99);
+        Check("some matches are comebacks (Map #25, v2 reading)", st.Comebacks / m, v => v > 0 && v < 0.5);
         Check("chains occur in a minority of halves (Sigils #15)", st.Chains / (double)st.Halves, v => v > 0 && v < 0.5);
         Check("basic attacks ≤80% of basics (Movement #11)", st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks), v => v <= 0.80);
         Check("≤16 ability resolutions per round (Ladder F5)", st.Resolutions / (double)st.Rounds, v => v <= 16, pct: false);

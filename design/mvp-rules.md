@@ -197,11 +197,12 @@ replaces a weaker one (higher amount wins). Stat `RES` does not exist.
 Strict order (ADR-0006):
 
 1. **Death check** — every on-board champion at ≤0 HP dies, and every champion that was
-   **Dying** dies unless healed above 0. Each death gives the **other** team **3 points** ⚠.
-   `OnAllyDies` passives fire.
+   **Dying** dies unless healed above 0. Each death deals **3 damage to the dead champion's
+   own nexus** ⚠ (D-038). `OnAllyDies` passives fire.
 2. **Status phase** — poison ticks, then tower shots. A living champion driven to ≤0 here
    enters **Dying** instead of dying.
-3. **Scoring** — each team scores **1 point per tower it owns** ⚠.
+3. **Siege** — every tower a team holds fires at the **enemy nexus for 1** ⚠, whether or not
+   that nexus is open (D-038).
 4. **Upkeep** — cooldowns −1, shields cleared, respawn timers −1; `OnRoundClose` passives.
 5. **Win check** — see §15.
 
@@ -215,10 +216,15 @@ Strict order (ADR-0006):
 
 ## 15. Winning
 
-- **Nexus destroyed** → the destroyer wins immediately.
-- **Target score 60** ⚠ (D-026) reached at round close → the higher score wins; an exact tie plays
-  another round.
-- **Round 30 safety cap** → higher score wins; tie is a draw (D-018).
+> **Revised 2026-10-04 (D-038, owner's decision).** Points are gone: what used to score now
+> damages the enemy nexus, so every match ends with a nexus falling.
+
+- **Destroy the enemy nexus** (**60 HP** ⚠). It is drained three ways: kills (§13.1), siege
+  from held towers (§13.3), and direct attacks once it is open (§11).
+- **Destroyed by a direct attack** → the attacker wins immediately.
+- **Destroyed at round close** (siege and kills) → that team loses. If both fall at the same
+  round close, the nexus with more HP left (less negative) wins; equal is a draw.
+- **Round 30 safety cap** → the team whose nexus has more HP left wins; equal is a draw (D-018).
 
 ## 16. What is deliberately absent
 
@@ -233,12 +239,11 @@ Both live in `assets/data/`, are strict JSON, and are validated on load — a br
 
 | Key | Value | Meaning | Decision |
 |---|---|---|---|
-| `targetScore` | 60 | Points that end the match at round close | D-001, D-026 |
-| `roundCap` | 30 | Safety cap; higher score wins, tie draws | D-018 |
-| `killPoints` | 3 | Points to the other team per death | D-001 |
-| `towerPoints` | 1 | Points per owned tower per round close | D-001 |
+| `roundCap` | 30 | Safety cap; more nexus HP left wins, equal draws | D-018 |
+| `killSiege` | 3 | Damage to a champion's own nexus when it dies | D-038 |
+| `towerSiege` | 1 | Damage each held tower deals the enemy nexus per round close | D-038 |
 | `towerHp` | 16 | Tower HP; resets when captured | D-026 |
-| `nexusHp` | 25 | One pool across a team's three nexus hexes | D-026 |
+| `nexusHp` | 60 | One pool across a team's three nexus hexes; sets match length | D-038 |
 | `nexusGateTowers` | 1 | Home towers a team must lose before its nexus opens | D-025 |
 | `towerShot` | 2 | Damage a tower deals each adjacent enemy in the status phase | D-024 |
 | `basicBase` | 2 | Basic attack damage before POW and ARM | D-008 |
@@ -248,6 +253,7 @@ Both live in `assets/data/`, are strict JSON, and are validated on load — a br
 | `beaconDurability` | 2 | Enemy basic attacks a beacon survives | D-010 |
 | `respawnBase`, `respawnEvery` | 1, 8 | Respawn = base + round ÷ every | D-016 |
 | `basicsPerHalf` | 2 | Basics per team per half | Movement & Targeting |
+| `towersBlock` | false | Towers are impassable — owner's decision, **off until the champion rewrite** | D-039 |
 | `friendliesBlock` | true | Friendly champions block movement | D-017 |
 | `roundOneOpener` | "B" | Opens round 1; the other team places first in the opening | D-013 |
 

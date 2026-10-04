@@ -125,7 +125,7 @@ public sealed partial class Game
             if (ins.Kind == InstructionKind.PlaceBeacon) continue;   // always executes
             int who = MatchState.Slot(caster.Team, ins.Role);
             HexCoord to = pos[who] + Board.Frame(Hex.Directions[ins.Direction], caster.Team);
-            if (!Board.Playable(to)) return false;
+            if (!Board.Playable(to) || IsSolidTower(to)) return false;
             for (int i = 0; i < 10; i++)
             {
                 if (onBoard[i] && pos[i] == to) return false;

@@ -300,8 +300,8 @@ public sealed partial class Game
         s.Winner = winner;
         s.EndReason = reason;
         Log(log, EventKind.MatchOver, winner == Team.None
-            ? $"Match drawn ({reason}) {s.Score[0]}–{s.Score[1]}."
-            : $"{winner} wins by {reason}. Score {s.Score[0]}–{s.Score[1]}.");
+            ? $"Match drawn ({reason}). Nexus A {Math.Max(0, s.NexusHp[0])} – B {Math.Max(0, s.NexusHp[1])}."
+            : $"{winner} wins — {(reason == EndReason.RoundCap ? "round cap reached" : $"NEXUS {MatchState.Other(winner)} destroyed")}. Nexus A {Math.Max(0, s.NexusHp[0])} – B {Math.Max(0, s.NexusHp[1])}.");
     }
 
     // ───────────────────────────── helpers ─────────────────────────────
@@ -326,7 +326,11 @@ public sealed partial class Game
         return -1;
     }
 
-    private static bool Occupied(in MatchState s, HexCoord h) => ChampionAt(s, h) >= 0;
+    /// <summary>A champion or, when <see cref="RulesConfig.TowersBlock"/>, a tower is in the way.</summary>
+    private bool Occupied(in MatchState s, HexCoord h) => ChampionAt(s, h) >= 0 || IsSolidTower(h);
+
+    /// <summary>True for a tower hex when towers are impassable (v2).</summary>
+    private bool IsSolidTower(HexCoord h) => Rules.TowersBlock && Board.TowerAt(h) >= 0;
 
     private static int TeamIndex(Team t) => t == Team.A ? 0 : 1;
 }

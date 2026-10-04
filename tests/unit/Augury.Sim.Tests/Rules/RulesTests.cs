@@ -39,7 +39,7 @@ public class RulesTests
     }
 
     /// <summary>Forces round close by declining a second-half Last Word.</summary>
-    private static List<GameEvent> CloseRound(ref MatchState s)
+    internal static List<GameEvent> CloseRound(ref MatchState s)
     {
         var log = new List<GameEvent>();
         s.Phase = Phase.LastWord;
@@ -70,12 +70,12 @@ public class RulesTests
         MatchState s = Arena();
         s.Champions[BWarden].Hp = -1;
         s.Champions[BWarden].Flags |= ChampFlags.Dying;
-        int before = s.Score[0];
+        int before = s.NexusHp[1];
 
         CloseRound(ref s);
 
         Assert.Equal(Presence.Dead, s.Champions[BWarden].Presence);
-        Assert.Equal(before + G.Rules.KillPoints + Game.TowersOwned(s, Team.A) * G.Rules.TowerPoints, s.Score[0]);
+        Assert.Equal(before - G.Rules.KillSiege - Game.TowersOwned(s, Team.A) * G.Rules.TowerSiege, s.NexusHp[1]);
     }
 
     [Fact]

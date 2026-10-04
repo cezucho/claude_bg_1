@@ -58,7 +58,7 @@ public sealed partial class Game
                 for (int k = 0; k < 6; k++)
                 {
                     HexCoord to = at + Hex.Directions[Board.FrameDirection(k, c.Team)];
-                    if (!Board.Playable(to) || !seen.Add(to)) continue;
+                    if (!Board.Playable(to) || IsSolidTower(to) || !seen.Add(to)) continue;
                     int occupant = ChampionAt(s, to);
                     if (occupant >= 0)
                     {

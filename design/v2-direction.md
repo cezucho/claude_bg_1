@@ -1,0 +1,88 @@
+# AUGURY v2 — Direction After the First Playtests
+
+> **Date**: 2026-10-04 · **Status**: Agreed direction, not yet a GDD
+> **Source**: the project owner's playtests of the browser build and the discussion that
+> followed. Decisions marked **Owner** were made by the owner; **Proposed** are Claude's and
+> open to change. This document precedes GDD revisions; each item names the GDD it will
+> change.
+
+## What playtesting showed
+
+| Area | Owner's verdict |
+|---|---|
+| Draft | Works, but 10 champions with two per role leave no variety: the second pick of each role is forced |
+| Opening | **Feels right.** Planning paths and end positions is the part that works |
+| Combat | **Too many choices.** 20 abilities overwhelm a new player and stay hard to remember on the fifth match; it will get worse with a bigger roster |
+| Champions | Too similar: mostly damage in different shapes |
+| Board | Feels one dimension too large: the front-to-back depth |
+| Victory points | Anticlimactic on a screen. On a table, moving the marker is physical; here a counter ticks |
+
+The owner's framing: with a large board and many options, the game drifts toward chess,
+where playing well means memorising openings and positions. **That is not wanted.**
+
+## Decisions
+
+### Victory — the nexus HP race · Owner · *Objectives & Scoring, Map & Terrain*
+
+Points become damage to the enemy nexus. Each tower a team holds at round close fires at
+the enemy nexus; each kill damages the victim's nexus; direct attacks on an open nexus
+still work. **Every match ends with a nexus being destroyed.** Match length is set by
+nexus HP.
+
+### Towers are impassable · Owner · *Map & Terrain*
+
+No champion may enter a tower hex by any means. Towers become obstacles and choke points,
+and must be attacked from beside them.
+
+### Champion kit: three abilities plus a summoner slot · Owner · *Champion & Ability Schema, Opening Phase, Draft*
+
+- Each champion has **three abilities** and a **fourth slot** filled by a summoner spell.
+- **Opening instructions stay with the champion**: four sets, one per slot, the fourth
+  belonging to the champion and not to the spell. A spell never carries opening
+  instructions. *Owner's reason: if the spell supplied instructions, the opening could be
+  corrected after the draft; the draft should be where the opening is planned, and a
+  draft that doesn't fit should cost work later.*
+- **Summoner spells** come from one shared pool, the same for every champion, so they are
+  learned once. They are chosen **after the draft**, one per champion.
+- **Cooldowns are long relative to match length.** The exact number waits until match
+  length is measured.
+- **Duplicates within a team: probably not allowed.** Owner leans no, not strictly.
+
+### Champions differ by verb, not shape · Owner · *Champion & Ability Schema*
+
+Distinctness comes from **status and control effects** — poison, burn, immobilise, swap
+places, barriers and similar — not from pattern shapes. Damage patterns may stay
+rotatable. *Test (Proposed): each champion can be described in one sentence, and its
+three abilities are three different verbs.*
+
+### Match length · Owner
+
+**About 15 minutes for an advanced player**, so a best-of-three fits in the time of one
+League of Legends game. Fifteen minutes may hold more than six rounds; the round count is
+to be measured, not assumed. A short match is acceptable; three rounds is probably too
+few for a comeback.
+
+### Rejected · Owner
+
+- **Unlocking abilities over rounds** (two at first, then three, then four): a player
+  must plan with every ability from the start.
+
+## Open, to be decided with measurements
+
+| Question | Leaning | Evidence needed |
+|---|---|---|
+| Board depth | Shallower: about 7 rows instead of 9 (Proposed) | Self-play: rounds to first contact, pattern applicability, match length |
+| Terrain types (hills, swamp…) | Yes, after the board size is settled; few keywords if champions get terrain affinities (Proposed) | A board-size decision first |
+| Role-flexible champions in the draft | Possible draft depth without a large roster (Proposed) | Roster growth |
+| Best-of-three series | Natural fit for 15-minute matches (Proposed) | Match length |
+
+## Build order (Proposed, agreed in conversation)
+
+1. **Nexus HP race and impassable towers.** Small rules change, large change in feel.
+   *Done 2026-10-04:* the nexus race is live (D-038). Solid towers are implemented but
+   shipped off until the champion rewrite (D-039): the placeholder openings route through
+   tower hexes, and with towers solid 83% of team openings hit the fallback.
+2. **Board-size experiment** — compare the current board with a shallower one in self-play.
+3. **Three abilities plus summoner spells** — schema change, then the real work: rewriting
+   the roster around distinct verbs. Claude drafts a spell pool for the owner to react to.
+4. **Terrain**, once the board is settled.

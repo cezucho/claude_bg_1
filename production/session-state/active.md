@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**v2 IN PROGRESS — 2026-10-04.** Direction agreed after playtests: `design/v2-direction.md`. Step 1 done (nexus HP race D-038; solid towers implemented, shipped off D-039). Next: board-size experiment, then 3 abilities + summoner spells and the champion rewrite.
+
 **FIRST PLAYABLE BUILT — 2026-09-27.** The owner granted standing authority to finish the
 design and build to a first playable, logging every unilateral decision.
 
@@ -14,7 +16,7 @@ design and build to a first playable, logging every unilateral decision.
 - **Play (terminal):** `dotnet run --project src/Augury.Cli` (see `PLAY.md`). Modes: vs AI
   as A or B, hotseat, watch.
 - **Rules:** `design/mvp-rules.md` (authoritative for the build). **Decisions:**
-  `design/claude-decisions.md` (D-001…D-037, each reversible). **Report:**
+  `design/claude-decisions.md` (D-001…D-039, each reversible). **Report:**
   `design/first-playable-report.md`.
 - **Code:** `src/Augury.Sim` (content loader, blittable MatchState, full rules engine in
   `Rules/Game*.cs`, AI in `AI/Agent.cs`), `src/Augury.Cli` (terminal client),

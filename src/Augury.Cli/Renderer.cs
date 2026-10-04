@@ -107,7 +107,7 @@ internal sealed class Renderer(Game game)
             _ => s.Phase.ToString().ToUpperInvariant(),
         };
         string round = s.Round > 0 ? $"Round {s.Round} · Half {s.Half} · " : "";
-        string score = $"Score {Ansi.A($"A {s.Score[0]}")} – {Ansi.B($"B {s.Score[1]}")}  (to {_game.Rules.TargetScore})";
+        string score = $"Siege: each tower held hits the enemy nexus for {_game.Rules.TowerSiege} per round, each death costs your nexus {_game.Rules.KillSiege}";
         string nexus = $"Nexus {Ansi.A($"A {s.NexusHp[0]}")}{(Game.NexusVulnerable(s, Team.A) ? Ansi.Hi(" OPEN") : "")}"
                        + $" / {Ansi.B($"B {s.NexusHp[1]}")}{(Game.NexusVulnerable(s, Team.B) ? Ansi.Hi(" OPEN") : "")}";
         var towers = new StringBuilder("Towers ");

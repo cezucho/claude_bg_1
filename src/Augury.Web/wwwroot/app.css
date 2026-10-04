@@ -296,6 +296,7 @@ button:disabled { opacity: .35; cursor: default; }
 .dia-title { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
 .dia-cap { font-size: 10.5px; line-height: 1.3; color: var(--text); margin-top: 3px; text-align: center; }
 .dia-cap .bad-txt { color: var(--bad); }
+.team-block.B .nexus-line.plain { flex-direction: row; }
 svg.mini { display: block; max-width: 100%; }
 .with-dia svg.mini.combat { height: 104px; }
 .with-dia svg.mini.opening { height: 84px; }
@@ -333,6 +334,9 @@ svg.mini { display: block; max-width: 100%; }
 .last-ring { fill: none; stroke: var(--last); stroke-width: 3; stroke-dasharray: 5 3; pointer-events: none; }
 .last-ghost { fill: none; stroke: var(--last); stroke-width: 2; stroke-dasharray: 3 3; opacity: .8; pointer-events: none; }
 .last-arrow { stroke: var(--last); stroke-width: 3.5; fill: none; marker-end: url(#arrowhead-last); pointer-events: none; }
+.bad-txt { color: var(--bad); }
+.team-block.B .nexus-line.plain { flex-direction: row; }
+.last-beam.siege { stroke-width: 2; opacity: .75; }
 .last-beam { stroke: var(--last); stroke-width: 3; stroke-dasharray: 7 4; fill: none; marker-end: url(#arrowhead-last); pointer-events: none; animation: beam 1s linear infinite; }
 .token.last-actor .body { stroke: var(--last); stroke-width: 4; }
 .card.last-actor { border-color: var(--last); box-shadow: 0 0 0 1px var(--last) inset, 0 0 12px rgba(255,79,216,.35); }

@@ -8,22 +8,22 @@ namespace Augury.Sim;
 /// </summary>
 public sealed record RulesConfig
 {
-    /// <summary>Score that ends the match at round close (D-001).</summary>
-    public int TargetScore { get; init; } = 50;
-
     /// <summary>Safety cap on rounds (D-018).</summary>
     public int RoundCap { get; init; } = 30;
 
-    /// <summary>Points to the other team per death (D-001).</summary>
-    public int KillPoints { get; init; } = 3;
+    /// <summary>Damage to a champion's own nexus when it dies (v2: points became nexus damage).</summary>
+    public int KillSiege { get; init; } = 3;
 
-    /// <summary>Points per owned tower at each round close (D-001).</summary>
-    public int TowerPoints { get; init; } = 1;
+    /// <summary>Damage each held tower deals to the enemy nexus at every round close (v2).</summary>
+    public int TowerSiege { get; init; } = 1;
 
     /// <summary>Tower HP; resets on capture.</summary>
     public int TowerHp { get; init; } = 24;
 
-    /// <summary>Nexus HP, one pool across three hexes.</summary>
+    /// <summary>
+    /// Nexus HP, one pool across three hexes. Kills, tower siege and direct attacks all drain
+    /// it, so this number sets match length.
+    /// </summary>
     public int NexusHp { get; init; } = 60;
 
     /// <summary>Damage a tower deals to each adjacent enemy in the status phase (D-024).</summary>
@@ -52,6 +52,13 @@ public sealed record RulesConfig
 
     /// <summary>Basics per team per half.</summary>
     public int BasicsPerHalf { get; init; } = 2;
+
+    /// <summary>
+    /// Whether towers are impassable: no champion may enter a tower hex (v2, owner's
+    /// decision). Off until the champion rewrite: the placeholder openings route through
+    /// tower hexes, and with it on 83% of team openings hit the fallback (D-039).
+    /// </summary>
+    public bool TowersBlock { get; init; }
 
     /// <summary>Whether friendly champions block movement (D-017).</summary>
     public bool FriendliesBlock { get; init; } = true;

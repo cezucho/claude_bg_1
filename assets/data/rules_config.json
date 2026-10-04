@@ -1,10 +1,9 @@
 {
-  "targetScore": 60,
   "roundCap": 30,
-  "killPoints": 3,
-  "towerPoints": 1,
+  "killSiege": 3,
+  "towerSiege": 1,
   "towerHp": 16,
-  "nexusHp": 25,
+  "nexusHp": 60,
   "towerShot": 2,
   "basicBase": 2,
   "abilityBase": 3,
@@ -14,6 +13,7 @@
   "respawnBase": 1,
   "respawnEvery": 8,
   "basicsPerHalf": 2,
+  "towersBlock": false,
   "friendliesBlock": true,
   "nexusGateTowers": 1,
   "roundOneOpener": "B"

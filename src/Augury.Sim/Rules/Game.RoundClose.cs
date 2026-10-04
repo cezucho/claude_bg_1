@@ -6,9 +6,14 @@ namespace Augury.Sim;
 public sealed partial class Game
 {
     /// <summary>
-    /// Strict order, asserted by test (ADR-0006): death check, status phase, scoring,
+    /// Strict order, asserted by test (ADR-0006): death check, status phase, siege,
     /// upkeep, win check. Reordering the first two deletes the dying round.
     /// </summary>
+    /// <remarks>
+    /// v2 (<c>design/v2-direction.md</c>): there are no points. A death damages the dead
+    /// champion's own nexus, and every held tower fires at the enemy nexus. A nexus at zero
+    /// after the siege ends the match.
+    /// </remarks>
     private void CloseRound(ref MatchState s, List<GameEvent>? log)
     {
         // 1. Death check.
@@ -27,9 +32,8 @@ public sealed partial class Game
             c.PoisonAmount = 0;
             c.PoisonRounds = 0;
             c.Shield = 0;
-            Team scorer = MatchState.Other(c.Team);
-            s.Score[TeamIndex(scorer)] += Rules.KillPoints;
-            Log(log, EventKind.Death, $"  ✝ {Name(s, i)} dies (respawn in {respawn}). {scorer} +{Rules.KillPoints}");
+            s.NexusHp[TeamIndex(c.Team)] -= Rules.KillSiege;
+            Log(log, EventKind.Death, $"  ✝ {Name(s, i)} dies (respawn in {respawn}). NEXUS {c.Team} −{Rules.KillSiege} → {Math.Max(0, s.NexusHp[TeamIndex(c.Team)])}");
         }
 
         for (int i = 0; i < 10; i++)
@@ -81,14 +85,16 @@ public sealed partial class Game
             }
         }
 
-        // 3. Scoring: towers held.
-        for (int t = 0; t < 5; t++)
+        // 3. Siege: every held tower fires at the enemy nexus, whether or not its gate is open.
+        for (int k = 0; k < 2; k++)
         {
-            Team owner = s.Towers[t].Owner;
-            if (owner != Team.None) s.Score[TeamIndex(owner)] += Rules.TowerPoints;
+            Team t = k == 0 ? Team.A : Team.B;
+            int towers = TowersOwned(s, t);
+            if (towers == 0) continue;
+            Team enemy = MatchState.Other(t);
+            s.NexusHp[TeamIndex(enemy)] -= towers * Rules.TowerSiege;
+            Log(log, EventKind.Score, $"  Siege: {t}'s {towers} tower{(towers == 1 ? "" : "s")} fire at NEXUS {enemy} −{towers * Rules.TowerSiege} → {Math.Max(0, s.NexusHp[TeamIndex(enemy)])}");
         }
-
-        Log(log, EventKind.Score, $"  Towers held: A {TowersOwned(s, Team.A)}, B {TowersOwned(s, Team.B)}. Score A {s.Score[0]} – B {s.Score[1]}");
 
         // 4. Upkeep.
         for (int i = 0; i < 10; i++)
@@ -112,15 +118,16 @@ public sealed partial class Game
 
         for (int i = 0; i < 10; i++) FirePassive(ref s, i, PassiveTrigger.OnRoundClose, -1, log);
 
-        // 5. Win check.
-        int a0 = s.Score[0], b0 = s.Score[1];
-        if ((a0 >= Rules.TargetScore || b0 >= Rules.TargetScore) && a0 != b0)
+        // 5. Win check. If both fall together, the nexus with more left stands.
+        int a0 = s.NexusHp[0], b0 = s.NexusHp[1];
+        Team leader = a0 == b0 ? Team.None : a0 > b0 ? Team.A : Team.B;
+        if (a0 <= 0 || b0 <= 0)
         {
-            EndMatch(ref s, a0 > b0 ? Team.A : Team.B, EndReason.Score, log);
+            EndMatch(ref s, leader, EndReason.Siege, log);
         }
         else if (s.Round >= Rules.RoundCap)
         {
-            EndMatch(ref s, a0 == b0 ? Team.None : a0 > b0 ? Team.A : Team.B, EndReason.RoundCap, log);
+            EndMatch(ref s, leader, EndReason.RoundCap, log);
         }
     }
 

@@ -366,10 +366,11 @@ namespace Augury.Cli
                 ceiling drops to what you played. Each champion acts once per half. PASS gives the
                 other side one unanswerable Last Word. If you have nothing legal, the half ends.
                 Round close: death check → poison and tower shots (≤0 here = DYING, one more round)
-                → +1 point per tower you own → cooldowns tick, respawns.
+                → siege: your towers fire at the enemy nexus → cooldowns tick, respawns.
 
-              WINNING  Reach the target score (kills 3, each tower 1 per round), or destroy the enemy
-                       NEXUS — only possible once you hold BOTH of their home towers.
+              WINNING  Destroy the enemy NEXUS. Each tower you hold hits it every round close, each
+                       enemy death hits it too, and once you've taken one of their home towers
+                       you can attack it directly.
 
               CHAINS   Two abilities sharing an active sigil resolve as one step, no answer between,
                        and the second may exceed the ceiling. Slot sigils light up near your beacon.

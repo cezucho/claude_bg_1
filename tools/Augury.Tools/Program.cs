@@ -23,6 +23,9 @@ switch (command)
     case "opening":
         OpeningSequencing.Run();
         break;
+    case "openings":
+        OpeningKits.Run();
+        break;
     case "trace":
         Trace.Run(args);
         break;
@@ -30,7 +33,7 @@ switch (command)
         SelfPlay.Run(args);
         break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, trace, selfplay");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, openings, trace, selfplay");
         return 1;
 }
 
