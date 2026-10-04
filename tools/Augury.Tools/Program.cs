@@ -24,7 +24,7 @@ switch (command)
         OpeningSequencing.Run();
         break;
     case "openings":
-        OpeningKits.Run();
+        OpeningKits.Run(args);
         break;
     case "trace":
         Trace.Run(args);

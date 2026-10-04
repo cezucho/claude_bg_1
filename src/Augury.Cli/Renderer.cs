@@ -16,10 +16,12 @@ internal sealed class Renderer(Game game)
     {
         var sb = new StringBuilder();
         const int Base = 20;
-        for (int r = Sim.Board.Radius + 1; r >= -Sim.Board.Radius - 1; r--)
+        var all = Sim.Board.AllHexes.Concat(Sim.Board.Layout.SpawnA).Concat(Sim.Board.Layout.SpawnA.Select(Hex.Mirror)).ToArray();
+        int minR = all.Min(h => h.R), maxR = all.Max(h => h.R), minQ = all.Min(h => h.Q), maxQ = all.Max(h => h.Q);
+        for (int r = maxR; r >= minR; r--)
         {
             var cells = new SortedDictionary<int, string>();
-            for (int q = -Sim.Board.Radius - 1; q <= Sim.Board.Radius + 1; q++)
+            for (int q = minQ; q <= maxQ; q++)
             {
                 var h = new HexCoord(q, r);
                 string? cell = Cell(s, h, marks);
@@ -27,7 +29,7 @@ internal sealed class Renderer(Game game)
             }
 
             if (cells.Count == 0) continue;
-            string label = Math.Abs(r) > Sim.Board.Radius ? "     " : $"r{r,3} ";
+            string label = Sim.Board.AllHexes.Any(h => h.R == r) ? $"r{r,3} " : "     ";
             var line = new StringBuilder(Ansi.Dim(label));
             int col = 0;
             foreach (var (c, text) in cells)
@@ -91,9 +93,8 @@ internal sealed class Renderer(Game game)
             if (beacon.Team != Team.None && beacon.Pos == h) return Ansi.Team(beacon.Team, $" *{beacon.Sigil + 1}");
         }
 
-        int file = Math.Abs(Sim.Board.File(h));
-        bool lane = h.Q == 0 || h.Q + h.R == 0;
-        return Ansi.Dim(file >= 5 ? " . " : lane ? " = " : " · ");
+        bool jungle = Sim.Board.Layout.Jungle.Contains(h), lane = Sim.Board.Layout.Lanes.Contains(h);
+        return Ansi.Dim(jungle ? " . " : lane ? " = " : " · ");
     }
 
     /// <summary>Header line: round, phase, whose turn, ceiling, score, structures.</summary>

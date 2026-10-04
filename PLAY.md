@@ -48,6 +48,11 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
   **AI speed** sets how fast it plays. **Rules** is a one-screen summary. Esc cancels a
   selection.
 
+### Trying another board
+
+Set `"board"` in `assets/data/rules_config.json` to `field7`, `field7base` or `field5` and
+restart. The candidates and their measurements are in `design/board-layouts.md`.
+
 ## Terminal client
 
 From the repository root:

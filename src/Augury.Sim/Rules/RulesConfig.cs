@@ -69,6 +69,12 @@ public sealed record RulesConfig
     /// </summary>
     public int NexusGateTowers { get; init; } = 2;
 
+    /// <summary>
+    /// Board layout: <c>classic</c> (built in) or the name of <c>assets/data/boards/board_[name].json</c>
+    /// (v2 board-size experiment, D-040).
+    /// </summary>
+    public string Board { get; init; } = "classic";
+
     /// <summary>Team that opens round 1; the other places first in the opening (D-013).</summary>
     public string RoundOneOpener { get; init; } = "B";
 

@@ -9,6 +9,8 @@ public static class Trace
     {
         uint seed = args.Length > 1 ? uint.Parse(args[1]) : 7;
         Game game = Game.LoadDefault();
+        string? board = args.Skip(2).FirstOrDefault(a => a.StartsWith("board="))?["board=".Length..];
+        if (board is not null) Board.Use(Augury.Sim.BoardLayout.Load(board));
         MatchState s = game.NewMatch();
         var log = new List<GameEvent>();
         var legal = new List<Command>();

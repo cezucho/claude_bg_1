@@ -253,6 +253,7 @@ Both live in `assets/data/`, are strict JSON, and are validated on load — a br
 | `beaconDurability` | 2 | Enemy basic attacks a beacon survives | D-010 |
 | `respawnBase`, `respawnEvery` | 1, 8 | Respawn = base + round ÷ every | D-016 |
 | `basicsPerHalf` | 2 | Basics per team per half | Movement & Targeting |
+| `board` | "classic" | Board layout: built-in `classic` or `assets/data/boards/board_[name].json` | D-040 |
 | `towersBlock` | false | Towers are impassable — owner's decision, **off until the champion rewrite** | D-039 |
 | `friendliesBlock` | true | Friendly champions block movement | D-017 |
 | `roundOneOpener` | "B" | Opens round 1; the other team places first in the opening | D-013 |

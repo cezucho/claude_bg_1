@@ -62,6 +62,15 @@ League of Legends game. Fifteen minutes may hold more than six rounds; the round
 to be measured, not assumed. A short match is acceptable; three rounds is probably too
 few for a comeback.
 
+### The feeling to aim for · Owner, 2026-10-04 · *not a requirement yet*
+
+Mastery: each champion has a specific way to be played, and a player who uses it well —
+plays the champion's part, cooperates with the champions it needs — gets visibly more out
+of it than one who doesn't. Comebacks are welcome; they make stories and tension. Both
+pull against a short match, and the owner chooses the short match. Keep the feeling in
+mind when measuring: notice whether board, kit or rules changes produce it on their own,
+or can with small tweaks. It is a direction, not a gate.
+
 ### Rejected · Owner
 
 - **Unlocking abilities over rounds** (two at first, then three, then four): a player
@@ -83,6 +92,8 @@ few for a comeback.
    shipped off until the champion rewrite (D-039): the placeholder openings route through
    tower hexes, and with towers solid 83% of team openings hit the fallback.
 2. **Board-size experiment** — compare the current board with a shallower one in self-play.
+   *Measured 2026-10-04:* three candidates against classic in `design/board-layouts.md`.
+   Claude recommends **Field 7 + base**; owner to choose.
 3. **Three abilities plus summoner spells** — schema change, then the real work: rewriting
    the roster around distinct verbs. Claude drafts a spell pool for the owner to react to.
 4. **Terrain**, once the board is settled.

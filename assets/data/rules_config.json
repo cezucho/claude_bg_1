@@ -16,5 +16,6 @@
   "towersBlock": false,
   "friendliesBlock": true,
   "nexusGateTowers": 1,
-  "roundOneOpener": "B"
+  "roundOneOpener": "B",
+  "board": "classic"
 }

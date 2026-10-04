@@ -16,6 +16,8 @@ public static class SelfPlay
         public int Matches, WinsA, WinsB, Draws, Nexus, Siege, Cap, Comebacks;
         public long Rounds, Halves, HalvesOpened, HalvesByPass, Resolutions, Chains, Deaths, Captures;
         public long BasicMoves, BasicAttacks, OpeningFallbackTeams, Decisions, PlayerDecisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
+        public long PatternChecks, PatternLive, GapSamples, GapTotal;
+        public readonly long[] ResolvedByTier = new long[5];
         public double AiMsTotal, AiMsMax;
         public long AiCalls;
         public readonly List<int> RoundCounts = new();
@@ -31,6 +33,7 @@ public static class SelfPlay
         string bName = positional.Count > 2 ? positional[2] : "heuristic";
         Game baseline = Game.LoadDefault();
         Game game = new(baseline.Content, Override(baseline.Rules, args.Where(a => a.Contains('='))));
+        Board.Use(Augury.Sim.BoardLayout.Load(game.Rules.Board));
         var stats = new Stats();
         var sw = Stopwatch.StartNew();
 
@@ -98,8 +101,43 @@ public static class SelfPlay
                 }
             }
 
+            if (s.Phase == Phase.Ladder && legal.Count > 1)
+            {
+                // Pattern applicability: of the ready tier-3/4 abilities the side to act holds,
+                // how many have something to hit right now.
+                int first = MatchState.FirstSlot(s.Active);
+                for (int slot = first; slot < first + 5; slot++)
+                {
+                    Champion ch = s.Champions[slot];
+                    if (!ch.OnBoard || ch.Has(ChampFlags.Acted)) continue;
+                    for (int ab = 0; ab < 4; ab++)
+                    {
+                        if (ch.Cooldowns[ab] > 0 || game.Def(ch).Abilities[ab].Initiative < 3) continue;
+                        st.PatternChecks++;
+                        if (game.AbilityTargets(s, slot, ab).Count > 0) st.PatternLive++;
+                    }
+                }
+            }
+
             int roundBefore = s.Round;
+            Phase phaseBefore = s.Phase;
             game.Apply(ref s, c, log);
+            if (phaseBefore == Phase.Opening && s.Phase != Phase.Opening)
+            {
+                // How close the teams stand when the opening ends: each champion's distance
+                // to its nearest enemy.
+                for (int i = 0; i < 10; i++)
+                {
+                    int nearest = 99;
+                    for (int j = 0; j < 10; j++)
+                    {
+                        if (s.Champions[j].Team != s.Champions[i].Team) nearest = Math.Min(nearest, HexCoord.Distance(s.Champions[i].Pos, s.Champions[j].Pos));
+                    }
+
+                    st.GapTotal += nearest;
+                    st.GapSamples++;
+                }
+            }
             st.Decisions++;
             if (s.Phase != Phase.Draft && legal.Count > 1) st.PlayerDecisions++;
             if (s.Round != roundBefore || s.Phase == Phase.MatchOver)
@@ -148,6 +186,12 @@ public static class SelfPlay
 
         // A comeback: the winner trailed the nexus race by at least 5 at some round close.
         if ((s.Winner == Team.A && maxLeadB >= 5) || (s.Winner == Team.B && maxLeadA >= 5)) st.Comebacks++;
+
+        foreach (GameEvent e in log)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(e.Text, @"\[init (\d)\]");
+            if (e.Kind == EventKind.AbilityResolved && m.Success) st.ResolvedByTier[int.Parse(m.Groups[1].Value)]++;
+        }
 
         // Walk the event stream for per-half ladder facts.
         bool inLadder = false;
@@ -208,6 +252,11 @@ public static class SelfPlay
         Console.WriteLine($"  Results       A {st.WinsA / m,6:P0}   B {st.WinsB / m,6:P0}   draw {st.Draws / m,6:P0}");
         Console.WriteLine($"  Endings       siege {st.Siege / m,6:P1}   direct nexus kill {st.Nexus / m,6:P1}   round cap {st.Cap / m,6:P1}   comebacks {st.Comebacks / m,6:P1}");
         Console.WriteLine($"  Decisions     {st.PlayerDecisions / m,5:F0} per match with a real choice (both teams, after the draft)");
+        Console.WriteLine($"  Board         {Board.Layout.Name}: {Board.AllHexes.Length} hexes; front lines {Math.Abs(Board.StartHex(Team.A, Sim.Content.Role.Mid).R - Board.StartHex(Team.B, Sim.Content.Role.Mid).R)} rows apart; towers {(game.Rules.TowersBlock ? "solid" : "walkable")}");
+        Console.WriteLine($"  Contact       after the opening, each champion's nearest enemy is {st.GapTotal / (double)Math.Max(1, st.GapSamples),4:F1} hexes away on average");
+        long tiers = st.ResolvedByTier.Sum();
+        Console.WriteLine($"  Abilities     resolved by initiative tier: 1 {st.ResolvedByTier[1] / (double)tiers,4:P0} · 2 {st.ResolvedByTier[2] / (double)tiers,4:P0} · 3 {st.ResolvedByTier[3] / (double)tiers,4:P0} · 4 {st.ResolvedByTier[4] / (double)tiers,4:P0}");
+        Console.WriteLine($"  Patterns      ready tier-3/4 abilities with a target on the ladder: {st.PatternLive / (double)Math.Max(1, st.PatternChecks),5:P0}");
         st.RoundCounts.Sort();
         Console.WriteLine($"  Rounds        mean {st.Rounds / m,5:F1}   median {st.RoundCounts[st.RoundCounts.Count / 2]}   min {st.RoundCounts[0]}   max {st.RoundCounts[^1]}");
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");

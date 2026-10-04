@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Board Layouts</title>
+<style>
+:root { --bg:#080c18; --text:#dfe6f5; --dim:#8390ad; --gold:#e8c46a; --A:#3fa7ff; --B:#ff4d5e; --line:#26314f; }
+body { margin:0; background:var(--bg); color:var(--text); font:13px/1.4 system-ui, sans-serif; padding:18px 22px; }
+h1 { margin:0 0 2px; font-size:20px; letter-spacing:.12em; text-transform:uppercase; }
+.lead { color:var(--dim); margin-bottom:14px; }
+.grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; align-items:start; }
+.card { background:#0f1628; border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+.card h2 { margin:0; font-size:16px; } .card .sub { color:var(--dim); font-size:11.5px; min-height:32px; }
+svg { display:block; margin:6px auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; margin-top:4px; }
+td { padding:2px 0; border-bottom:1px solid #1b2440; } td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+.legend { color:var(--dim); font-size:11.5px; margin-top:12px; }
+.legend b { color:var(--text); }
+</style></head><body>
+<h1>Candidate boards — same scale</h1>
+<div class="lead">Team A (blue) plays up from the bottom, team B (red) is its mirror image. Symbols are the five roles on their start hexes; dashed hexes are spawns; tinted hexes the nexus; tower shapes the five towers. Numbers: 400 AI-vs-AI matches each with <b>towers solid</b>, walkable in brackets.</div>
+<div class="grid" id="grid"></div>
+<div class="legend"><b>Contact</b>: hexes from each champion to its nearest enemy when the opening ends. <b>Patterns live</b>: ready rotatable/fixed abilities that have something to hit on the ladder. <b>Direct kills</b>: matches ending with a direct attack on the nexus rather than siege at round close. <b>Comebacks</b>: the winner trailed by 5+ nexus HP at some round close. All champions are today's placeholders, whose openings were written for the classic board — on the new boards most openings hit the fallback, so opening behaviour is not compared.</div>
+<script>
+const DATA = [{"key": "classic", "title": "Classic \u2014 today", "sub": "9 rows deep \u00b7 front lines 8 apart \u00b7 61 hexes", "board": {"name": "classic", "hexes": [[0, -4], [1, -4], [2, -4], [3, -4], [4, -4], [-1, -3], [0, -3], [1, -3], [2, -3], [3, -3], [4, -3], [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], [3, -2], [4, -2], [-3, -1], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [3, -1], [4, -1], [-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [-4, 1], [-3, 1], [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1], [-4, 2], [-3, 2], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [-4, 3], [-3, 3], [-2, 3], [-1, 3], [0, 3], [1, 3], [-4, 4], [-3, 4], [-2, 4], [-1, 4], [0, 4]], "towers": [[0, 0], [0, -2], [2, -2], [0, 2], [-2, 2]], "nexusA": [[1, -4], [2, -4], [3, -4]], "startA": [[0, -4], [1, -4], [2, -4], [3, -4], [4, -4]], "spawnA": [[0, -5], [1, -5], [2, -5], [3, -5], [4, -5]], "lanes": [[0, -4], [4, -4], [0, -3], [3, -3], [0, -2], [2, -2], [0, -1], [1, -1], [0, 0], [-1, 1], [0, 1], [-2, 2], [0, 2], [-3, 3], [0, 3], [-4, 4], [0, 4]], "jungle": [[-1, -3], [4, -3], [-2, -2], [4, -2], [-3, -1], [-2, -1], [3, -1], [4, -1], [-4, 0], [-3, 0], [3, 0], [4, 0], [-4, 1], [-3, 1], [2, 1], [3, 1], [-4, 2], [2, 2], [-4, 3], [1, 3]]}, "stats": {"gap": "3.0 (1.9)", "rounds": "13.1 (12.1)", "patterns": "62% (66%)", "direct": "12% (31%)", "comeback": "19% (23%)", "ab": "47/52 (50/48)", "decisions": "239 (224)"}}, {"key": "field7", "title": "Field 7", "sub": "7 rows \u00b7 front lines 6 apart \u00b7 59 hexes \u00b7 nexus on the start line", "board": {"name": "field7", "description": "Wide: 9 across, 7 rows, 59 hexes. Front lines 6 rows apart; the nexus sits on the start line.", "hexes": [[-2, -3], [-1, -3], [0, -3], [1, -3], [2, -3], [3, -3], [4, -3], [5, -3], [-3, -2], [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], [3, -2], [4, -2], [5, -2], [-3, -1], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [3, -1], [4, -1], [-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [-4, 1], [-3, 1], [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1], [-5, 2], [-4, 2], [-3, 2], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [3, 2], [-5, 3], [-4, 3], [-3, 3], [-2, 3], [-1, 3], [0, 3], [1, 3], [2, 3]], "towers": [[0, 0], [-2, -1], [3, -1], [2, 1], [-3, 1]], "nexusA": [[0, -3], [1, -3], [2, -3]], "startA": [[-1, -3], [0, -3], [1, -3], [2, -3], [3, -3]], "spawnA": [[-1, -4], [0, -4], [1, -4], [2, -4], [3, -4]], "lanes": [[-2, -2], [-1, -2], [1, -2], [3, -2], [4, -2], [-2, -1], [0, -1], [1, -1], [3, -1], [-3, 0], [-2, 0], [0, 0], [2, 0], [3, 0], [-3, 1], [-1, 1], [0, 1], [2, 1], [-4, 2], [-3, 2], [-1, 2], [1, 2], [2, 2]], "jungle": [[-3, -2], [0, -2], [2, -2], [5, -2], [-3, -1], [-1, -1], [2, -1], [4, -1], [-4, 0], [-1, 0], [1, 0], [4, 0], [-4, 1], [-2, 1], [1, 1], [3, 1], [-5, 2], [-2, 2], [0, 2], [3, 2]]}, "stats": {"gap": "1.6 (1.4)", "rounds": "11.7 (10.1)", "patterns": "76% (70%)", "direct": "33% (50%)", "comeback": "23% (22%)", "ab": "45/54 (50/49)", "decisions": "218 (192)"}}, {"key": "field7base", "title": "Field 7 + base", "sub": "7 rows \u00b7 teams start 4 apart \u00b7 59 hexes \u00b7 nexus in a base row behind", "board": {"name": "field7base", "description": "Wide, with a base row: 9 across, 7 rows, 59 hexes. Teams start 4 rows apart with the nexus in a row behind them.", "hexes": [[-2, -3], [-1, -3], [0, -3], [1, -3], [2, -3], [3, -3], [4, -3], [5, -3], [-3, -2], [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], [3, -2], [4, -2], [5, -2], [-3, -1], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [3, -1], [4, -1], [-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [-4, 1], [-3, 1], [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1], [-5, 2], [-4, 2], [-3, 2], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [3, 2], [-5, 3], [-4, 3], [-3, 3], [-2, 3], [-1, 3], [0, 3], [1, 3], [2, 3]], "towers": [[0, 0], [-2, -1], [3, -1], [2, 1], [-3, 1]], "nexusA": [[1, -3], [2, -3]], "startA": [[-1, -2], [0, -2], [1, -2], [2, -2], [3, -2]], "spawnA": [[0, -4], [1, -4], [2, -4], [3, -4], [4, -4]], "lanes": [[-2, -1], [0, -1], [1, -1], [3, -1], [-3, 0], [-2, 0], [0, 0], [2, 0], [3, 0], [-3, 1], [-1, 1], [0, 1], [2, 1]], "jungle": [[-3, -1], [-1, -1], [2, -1], [4, -1], [-4, 0], [-1, 0], [1, 0], [4, 0], [-4, 1], [-2, 1], [1, 1], [3, 1]]}, "stats": {"gap": "1.4 (1.3)", "rounds": "12.1 (10.1)", "patterns": "78% (66%)", "direct": "28% (47%)", "comeback": "28% (22%)", "ab": "52/48 (44/56)", "decisions": "227 (192)"}}, {"key": "field5", "title": "Field 5", "sub": "5 rows \u00b7 front lines 4 apart \u00b7 43 hexes \u00b7 nexus on the start line", "board": {"name": "field5", "description": "Wide and shallow: 9 across, 5 rows, 43 hexes. Front lines 4 rows apart; the nexus sits on the start line.", "hexes": [[-3, -2], [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], [3, -2], [4, -2], [5, -2], [-3, -1], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [3, -1], [4, -1], [-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [-4, 1], [-3, 1], [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1], [-5, 2], [-4, 2], [-3, 2], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [3, 2]], "towers": [[0, 0], [-2, -1], [3, -1], [2, 1], [-3, 1]], "nexusA": [[0, -2], [1, -2], [2, -2]], "startA": [[-1, -2], [0, -2], [1, -2], [2, -2], [3, -2]], "spawnA": [[-1, -3], [0, -3], [1, -3], [2, -3], [3, -3]], "lanes": [[-2, -1], [0, -1], [1, -1], [3, -1], [-3, 0], [-2, 0], [0, 0], [2, 0], [3, 0], [-3, 1], [-1, 1], [0, 1], [2, 1]], "jungle": [[-3, -1], [-1, -1], [2, -1], [4, -1], [-4, 0], [-1, 0], [1, 0], [4, 0], [-4, 1], [-2, 1], [1, 1], [3, 1]]}, "stats": {"gap": "1.4 (1.2)", "rounds": "10.1 (8.5)", "patterns": "84% (70%)", "direct": "48% (68%)", "comeback": "26% (19%)", "ab": "49/51 (44/56)", "decisions": "193 (164)"}}];
+const S = 21, SQ3 = Math.sqrt(3), ROLES = ['Top','Jungle','Mid','Bottom','Support'];
+const px = (q, r) => [S * SQ3 * (q + r / 2), -S * 1.5 * r];
+const pts = (q, r, k = 0.95) => [...Array(6)].map((_, i) => { const a = Math.PI / 180 * (60 * i - 30); const [x, y] = px(q, r); return `${(x + S * k * Math.cos(a)).toFixed(1)},${(y + S * k * Math.sin(a)).toFixed(1)}`; }).join(' ');
+const mir = ([q, r]) => [q + r, -r];
+const key = h => h.join(',');
+function icon(role, color) {
+  const s = `stroke="${color}" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  return { Top: `<path ${s} d="M5 19 L17 7 L19 5 M16 4 L20 4 L20 8 M7 13 L11 17 M4 20 L6 18"/>`,
+    Jungle: `<path ${s} d="M6 20 C6 12 9 7 14 4 M11 20 C11 13 13 9 18 6 M16 20 C16 15 17 12 20 10"/>`,
+    Mid: `<path ${s} d="M12 3 L20 12 L12 21 L4 12 Z M12 8 L16 12 L12 16 L8 12 Z"/>`,
+    Bottom: `<circle ${s} cx="12" cy="12" r="7"/><path ${s} d="M12 2 V7 M12 17 V22 M2 12 H7 M17 12 H22"/>`,
+    Support: `<path ${s} d="M12 3 L19 6 V12 C19 16 16 19 12 21 C8 19 5 16 5 12 V6 Z M12 9 V15 M9 12 H15"/>` }[role];
+}
+// common scale: one viewBox size for all boards
+const all = DATA.flatMap(d => [...d.board.hexes, ...d.board.spawnA, ...d.board.spawnA.map(mir)].map(h => px(...h)));
+const W = Math.max(...all.map(p => Math.abs(p[0]))) + S * 1.4, H = Math.max(...all.map(p => Math.abs(p[1]))) + S * 1.4;
+for (const d of DATA) {
+  const b = d.board, lanes = new Set(b.lanes.map(key)), jungle = new Set(b.jungle.map(key));
+  const nexA = new Set(b.nexusA.map(key)), nexB = new Set(b.nexusA.map(mir).map(key));
+  let svg = `<svg viewBox="${-W} ${-H} ${2 * W} ${2 * H}" width="${2 * W}" height="${2 * H}">`;
+  for (const h of b.hexes) {
+    const k = key(h);
+    const fill = nexA.has(k) ? '#173a5c' : nexB.has(k) ? '#5a1d2a' : jungle.has(k) ? '#152a22' : lanes.has(k) ? '#2a3352' : '#1d2744';
+    svg += `<polygon points="${pts(...h)}" fill="${fill}" stroke="#0a0f1d" stroke-width="1.2"/>`;
+  }
+  for (const [list, team] of [[b.spawnA, 'A'], [b.spawnA.map(mir), 'B']]) for (const h of list)
+    svg += `<polygon points="${pts(...h, 0.85)}" fill="none" stroke="${team === 'A' ? '#3fa7ff66' : '#ff4d5e66'}" stroke-dasharray="3 3"/>`;
+  b.towers.forEach((t, i) => {
+    const [x, y] = px(...t), c = i === 0 ? '#9aa3b5' : i <= 2 ? 'var(--A)' : 'var(--B)', w = 8, top = y - 10;
+    svg += `<polygon points="${x - w},${y + 7} ${x + w},${y + 7} ${x + w - 2},${top + 5} ${x + w},${top} ${x + 3},${top} ${x + 3},${top + 3} ${x - 3},${top + 3} ${x - 3},${top} ${x - w},${top} ${x - w + 2},${top + 5}" fill="#0b1020" stroke="${c}" stroke-width="2"/>`;
+  });
+  for (const [list, team] of [[b.startA, 'A'], [b.startA.map(mir), 'B']]) list.forEach((h, i) => {
+    const [x, y] = px(...h), c = team === 'A' ? '#3fa7ff' : '#ff4d5e';
+    svg += `<circle cx="${x}" cy="${y}" r="${S * 0.62}" fill="${team === 'A' ? '#0e3558' : '#57121d'}" stroke="${c}" stroke-width="2"/>`;
+    svg += `<svg x="${x - 11}" y="${y - 11}" width="22" height="22" viewBox="0 0 24 24">${icon(ROLES[i], '#fff')}</svg>`;
+  });
+  svg += '</svg>';
+  const s = d.stats;
+  const rows = [['Contact after opening', s.gap + ' hexes'], ['Rounds per match', s.rounds], ['Decisions per match', s.decisions], ['Patterns live', s.patterns], ['Direct nexus kills', s.direct], ['Comebacks', s.comeback], ['A / B wins', s.ab]];
+  document.getElementById('grid').insertAdjacentHTML('beforeend', `<div class="card"><h2>${d.title}</h2><div class="sub">${d.sub}</div>${svg}
+    <table>${rows.map(([a, v]) => `<tr><td>${a}</td><td>${v}</td></tr>`).join('')}</table></div>`);
+}
+</script></body></html>

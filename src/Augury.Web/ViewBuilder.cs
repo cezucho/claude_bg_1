@@ -566,7 +566,7 @@ public static class ViewBuilder
 
     private static string Zone(HexCoord h)
     {
-        if (Math.Abs(Board.File(h)) >= 5) return "jungle";
-        return h.Q == 0 || h.Q + h.R == 0 ? "lane" : "open";
+        if (Board.Layout.Jungle.Contains(h)) return "jungle";
+        return Board.Layout.Lanes.Contains(h) ? "lane" : "open";
     }
 }

@@ -30,9 +30,16 @@ public sealed partial class Game
     /// <summary>Tunable numbers.</summary>
     public RulesConfig Rules { get; }
 
-    /// <summary>Loads content and rules from <c>assets/data</c>.</summary>
-    public static Game LoadDefault() =>
-        new(ContentLoader.LoadDirectory(ContentLoader.FindChampionDirectory()), RulesConfig.LoadDefault());
+    /// <summary>
+    /// Loads content and rules from <c>assets/data</c>, and switches to the board layout the
+    /// rules name (process-wide; see <see cref="Board"/>).
+    /// </summary>
+    public static Game LoadDefault()
+    {
+        RulesConfig rules = RulesConfig.LoadDefault();
+        Board.Use(BoardLayout.Load(rules.Board));
+        return new Game(ContentLoader.LoadDirectory(ContentLoader.FindChampionDirectory()), rules);
+    }
 
     // ───────────────────────────── setup ─────────────────────────────
 

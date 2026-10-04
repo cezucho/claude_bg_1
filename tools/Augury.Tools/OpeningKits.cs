@@ -11,15 +11,17 @@ namespace Augury.Tools;
 /// </summary>
 internal static class OpeningKits
 {
-    public static void Run()
+    public static void Run(string[] args)
     {
         Game solid = Game.LoadDefault();
+        string? board = args.Skip(1).FirstOrDefault(a => a.StartsWith("board="))?["board=".Length..];
+        if (board is not null) Board.Use(Augury.Sim.BoardLayout.Load(board));
         Game open = new(solid.Content, solid.Rules with { TowersBlock = false });
         IReadOnlyList<ChampionDef> roster = solid.Content.Champions;
 
         int[] defaults = Enum.GetValues<Role>().Select(r => solid.Content.ForRole(r).First()).ToArray();
         int okSolid = 0, okOpen = 0, total = 0;
-        Console.WriteLine("OPENINGS FROM THE STARTING LINE — first move of the opening, rest of the team on the line");
+        Console.WriteLine($"OPENINGS FROM THE STARTING LINE ({Board.Layout.Name}) — first move of the opening, rest of the team on the line");
         Console.WriteLine($"  {"champion",-12} {"ability",-16} {"walkable",9} {"solid",6}   instructions");
         for (int def = 0; def < roster.Count; def++)
         {
