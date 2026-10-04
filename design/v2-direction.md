@@ -127,3 +127,30 @@ opponent's turn when a condition is met.*
     depth limit; passives use depth 1.
   - It could also help the failing pass-rate criterion (Sigils #14): holding something back
     becomes a real option.
+
+### Attacks in the opening (owner, 2026-10-04)
+
+*Some champions' opening plays include using the ability itself, not only movement.*
+
+- **The idea.** The opening still takes five plays, one per champion. Some abilities'
+  opening versions include their **combat effect** as well as movement. A team might spend
+  four plays shaping its formation and the fifth on an attack — or two or three attacks
+  in a row — before the opponent can answer on the ladder.
+- **The trade.** An ability used this way **goes on cooldown**, so that team starts the
+  first ladder with fewer tools, but its opponent may start with less HP.
+- **Notes for later (Claude).**
+  - It reverses D-011 ("the opening ability does not start on cooldown") for the abilities
+    that attack. Movement-only openings could stay free.
+  - It is not quite unanswered. The teams still alternate opening plays, so the opponent
+    replies with its own next play — move away, shield, or strike back. Who places first
+    (D-013) matters more: the second placer sees the formation and can punish it.
+  - It only works on a shallow board. On Field 7, teams stand about 1.5 hexes apart
+    after the opening; on the classic board an opening attack would rarely reach anything.
+  - The risk is a decisive alpha strike before the match really starts, which works against
+    comebacks. Possible limits: opening attacks cannot kill, deal reduced damage, or only one
+    per team.
+  - It gives the draft another axis — champions whose openings attack, against champions
+    that shape the formation — which fits the owner's wish that the draft and the opening
+    be planned together.
+  - The engine supports it: the opening already resolves ability-linked instructions, and
+    previews would show the exact damage before you commit.
