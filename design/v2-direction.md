@@ -93,7 +93,37 @@ or can with small tweaks. It is a direction, not a gate.
    tower hexes, and with towers solid 83% of team openings hit the fallback.
 2. **Board-size experiment** — compare the current board with a shallower one in self-play.
    *Measured 2026-10-04:* three candidates against classic in `design/board-layouts.md`.
-   Claude recommends **Field 7 + base**; owner to choose.
+   Claude recommended Field 7 + base. **Owner chose Field 7 "for now"** (front lines 6 rows
+   apart, nexus on the start line). The shipped board stays classic until the champion
+   rewrite gives Field 7 openings that fit it; today's openings fall back 85% of the time there.
 3. **Three abilities plus summoner spells** — schema change, then the real work: rewriting
    the roster around distinct verbs. Claude drafts a spell pool for the owner to react to.
 4. **Terrain**, once the board is settled.
+
+## Idea parking lot
+
+Ideas the owner raised but has not committed to. Recorded so they are not lost; none is
+scheduled.
+
+### Overwatch (owner, 2026-10-04)
+
+*From XCOM and similar turn-based games: hold back part of your turn, and act in the
+opponent's turn when a condition is met.*
+
+- **The idea.** A champion can go on Overwatch instead of acting. If a condition is met
+  during the opponent's turn — an enemy comes into view or reach, or the champion is
+  attacked — it acts for free.
+- **Where it might fit.** A fallback **if three abilities per champion still prove too
+  many**: one of the three becomes an Overwatch ability, a fixed action much like a
+  passive (a fixed-hex attack or a fixed move), which you arm instead of acting.
+- **Notes for later (Claude).**
+  - It fits the existing machinery. Passives already fire on conditions such as
+    `OnEnemyEntersReach`, and the ladder already has a give-up-your-turn decision in Pass /
+    Last Word. Arming Overwatch would be a third way to spend a champion's action on the
+    ladder.
+  - It is deterministic and readable if the armed champion and its trigger are shown on
+    the board (Pillar 1: nothing hidden).
+  - The risk is reaction chains. An Overwatch shot that triggers another Overwatch needs a
+    depth limit; passives use depth 1.
+  - It could also help the failing pass-rate criterion (Sigils #14): holding something back
+    becomes a real option.
