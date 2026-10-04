@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>v2 Champion Draft</title>
+<style>
+:root { --bg:#080c18; --card:#0f1628; --text:#dfe6f5; --dim:#8390ad; --gold:#e8c46a; --A:#3fa7ff; --B:#ff4d5e; --line:#26314f;
+  --t1:#3fd6a0; --t2:#5a9dff; --t3:#b07aff; --t4:#ff9a3c; --bad:#ff5a5a; --good:#57e08a; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:12.5px/1.4 system-ui, sans-serif; padding:18px 22px; width:1700px; }
+h1 { margin:0 0 2px; font-size:20px; letter-spacing:.12em; text-transform:uppercase; }
+h2 { margin:18px 0 8px; font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); }
+.lead { color:var(--dim); max-width:1300px; }
+.spells { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
+.spell { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+.spell b { font-size:14px; } .spell .meta { float:right; color:var(--dim); }
+.spell .when { color:var(--good); margin-top:3px; } .spell .ans { color:var(--dim); }
+.init { display:inline-block; min-width:18px; text-align:center; border-radius:3px; color:#000; font-weight:900; margin-right:4px; }
+.champs { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.champ { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+.chead { display:flex; gap:10px; align-items:center; }
+.chead .ico { width:38px; height:38px; border-radius:50%; background:#0e3558; border:2px solid var(--A); display:grid; place-items:center; }
+.chead h3 { margin:0; font-size:17px; } .chead .role { color:var(--dim); letter-spacing:.14em; text-transform:uppercase; font-size:11px; }
+.line { font-style:italic; margin:4px 0 2px; }
+.stats { color:var(--dim); font-size:11.5px; } .passive { color:var(--t3); }
+.ab { display:grid; grid-template-columns:1fr 128px; gap:8px; align-items:center; padding:6px 0; border-top:1px solid #1b2440; }
+.verbs span { display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:.08em; padding:0 5px; border-radius:7px; background:#2a3350; margin-right:3px; }
+.ab .txt { margin-top:2px; }
+.ops { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; border-top:1px solid #1b2440; padding-top:6px; }
+.op { text-align:center; font-size:11.5px; padding:4px 0; } .op .nm { color:var(--gold); }
+.op .bad { color:var(--bad); }
+.notes { margin-top:6px; font-size:11.5px; } .notes b { color:var(--gold); font-weight:600; }
+svg.mini { display:block; margin:0 auto; }
+</style></head><body>
+<h1>v2 draft — summoner spells and four sample champions</h1>
+<div class="lead">For the owner to react to; not in the game yet. Each champion: three abilities, each a different verb, plus a fourth slot filled by a summoner spell chosen after the draft. Four opening plays each: one per ability, plus the champion's own fourth ("signature") opening — the spell never brings one. Openings are drawn on <b>Field 7</b> from the starting line, towers solid; all sixteen are playable from there. Team A's view: forward is up.</div>
+<h2>Summoner spells — one shared pool, learned once</h2>
+<div class="spells" id="spells"></div>
+<h2>Sample champions</h2>
+<div class="champs" id="champs"></div>
+<script>
+const DATA = __DATA__;
+const SQ3 = Math.sqrt(3), ROLES = ['Top','Jungle','Mid','Bottom','Support'];
+function icon(role, color, size, x = 0, y = 0) {
+  const s = `stroke="${color}" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  const p = { Top: `<path ${s} d="M5 19 L17 7 L19 5 M16 4 L20 4 L20 8 M7 13 L11 17 M4 20 L6 18"/>`,
+    Jungle: `<path ${s} d="M6 20 C6 12 9 7 14 4 M11 20 C11 13 13 9 18 6 M16 20 C16 15 17 12 20 10"/>`,
+    Mid: `<path ${s} d="M12 3 L20 12 L12 21 L4 12 Z M12 8 L16 12 L12 16 L8 12 Z"/>`,
+    Bottom: `<circle ${s} cx="12" cy="12" r="7"/><path ${s} d="M12 2 V7 M12 17 V22 M2 12 H7 M17 12 H22"/>`,
+    Support: `<path ${s} d="M12 3 L19 6 V12 C19 16 16 19 12 21 C8 19 5 16 5 12 V6 Z M12 9 V15 M9 12 H15"/>` }[role];
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24">${p}</svg>`;
+}
+function mk(S) {
+  const px = (q, r) => [S * SQ3 * (q + r / 2), -S * 1.5 * r];
+  const poly = (q, r, k = 0.93) => [...Array(6)].map((_, i) => { const a = Math.PI / 180 * (60 * i - 30); const [x, y] = px(q, r); return `${(x + S * k * Math.cos(a)).toFixed(1)},${(y + S * k * Math.sin(a)).toFixed(1)}`; }).join(' ');
+  return { px, poly };
+}
+const dist = ([a, b], [c, d]) => (Math.abs(a - c) + Math.abs(b - d) + Math.abs(a + b - c - d)) / 2;
+function svgWrap(parts, pts, S) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = S * 1.2;
+  const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad, w = Math.max(...xs) - Math.min(...xs) + 2 * pad, h = Math.max(...ys) - Math.min(...ys) + 2 * pad;
+  return `<svg class="mini" viewBox="${x0} ${y0} ${w} ${h}" width="${w}" height="${h}"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#fff"/></marker><marker id="ahb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff5a5a"/></marker></defs>${parts.join('')}</svg>`;
+}
+function token(px, h, role, team, S, extra = '') {
+  const [x, y] = px(...h);
+  return `<g ${extra}><circle cx="${x}" cy="${y}" r="${S * 0.68}" fill="${team === 'A' ? '#0e3558' : '#57121d'}" stroke="${team === 'A' ? '#3fa7ff' : '#ff4d5e'}" stroke-width="1.6"/>${role ? icon(role, '#fff', S * 1.1, x - S * 0.55, y - S * 0.55) : ''}</g>`;
+}
+function arrow(px, a, b, S, cls = '') {
+  const [x1, y1] = px(...a), [x2, y2] = px(...b), d = Math.hypot(x2 - x1, y2 - y1) || 1, sh = S * 0.55;
+  return `<line x1="${x1 + (x2 - x1) * sh / d}" y1="${y1 + (y2 - y1) * sh / d}" x2="${x2 - (x2 - x1) * sh / d}" y2="${y2 - (y2 - y1) * sh / d}" stroke="${cls ? '#ff5a5a' : '#fff'}" stroke-width="1.8" marker-end="url(#${cls ? 'ahb' : 'ah'})"/>`;
+}
+function combat(ab, role) {
+  const S = 10, { px, poly } = mk(S), parts = [], pts = [];
+  const heal = ab.verbs.some(v => /heal|shield|swap|pull ally|unstoppable/.test(v)) && !ab.verbs.some(v => /damage/.test(v));
+  const R = ab.aim === 'free' ? Math.max(2, ab.range + 1) : Math.max(2, ...ab.pattern.map(p => dist(p, [0, 0])));
+  const cells = new Map();
+  if (ab.aim === 'free') {
+    for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) if (dist([q, r], [0, 0]) <= ab.range && (q || r)) cells.set(`${q},${r}`, 'reach');
+    if (ab.target === 'enemy') cells.set(`0,${ab.range}`, 'hit');
+    if (ab.target === 'ally') cells.set(`-1,1`, 'buff');
+    if (ab.target === 'empty') cells.set(`0,${ab.range}`, 'wall');
+  } else for (const [q, r] of ab.pattern) cells.set(`${q},${r}`, heal ? 'buff' : 'hit');
+  const fill = { reach: 'rgba(232,196,106,.25)', hit: 'rgba(255,90,90,.8)', buff: 'rgba(87,224,138,.7)', wall: '#9aa3b5' };
+  for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) {
+    if (dist([q, r], [0, 0]) > R) continue;
+    const c = cells.get(`${q},${r}`);
+    parts.push(`<polygon points="${poly(q, r)}" fill="${c ? fill[c] : '#1d2744'}" stroke="#0a0f1d" stroke-width="1"/>`);
+    pts.push(px(q, r));
+  }
+  parts.push(token(px, [0, 0], role, 'A', S));
+  if (ab.target === 'enemy') parts.push(token(px, [0, ab.range], null, 'B', S, 'opacity=".5"'));
+  if (ab.target === 'ally') parts.push(token(px, [-1, 1], null, 'A', S, 'opacity=".5"'));
+  if (ab.target === 'self') parts.push(`<circle cx="0" cy="0" r="${S * 0.95}" fill="none" stroke="#57e08a" stroke-width="2"/>`);
+  return svgWrap(parts, pts, S);
+}
+function opening(op, me) {
+  const S = 14, { px, poly } = mk(S), parts = [], pts = [], b = DATA.board;
+  const tw = new Set(b.towers.map(h => h.join(','))), nx = new Set(b.nexusA.map(h => h.join(',')));
+  for (const h of b.hexes) if (h[1] <= 0) {
+    parts.push(`<polygon points="${poly(...h)}" fill="${nx.has(h.join(',')) ? '#173a5c' : '#1d2744'}" stroke="#0a0f1d" stroke-width="1"/>`);
+    pts.push(px(...h));
+  }
+  b.towers.forEach((t, i) => { if (t[1] > 0) return; const [x, y] = px(...t);
+    parts.push(`<rect x="${x - S * 0.5}" y="${y - S * 0.55}" width="${S}" height="${S * 1.1}" rx="1.5" fill="#0b1020" stroke="${i === 0 ? '#9aa3b5' : '#3fa7ff'}" stroke-width="1.6"/>`); });
+  const start = Object.fromEntries(DATA.board.startA.map((h, i) => [ROLES[i], h]));
+  for (const r of ROLES) {
+    const f = op.final[r];
+    if (f[0] !== start[r][0] || f[1] !== start[r][1]) parts.push(token(px, start[r], r, 'A', S, 'opacity=".35"'));
+  }
+  op.path.forEach((p, i) => {
+    if (p[0] === 'beacon') { const [x, y] = px(...p[2]); parts.push(`<polygon points="${x - S * .45},${y - S * .9} ${x},${y - S * 1.35} ${x + S * .45},${y - S * .9} ${x},${y - S * .45}" fill="#3fa7ff88" stroke="#3fa7ff"/>`); }
+    else parts.push(arrow(px, p[2], p[3], S, p[0] === 'blocked' ? 'bad' : ''));
+  });
+  for (const r of ROLES) parts.push(token(px, op.final[r], r, 'A', S, r === me ? 'stroke-width="2"' : ''));
+  op.path.forEach((p, i) => { if (p[0] === 'move') { const [x1, y1] = px(...p[2]), [x2, y2] = px(...p[3]); parts.push(`<circle cx="${(x1 + x2) / 2 + 5}" cy="${(y1 + y2) / 2}" r="5" fill="#000" stroke="#fff" stroke-width=".7"/><text x="${(x1 + x2) / 2 + 5}" y="${(y1 + y2) / 2 + 2.5}" font-size="7" fill="#fff" text-anchor="middle" font-weight="800">${i + 1}</text>`); } });
+  return svgWrap(parts, pts, S);
+}
+const tc = n => `var(--t${n})`;
+document.getElementById('spells').innerHTML = DATA.spells.map(([n, init, cd, eff, when, ans]) =>
+  `<div class="spell"><span class="meta">cooldown ${cd} rounds</span><span class="init" style="background:${tc(init)}">${init}</span><b>${n}</b><div>${eff}</div><div class="when">Take it: ${when}</div><div class="ans">Answer: ${ans}</div></div>`).join('');
+const dirTxt = s => s[0] === 'beacon' ? `beacon ${'I II III'.split(' ')[s[2] - 1]} under ${s[1].toLowerCase()}` : `${s[1].toLowerCase()} ${s[2]}`;
+document.getElementById('champs').innerHTML = DATA.champions.map(c => `<div class="champ">
+  <div class="chead"><div class="ico">${icon(c.role, '#fff', 24)}</div><div><h3>${c.name}</h3><div class="role">${c.role}</div></div></div>
+  <div class="line">${c.line}</div>
+  <div class="stats">HP ${c.stats.hp} · POW ${c.stats.pow.toFixed(2)} · ARM ${c.stats.arm} · RCH ${c.stats.rch} · SPD ${c.stats.spd}</div>
+  <div class="passive">Passive — ${c.passive[0]}: ${c.passive[1]}</div>
+  ${c.abilities.map(a => `<div class="ab"><div><span class="init" style="background:${tc(a.init)}">${a.init}</span><b>${a.key} · ${a.name}</b> <span style="color:var(--dim)">· ${a.aim === 'free' ? 'free aim' : a.aim} · cooldown ${a.cd}</span>
+    <div class="verbs">${a.verbs.map(v => `<span>${v}</span>`).join('')}</div><div class="txt">${a.text}</div></div>${combat(a, c.role)}</div>`).join('')}
+  <div class="ops">${c.openings.map((o, i) => `<div class="op"><div class="nm">${i < 3 ? c.abilities[i].key + ' · ' : '4th · '}${o.name}</div>${opening(o, c.role)}<div>${o.steps.map(dirTxt).join(' → ')}</div></div>`).join('')}</div>
+  <div class="notes"><b>How to play it.</b> ${c.play}<br><b>Works with.</b> ${c.partners}<br><b>Answered by.</b> ${c.answers}</div>
+</div>`).join('');
+</script></body></html>

@@ -4,7 +4,7 @@
 
 ## Current Task
 
-**v2 IN PROGRESS — 2026-10-04.** Direction agreed after playtests: `design/v2-direction.md`. Step 1 done (nexus HP race D-038; solid towers implemented, shipped off D-039). Step 2 measured: `design/board-layouts.md` (recommend Field 7 + base; owner choosing). Next: 3 abilities + summoner spells and the champion rewrite.
+**v2 IN PROGRESS — 2026-10-04.** Direction agreed after playtests: `design/v2-direction.md`. Step 1 done (nexus HP race D-038; solid towers implemented, shipped off D-039). Step 2 measured: `design/board-layouts.md` (recommend Field 7 + base; owner choosing). Owner chose Field 7. Step 3 drafted: `design/v2-champions.md` + sheet (8 spells, 4 sample champions, verbs); awaiting owner's reaction before engine verbs + roster rewrite.
 
 **FIRST PLAYABLE BUILT — 2026-09-27.** The owner granted standing authority to finish the
 design and build to a first playable, logging every unilateral decision.
