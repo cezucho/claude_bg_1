@@ -393,3 +393,18 @@ svg.mini { display: block; max-width: 100%; }
 .spell-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .spell-card .det-init { font-style: normal; font-weight: 900; padding: 0 4px; border-radius: 3px; color: #000; }
 .spell-card .taken-lbl { color: var(--dim); font-size: 10px; }
+
+/* ───────── synergy groups in the draft ───────── */
+.syn-score { text-align: center; margin: -6px 0 8px; font-size: 12.5px; }
+.syn-legend { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 14px; }
+.syn-chip { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--bg3); color: var(--dim); border: 1px solid var(--line); cursor: help; }
+.syn-chip b { color: var(--text); margin-right: 3px; }
+.syn-chip.small { font-size: 10px; padding: 0 6px; }
+.syn-chip.ours.A { border-color: var(--A); color: #cfe6ff; background: var(--A-dark); }
+.syn-chip.ours.B { border-color: var(--B); color: #ffd5da; background: var(--B-dark); }
+.syn-chip.theirs { border-style: dashed; }
+.syn-chip.theirs.A { border-color: var(--A); }
+.syn-chip.theirs.B { border-color: var(--B); }
+.dcard .dgroups { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0 4px; }
+.det-syn { font-size: 11px; color: #cfe6ff; margin: 2px 0; }
+.det-syn b { color: var(--gold); }

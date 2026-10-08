@@ -33,6 +33,7 @@ public static class EffectText
             _ => e.Kind.ToString(),
         };
 
+        if (e.Slam > 0) text += $", {e.Slam} if it slams into something";
         if (e.BonusVs != StatusKind.None)
         {
             text += e.BonusDouble ? $", doubled vs {e.BonusVs.ToString().ToLowerInvariant()}" : $", +{e.BonusFlat} vs {e.BonusVs.ToString().ToLowerInvariant()}";

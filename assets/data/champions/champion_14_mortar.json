@@ -1,129 +1,130 @@
 {
-  "id": "gunner",
-  "name": "Gunner",
+  "id": "mortar",
+  "name": "Mortar",
   "role": "Bottom",
-  "glyph": "G",
-  "line": "Bursts from safety, hardest on a target that can't move.",
+  "glyph": "M",
+  "line": "Shells enemies from far back, into walls, towers and each other.",
   "stats": {
-    "vit": 26000,
-    "pow": 1150,
+    "vit": 24000,
+    "pow": 1100,
     "arm": 0,
     "rch": 3000,
-    "spd": 2000
+    "spd": 1000
   },
   "passive": {
-    "name": "Overwatch",
-    "trigger": "OnEnemyEntersReach",
-    "effect": "Strike",
-    "amount": 1
+    "name": "Entrenched",
+    "trigger": "OnRoundClose",
+    "effect": "ShieldSelf",
+    "amount": 2
   },
   "abilities": [
     {
-      "name": "Snipe",
+      "name": "Shell",
       "initiative": 1,
       "cooldown": 1,
       "effects": [
         {
           "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "power": 800
+        },
+        {
+          "kind": "Displace",
+          "amount": 1,
+          "slam": 3
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
+        "rch",
+        25
+      ],
+      "moldDown": [
         "spd",
         25
       ],
-      "moldDown": [
-        "arm",
-        25
-      ],
-      "slotSigil": 2,
+      "slotSigil": 0,
       "opening": [
-        "cast top w",
         "cast bottom q",
-        "move bottom forward-right"
+        "move bottom forward-left",
+        "move support forward-left"
       ]
     },
     {
-      "name": "Recoil",
+      "name": "Tripwire",
       "initiative": 2,
-      "cooldown": 2,
+      "cooldown": 3,
       "target": "EmptyHex",
       "effects": [
         {
-          "kind": "Dash",
+          "kind": "Wall",
           "amount": 2
         }
       ],
-      "scalesFrom": "spd",
+      "scalesFrom": "rch",
       "moldUp": [
+        "vit",
+        30
+      ],
+      "moldDown": [
         "pow",
         25
       ],
-      "moldDown": [
-        "vit",
-        25
-      ],
       "opening": [
-        "move bottom forward-left",
         "move bottom forward-right",
-        "beacon bottom 2"
+        "move bottom forward-left",
+        "beacon bottom 0"
       ]
     },
     {
-      "name": "Buckshot",
-      "initiative": 3,
-      "cooldown": 1,
+      "name": "Barrage",
+      "initiative": 4,
+      "cooldown": 3,
       "pattern": [
         [
           0,
-          1
-        ],
-        [
-          -1,
-          1
+          2
         ],
         [
           0,
-          2
+          3
+        ],
+        [
+          -1,
+          3
+        ],
+        [
+          -1,
+          4
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600
-        },
-        {
-          "kind": "Displace",
-          "amount": 1,
-          "slam": 2
+          "power": 2200
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "vit",
+        "arm",
         60
       ],
       "moldDown": [
-        "rch",
+        "spd",
         60
       ],
-      "printedSigil": 0,
       "opening": [
-        "move bottom forward-right",
-        "move support forward-right",
+        "move support forward-left",
+        "move bottom right",
         "move mid forward-right"
       ]
     }
   ],
   "signature": {
-    "name": "Hold Position",
+    "name": "Dig In",
     "opening": [
       "move bottom forward-left",
       "move mid forward-left",
-      "move support forward-left"
+      "beacon bottom 1"
     ]
   }
 }

@@ -46,8 +46,8 @@ public sealed class MatchSession
             };
 
             // Presentation, not simulation: a time-based seed so AI drafts differ (ADR-0002
-            // binds Augury.Sim only).
-            _drafter = new RandomAgent((uint)Environment.TickCount);
+            // binds Augury.Sim only). The AI drafts around synergy groups, with some noise.
+            _drafter = new SynergyDrafter(_game, (uint)Environment.TickCount) { NoisePermille = 150 };
             _log.Clear();
             _undo.Clear();
             _last = null;

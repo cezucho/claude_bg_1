@@ -853,7 +853,11 @@ function draftView() {
   const modes = [['vsai-A', 'vs AI · play A (bottom)'], ['vsai-B', 'vs AI · play B (top)'], ['hotseat', 'Hotseat'], ['watch', 'Watch AI vs AI']];
   const root = h(`<div class="draft"><h2>Draft</h2>
     <div class="sub mode-row">${modes.map(([m, l]) => `<button data-newmode="${m}" class="${V.mode === m ? 'on' : ''}">${l}</button>`).join(' ')} <button data-help>Rules</button></div>
-    <div class="sub">${who}. Snake order A · B B · A A · B B · A A · B. One champion per role; a picked champion is gone for both teams.</div><div class="draft-cols"></div></div>`);
+    <div class="sub">${who}. Snake order A · B B · A A · B B · A A · B. One champion per role; a picked champion is gone for both teams.</div>
+    <div class="syn-score"><span class="A-c">Team A synergy <b>${V.synergy[0]}</b></span> · <span class="B-c">Team B synergy <b>${V.synergy[1]}</b></span>
+      <span class="tt-dim">— one point per pair of champions on a team that share a group</span></div>
+    <div class="syn-legend">${V.synergies.map(g => `<span class="syn-chip ${groupState(g.id)}" title="${esc(g.idea)}"><b>${esc(g.name)}</b> ${g.members.map(id => esc(nameOf(id))).join(' · ')}</span>`).join('')}</div>
+    <div class="draft-cols"></div></div>`);
   root.querySelectorAll('[data-newmode]').forEach(b => b.addEventListener('click', () => api('POST', `/api/new?mode=${b.dataset.newmode}`)));
   root.querySelector('[data-help]').addEventListener('click', showHelp);
   const cols = root.querySelector('.draft-cols');
@@ -868,6 +872,7 @@ function draftView() {
       const card = h(`<div class="dcard ${pick ? 'pickable' : ''} ${taken ? 'taken' : ''}">
         <div class="top">${portrait(d.id, d.glyph, taken ? taken.team : pick ? V.active : 'N')}<div><b>${esc(d.name)}</b>${taken ? ` <span class="${taken.team}-c taken-lbl">picked by ${taken.team}</span>` : ''}<div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div></div></div>
         ${d.line ? `<div class="dline">${esc(d.line)}</div>` : ''}
+        <div class="dgroups">${d.groups.map(id => { const g = V.synergies.find(x => x.id === id); return `<span class="syn-chip small ${groupState(id, d.id)}" title="${esc(g.idea)} — ${esc(g.members.filter(m => m !== d.id).map(nameOf).join(', '))}">${esc(g.name)}${partnerNote(id, d.id)}</span>`; }).join('')}</div>
         ${d.abilities.map(x => `<div class="dab"><i style="background:var(--t${x.init})">${x.init}</i><span><b>${esc(x.name)}</b> · ${esc(x.effects)} <span class="tt-dim">· cd ${x.cooldown}${x.printedSigil ? ` · sigil ${x.printedSigil}` : ''}${x.slotSigil ? ` · slot ${x.slotSigil}` : ''}</span>${x.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>`).join('')}
         ${d.signature ? `<div class="dab"><i class="spell">✦</i><span><b>Summoner spell</b> <span class="tt-dim">· chosen after the draft · opening: ${esc(d.signature.name)}</span>${d.signature.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>` : ''}
         <div class="passive">${esc(d.passive.name)} — ${esc(d.passive.text)}</div>
@@ -917,6 +922,24 @@ function spellView() {
     grid.appendChild(card);
   }
   return root;
+}
+
+// ───────────────────────────── synergy (draft) ─────────────────────────────
+
+function nameOf(id) { return (V.roster || []).find(d => d.id === id)?.name || id; }
+function teamIds(team) { return V.champions.filter(c => c.team === team && c.drafted).map(c => c.id); }
+
+// A group is "ours" when a member is already on the picking team, "theirs" when on the other.
+function groupState(groupId, self = null) {
+  const g = V.synergies.find(x => x.id === groupId);
+  const mine = teamIds(V.active).filter(id => id !== self && g.members.includes(id)).length;
+  const theirs = teamIds(V.active === 'A' ? 'B' : 'A').filter(id => id !== self && g.members.includes(id)).length;
+  return mine ? `ours ${V.active}` : theirs ? `theirs ${V.active === 'A' ? 'B' : 'A'}` : '';
+}
+function partnerNote(groupId, self) {
+  const g = V.synergies.find(x => x.id === groupId);
+  const mine = teamIds(V.active).filter(id => id !== self && g.members.includes(id));
+  return mine.length ? ` +${mine.length} with ${mine.map(nameOf).join(', ')}` : '';
 }
 
 // Whose orientation the draft diagrams use: the human's, or the side picking in hotseat.

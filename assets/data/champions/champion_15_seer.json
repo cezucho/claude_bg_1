@@ -1,0 +1,138 @@
+{
+  "id": "seer",
+  "name": "Seer",
+  "role": "Support",
+  "glyph": "E",
+  "line": "Calls the target: marks and binds one enemy so the whole team knows where to hit.",
+  "stats": {
+    "vit": 27000,
+    "pow": 900,
+    "arm": 1000,
+    "rch": 3000,
+    "spd": 2000
+  },
+  "passive": {
+    "name": "Foresight",
+    "trigger": "OnRoundClose",
+    "effect": "ShieldSelf",
+    "amount": 1
+  },
+  "abilities": [
+    {
+      "name": "Omen",
+      "initiative": 1,
+      "cooldown": 1,
+      "effects": [
+        {
+          "kind": "Mark",
+          "amount": 3
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "rch",
+        25
+      ],
+      "moldDown": [
+        "vit",
+        25
+      ],
+      "slotSigil": 1,
+      "opening": [
+        "move support forward-left",
+        "cast support q",
+        "move support back-right"
+      ]
+    },
+    {
+      "name": "Bind",
+      "initiative": 2,
+      "cooldown": 2,
+      "rangeBonus": -1,
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 500
+        },
+        {
+          "kind": "Root",
+          "amount": 2
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "spd",
+        30
+      ],
+      "moldDown": [
+        "vit",
+        30
+      ],
+      "printedSigil": 0,
+      "opening": [
+        "move support forward-right",
+        "move bottom forward-right",
+        "beacon support 1"
+      ]
+    },
+    {
+      "name": "Revelation",
+      "initiative": 4,
+      "cooldown": 3,
+      "pattern": [
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "effects": [
+        {
+          "kind": "Damage",
+          "power": 1200
+        },
+        {
+          "kind": "Mark",
+          "amount": 2
+        },
+        {
+          "kind": "Exhaust",
+          "amount": 1
+        }
+      ],
+      "scalesFrom": "pow",
+      "moldUp": [
+        "arm",
+        60
+      ],
+      "moldDown": [
+        "spd",
+        60
+      ],
+      "opening": [
+        "move support forward-left",
+        "move support forward-right",
+        "move bottom forward-left"
+      ]
+    }
+  ],
+  "signature": {
+    "name": "Vision",
+    "opening": [
+      "move support forward-right",
+      "move support left",
+      "beacon support 2"
+    ]
+  }
+}

@@ -254,6 +254,7 @@ function champDetail(d, team) {
       <h4>${esc(d.name)} <span class="tt-dim">· ${d.role}</span></h4>
       <div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div>
       ${d.line ? `<div class="det-line">${esc(d.line)}</div>` : ''}
+      ${(d.groups || []).map(id => { const g = (V.synergies || []).find(x => x.id === id); return g ? `<div class="det-syn"><b>${esc(g.name)}</b> with ${esc(g.members.filter(m => m !== d.id).map(nameOf).join(', '))} — ${esc(g.idea)}</div>` : ''; }).join('')}
       <div style="color:var(--t3)">${esc(d.passive.name)} — ${esc(d.passive.text)}</div></div></div>
     <div class="det-cols"><span></span><span>In combat</span><span>In the opening (team ${team}, from the starting line)</span></div>
     ${rows}`;

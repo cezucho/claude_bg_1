@@ -31,7 +31,10 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
   shield support), coloured by team; the champion's name is in the side panel.
 - **In the draft, hover a champion** for a card with every ability's combat shape and
   opening moves side by side, to compare champions before you pick. Each card says how the
-  champion is meant to be played, and tags its **opening attack**.
+  champion is meant to be played, and tags its **opening attack**. Fifteen champions, three per
+  role. Above the columns are the **synergy groups** — champions that work well together — and
+  each team's synergy score; a card's group chips light up in your colour when a partner is
+  already on your team (dashed in the enemy's colour when they have started that group).
 - **Summoner spells** come after the draft: give each of your champions one of eight spells
   (no spell twice in a team). The other team's spells stay hidden until the opening. A spell
   sits in slot R with a dashed gold border; slot R's opening is still the champion's own.

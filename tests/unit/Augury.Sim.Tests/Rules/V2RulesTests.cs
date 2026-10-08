@@ -1,3 +1,4 @@
+using Augury.Sim.AI;
 using Augury.Sim.Content;
 
 namespace Augury.Sim.Tests.Rules;
@@ -11,8 +12,9 @@ namespace Augury.Sim.Tests.Rules;
 [Collection("Board switching")]
 public sealed class V2RulesTests : IDisposable
 {
-    // Content indices follow file order: 01 Anchor … 10 Bastion.
+    // Content indices follow file order: 01 Anchor … 15 Seer.
     private const int Anchor = 0, Ember = 1, Lens = 2, Oriel = 3, Bulwark = 4, Viper = 5, Tempest = 6, Ranger = 7, Gunner = 8, Bastion = 9;
+    private const int Briar = 10, Talon = 11, Pyre = 12, Mortar = 13, Seer = 14;
 
     // Picks per role: Top, Jungle, Mid, Bottom, Support.
     private static readonly int[] PicksA = [Anchor, Ember, Lens, Ranger, Oriel];
@@ -34,9 +36,10 @@ public sealed class V2RulesTests : IDisposable
         Enumerable.Range(0, 3).Single(i => d.Abilities[i].Opening.Any(any));
 
     [Fact]
-    public void Roster_TenChampions_ThreeAbilitiesSignatureAndOneCastOpening()
+    public void Roster_FifteenChampions_ThreePerRole_ThreeAbilitiesSignatureAndOneCastOpening()
     {
-        Assert.Equal(10, _game.Content.Champions.Count);
+        Assert.Equal(15, _game.Content.Champions.Count);
+        Assert.All(Enum.GetValues<Role>(), r => Assert.Equal(3, _game.Content.ForRole(r).Count()));
         Assert.Equal(8, _game.Content.Spells.Count);
         Assert.Equal("field7", _game.Rules.Board);
         Assert.True(_game.Rules.TowersBlock);
@@ -63,6 +66,117 @@ public sealed class V2RulesTests : IDisposable
                 for (int ab = 0; ab < 4; ab++) Assert.True(_game.OpeningAvailable(s, slot, ab), $"{_game.Name(s, slot)} opening {ab}");
             }
         }
+    }
+
+    [Fact]
+    public void Synergies_LoadAndScoreSharedGroupPairs()
+    {
+        ContentDb db = _game.Content;
+        Assert.NotEmpty(db.Synergies);
+        Assert.All(db.Champions.Select((_, i) => i), i => Assert.NotEmpty(db.GroupsOf(i)));   // nobody is left out
+
+        // Lockdown: Anchor, Gunner, Seer → 3 pairs. Called Shot: Lens, Talon, Seer → 3 pairs.
+        Assert.Equal(6, db.SynergyScore([Anchor, Talon, Lens, Gunner, Seer]));
+        // Bulwark and Lens share Crush; Lens and Ranger share Called Shot.
+        Assert.Equal(2, db.SynergyScore([Bulwark, Ember, Lens, Ranger, Oriel]));
+        Assert.Equal(0, db.SynergyScore([255, 255]));
+    }
+
+    /// <summary>A ladder state at round 1: picks as given, champions on their start hexes.</summary>
+    private MatchState Ladder(Team active, int[]? a = null, int[]? b = null)
+    {
+        MatchState s = Opening(active, a, b);
+        s.Phase = Phase.Ladder;
+        s.Round = 1;
+        s.Half = 1;
+        s.Ceiling = 4;
+        s.Active = active;
+        return s;
+    }
+
+    [Fact]
+    public void Slam_RootedOrWalledTarget_TakesExtraDamage_UnstoppableDoesNot()
+    {
+        // B's Bulwark (slot 5) shoves A's Ember (slot 1), which has no on-damage passive.
+        // Arrangements mutate a one-element array so the struct state is changed in place.
+        MatchState Prepare(Action<MatchState[]> f) { var arr = new[] { Ladder(Team.B) }; f(arr); return arr[0]; }
+
+        int Loss(Action<MatchState[]> arrange, out HexCoord pos, out List<GameEvent> log)
+        {
+            MatchState s = Prepare(arr =>
+            {
+                arr[0].Champions[5].Pos = new HexCoord(1, 0);
+                arr[0].Champions[1].Pos = new HexCoord(1, -1);
+                arrange(arr);
+            });
+            int before = s.Champions[1].Hp;
+            log = new List<GameEvent>();
+            _game.Apply(ref s, new Command(CommandKind.Ability, 5, 0, Target.Champ(1)), log);
+            pos = s.Champions[1].Pos;
+            return before - s.Champions[1].Hp;
+        }
+
+        int plain = Loss(arr => arr[0].Champions[1].UnstoppableHalves = 1, out HexCoord p0, out var l0);
+        Assert.Equal(new HexCoord(1, -1), p0);
+        Assert.DoesNotContain(l0, e => e.Text.Contains("SLAMS"));
+
+        int rooted = Loss(arr => arr[0].Champions[1].RootHalves = 1, out HexCoord p1, out var l1);
+        Assert.Equal(new HexCoord(1, -1), p1);
+        Assert.Contains(l1, e => e.Text.Contains("SLAMS"));
+        Assert.Equal(plain + 2, rooted);   // Shove's slam is 2
+
+        int walled = Loss(arr =>
+        {
+            // Every hex that would take Ember further from Bulwark is a wall.
+            arr[0].Walls[0] = new Wall { Pos = new HexCoord(1, -2), Rounds = 2 };
+            arr[0].Walls[1] = new Wall { Pos = new HexCoord(2, -2), Rounds = 2 };
+            arr[0].Walls[2] = new Wall { Pos = new HexCoord(0, -1), Rounds = 2 };
+        }, out HexCoord p2, out var l2);
+        Assert.Equal(new HexCoord(1, -1), p2);
+        Assert.Equal(plain + 2, walled);
+    }
+
+    [Fact]
+    public void BonusVsMarked_AddsOnTopOfTheMark()
+    {
+        // A's Ranger (slot 3) Volleys B's Viper (slot 6): +2 vs marked, plus the mark itself.
+        int Loss(int mark)
+        {
+            MatchState s = Ladder(Team.A);
+            s.Champions[6].Pos = new HexCoord(2, -1);
+            s.Champions[6].Mark = (byte)mark;
+            int before = s.Champions[6].Hp;
+            _game.Apply(ref s, new Command(CommandKind.Ability, 3, 0, Target.Champ(6)));
+            return before - s.Champions[6].Hp;
+        }
+
+        Assert.Equal(Loss(0) + 3 + 2, Loss(3));
+    }
+
+    [Fact]
+    public void SynergyDrafter_BuildsMoreSynergyThanRandomDrafting()
+    {
+        int Total(Func<uint, IAgent> drafter)
+        {
+            int sum = 0;
+            for (uint seed = 1; seed <= 20; seed++)
+            {
+                IAgent d = drafter(seed);
+                var rng = new RandomPlayTests.Lcg(seed);
+                MatchState s = _game.NewMatch();
+                while (s.Phase == Phase.Draft)
+                {
+                    List<Command> legal = _game.Legal(s);
+                    _game.Apply(ref s, s.Active == Team.A ? d.Choose(s, legal) : legal[rng.Below(legal.Count)]);
+                }
+
+                sum += _game.Content.SynergyScore(Enumerable.Range(0, 5).Select(i => (int)s.Champions[i].Def));
+            }
+
+            return sum;
+        }
+
+        Assert.True(Total(seed => new SynergyDrafter(_game, seed)) > Total(seed => new RandomAgent(seed)));
     }
 
     [Fact]

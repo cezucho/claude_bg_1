@@ -477,7 +477,16 @@ public sealed partial class Game
                     break;
 
                 case EffectKind.Displace:
-                    foreach (int t in champTargets) Displace(ref s, slot, t, e.Amount, log);
+                    foreach (int t in champTargets)
+                    {
+                        bool stopped = Displace(ref s, slot, t, e.Amount, log);
+                        if (stopped && e.Slam > 0 && e.Amount > 0 && s.Champions[t].OnBoard)
+                        {
+                            Log(log, EventKind.Damage, $"  {Name(s, t)} SLAMS into something");
+                            DamageChampion(ref s, t, e.Slam, slot, fromPassive: false, log);
+                        }
+                    }
+
                     break;
 
                 case EffectKind.Dash:
@@ -644,6 +653,8 @@ public sealed partial class Game
             StatusKind.Rooted => t.Rooted,
             StatusKind.Burning => t.Burning,
             StatusKind.Poisoned => t.PoisonRounds > 0,
+            StatusKind.Marked => t.Mark > 0,
+            StatusKind.Exhausted => t.ExhaustHalves > 0,
             _ => false,
         };
         if (bonus)
@@ -799,12 +810,20 @@ public sealed partial class Game
         if (s.NexusHp[idx] <= 0) EndMatch(ref s, attacker, EndReason.Nexus, log);
     }
 
-    private void Displace(ref MatchState s, int caster, int target, int amount, List<GameEvent>? log)
+    /// <returns>True when the target moved fewer hexes than asked: blocked, at the edge, or rooted
+    /// (it "slams"). Unstoppable targets ignore the push entirely and never slam.</returns>
+    private bool Displace(ref MatchState s, int caster, int target, int amount, List<GameEvent>? log)
     {
-        if (s.Champions[target].Rooted || s.Champions[target].Unstoppable)
+        if (s.Champions[target].Unstoppable)
         {
-            Log(log, EventKind.Move, $"  {Name(s, target)} holds its ground");
-            return;
+            Log(log, EventKind.Move, $"  {Name(s, target)} is unstoppable and holds its ground");
+            return false;
+        }
+
+        if (s.Champions[target].Rooted)
+        {
+            Log(log, EventKind.Move, $"  {Name(s, target)} is rooted and holds its ground");
+            return true;
         }
 
         HexCoord from = s.Champions[caster].Pos;
@@ -812,6 +831,7 @@ public sealed partial class Game
         int steps = Math.Abs(amount);
         HexCoord start = s.Champions[target].Pos;
         Team frame = s.Champions[caster].Team;
+        int moved = 0;
 
         for (int step = 0; step < steps; step++)
         {
@@ -835,12 +855,15 @@ public sealed partial class Game
 
             if (best == at) break;   // truncated at the last free hex (schema edge case 4)
             s.Champions[target].Pos = best;
+            moved++;
         }
 
         if (s.Champions[target].Pos != start)
         {
             Log(log, EventKind.Move, $"  {Name(s, target)} is {(push ? "pushed" : "pulled")} to {Fmt(s.Champions[target].Pos)}");
         }
+
+        return moved < steps;
     }
 
     private void Mold(ref MatchState s, int slot, Stat stat, int delta)

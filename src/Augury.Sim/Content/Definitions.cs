@@ -112,7 +112,13 @@ public enum StatusKind : byte
     Burning,
 
     /// <summary>Poisoned.</summary>
-    Poisoned
+    Poisoned,
+
+    /// <summary>Marked (checked before the hit consumes the mark).</summary>
+    Marked,
+
+    /// <summary>Exhausted.</summary>
+    Exhausted
 }
 
 /// <summary>What a free-targeting (initiative 1–2) ability may be aimed at.</summary>
@@ -196,8 +202,20 @@ public enum PassiveEffect : byte
 /// <param name="BonusVs">v2: a status on the target that improves this effect.</param>
 /// <param name="BonusFlat">v2: extra damage against such a target.</param>
 /// <param name="BonusDouble">v2: double damage against such a target.</param>
+/// <param name="Slam">v2, Displace only: damage dealt when a push is stopped short by a wall,
+/// tower, champion, the board's edge, or a root.</param>
 public sealed record EffectDef(EffectKind Kind, int Power, int Amount, int Rounds,
-    StatusKind BonusVs = StatusKind.None, int BonusFlat = 0, bool BonusDouble = false);
+    StatusKind BonusVs = StatusKind.None, int BonusFlat = 0, bool BonusDouble = false, int Slam = 0);
+
+/// <summary>
+/// v2: champions that work well together (<c>assets/data/synergies.json</c>). Data for the
+/// draft screen, the AI drafter and the harness; the rules never read it.
+/// </summary>
+/// <param name="Id">Stable id.</param>
+/// <param name="Name">Display name.</param>
+/// <param name="Idea">One sentence: what the group does together.</param>
+/// <param name="Members">Champion ids.</param>
+public sealed record SynergyGroup(string Id, string Name, string Idea, IReadOnlyList<string> Members);
 
 /// <summary>One of an ability's three opening instructions.</summary>
 /// <param name="Kind">Move or PlaceBeacon.</param>

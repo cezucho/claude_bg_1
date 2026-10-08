@@ -7,7 +7,9 @@ namespace Augury.Tools;
 /// <summary>
 /// AI-vs-AI matches, measured against the acceptance criteria the GDDs wrote as harness
 /// assertions. Usage: <c>selfplay [matches] [a-agent] [b-agent]</c>, agents
-/// <c>heuristic</c> or <c>random</c>.
+/// <c>heuristic</c> or <c>random</c>. <c>draft=random|synergy|mixed</c> picks the drafters:
+/// random for both (default), the synergy drafter for both, or synergy against random with
+/// the synergy side alternating between A and B so side bias cancels out.
 /// </summary>
 public static class SelfPlay
 {
@@ -22,11 +24,17 @@ public static class SelfPlay
         public long AiCalls;
         public readonly List<int> RoundCounts = new();
         public readonly Dictionary<string, (int Picks, int Wins)> Champs = new();
+
+        // Draft quality: synergy score of each side (pairs in shared groups) and the result.
+        public readonly List<(int SynA, int SynB, Team Winner, Team Drafter)> Drafts = new();
+        public readonly Dictionary<string, (int Teams, int Wins)> Groups = new();
     }
 
     public static void Run(string[] args)
     {
         // Positional: matches, a-agent, b-agent. Any "key=value" overrides a rules_config.json field.
+        string draftMode = args.FirstOrDefault(a => a.StartsWith("draft="))?["draft=".Length..] ?? "random";
+        args = args.Where(a => !a.StartsWith("draft=")).ToArray();
         var positional = args.Skip(1).Where(a => !a.Contains('=')).ToList();
         int n = positional.Count > 0 ? int.Parse(positional[0]) : 100;
         string aName = positional.Count > 1 ? positional[1] : "heuristic";
@@ -41,10 +49,16 @@ public static class SelfPlay
         {
             IAgent a = Make(aName, game, (uint)(1000 + m));
             IAgent b = Make(bName, game, (uint)(5000 + m));
-            PlayOne(game, a, b, stats, draftSeed: (uint)(77 + m));
+            // In mixed mode the synergy drafter alternates sides: even matches A, odd matches B.
+            Team synSide = draftMode switch { "synergy" => Team.None, "mixed" => m % 2 == 0 ? Team.A : Team.B, _ => Team.None };
+            IAgent DraftAgent(Team t, uint seed) => draftMode == "synergy" || (draftMode == "mixed" && t == synSide)
+                ? new SynergyDrafter(game, seed) { NoisePermille = 100 }
+                : new RandomAgent(seed);
+            PlayOne(game, a, b, stats, DraftAgent(Team.A, (uint)(77 + m)), DraftAgent(Team.B, (uint)(9077 + m)), synSide);
         }
 
         Report(game, stats, aName, bName, sw.Elapsed.TotalSeconds);
+        DraftReport(game, stats, draftMode);
     }
 
     private static RulesConfig Override(RulesConfig rules, IEnumerable<string> pairs)
@@ -68,10 +82,8 @@ public static class SelfPlay
         _ => new HeuristicAgent(game, seed) { NoisePermille = 150 },
     };
 
-    private static void PlayOne(Game game, IAgent a, IAgent b, Stats st, uint draftSeed)
+    private static void PlayOne(Game game, IAgent a, IAgent b, Stats st, IAgent draftA, IAgent draftB, Team synSide)
     {
-        // A seeded random draft so matches differ; the roster decides whether it matters.
-        var draft = new RandomAgent(draftSeed);
         MatchState s = game.NewMatch();
         var log = new List<GameEvent>();
         var legal = new List<Command>();
@@ -85,7 +97,7 @@ public static class SelfPlay
             Command c;
             if (s.Phase == Phase.Draft)
             {
-                c = draft.Choose(s, legal);
+                c = (s.Active == Team.A ? draftA : draftB).Choose(s, legal);
             }
             else
             {
@@ -160,6 +172,20 @@ public static class SelfPlay
         if (hits > 0) st.MatchesNexusHit++;
 
         st.Matches++;
+        int[] defsA = Enumerable.Range(0, 5).Select(i => (int)s.Champions[i].Def).ToArray();
+        int[] defsB = Enumerable.Range(5, 5).Select(i => (int)s.Champions[i].Def).ToArray();
+        st.Drafts.Add((game.Content.SynergyScore(defsA), game.Content.SynergyScore(defsB), s.Winner, synSide));
+        foreach ((Team t, int[] defs) in new[] { (Team.A, defsA), (Team.B, defsB) })
+        {
+            var ids = defs.Select(d => game.Content.Champions[d].Id).ToHashSet();
+            foreach (Sim.Content.SynergyGroup g in game.Content.Synergies)
+            {
+                if (g.Members.Count(ids.Contains) < 2) continue;   // a group "on" the team: two or more members
+                var (n, w) = st.Groups.GetValueOrDefault(g.Name);
+                st.Groups[g.Name] = (n + 1, w + (s.Winner == t ? 1 : 0));
+            }
+        }
+
         for (int slot = 0; slot < 10; slot++)
         {
             Champion ch = s.Champions[slot];
@@ -289,6 +315,58 @@ public static class SelfPlay
         Check("basic attacks ≤80% of basics (Movement #11)", st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks), v => v <= 0.80);
         Check("≤16 ability resolutions per round (Ladder F5)", st.Resolutions / (double)st.Rounds, v => v <= 16, pct: false);
         if (st.AiCalls > 0) Check("AI max decision ≤1500 ms", st.AiMsMax, v => v <= 1500, pct: false);
+        Console.WriteLine();
+    }
+
+    /// <summary>Does the better draft win? Win rate by synergy difference, and per group.</summary>
+    private static void DraftReport(Game game, Stats st, string mode)
+    {
+        Console.WriteLine($"  DRAFT QUALITY — draft={mode}; synergy score = pairs of champions on one team that share a group");
+        double meanA = st.Drafts.Average(d => d.SynA), meanB = st.Drafts.Average(d => d.SynB);
+        Console.WriteLine($"    mean synergy  A {meanA:F2}   B {meanB:F2}   (max seen {st.Drafts.Max(d => Math.Max(d.SynA, d.SynB))})");
+        Console.WriteLine("    synergy edge (yours − theirs)   matches   your win rate");
+        foreach ((string label, Func<int, bool> inBucket) in new (string, Func<int, bool>)[]
+        {
+            ("≤ −3", d => d <= -3), ("−2", d => d == -2), ("−1", d => d == -1), ("0  (equal drafts)", d => d == 0),
+            ("+1", d => d == 1), ("+2", d => d == 2), ("≥ +3", d => d >= 3),
+        })
+        {
+            // Every match counts from both sides, so the table is symmetric by construction.
+            int n = 0, w = 0, draws = 0;
+            foreach (var d in st.Drafts)
+            {
+                foreach ((Team t, int edge) in new[] { (Team.A, d.SynA - d.SynB), (Team.B, d.SynB - d.SynA) })
+                {
+                    if (!inBucket(edge)) continue;
+                    n++;
+                    if (d.Winner == t) w++;
+                    if (d.Winner == Team.None) draws++;
+                }
+            }
+
+            if (n > 0) Console.WriteLine($"    {label,-30} {n / (label.StartsWith('0') ? 2 : 1),7}   {w / (double)n,8:P0}");
+        }
+
+        var equal = st.Drafts.Where(d => d.SynA == d.SynB).ToList();
+        if (equal.Count > 0)
+        {
+            Console.WriteLine($"    equal drafts: A wins {equal.Count(d => d.Winner == Team.A) / (double)equal.Count:P0} of {equal.Count} — what's left is side bias and noise");
+        }
+
+        var mixed = st.Drafts.Where(d => d.Drafter != Team.None).ToList();
+        if (mixed.Count > 0)
+        {
+            double wr = mixed.Count(d => d.Winner == d.Drafter) / (double)mixed.Count;
+            double edge = mixed.Average(d => d.Drafter == Team.A ? d.SynA - d.SynB : d.SynB - d.SynA);
+            Console.WriteLine($"    synergy drafter vs random drafter: wins {wr:P0} of {mixed.Count} (sides alternate); average synergy edge {edge:+0.0;-0.0}");
+        }
+
+        Console.WriteLine("    groups on a team (2+ members): matches, win rate");
+        foreach (var (name, (n, w)) in st.Groups.OrderByDescending(g => g.Value.Wins / (double)g.Value.Teams))
+        {
+            Console.WriteLine($"      {name,-20} {n,5}   {w / (double)n,6:P0}");
+        }
+
         Console.WriteLine();
     }
 

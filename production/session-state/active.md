@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-10-04*
+*Last updated: 2026-10-08*
 
 ## Current Task
+
+**15-CHAMPION ROSTER + DRAFT EXPERIMENT — 2026-10-08.** Owner asked for 15 champions with groups that work together, and to measure equal vs unequal drafts instead of balancing. Done: 5 new champions (Briar, Talon, Pyre, Mortar, Seer), slam + marked/exhausted bonuses (D-049), `assets/data/synergies.json` with 7 groups + synergy score (D-050), `SynergyDrafter` (AI + web), `selfplay N draft=random|synergy|mixed`. Results in `design/v2-champions.md` → "The draft experiment": spread 28–65%; synergy score alone doesn't predict wins (synergy drafter 48% vs random); group identity does (Lockdown/Called Shot win, Crush/Hold the Line lose — Mortar 28%). No balancing (D-051). 106 tests pass. Next: owner decides synergy strength, combo-aware AI, when to tune.
 
 **v2 PLAYABLE — 2026-10-04.** Direction: `design/v2-direction.md`. Built on the owner's "design them and build on your own":
 - **Game:** 10 v2 champions (3 abilities + summoner slot + signature opening), 8 spells, hidden simultaneous spell pick, opening casts (role+slot, fizzle, cooldown ≥1, can't kill), status verbs (root, burn, mark, wall, swap, pull ally, unstoppable, cleanse, exhaust, wound), Field 7 with solid towers shipped in `rules_config.json`.

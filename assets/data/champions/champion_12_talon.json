@@ -1,33 +1,35 @@
 {
-  "id": "gunner",
-  "name": "Gunner",
-  "role": "Bottom",
-  "glyph": "G",
-  "line": "Bursts from safety, hardest on a target that can't move.",
+  "id": "talon",
+  "name": "Talon",
+  "role": "Jungle",
+  "glyph": "N",
+  "line": "Dives onto whatever its team has marked, and doubles down on it.",
   "stats": {
-    "vit": 26000,
-    "pow": 1150,
+    "vit": 25000,
+    "pow": 1200,
     "arm": 0,
-    "rch": 3000,
-    "spd": 2000
+    "rch": 1000,
+    "spd": 3000
   },
   "passive": {
-    "name": "Overwatch",
+    "name": "Scent",
     "trigger": "OnEnemyEntersReach",
     "effect": "Strike",
     "amount": 1
   },
   "abilities": [
     {
-      "name": "Snipe",
+      "name": "Rend",
       "initiative": 1,
       "cooldown": 1,
       "effects": [
         {
           "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "power": 900
+        },
+        {
+          "kind": "Mark",
+          "amount": 2
         }
       ],
       "scalesFrom": "pow",
@@ -39,22 +41,22 @@
         "arm",
         25
       ],
-      "slotSigil": 2,
+      "printedSigil": 1,
       "opening": [
-        "cast top w",
-        "cast bottom q",
-        "move bottom forward-right"
+        "move jungle forward-left",
+        "move jungle forward-right",
+        "move top right"
       ]
     },
     {
-      "name": "Recoil",
+      "name": "Pounce",
       "initiative": 2,
       "cooldown": 2,
       "target": "EmptyHex",
       "effects": [
         {
           "kind": "Dash",
-          "amount": 2
+          "amount": 3
         }
       ],
       "scalesFrom": "spd",
@@ -67,15 +69,15 @@
         25
       ],
       "opening": [
-        "move bottom forward-left",
-        "move bottom forward-right",
-        "beacon bottom 2"
+        "move jungle forward-right",
+        "move jungle forward-right",
+        "move top forward-right"
       ]
     },
     {
-      "name": "Buckshot",
+      "name": "Execute",
       "initiative": 3,
-      "cooldown": 1,
+      "cooldown": 2,
       "pattern": [
         [
           0,
@@ -84,46 +86,39 @@
         [
           -1,
           1
-        ],
-        [
-          0,
-          2
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600
-        },
-        {
-          "kind": "Displace",
-          "amount": 1,
-          "slam": 2
+          "power": 1400,
+          "bonusVs": "Marked",
+          "bonusDouble": true
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "vit",
+        "spd",
         60
       ],
       "moldDown": [
-        "rch",
+        "vit",
         60
       ],
-      "printedSigil": 0,
+      "slotSigil": 1,
       "opening": [
-        "move bottom forward-right",
-        "move support forward-right",
-        "move mid forward-right"
+        "move jungle forward-right",
+        "cast jungle q",
+        "cast jungle e"
       ]
     }
   ],
   "signature": {
-    "name": "Hold Position",
+    "name": "Prowl",
     "opening": [
-      "move bottom forward-left",
-      "move mid forward-left",
-      "move support forward-left"
+      "move jungle forward-left",
+      "move jungle forward-right",
+      "beacon jungle 1"
     ]
   }
 }

@@ -1,41 +1,45 @@
 {
-  "id": "bulwark",
-  "name": "Bulwark",
+  "id": "briar",
+  "name": "Briar",
   "role": "Top",
-  "glyph": "B",
-  "line": "Holds the ground in front of its tower: shoves enemies off it and walls the way.",
+  "glyph": "R",
+  "line": "Roots an enemy in thorns and lets the poison, and the team, finish it.",
   "stats": {
     "vit": 33000,
-    "pow": 900,
-    "arm": 2000,
-    "rch": 1000,
+    "pow": 950,
+    "arm": 1000,
+    "rch": 2000,
     "spd": 2000
   },
   "passive": {
-    "name": "Spiked Plate",
+    "name": "Thorns",
     "trigger": "OnDamaged",
     "effect": "Retaliate",
     "amount": 1
   },
   "abilities": [
     {
-      "name": "Shove",
+      "name": "Entangle",
       "initiative": 1,
-      "cooldown": 1,
+      "cooldown": 2,
       "effects": [
         {
           "kind": "Damage",
-          "power": 1000
+          "power": 600
         },
         {
-          "kind": "Displace",
-          "amount": 2,
-          "slam": 2
+          "kind": "Root",
+          "amount": 1
+        },
+        {
+          "kind": "Poison",
+          "amount": 1,
+          "rounds": 2
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "vit",
+        "arm",
         25
       ],
       "moldDown": [
@@ -44,13 +48,13 @@
       ],
       "printedSigil": 0,
       "opening": [
-        "move top forward-left",
-        "move jungle forward-left",
-        "beacon top 0"
+        "move top forward-right",
+        "cast top q",
+        "move top back-left"
       ]
     },
     {
-      "name": "Rampart",
+      "name": "Thornwall",
       "initiative": 2,
       "cooldown": 3,
       "target": "EmptyHex",
@@ -70,13 +74,13 @@
         25
       ],
       "opening": [
-        "move top forward-right",
-        "move jungle forward-right",
-        "move mid forward-right"
+        "move top forward-left",
+        "beacon top 1",
+        "move jungle forward-right"
       ]
     },
     {
-      "name": "Quake",
+      "name": "Bloom",
       "initiative": 4,
       "cooldown": 3,
       "pattern": [
@@ -95,36 +99,38 @@
         [
           0,
           2
+        ],
+        [
+          -2,
+          2
         ]
       ],
       "effects": [
         {
           "kind": "Damage",
-          "power": 2100
-        },
-        {
-          "kind": "Displace",
-          "amount": 1
+          "power": 2000,
+          "bonusVs": "Poisoned",
+          "bonusFlat": 3
         }
       ],
       "scalesFrom": "pow",
       "moldUp": [
-        "arm",
+        "vit",
         60
       ],
       "moldDown": [
-        "spd",
+        "rch",
         60
       ],
       "opening": [
         "move top forward-right",
         "move top forward-right",
-        "cast top e"
+        "move mid forward-left"
       ]
     }
   ],
   "signature": {
-    "name": "Hold the Line",
+    "name": "Overgrowth",
     "opening": [
       "move top forward-left",
       "move top right",

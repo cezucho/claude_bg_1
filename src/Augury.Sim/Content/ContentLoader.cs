@@ -23,8 +23,31 @@ public static class ContentLoader
             .OrderBy(f => f, StringComparer.Ordinal)
             .Select(f => ParseChampion(File.ReadAllText(f), Path.GetFileName(f)))
             .ToList();
-        string spells = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar))!, "spells.json");
-        return new ContentDb(champions, LoadSpells(spells));
+        string data = Path.GetDirectoryName(Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar))!;
+        var db = new ContentDb(champions, LoadSpells(Path.Combine(data, "spells.json")));
+        db.Synergies = LoadSynergies(Path.Combine(data, "synergies.json"), db);
+        return db;
+    }
+
+    /// <summary>
+    /// Synergy groups (v2). Missing file → none. Every member must be a loaded champion, and a
+    /// group needs at least two.
+    /// </summary>
+    public static IReadOnlyList<SynergyGroup> LoadSynergies(string path, ContentDb db)
+    {
+        if (!File.Exists(path)) return [];
+        using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path));
+        var groups = new List<SynergyGroup>();
+        foreach (JsonElement g in doc.RootElement.GetProperty("groups").EnumerateArray())
+        {
+            var members = g.GetProperty("members").EnumerateArray().Select(m => m.GetString()!).ToList();
+            string id = Str(g, "id");
+            if (members.Count < 2) throw new ContentException($"synergies.json: group '{id}' needs at least two members.");
+            foreach (string m in members) db.IndexOf(m);   // throws on an unknown champion
+            groups.Add(new SynergyGroup(id, Str(g, "name"), Str(g, "idea"), members));
+        }
+
+        return groups;
     }
 
     /// <summary>
@@ -148,7 +171,8 @@ public static class ContentLoader
             e.TryGetProperty("rounds", out JsonElement rd) ? rd.GetInt32() : 0,
             e.TryGetProperty("bonusVs", out JsonElement bv) ? Enum<StatusKind>(bv.GetString()!) : StatusKind.None,
             e.TryGetProperty("bonusFlat", out JsonElement bf) ? bf.GetInt32() : 0,
-            e.TryGetProperty("bonusDouble", out JsonElement bd) && bd.GetBoolean())).ToList();
+            e.TryGetProperty("bonusDouble", out JsonElement bd) && bd.GetBoolean(),
+            e.TryGetProperty("slam", out JsonElement sl) ? sl.GetInt32() : 0)).ToList();
 
         bool spell = !a.TryGetProperty("moldUp", out _);
         JsonElement up = spell ? default : a.GetProperty("moldUp");
@@ -330,6 +354,29 @@ public sealed class ContentDb
 
     /// <summary>The summoner spell pool (v2), in file order. Champions refer to them by index.</summary>
     public IReadOnlyList<AbilityDef> Spells { get; }
+
+    /// <summary>Synergy groups (v2), or none.</summary>
+    public IReadOnlyList<SynergyGroup> Synergies { get; internal set; } = [];
+
+    /// <summary>
+    /// How well a team's champions fit together: for each group, the number of pairs of its
+    /// members on the team (k members → k(k−1)/2). Content indices; 255 (undrafted) is ignored.
+    /// </summary>
+    public int SynergyScore(IEnumerable<int> team)
+    {
+        var ids = team.Where(d => d >= 0 && d < Champions.Count).Select(d => Champions[d].Id).ToHashSet();
+        int score = 0;
+        foreach (SynergyGroup g in Synergies)
+        {
+            int k = g.Members.Count(ids.Contains);
+            score += k * (k - 1) / 2;
+        }
+
+        return score;
+    }
+
+    /// <summary>The synergy groups a champion belongs to.</summary>
+    public IEnumerable<SynergyGroup> GroupsOf(int def) => Synergies.Where(g => g.Members.Contains(Champions[def].Id));
 
     /// <summary>Index of a champion by id.</summary>
     public int IndexOf(string id)

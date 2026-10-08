@@ -248,3 +248,83 @@ public static class Evaluation
         return v;
     }
 }
+
+/// <summary>
+/// A drafter that builds around synergy groups (<c>assets/data/synergies.json</c>): each pick
+/// adds the most synergy pairs to its own team, then keeps the most group members still
+/// reachable for its open roles. Ties, and an optional share of noisy picks, break by a fixed
+/// seed. Draft commands only.
+/// </summary>
+public sealed class SynergyDrafter(Game game, uint seed = 0) : IAgent
+{
+    private readonly Game _game = game;
+    private uint _rng = seed;
+
+    /// <summary>Permille chance of a uniformly random legal pick instead of the best one.</summary>
+    public int NoisePermille { get; init; }
+
+    /// <inheritdoc/>
+    public string Name => "Synergy drafter";
+
+    /// <inheritdoc/>
+    public Command Choose(in MatchState s, IReadOnlyList<Command> legal)
+    {
+        if (legal.Count == 1 || s.Phase != Phase.Draft) return legal[0];
+        if (NoisePermille > 0 && Next() % 1000 < (uint)NoisePermille) return legal[(int)(Next() % (uint)legal.Count)];
+
+        ContentDb db = _game.Content;
+        int first = MatchState.FirstSlot(s.Active);
+        var mine = new List<int>();
+        var open = new HashSet<Content.Role>();
+        var taken = new HashSet<int>();
+        for (int i = 0; i < 10; i++)
+        {
+            if (s.Champions[i].Def != 255) taken.Add(s.Champions[i].Def);
+        }
+
+        for (int i = first; i < first + 5; i++)
+        {
+            if (s.Champions[i].Def != 255) mine.Add(s.Champions[i].Def);
+            else open.Add(s.Champions[i].Role);
+        }
+
+        int baseScore = db.SynergyScore(mine);
+        var best = new List<Command>();
+        int bestValue = int.MinValue;
+        foreach (Command c in legal)
+        {
+            int def = c.Ability;
+            int gain = db.SynergyScore(mine.Append(def)) - baseScore;
+
+            // Potential: partners of this champion still free for the roles we have left.
+            var rolesAfter = new HashSet<Content.Role>(open);
+            rolesAfter.Remove(db.Champions[def].Role);
+            int potential = 0;
+            foreach (SynergyGroup g in db.GroupsOf(def))
+            {
+                foreach (string id in g.Members)
+                {
+                    int other = db.IndexOf(id);
+                    if (other != def && !taken.Contains(other) && rolesAfter.Contains(db.Champions[other].Role)) potential++;
+                }
+            }
+
+            int value = gain * 10 + potential;
+            if (value > bestValue)
+            {
+                bestValue = value;
+                best.Clear();
+            }
+
+            if (value == bestValue) best.Add(c);
+        }
+
+        return best[(int)(Next() % (uint)best.Count)];
+    }
+
+    private uint Next()
+    {
+        _rng = _rng * 1664525u + 1013904223u;
+        return _rng >> 8;
+    }
+}

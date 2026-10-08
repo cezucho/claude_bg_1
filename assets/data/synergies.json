@@ -1,0 +1,77 @@
+{
+  "groups": [
+    {
+      "id": "lockdown",
+      "name": "Lockdown",
+      "members": [
+        "anchor",
+        "briar",
+        "seer",
+        "ranger",
+        "gunner"
+      ],
+      "idea": "Root a target, then hit what can't move: Snipe and Groundswell add 3, and a rooted target slams when pushed."
+    },
+    {
+      "id": "called-shot",
+      "name": "Called Shot",
+      "members": [
+        "lens",
+        "seer",
+        "talon",
+        "ranger"
+      ],
+      "idea": "Mark one enemy and spend the mark: Execute doubles on it, Volley adds 2, and every hit adds the mark."
+    },
+    {
+      "id": "wildfire",
+      "name": "Wildfire",
+      "members": [
+        "ember",
+        "pyre"
+      ],
+      "idea": "Set the line alight; Wildfire and Inferno deal double to burning targets."
+    },
+    {
+      "id": "venom",
+      "name": "Venom",
+      "members": [
+        "viper",
+        "briar"
+      ],
+      "idea": "Poison first; Ambush and Bloom add 3 to poisoned targets."
+    },
+    {
+      "id": "crush",
+      "name": "Crush",
+      "members": [
+        "bulwark",
+        "tempest",
+        "mortar",
+        "lens"
+      ],
+      "idea": "Walls and pushes: shove enemies into walls, towers and each other \u2014 a stopped push slams for extra damage."
+    },
+    {
+      "id": "dive",
+      "name": "Dive and Retrieve",
+      "members": [
+        "viper",
+        "talon",
+        "oriel"
+      ],
+      "idea": "Divers go deep for the kill; Oriel's Tether and Mend bring them back out."
+    },
+    {
+      "id": "hold",
+      "name": "Hold the Line",
+      "members": [
+        "bastion",
+        "bulwark",
+        "anchor",
+        "mortar"
+      ],
+      "idea": "Stand in front of your towers: shields, unstoppable front-liners and long-range fire behind them."
+    }
+  ]
+}

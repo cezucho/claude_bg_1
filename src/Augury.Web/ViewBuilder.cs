@@ -84,6 +84,9 @@ public static class ViewBuilder
             walls = Enumerable.Range(0, 4).Where(w => s.Walls[w].Rounds > 0)
                 .Select(w => new { q = s.Walls[w].Pos.Q, r = s.Walls[w].Pos.R, rounds = (int)s.Walls[w].Rounds }).ToArray(),
             spells = g.Content.Spells.Select((sp, i) => SpellView(g, sp, i)).ToArray(),
+            synergies = g.Content.Synergies.Select(sy => new { id = sy.Id, name = sy.Name, idea = sy.Idea, members = sy.Members }).ToArray(),
+            synergy = new[] { Team.A, Team.B }.Select(t => g.Content.SynergyScore(
+                Enumerable.Range(MatchState.FirstSlot(t), 5).Select(i => (int)s.Champions[i].Def))).ToArray(),
             spawns = new[] { Team.A, Team.B }.SelectMany(t => Enum.GetValues<Role>().Select(r =>
             {
                 HexCoord h = Board.SpawnHex(t, r);
@@ -92,7 +95,7 @@ public static class ViewBuilder
             winner = s.Phase == Phase.MatchOver ? s.Winner.ToString() : null,
             endReason = s.Phase == Phase.MatchOver ? s.EndReason.ToString() : null,
             champions = Enumerable.Range(0, 10).Select(i => ChampionView(g, s, i, ladder, singles, chainParts, humans)).ToArray(),
-            roster = s.Phase == Phase.Draft ? g.Content.Champions.Select((d, i) => DefView(d, i)).ToArray() : null,
+            roster = s.Phase == Phase.Draft ? g.Content.Champions.Select((d, i) => DefView(g, d, i)).ToArray() : null,
             legal = legal.Select((c, i) => LegalView(g, s, c, i)).ToArray(),
             last = last is null ? null : LastView(g, last, s, log),
             events = log.Skip(start).Select((e, k) => new { n = start + k, kind = e.Kind.ToString(), text = e.Text }).ToArray(),
@@ -290,7 +293,7 @@ public static class ViewBuilder
         Enumerable.Range(0, 3).Where(i => (mask & (1 << i)) != 0).Select(Game.SigilName).ToArray();
 
     /// <summary>Static content for the draft screen.</summary>
-    private static object DefView(ChampionDef d, int index) => new
+    private static object DefView(Game g, ChampionDef d, int index) => new
     {
         index,
         id = d.Id,
@@ -307,6 +310,7 @@ public static class ViewBuilder
         },
         passive = new { name = d.Passive.Name, text = Describe.Passive(d.Passive) },
         line = d.Line,
+        groups = g.Content.GroupsOf(index).Select(sy => sy.Id).ToArray(),
         abilities = d.Abilities.Select((ab, a) => new
         {
             key = Keys[a],

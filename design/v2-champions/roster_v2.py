@@ -72,7 +72,7 @@ ROSTER = [
       "Keeps one ally standing, and pulls it out of trouble."),
     C(5, "bulwark", "Bulwark", "Top", "B", [33000, 900, 2000, 1000, 2000],
       {"name": "Spiked Plate", "trigger": "OnDamaged", "effect": "Retaliate", "amount": 1},
-      [A("Shove", 1, 1, [dmg(1000), {"kind": "Displace", "amount": 2}],
+      [A("Shove", 1, 1, [dmg(1000), {"kind": "Displace", "amount": 2, "slam": 2}],
          ["move top forward-left", "move jungle forward-left", "beacon top 0"], "pow", ["vit", 25], ["spd", 25], printed=0),
        A("Rampart", 2, 3, [{"kind": "Wall", "amount": 2}],
          ["move top forward-right", "move jungle forward-right", "move mid forward-right"], "arm", ["vit", 30], ["pow", 25], target="EmptyHex"),
@@ -94,7 +94,7 @@ ROSTER = [
       {"name": "Static Skin", "trigger": "OnDamaged", "effect": "ShieldSelf", "amount": 1},
       [A("Zap", 1, 0, [dmg(900)],
          ["move mid forward-right", "move mid forward-left", "move top forward-right"], "pow", ["spd", 25], ["arm", 25], printed=2),
-       A("Gust", 2, 1, [dmg(700), {"kind": "Displace", "amount": 2}],
+       A("Gust", 2, 1, [dmg(700), {"kind": "Displace", "amount": 2, "slam": 2}],
          ["move mid forward-left", "beacon mid 2", "move bottom forward-left"], "pow", ["rch", 30], ["vit", 30], slot=2),
        A("Eye of the Storm", 4, 3, [dmg(1900), {"kind": "Displace", "amount": 1}],
          ["cast top q", "cast jungle q", "cast mid q"], "pow", ["vit", 60], ["spd", 60], pattern=[[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]])],
@@ -102,7 +102,7 @@ ROSTER = [
       "Throws the enemy line around: knockbacks that set up its allies."),
     C(8, "ranger", "Ranger", "Bottom", "R", [25000, 1100, 0, 3000, 2000],
       {"name": "Vengeance", "trigger": "OnAllyDies", "effect": "EmpowerSelf", "amount": 50, "stat": "pow"},
-      [A("Volley", 1, 0, [dmg(1000)],
+      [A("Volley", 1, 0, [dmg(1000, bonusVs="Marked", bonusFlat=2)],
          ["move bottom forward-right", "cast mid q", "cast bottom q"], "pow", ["vit", 25], ["arm", 25], slot=0),
        A("Pin Shot", 2, 2, [dmg(1100), {"kind": "Root", "amount": 1}],
          ["move bottom forward-left", "move support forward-left", "beacon bottom 0"], "pow", ["spd", 40], ["vit", 40]),
@@ -116,7 +116,7 @@ ROSTER = [
          ["cast top w", "cast bottom q", "move bottom forward-right"], "pow", ["spd", 25], ["arm", 25], slot=2),
        A("Recoil", 2, 2, [{"kind": "Dash", "amount": 2}],
          ["move bottom forward-left", "move bottom forward-right", "beacon bottom 2"], "spd", ["pow", 25], ["vit", 25], target="EmptyHex"),
-       A("Buckshot", 3, 1, [dmg(1600), {"kind": "Displace", "amount": 1}],
+       A("Buckshot", 3, 1, [dmg(1600), {"kind": "Displace", "amount": 1, "slam": 2}],
          ["move bottom forward-right", "move support forward-right", "move mid forward-right"], "pow", ["vit", 60], ["rch", 60], pattern=[[0, 1], [-1, 1], [0, 2]], printed=0)],
       "Hold Position", ["move bottom forward-left", "move mid forward-left", "move support forward-left"],
       "Bursts from safety, hardest on a target that can't move."),
@@ -130,6 +130,75 @@ ROSTER = [
          ["move support forward-left", "move support forward-left", "cast support e"], "pow", ["arm", 60], ["spd", 60], pattern=[[-1, 1], [-2, 2], [-3, 3]])],
       "Bastion Stance", ["move support forward-left", "beacon support 1", "move mid forward-right"],
       "Shields the team and drains the dive."),
+    C(11, "briar", "Briar", "Top", "R", [33000, 950, 1000, 2000, 2000],
+      {"name": "Thorns", "trigger": "OnDamaged", "effect": "Retaliate", "amount": 1},
+      [A("Entangle", 1, 2, [dmg(600), {"kind": "Root", "amount": 1}, {"kind": "Poison", "amount": 1, "rounds": 2}],
+         ["move top forward-right", "cast top q", "move top back-left"], "pow", ["arm", 25], ["spd", 25], printed=0),
+       A("Thornwall", 2, 3, [{"kind": "Wall", "amount": 2}],
+         ["move top forward-left", "beacon top 1", "move jungle forward-right"], "arm", ["vit", 30], ["pow", 25], target="EmptyHex"),
+       A("Bloom", 4, 3, [dmg(2000, bonusVs="Poisoned", bonusFlat=3)],
+         ["move top forward-right", "move top forward-right", "move mid forward-left"], "pow", ["vit", 60], ["rch", 60], pattern=[[-1, 1], [0, 1], [-1, 2], [0, 2], [-2, 2]])],
+      "Overgrowth", ["move top forward-left", "move top right", "move jungle forward-right"],
+      "Roots an enemy in thorns and lets the poison, and the team, finish it."),
+    C(12, "talon", "Talon", "Jungle", "N", [25000, 1200, 0, 1000, 3000],
+      {"name": "Scent", "trigger": "OnEnemyEntersReach", "effect": "Strike", "amount": 1},
+      [A("Rend", 1, 1, [dmg(900), {"kind": "Mark", "amount": 2}],
+         ["move jungle forward-left", "move jungle forward-right", "move top right"], "pow", ["spd", 25], ["arm", 25], printed=1),
+       A("Pounce", 2, 2, [{"kind": "Dash", "amount": 3}],
+         ["move jungle forward-right", "move jungle forward-right", "move top forward-right"], "spd", ["pow", 25], ["vit", 25], target="EmptyHex"),
+       A("Execute", 3, 2, [dmg(1400, bonusVs="Marked", bonusDouble=True)],
+         ["move jungle forward-right", "cast jungle q", "cast jungle e"], "pow", ["spd", 60], ["vit", 60], pattern=[[0, 1], [-1, 1]], slot=1)],
+      "Prowl", ["move jungle forward-left", "move jungle forward-right", "beacon jungle 1"],
+      "Dives onto whatever its team has marked, and doubles down on it."),
+    C(13, "pyre", "Pyre", "Mid", "P", [23000, 1150, 0, 3000, 2000],
+      {"name": "Ember Heart", "trigger": "OnRoundClose", "effect": "HealSelf", "amount": 1},
+      [A("Scorch", 1, 1, [dmg(600), {"kind": "Burn", "amount": 2, "rounds": 2}],
+         ["move mid forward-right", "cast mid q", "beacon mid 2"], "pow", ["rch", 25], ["vit", 25], slot=2),
+       A("Smoke", 2, 2, [dmg(500), {"kind": "Exhaust", "amount": 1}],
+         ["move mid forward-left", "move bottom forward-left", "move mid forward-right"], "pow", ["arm", 30], ["spd", 30]),
+       A("Inferno", 4, 3, [dmg(1600, bonusVs="Burning", bonusDouble=True)],
+         ["move mid forward-right", "move mid forward-left", "move support forward-left"], "pow", ["vit", 60], ["spd", 60], pattern=[[0, 1], [-1, 2], [0, 2], [-1, 3]], printed=2)],
+      "Heat Haze", ["move mid forward-left", "beacon mid 2", "move jungle forward-left"],
+      "Spreads fire along the enemy line, then burns it down with Ember."),
+    C(14, "mortar", "Mortar", "Bottom", "M", [24000, 1100, 0, 3000, 1000],
+      {"name": "Entrenched", "trigger": "OnRoundClose", "effect": "ShieldSelf", "amount": 2},
+      [A("Shell", 1, 1, [dmg(800), {"kind": "Displace", "amount": 1, "slam": 3}],
+         ["cast bottom q", "move bottom forward-left", "move support forward-left"], "pow", ["rch", 25], ["spd", 25], slot=0),
+       A("Tripwire", 2, 3, [{"kind": "Wall", "amount": 2}],
+         ["move bottom forward-right", "move bottom forward-left", "beacon bottom 0"], "rch", ["vit", 30], ["pow", 25], target="EmptyHex"),
+       A("Barrage", 4, 3, [dmg(2200)],
+         ["move support forward-left", "move bottom right", "move mid forward-right"], "pow", ["arm", 60], ["spd", 60], pattern=[[0, 2], [0, 3], [-1, 3], [-1, 4]])],
+      "Dig In", ["move bottom forward-left", "move mid forward-left", "beacon bottom 1"],
+      "Shells enemies from far back, into walls, towers and each other."),
+    C(15, "seer", "Seer", "Support", "E", [27000, 900, 1000, 3000, 2000],
+      {"name": "Foresight", "trigger": "OnRoundClose", "effect": "ShieldSelf", "amount": 1},
+      [A("Omen", 1, 1, [{"kind": "Mark", "amount": 3}],
+         ["move support forward-left", "cast support q", "move support back-right"], "pow", ["rch", 25], ["vit", 25], slot=1),
+       A("Bind", 2, 2, [dmg(500), {"kind": "Root", "amount": 2}],
+         ["move support forward-right", "move bottom forward-right", "beacon support 1"], "pow", ["spd", 30], ["vit", 30], rb=-1, printed=0),
+       A("Revelation", 4, 3, [dmg(1200), {"kind": "Mark", "amount": 2}, {"kind": "Exhaust", "amount": 1}],
+         ["move support forward-left", "move support forward-right", "move bottom forward-left"], "pow", ["arm", 60], ["spd", 60], pattern=[[0, 1], [-1, 2], [0, 2], [-1, 1]])],
+      "Vision", ["move support forward-right", "move support left", "beacon support 2"],
+      "Calls the target: marks and binds one enemy so the whole team knows where to hit."),
+]
+
+# Champions that work well together. Data for the draft screen, the AI drafter and the
+# harness; the rules never read it. Score = pairs of a group's members on one team.
+SYNERGIES = [
+    {"id": "lockdown", "name": "Lockdown", "members": ["anchor", "briar", "seer", "ranger", "gunner"],
+     "idea": "Root a target, then hit what can't move: Snipe and Groundswell add 3, and a rooted target slams when pushed."},
+    {"id": "called-shot", "name": "Called Shot", "members": ["lens", "seer", "talon", "ranger"],
+     "idea": "Mark one enemy and spend the mark: Execute doubles on it, Volley adds 2, and every hit adds the mark."},
+    {"id": "wildfire", "name": "Wildfire", "members": ["ember", "pyre"],
+     "idea": "Set the line alight; Wildfire and Inferno deal double to burning targets."},
+    {"id": "venom", "name": "Venom", "members": ["viper", "briar"],
+     "idea": "Poison first; Ambush and Bloom add 3 to poisoned targets."},
+    {"id": "crush", "name": "Crush", "members": ["bulwark", "tempest", "mortar", "lens"],
+     "idea": "Walls and pushes: shove enemies into walls, towers and each other — a stopped push slams for extra damage."},
+    {"id": "dive", "name": "Dive and Retrieve", "members": ["viper", "talon", "oriel"],
+     "idea": "Divers go deep for the kill; Oriel's Tether and Mend bring them back out."},
+    {"id": "hold", "name": "Hold the Line", "members": ["bastion", "bulwark", "anchor", "mortar"],
+     "idea": "Stand in front of your towers: shields, unstoppable front-liners and long-range fire behind them."},
 ]
 
 SPELLS = [
@@ -185,4 +254,10 @@ for num, cid, c in ROSTER:
         fh.write(json.dumps(c, indent=2, ensure_ascii=False) + "\n")
 with open(f"{ROOT}/assets/data/spells.json", "w") as fh:
     fh.write(json.dumps({"spells": [{k: v for k, v in sp.items() if k != "text"} for sp in SPELLS]}, indent=2) + "\n")
-print("wrote", len(ROSTER), "champions and", len(SPELLS), "spells")
+ids = {cid for _, cid, _ in ROSTER}
+for g in SYNERGIES:
+    missing = [m for m in g["members"] if m not in ids]
+    if missing: sys.exit(f"synergy {g['id']}: unknown {missing}")
+with open(f"{ROOT}/assets/data/synergies.json", "w") as fh:
+    fh.write(json.dumps({"groups": SYNERGIES}, indent=2) + "\n")
+print("wrote", len(ROSTER), "champions,", len(SPELLS), "spells and", len(SYNERGIES), "synergy groups")
