@@ -123,7 +123,7 @@ public sealed class V2RulesTests : IDisposable
         int rooted = Loss(arr => arr[0].Champions[1].RootHalves = 1, out HexCoord p1, out var l1);
         Assert.Equal(new HexCoord(1, -1), p1);
         Assert.Contains(l1, e => e.Text.Contains("SLAMS"));
-        Assert.Equal(plain + 2, rooted);   // Shove's slam is 2
+        Assert.Equal(plain + 3, rooted);   // Shove's slam is 3
 
         int walled = Loss(arr =>
         {
@@ -133,13 +133,14 @@ public sealed class V2RulesTests : IDisposable
             arr[0].Walls[2] = new Wall { Pos = new HexCoord(0, -1), Rounds = 2 };
         }, out HexCoord p2, out var l2);
         Assert.Equal(new HexCoord(1, -1), p2);
-        Assert.Equal(plain + 2, walled);
+        Assert.Equal(plain + 3, walled);
     }
 
     [Fact]
     public void BonusVsMarked_AddsOnTopOfTheMark()
     {
-        // A's Ranger (slot 3) Volleys B's Viper (slot 6): +2 vs marked, plus the mark itself.
+        // A's Ranger (slot 3) Volleys B's Viper (slot 6, no armour): ×1.5 vs marked with a floor
+        // of +2 (D-052), plus the mark itself (+3).
         int Loss(int mark)
         {
             MatchState s = Ladder(Team.A);
@@ -150,7 +151,31 @@ public sealed class V2RulesTests : IDisposable
             return before - s.Champions[6].Hp;
         }
 
-        Assert.Equal(Loss(0) + 3 + 2, Loss(3));
+        int hit = Loss(0);
+        Assert.Equal(Math.Max(hit * 3 / 2, hit + 2) + 3, Loss(3));
+    }
+
+    [Fact]
+    public void Speed_NeverMoldsBelowOne()
+    {
+        MatchState s = Opening(Team.A);
+        s.Champions[0].Drift[(int)Stat.Spd] = -5000;
+        Assert.Equal(1, _game.Speed(s.Champions[0]));
+    }
+
+    [Fact]
+    public void ComboAwareEvaluation_ValuesARootWhenATeammateCanPunishIt()
+    {
+        // A fields Gunner (Snipe: ×1.5 vs rooted). B's Viper stands next to it, away from any
+        // wall, tower or edge (pinned there, Buckshot's slam would already be Gunner's best payoff).
+        int[] withGunner = [Anchor, Ember, Lens, Gunner, Oriel];
+        MatchState free = Ladder(Team.A, withGunner);
+        free.Champions[6].Pos = new HexCoord(2, -2);
+        MatchState rooted = free;
+        rooted.Champions[6].RootHalves = 2;
+
+        int Gain(bool combo) => Augury.Sim.AI.Evaluation.Score(_game, rooted, Team.A, combo) - Augury.Sim.AI.Evaluation.Score(_game, free, Team.A, combo);
+        Assert.True(Gain(true) > Gain(false), $"combo {Gain(true)} vs plain {Gain(false)}");
     }
 
     [Fact]

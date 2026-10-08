@@ -110,7 +110,8 @@
           "kind": "Damage",
           "power": 2600,
           "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "bonusPermille": 1500,
+          "bonusFlat": 2
         }
       ],
       "scalesFrom": "pow",

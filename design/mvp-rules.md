@@ -59,8 +59,13 @@ Agreed with the owner in `design/v2-direction.md`. Roster, spells and measuremen
   | **Cleanse** | Removes root, burn, poison, mark, exhaust and wound | Instant |
 
   Death clears every status.
-- **Conditional damage.** An effect may deal +N, or double, against a rooted, burning or
-  poisoned target.
+- **Conditional damage (synergy payoffs).** Against a rooted, burning, poisoned, marked or
+  exhausted target, a payoff ability hits **×1.5, and always at least +2** (D-052). The bonus
+  is checked before the hit spends a mark.
+- **Slam.** A push stopped short deals extra damage: 3, or 4 for Mortar's Shell (D-049, D-052).
+  It can be stopped by a wall, a solid tower, a champion, the edge of the board, or a root.
+  Unstoppable targets aren't moved and never slam.
+- **Speed is never below 1** (D-053). Molding can slow a champion but never strand it.
 
 
 ## 1. Match flow

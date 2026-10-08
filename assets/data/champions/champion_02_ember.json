@@ -94,7 +94,8 @@
           "kind": "Damage",
           "power": 1500,
           "bonusVs": "Burning",
-          "bonusDouble": true
+          "bonusPermille": 1500,
+          "bonusFlat": 2
         }
       ],
       "scalesFrom": "pow",

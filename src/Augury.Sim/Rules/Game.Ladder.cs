@@ -437,6 +437,11 @@ public sealed partial class Game
                     if (s.Champions[slot].ExhaustHalves > 0) raw = Math.Max(1, raw / 2);
                     foreach (int t in champTargets)
                     {
+                        if (e.BonusVs != StatusKind.None && BonusApplies(s.Champions[t], e.BonusVs))
+                        {
+                            Log(log, EventKind.Damage, $"  PAYOFF: {a.Name} on {Name(s, t)}, who is {e.BonusVs.ToString().ToLowerInvariant()}");
+                        }
+
                         DamageChampion(ref s, t, HitDamage(s, t, raw, e), slot, fromPassive: false, log);
                     }
 
@@ -648,25 +653,34 @@ public sealed partial class Game
     {
         Champion t = s.Champions[target];
         int dmg = Math.Max(1, raw - Armour(t));
-        bool bonus = e.BonusVs switch
+        if (BonusApplies(t, e.BonusVs))
         {
-            StatusKind.Rooted => t.Rooted,
-            StatusKind.Burning => t.Burning,
-            StatusKind.Poisoned => t.PoisonRounds > 0,
-            StatusKind.Marked => t.Mark > 0,
-            StatusKind.Exhausted => t.ExhaustHalves > 0,
-            _ => false,
-        };
-        if (bonus)
-        {
-            if (e.BonusDouble) dmg *= 2;
-            dmg += e.BonusFlat;
+            if (e.BonusPermille > 0)
+            {
+                // Multiplier, with the flat amount as a floor so cheap hits still pay off.
+                dmg = Math.Max(dmg * e.BonusPermille / 1000, dmg + e.BonusFlat);
+            }
+            else
+            {
+                if (e.BonusDouble) dmg *= 2;
+                dmg += e.BonusFlat;
+            }
         }
 
         return dmg;
     }
 
     /// <summary>A burning champion takes its burn each time it acts (v2): through shields, never killing in the opening.</summary>
+    private static bool BonusApplies(in Champion t, StatusKind k) => k switch
+    {
+        StatusKind.Rooted => t.Rooted,
+        StatusKind.Burning => t.Burning,
+        StatusKind.Poisoned => t.PoisonRounds > 0,
+        StatusKind.Marked => t.Mark > 0,
+        StatusKind.Exhausted => t.ExhaustHalves > 0,
+        _ => false,
+    };
+
     private void BurnOnAct(ref MatchState s, int slot, List<GameEvent>? log)
     {
         ref Champion c = ref s.Champions[slot];

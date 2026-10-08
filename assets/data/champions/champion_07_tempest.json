@@ -56,7 +56,7 @@
         {
           "kind": "Displace",
           "amount": 2,
-          "slam": 2
+          "slam": 3
         }
       ],
       "scalesFrom": "pow",

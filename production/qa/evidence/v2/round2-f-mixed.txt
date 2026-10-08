@@ -1,0 +1,67 @@
+
+SELF-PLAY — 300 matches, A = heuristic, B = heuristic, 569.5s
+  rules: nexus HP 60, kill siege 3, tower siege 1/round, tower HP 16, tower shot 2, defender 500
+
+  Results       A   53 %   B   45 %   draw    2 %
+  Endings       siege 78.0 %   direct nexus kill 22.0 %   round cap  0.0 %   comebacks 28.7 %
+  Decisions       267 per match with a real choice (both teams, after the draft)
+  Board         field7: 59 hexes; front lines 6 rows apart; towers solid
+  Contact       after the opening, each champion's nearest enemy is  2.0 hexes away on average
+  Abilities     resolved by initiative tier: 1 65 % · 2 20 % · 3  8 % · 4  8 %
+  Patterns      ready tier-3/4 abilities with a target on the ladder:  76 %
+  Rounds        mean  13.0   median 13   min 8   max 17
+  Per round     deaths 0.90   captures 0.58   resolutions  11.8   chains 0.57
+  Nexus open    in  100 % of matches, 45.0 % of decisions; hit in   96 % of matches (8.9 hits/match)
+  Synergy       payoff hits  7.0 per match · slams  3.5 per match
+  Basics        moves   36 %   attacks   64 %
+  Opening       team-openings hitting the fallback   30 %   (Opening #10 wants 10–25%); 1.1 champions left when it does
+  AI time       mean    7.0 ms   max   175.5 ms   (budget 1500 ms)
+
+  CHAMPIONS (win rate when picked; mirrors count once per side)
+    Gunner         56 %  (151 picks)  ▲ strong
+    Lens           56 %  (288 picks)
+    Viper          54 %  (164 picks)
+    Anchor         52 %  (208 picks)
+    Ranger         51 %  (291 picks)
+    Oriel          51 %  (159 picks)
+    Seer           51 %  (297 picks)
+    Bulwark        51 %  (132 picks)
+    Ember          49 %  (144 picks)
+    Talon          46 %  (292 picks)
+    Tempest        46 %  (171 picks)
+    Briar          45 %  (260 picks)
+    Bastion        43 %  (144 picks)  ▼ weak
+    Pyre           39 %  (141 picks)  ▼ weak
+    Mortar         38 %  (158 picks)  ▼ weak
+
+  ACCEPTANCE CRITERIA (from the GDDs)
+    PASS  ladder opened in ≥70% of halves (Movement #12)          100 %
+    FAIL  halves ending by deliberate pass ≥50% (Sigils #14)       20 %
+    PASS  every match ends with a nexus falling (v2)              100 %
+    PASS  some matches are comebacks (Map #25, v2 reading)         29 %
+    PASS  chains occur in a minority of halves (Sigils #15)        29 %
+    PASS  basic attacks ≤80% of basics (Movement #11)              64 %
+    PASS  ≤16 ability resolutions per round (Ladder F5)            11.8
+    PASS  AI max decision ≤1500 ms                                175.5
+
+  DRAFT QUALITY — draft=mixed; synergy score = pairs of champions on one team that share a group
+    mean synergy  A 4.75   B 4.60   (max seen 9)
+    synergy edge (yours − theirs)   matches   your win rate
+    ≤ −3                               259       45 %
+    −2                                  31       39 %
+    −1                                   8       62 %
+    0  (equal drafts)                    2       50 %
+    +1                                   8       38 %
+    +2                                  31       61 %
+    ≥ +3                               259       53 %
+    equal drafts: A wins 50 % of 2 — what's left is side bias and noise
+    synergy drafter vs random drafter: wins 51 % of 300 (sides alternate); average synergy edge +5.0
+    groups on a team (2+ members): matches, win rate
+      Venom                   82     54 %
+      Called Shot            315     53 %
+      Lockdown               391     52 %
+      Dive and Retrieve       98     48 %
+      Crush                  176     48 %
+      Hold the Line          144     43 %
+      Wildfire                43     40 %
+

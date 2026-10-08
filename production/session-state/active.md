@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**SYNERGY ROUND 2 — 2026-10-08.** Owner: synergy medium-leaning-small, combo AI, fix Mortar. Done: payoffs ×1.5 floor +2, slam 3/4 (D-052); Mortar SPD 2 + global speed floor 1 (D-053); depth-3 combo AI default (wins 62% vs old; setup pricing measured useless, off) (D-054); payoff/slam counters in selfplay. Draft re-run: side bias gone; synergy drafter 51%; payoffs 7.0 vs 4.9/match; Mortar 33–39%; Wildfire & Hold the Line weak. Results in `design/v2-champions.md`. 108 tests pass. Next: owner on whether ×1.5 is enough (proposal ×1.75 +3).
+
 **15-CHAMPION ROSTER + DRAFT EXPERIMENT — 2026-10-08.** Owner asked for 15 champions with groups that work together, and to measure equal vs unequal drafts instead of balancing. Done: 5 new champions (Briar, Talon, Pyre, Mortar, Seer), slam + marked/exhausted bonuses (D-049), `assets/data/synergies.json` with 7 groups + synergy score (D-050), `SynergyDrafter` (AI + web), `selfplay N draft=random|synergy|mixed`. Results in `design/v2-champions.md` → "The draft experiment": spread 28–65%; synergy score alone doesn't predict wins (synergy drafter 48% vs random); group identity does (Lockdown/Called Shot win, Crush/Hold the Line lose — Mortar 28%). No balancing (D-051). 106 tests pass. Next: owner decides synergy strength, combo-aware AI, when to tune.
 
 **v2 PLAYABLE — 2026-10-04.** Direction: `design/v2-direction.md`. Built on the owner's "design them and build on your own":

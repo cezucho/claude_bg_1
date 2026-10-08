@@ -9,7 +9,7 @@
     "pow": 1100,
     "arm": 0,
     "rch": 3000,
-    "spd": 1000
+    "spd": 2000
   },
   "passive": {
     "name": "Entrenched",
@@ -30,7 +30,7 @@
         {
           "kind": "Displace",
           "amount": 1,
-          "slam": 3
+          "slam": 4
         }
       ],
       "scalesFrom": "pow",
@@ -109,7 +109,7 @@
         60
       ],
       "moldDown": [
-        "spd",
+        "vit",
         60
       ],
       "opening": [

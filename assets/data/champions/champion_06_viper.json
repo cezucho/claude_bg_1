@@ -95,7 +95,8 @@
           "kind": "Damage",
           "power": 1600,
           "bonusVs": "Poisoned",
-          "bonusFlat": 3
+          "bonusPermille": 1500,
+          "bonusFlat": 2
         }
       ],
       "scalesFrom": "pow",

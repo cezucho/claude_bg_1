@@ -27,7 +27,8 @@
           "kind": "Damage",
           "power": 1100,
           "bonusVs": "Rooted",
-          "bonusFlat": 3
+          "bonusPermille": 1500,
+          "bonusFlat": 2
         }
       ],
       "scalesFrom": "pow",
@@ -98,7 +99,7 @@
         {
           "kind": "Displace",
           "amount": 1,
-          "slam": 2
+          "slam": 3
         }
       ],
       "scalesFrom": "pow",

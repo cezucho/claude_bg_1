@@ -204,8 +204,11 @@ public enum PassiveEffect : byte
 /// <param name="BonusDouble">v2: double damage against such a target.</param>
 /// <param name="Slam">v2, Displace only: damage dealt when a push is stopped short by a wall,
 /// tower, champion, the board's edge, or a root.</param>
+/// <param name="BonusPermille">v2: multiplier against such a target, permille (1500 = ×1.5). With
+/// <paramref name="BonusFlat"/> as well, the bonus is at least that much (owner 2026-10-08:
+/// synergy payoffs medium-sized, leaning small — D-052).</param>
 public sealed record EffectDef(EffectKind Kind, int Power, int Amount, int Rounds,
-    StatusKind BonusVs = StatusKind.None, int BonusFlat = 0, bool BonusDouble = false, int Slam = 0);
+    StatusKind BonusVs = StatusKind.None, int BonusFlat = 0, bool BonusDouble = false, int Slam = 0, int BonusPermille = 0);
 
 /// <summary>
 /// v2: champions that work well together (<c>assets/data/synergies.json</c>). Data for the

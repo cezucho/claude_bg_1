@@ -28,6 +28,7 @@
           "kind": "Damage",
           "power": 1000,
           "bonusVs": "Marked",
+          "bonusPermille": 1500,
           "bonusFlat": 2
         }
       ],

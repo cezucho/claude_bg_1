@@ -18,7 +18,7 @@ public static class SelfPlay
         public int Matches, WinsA, WinsB, Draws, Nexus, Siege, Cap, Comebacks;
         public long Rounds, Halves, HalvesOpened, HalvesByPass, Resolutions, Chains, Deaths, Captures;
         public long BasicMoves, BasicAttacks, OpeningFallbackTeams, OpeningFallbackChamps, Decisions, PlayerDecisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
-        public long PatternChecks, PatternLive, GapSamples, GapTotal;
+        public long PatternChecks, PatternLive, GapSamples, GapTotal, Payoffs, Slams;
         public readonly long[] ResolvedByTier = new long[5];
         public double AiMsTotal, AiMsMax;
         public long AiCalls;
@@ -79,6 +79,8 @@ public static class SelfPlay
     {
         "random" => new RandomAgent(seed),
         "greedy" => new HeuristicAgent(game),
+        "plain" => new HeuristicAgent(game, seed) { NoisePermille = 150, ComboAware = false },
+        "setups" => new HeuristicAgent(game, seed) { NoisePermille = 150, ValueSetups = true },
         _ => new HeuristicAgent(game, seed) { NoisePermille = 150 },
     };
 
@@ -253,6 +255,8 @@ public static class SelfPlay
 
             if (e.Kind == EventKind.Pass) passedThisHalf = true;
             if (e.Kind == EventKind.Death) st.Deaths++;
+            if (e.Text.Contains("PAYOFF:")) st.Payoffs++;
+            if (e.Text.Contains("SLAMS")) st.Slams++;
             if (e.Kind == EventKind.Structure && e.Text.Contains("CAPTURES")) st.Captures++;
             if (e.Kind == EventKind.Basic)
             {
@@ -289,6 +293,7 @@ public static class SelfPlay
         Console.WriteLine($"  Rounds        mean {st.Rounds / m,5:F1}   median {st.RoundCounts[st.RoundCounts.Count / 2]}   min {st.RoundCounts[0]}   max {st.RoundCounts[^1]}");
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");
         Console.WriteLine($"  Nexus open    in {st.MatchesNexusOpened / m,6:P0} of matches, {st.NexusOpenDecisions / (double)st.Decisions,6:P1} of decisions; hit in {st.MatchesNexusHit / m,6:P0} of matches ({st.NexusHits / m:F1} hits/match)");
+        Console.WriteLine($"  Synergy       payoff hits {st.Payoffs / m,4:F1} per match · slams {st.Slams / m,4:F1} per match");
         Console.WriteLine($"  Basics        moves {st.BasicMoves / (double)(st.BasicMoves + st.BasicAttacks),6:P0}   attacks {st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks),6:P0}");
         Console.WriteLine($"  Opening       team-openings hitting the fallback {st.OpeningFallbackTeams / (2 * m),6:P0}   (Opening #10 wants 10–25%); {(double)st.OpeningFallbackChamps / Math.Max(1, st.OpeningFallbackTeams):0.0} champions left when it does");
         if (st.AiCalls > 0)

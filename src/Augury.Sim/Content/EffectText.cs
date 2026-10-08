@@ -36,7 +36,10 @@ public static class EffectText
         if (e.Slam > 0) text += $", {e.Slam} if it slams into something";
         if (e.BonusVs != StatusKind.None)
         {
-            text += e.BonusDouble ? $", doubled vs {e.BonusVs.ToString().ToLowerInvariant()}" : $", +{e.BonusFlat} vs {e.BonusVs.ToString().ToLowerInvariant()}";
+            string vs = e.BonusVs.ToString().ToLowerInvariant();
+            text += e.BonusPermille > 0
+                ? $", ×{e.BonusPermille / 1000.0:0.##} vs {vs}{(e.BonusFlat > 0 ? $" (at least +{e.BonusFlat})" : "")}"
+                : e.BonusDouble ? $", doubled vs {vs}" : $", +{e.BonusFlat} vs {vs}";
         }
 
         return text;

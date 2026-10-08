@@ -48,11 +48,25 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
     /// </summary>
     public int NoisePermille { get; init; }
 
+    /// <summary>
+    /// Value setups (v2): a status on an enemy, or an enemy pinned against an obstacle, counts
+    /// for the bonus damage our ready abilities could still land on it. Default on.
+    /// </summary>
+    public bool ComboAware { get; init; } = true;
+
+    /// <summary>
+    /// With <see cref="ComboAware"/>: also price setups in the evaluation. Off by default — measured
+    /// 2026-10-08, it added nothing over the depth-3 search, which already sees the cash-in (D-054).
+    /// </summary>
+    public bool ValueSetups { get; init; }
+
+    private bool Setups => ComboAware && ValueSetups;
+
     /// <summary>Ladder candidates kept for the two-ply search after a one-ply cut.</summary>
     public int Beam { get; init; } = 14;
 
     /// <inheritdoc/>
-    public string Name => "Heuristic";
+    public string Name => ComboAware ? "Heuristic (combo-aware)" : "Heuristic";
 
     /// <inheritdoc/>
     public Command Choose(in MatchState s, IReadOnlyList<Command> legal)
@@ -67,7 +81,7 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
         {
             MatchState next = s;
             _game.Apply(ref next, c);
-            scored.Add((c, Evaluation.Score(_game, next, me)));
+            scored.Add((c, Evaluation.Score(_game, next, me, Setups)));
         }
 
         if (!ladder) return Pick(scored);
@@ -80,7 +94,7 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
         {
             MatchState next = s;
             _game.Apply(ref next, cmd);
-            deep.Add((cmd, ReplyValue(next, me, replies)));
+            deep.Add((cmd, ComboAware ? FollowUpValue(next, me) : ReplyValue(next, me, replies)));
         }
 
         return Pick(deep);
@@ -135,7 +149,7 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
     {
         if (s.Phase is not (Phase.Ladder or Phase.LastWord) || s.Active == me)
         {
-            return Evaluation.Score(_game, s, me);
+            return Evaluation.Score(_game, s, me, Setups);
         }
 
         buffer.Clear();
@@ -145,10 +159,59 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
         {
             MatchState after = s;
             _game.Apply(ref after, reply);
-            worst = Math.Min(worst, Evaluation.Score(_game, after, me));
+            worst = Math.Min(worst, Evaluation.Score(_game, after, me, Setups));
         }
 
-        return worst == int.MaxValue ? Evaluation.Score(_game, s, me) : worst;
+        return worst == int.MaxValue ? Evaluation.Score(_game, s, me, Setups) : worst;
+    }
+
+    /// <summary>Opponent replies examined at depth 3: the ones that hurt us most at one ply.</summary>
+    public int ReplyBeam { get; init; } = 5;
+
+    /// <summary>
+    /// Three plies (combo-aware): the opponent answers with one of its most damaging replies,
+    /// then we take our best follow-up. A setup (root, mark, wall) is chosen because the
+    /// follow-up that cashes it in is seen — unless the opponent's answer removes it.
+    /// </summary>
+    private int FollowUpValue(in MatchState s, Team me)
+    {
+        if (s.Phase is not (Phase.Ladder or Phase.LastWord) || s.Active == me) return BestOwn(s, me);
+
+        var replies = new List<Command>();
+        _game.Legal(s, replies);
+        var ranked = new List<(MatchState After, int Value)>(replies.Count);
+        foreach (Command reply in replies)
+        {
+            MatchState after = s;
+            _game.Apply(ref after, reply);
+            ranked.Add((after, Evaluation.Score(_game, after, me, Setups)));
+        }
+
+        int worst = int.MaxValue;
+        foreach ((MatchState after, int _) in ranked.OrderBy(x => x.Value).Take(ReplyBeam))
+        {
+            worst = Math.Min(worst, BestOwn(after, me));
+        }
+
+        return worst == int.MaxValue ? Evaluation.Score(_game, s, me, Setups) : worst;
+    }
+
+    /// <summary>Our best one-ply continuation if it is our move on the ladder, else the static value.</summary>
+    private int BestOwn(in MatchState s, Team me)
+    {
+        int stay = Evaluation.Score(_game, s, me, Setups);
+        if (s.Phase is not (Phase.Ladder or Phase.LastWord) || s.Active != me) return stay;
+        var mine = new List<Command>();
+        _game.Legal(s, mine);
+        int best = int.MinValue;
+        foreach (Command c in mine)
+        {
+            MatchState after = s;
+            _game.Apply(ref after, c);
+            best = Math.Max(best, Evaluation.Score(_game, after, me, Setups));
+        }
+
+        return best == int.MinValue ? stay : best;
     }
 
     private static Command Best(List<(Command Cmd, int Value)> scored)
@@ -175,10 +238,10 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
 public static class Evaluation
 {
     /// <summary>Value of <paramref name="s"/> for <paramref name="me"/>. Higher is better.</summary>
-    public static int Score(Game game, in MatchState s, Team me) =>
-        Side(game, s, me) - Side(game, s, MatchState.Other(me));
+    public static int Score(Game game, in MatchState s, Team me, bool combo = false) =>
+        Side(game, s, me, combo) - Side(game, s, MatchState.Other(me), combo);
 
-    private static int Side(Game game, in MatchState s, Team t)
+    private static int Side(Game game, in MatchState s, Team t, bool combo)
     {
         if (s.Phase == Phase.MatchOver)
         {
@@ -245,7 +308,84 @@ public static class Evaluation
             if (nearest < 99) v -= nearest * 6;
         }
 
+        if (combo) v += SetupValue(game, s, t);
         return v;
+    }
+
+    /// <summary>
+    /// What team <paramref name="t"/>'s setups are worth: for each of our champions, the bonus
+    /// damage of its best ready payoff on any enemy carrying the status it keys on (or pinned so
+    /// a push would slam), at a third less than HP value.
+    /// ⚠ Weights are guesses, like the rest of the evaluation.
+    /// </summary>
+    private static int SetupValue(Game game, in MatchState s, Team t)
+    {
+        int v = 0;
+        int mine = MatchState.FirstSlot(t), theirs = MatchState.FirstSlot(MatchState.Other(t));
+        for (int m = mine; m < mine + 5; m++)
+        {
+            Champion c = s.Champions[m];
+            if (!c.OnBoard || c.Hp <= 0) continue;
+
+            // One action per champion: its single best payoff on any enemy, not one per enemy.
+            // Otherwise cashing in (which puts the ability on cooldown) would cost more
+            // potential than it gains, and the AI hoards setups instead of using them.
+            int best = 0;
+            for (int slot = 0; slot < 4; slot++)
+            {
+                AbilityDef? a = game.Kit(c, slot);
+                if (a is null || c.Cooldowns[slot] > 0) continue;
+                int reach = a.IsFree ? game.AbilityRange(c, a) : 3;
+                for (int e = theirs; e < theirs + 5; e++)
+                {
+                    Champion foe = s.Champions[e];
+                    if (!foe.OnBoard || foe.Hp <= 0 || HexCoord.Distance(c.Pos, foe.Pos) > reach + 1) continue;   // one step of slack
+                    foreach (EffectDef ef in a.Effects)
+                    {
+                        int bonus = 0;
+                        if (ef.Kind == EffectKind.Damage && ef.BonusVs != StatusKind.None && Has(foe, ef.BonusVs))
+                        {
+                            int raw = ef.Power > 0 ? (int)Arith.FloorDiv((long)game.Rules.AbilityBase * ef.Power * game.Pow(c), 1_000_000) : ef.Amount;
+                            int hit = Math.Max(1, raw - game.Armour(foe));
+                            bonus = ef.BonusPermille > 0 ? Math.Max(hit * ef.BonusPermille / 1000 - hit, ef.BonusFlat) : ef.BonusDouble ? hit + ef.BonusFlat : ef.BonusFlat;
+                        }
+                        else if (ef.Kind == EffectKind.Displace && ef.Slam > 0 && ef.Amount > 0 && !foe.Unstoppable
+                                 && (foe.Rooted || Pinned(game, s, foe.Pos)))
+                        {
+                            bonus = ef.Slam;
+                        }
+
+                        best = Math.Max(best, bonus);
+                    }
+                }
+            }
+
+            v += best * 5 / 3;   // below the value of the damage itself, so cashing in always pays
+        }
+
+        return v;
+    }
+
+    private static bool Has(in Champion c, StatusKind k) => k switch
+    {
+        StatusKind.Rooted => c.Rooted,
+        StatusKind.Burning => c.Burning,
+        StatusKind.Poisoned => c.PoisonRounds > 0,
+        StatusKind.Marked => c.Mark > 0,
+        StatusKind.Exhausted => c.ExhaustHalves > 0,
+        _ => false,
+    };
+
+    /// <summary>Next to the board's edge, a solid tower or a wall: a push there is likely to slam.</summary>
+    private static bool Pinned(Game game, in MatchState s, HexCoord at)
+    {
+        for (int d = 0; d < 6; d++)
+        {
+            HexCoord n = at + Hex.Directions[d];
+            if (!Board.Playable(n) || Game.WallAt(s, n) >= 0 || (game.Rules.TowersBlock && Board.TowerAt(n) >= 0)) return true;
+        }
+
+        return false;
     }
 }
 

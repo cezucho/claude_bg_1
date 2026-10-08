@@ -197,7 +197,8 @@ public sealed partial class Game
     public int Reach(in Champion c) => Math.Clamp((int)Arith.FloorDiv(StatPermille(c, Stat.Rch), 1000), 1, 3);
 
     /// <summary>Speed in hexes per basic move.</summary>
-    public int Speed(in Champion c) => Math.Max(0, (int)Arith.FloorDiv(StatPermille(c, Stat.Spd), 1000));
+    /// <remarks>Never below 1 (D-053): molding may slow a champion but never strand it.</remarks>
+    public int Speed(in Champion c) => Math.Max(1, (int)Arith.FloorDiv(StatPermille(c, Stat.Spd), 1000));
 
     /// <summary>Free-targeting range of an ability for this champion, 1–3.</summary>
     public int Range(in Champion c, AbilityDef a) => Math.Clamp(Reach(c) + a.RangeBonus, 1, 3);

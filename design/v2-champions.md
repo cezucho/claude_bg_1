@@ -325,16 +325,77 @@ samples, so treat this as noise-level.
   groups (Wildfire, Called Shot via Execute) show the biggest swings. If the owner wants a
   drafted plan to *feel* decisive, payoffs need to be closer to doubling than to +2.
 
+## Medium payoffs, Mortar fix, combo-playing AI (2026-10-08, second round)
+
+**The owner's answers.**
+- Synergy should be *significant but not decisive*: medium payoffs, leaning smaller.
+- Bans will matter once the roster is large (parked in `design/v2-direction.md`).
+- Teach the AI to set up combos.
+- Fix Mortar now — a champion that can't move is worthless.
+
+**Changes.**
+- **Payoffs:** every status payoff is now ×1.5 with a floor of +2 (D-052). The old doublings
+  are gone. Slam is 3, or 4 for Mortar.
+- **Mortar:** base SPD 2, and Barrage molds VIT down instead of SPD. **Speed can never drop
+  below 1** for any champion (D-053).
+- **Hold the Line** swapped Mortar for Briar, so Bulwark–Mortar is no longer counted in two
+  groups.
+- **The AI looks one step further** (D-054): our move, the opponent's most damaging replies,
+  then our best follow-up. That's what lets it play a root and then the Snipe that cashes it
+  in.
+
+**How the AI change was measured** (150 matches per side, so side bias cancels out):
+
+| Matchup | Combo-playing AI wins | Synergy hits per match |
+|---|---|---|
+| First try, pricing setups only, against the old AI | 25% | — |
+| Setup pricing fixed (each champion counts its best follow-up once) | 46% | 4.4 vs 4.1 |
+| **Depth-3 search** against the old AI | **62%** | 4.8 |
+| Depth-3 with setup pricing against depth-3 without | 48–50% | 5.2 |
+
+So the deeper search is what plays combos; pricing setups adds nothing measurable. It stays in
+the code, off by default (`setups` agent in the harness). The AI's slowest decision is 446 ms,
+against a 1,500 ms budget. A synergy hit is a payoff on a marked, rooted, burning, poisoned or
+exhausted target, or a slam; the harness now counts them.
+
+**The draft experiment again, with the combo-playing AI** (300 matches per scenario):
+
+| | random | synergy | mixed |
+|---|---|---|---|
+| A / B wins | 49 / 50% | 50 / 49% | 53 / 45% |
+| Synergy hits per match | 4.9 | 5.9 | **7.0** |
+| Champion win rates | 33–64% | 39–59% | 38–56% |
+| Group-building drafter against a random drafter | — | — | **51%** (synergy edge +5.0) |
+
+| Group | random | synergy | mixed |
+|---|---|---|---|
+| Dive and Retrieve | 62% | 57% | 48% |
+| Venom | 52% | 56% | 54% |
+| Lockdown | 51% | 51% | 52% |
+| Called Shot | 50% | 48% | 53% |
+| Crush | 48% | 46% | 48% |
+| Hold the Line | 38% | 43% | 43% |
+| Wildfire | **33%** | **34%** | 40% |
+
+**Reading it.**
+- **Side bias is gone** (49–53%) now that both sides play combos.
+- **Synergy is real but small.**
+  - Drafting toward groups produces more payoffs: 7.0 per match against 4.9.
+  - It turns into only about +1 to +3 points of win rate: 51% for the group-building drafter,
+    53% at an edge of +3 or more.
+  - On the owner's scale that is still *very small*, not medium. Champion strength (33–64%)
+    swamps it.
+- **Mortar can always move now and rose from 28% to 33–39%.** It is still the weakest, but a
+  real champion. Further tuning waits for the roster (D-051).
+- **Weak plans to watch:** Wildfire (Ember and Pyre, 33–40%) and Hold the Line (38–43%). Both
+  hold up badly against random teams, so they are traps until tuned.
+
 ## Open questions for the owner
 
-1. **Should synergy be decisive or a nudge?** Today it's a nudge: flat bonuses of +2 or +3. Making
-   payoffs bigger (doubling, longer statuses) makes the draft matter more and comebacks rarer.
-2. **The AI plays combos only by accident.** A combo-aware AI — planning a root before a Snipe,
-   or a wall before a push — would make the measurements fairer to setup-heavy groups. It costs
-   time, and the 1.5 s budget leaves room.
-3. **When to balance.** Tune when the roster stops growing, as you said. Two exceptions worth
-   making now, because they distort every experiment:
-   - Mortar at 28%;
-   - the double-counted Bulwark–Mortar pair in Crush and Hold the Line.
-4. Earlier questions still open: the round-1 opener's edge (D-045) — smaller with this roster —
-   and the opening fallback on Field 7.
+1. **Synergy strength.** ×1.5 turned out *very small* in win-rate terms: a group-built draft
+   wins about 51–53%. If "medium" means about 55–58% for a clearly better draft, the next
+   step is ×1.75 with a floor of +3. Alternatively, wait until champion strength is tuned,
+   since the 33–64% spread currently hides synergy.
+2. **When to balance champions.** The roster isn't final, so the plan is still to wait
+   (D-051). Wildfire and Mortar are the outliers if you want an exception.
+3. Earlier, still open: the opening fallback on Field 7.

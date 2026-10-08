@@ -10,7 +10,7 @@
         "ranger",
         "gunner"
       ],
-      "idea": "Root a target, then hit what can't move: Snipe and Groundswell add 3, and a rooted target slams when pushed."
+      "idea": "Root a target, then hit what can't move: Snipe and Groundswell hit half again as hard, and a rooted target slams when pushed."
     },
     {
       "id": "called-shot",
@@ -21,7 +21,7 @@
         "talon",
         "ranger"
       ],
-      "idea": "Mark one enemy and spend the mark: Execute doubles on it, Volley adds 2, and every hit adds the mark."
+      "idea": "Mark one enemy and spend the mark: Execute and Volley hit half again as hard, and every hit adds the mark."
     },
     {
       "id": "wildfire",
@@ -30,7 +30,7 @@
         "ember",
         "pyre"
       ],
-      "idea": "Set the line alight; Wildfire and Inferno deal double to burning targets."
+      "idea": "Set the line alight; Wildfire and Inferno hit burning targets half again as hard."
     },
     {
       "id": "venom",
@@ -39,7 +39,7 @@
         "viper",
         "briar"
       ],
-      "idea": "Poison first; Ambush and Bloom add 3 to poisoned targets."
+      "idea": "Poison first; Ambush and Bloom hit poisoned targets half again as hard."
     },
     {
       "id": "crush",
@@ -69,9 +69,9 @@
         "bastion",
         "bulwark",
         "anchor",
-        "mortar"
+        "briar"
       ],
-      "idea": "Stand in front of your towers: shields, unstoppable front-liners and long-range fire behind them."
+      "idea": "Stand in front of your towers: shields, unstoppable front-liners and thorns that punish whoever hits them."
     }
   ]
 }

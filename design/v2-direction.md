@@ -113,7 +113,20 @@ or can with small tweaks. It is a direction, not a gate.
    Roster and measurements: `design/v2-champions.md`.
 4. **Terrain**, once the board is settled.
 
+### Synergy strength · Owner, 2026-10-08
+
+Synergy should be **significant but not decisive**: medium-sized payoffs, leaning smaller than
+larger, but not very small. With a large roster (say 50), players will learn the best pairs.
+**Bans in the draft** then keep combos interesting. Implemented as ×1.5 with a floor of +2
+(D-052).
+
 ## Idea parking lot
+
+### Bans in the draft (owner, 2026-10-08)
+
+Once the roster is large enough that the best combinations are common knowledge. Not
+scheduled; it needs a roster well past 15.
+
 
 Ideas the owner raised but has not committed to. Recorded so they are not lost; none is
 scheduled.

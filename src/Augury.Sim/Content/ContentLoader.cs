@@ -172,7 +172,8 @@ public static class ContentLoader
             e.TryGetProperty("bonusVs", out JsonElement bv) ? Enum<StatusKind>(bv.GetString()!) : StatusKind.None,
             e.TryGetProperty("bonusFlat", out JsonElement bf) ? bf.GetInt32() : 0,
             e.TryGetProperty("bonusDouble", out JsonElement bd) && bd.GetBoolean(),
-            e.TryGetProperty("slam", out JsonElement sl) ? sl.GetInt32() : 0)).ToList();
+            e.TryGetProperty("slam", out JsonElement sl) ? sl.GetInt32() : 0,
+            e.TryGetProperty("bonusPermille", out JsonElement bp) ? bp.GetInt32() : 0)).ToList();
 
         bool spell = !a.TryGetProperty("moldUp", out _);
         JsonElement up = spell ? default : a.GetProperty("moldUp");
