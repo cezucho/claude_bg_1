@@ -440,6 +440,7 @@ public sealed partial class Game
                         if (e.BonusVs != StatusKind.None && BonusApplies(s.Champions[t], e.BonusVs))
                         {
                             Log(log, EventKind.Damage, $"  PAYOFF: {a.Name} on {Name(s, t)}, who is {e.BonusVs.ToString().ToLowerInvariant()}");
+                            _observer?.Payoff(slot, t);
                         }
 
                         DamageChampion(ref s, t, HitDamage(s, t, raw, e), slot, fromPassive: false, log);
@@ -448,20 +449,21 @@ public sealed partial class Game
                     foreach (Target st in structTargets)
                     {
                         if (s.Phase == Phase.MatchOver) break;
-                        DamageStructure(ref s, team, st, Math.Max(1, raw), log);
+                        DamageStructure(ref s, team, st, Math.Max(1, raw), log, source: slot);
                     }
 
                     break;
 
                 case EffectKind.Heal:
                     int heal = e.Power > 0 ? (int)Arith.FloorDiv((long)Rules.AbilityBase * e.Power * pow, 1_000_000) : e.Amount;
-                    foreach (int t in champTargets) Heal(ref s, t, heal, log);
+                    foreach (int t in champTargets) Heal(ref s, t, heal, log, slot);
                     break;
 
                 case EffectKind.Shield:
                     foreach (int t in champTargets)
                     {
                         s.Champions[t].Shield += (short)e.Amount;
+                        _observer?.Shielded(slot, t, e.Amount);
                         Log(log, EventKind.Heal, $"  {Name(s, t)} gains {e.Amount} shield");
                     }
 
@@ -488,6 +490,7 @@ public sealed partial class Game
                         if (stopped && e.Slam > 0 && e.Amount > 0 && s.Champions[t].OnBoard)
                         {
                             Log(log, EventKind.Damage, $"  {Name(s, t)} SLAMS into something");
+                            _observer?.Slam(slot, t);
                             DamageChampion(ref s, t, e.Slam, slot, fromPassive: false, log);
                         }
                     }
@@ -611,7 +614,7 @@ public sealed partial class Game
                     foreach (Target st in structTargets)
                     {
                         if (s.Phase == Phase.MatchOver) break;
-                        DamageStructure(ref s, team, st, e.Amount, log, ignoreDefenders: true);
+                        DamageStructure(ref s, team, st, e.Amount, log, ignoreDefenders: true, source: slot);
                     }
 
                     break;
@@ -630,7 +633,7 @@ public sealed partial class Game
                         }
                     }
 
-                    if (pick >= 0) Heal(ref s, pick, e.Amount, log);
+                    if (pick >= 0) Heal(ref s, pick, e.Amount, log, slot);
                     break;
             }
 
@@ -688,6 +691,7 @@ public sealed partial class Game
         int loss = c.BurnAmount;
         if (s.Phase == Phase.Opening) loss = Math.Min(loss, Math.Max(0, c.Hp - 1));
         c.Hp -= loss;
+        _observer?.ChampionDamaged(-1, slot, loss, 0);
         Log(log, EventKind.Damage, $"  {Name(s, slot)} burns for {loss} → {c.Hp} HP");
     }
 
@@ -766,6 +770,7 @@ public sealed partial class Game
         int loss = amount - absorbed;
         if (s.Phase == Phase.Opening) loss = Math.Min(loss, Math.Max(0, t.Hp - 1));   // opening damage can't kill (D-042)
         t.Hp -= loss;
+        _observer?.ChampionDamaged(source, target, loss, absorbed);
         Log(log, EventKind.Damage,
             $"  {Name(s, target)} takes {amount}{marked}{(absorbed > 0 ? $" ({absorbed} shielded)" : "")} → {t.Hp} HP");
 
@@ -775,7 +780,7 @@ public sealed partial class Game
         }
     }
 
-    private void Heal(ref MatchState s, int target, int amount, List<GameEvent>? log)
+    private void Heal(ref MatchState s, int target, int amount, List<GameEvent>? log, int source = -1)
     {
         ref Champion t = ref s.Champions[target];
         if (t.WoundRounds > 0) amount /= 2;   // wounded: healing halved (v2)
@@ -783,10 +788,11 @@ public sealed partial class Game
         int before = t.Hp;
         t.Hp = Math.Min(max, t.Hp + amount);
         if (t.Hp > 0) t.Flags &= ~ChampFlags.Dying;   // healing above 0 clears Dying (ladder edge cases)
+        if (t.Hp > before) _observer?.ChampionHealed(source, target, t.Hp - before);
         Log(log, EventKind.Heal, $"  {Name(s, target)} heals {t.Hp - before} → {t.Hp} HP");
     }
 
-    private void DamageStructure(ref MatchState s, Team attacker, Target st, int damage, List<GameEvent>? log, bool ignoreDefenders = false)
+    private void DamageStructure(ref MatchState s, Team attacker, Target st, int damage, List<GameEvent>? log, bool ignoreDefenders = false, int source = -1)
     {
         Team defending = MatchState.Other(attacker);
         IEnumerable<HexCoord> hexes = st.Kind == TargetKind.Nexus
@@ -807,6 +813,7 @@ public sealed partial class Game
         {
             ref Tower tower = ref s.Towers[st.Index];
             tower.Hp -= (short)scaled;
+            _observer?.StructureDamaged(source, scaled, nexus: false);
             Log(log, EventKind.Structure, $"  {StructureName(st)} takes {scaled}{(defenders > 0 ? $" ({defenders} defending)" : "")} → {Math.Max(0, (int)tower.Hp)}");
             if (tower.Hp <= 0)
             {
@@ -820,6 +827,7 @@ public sealed partial class Game
 
         int idx = st.Index;
         s.NexusHp[idx] -= scaled;
+        _observer?.StructureDamaged(source, scaled, nexus: true);
         Log(log, EventKind.Structure, $"  NEXUS {(Team)idx} takes {scaled}{(defenders > 0 ? $" ({defenders} defending)" : "")} → {Math.Max(0, s.NexusHp[idx])}");
         if (s.NexusHp[idx] <= 0) EndMatch(ref s, attacker, EndReason.Nexus, log);
     }
@@ -910,7 +918,7 @@ public sealed partial class Game
 
             case PassiveEffect.HealSelf:
                 Log(log, EventKind.Passive, $"  ✦ {Name(s, slot)}: {p.Name}");
-                Heal(ref s, slot, p.Amount, log);
+                Heal(ref s, slot, p.Amount, log, slot);
                 break;
 
             case PassiveEffect.ShieldSelf:

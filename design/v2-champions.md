@@ -390,6 +390,54 @@ exhausted target, or a slam; the harness now counts them.
 - **Weak plans to watch:** Wildfire (Ember and Pyre, 33–40%) and Hold the Line (38–43%). Both
   hold up badly against random teams, so they are traps until tuned.
 
+## Champion statistics inside the match (2026-10-09, 400 matches, random drafts)
+
+**How win rates are counted.** A champion's win rate is its team's: of the matches where it was
+drafted, how many its team won. To see *why*, the harness now also records per champion:
+- damage dealt to enemy champions, and damage taken;
+- healing and shields given, and tower damage;
+- kills (the last enemy to damage the victim) and deaths;
+- synergy payoffs and slams;
+- how often it used an ability, a basic attack or a move.
+
+It also adds:
+- **mates:** its teammates' usual win rate;
+- **drag:** the gap between the two;
+- a **lane table:** its record against each enemy in the same role.
+
+The simulation reports these through an observer (`IMatchObserver`), passed only for the real
+moves, never for the AI's search. Run it with `tools/Augury.Tools selfplay N`; the full table is
+in `production/qa/evidence/v2/round3-champion-stats-400.txt`.
+
+| Champion | Win | Drag | Dealt | Taken | Heal/shield | Tower | K / D | Lane |
+|---|---|---|---|---|---|---|---|---|
+| Viper | 62% | +13 | 21 | 76 | — | 36 | 0.5 / 2.5 | beats Ember 65%, Talon 60% |
+| Ranger | 61% | +12 | 79 | 47 | 15 heal | 21 | 2.5 / 1.2 | beats Mortar 70% |
+| Tempest | 59% | +10 | 58 | 44 | — | 15 | 2.0 / 1.3 | beats Pyre 63%, Lens 56% |
+| Oriel | 58% | +9 | 2 | 28 | 42 heal | 1 | 0.1 / 0.1 | beats Bastion 62% |
+| Bulwark | 57% | +8 | 21 | 36 | — | 10 | 0.7 / 0.6 | beats Anchor 60% |
+| … | | | | | | | | |
+| Pyre | 40% | −9 | 54 | 46 | 8 heal | 10 | 2.0 / 1.2 | loses to Tempest 37% |
+| **Mortar** | **32%** | **−17** | **66** | 29 | 16 heal | 11 | **2.2 / 0.6** | loses to Ranger 28%, Gunner 37% |
+
+**What it says about Mortar.**
+- It is not idle. It deals the third-most damage of all fifteen champions, gets 2.2 kills a
+  match and rarely dies.
+- Yet its team wins 32%, 17 points below what its teammates usually manage. So its damage
+  doesn't turn into winning.
+- Likely reasons, to check next:
+  - **Range:** it fires from far back, at whoever is in reach rather than at whoever decides the
+    tower fight.
+  - **Pushes:** its Shell pushes enemies away, which may push them out of range of its own team.
+  - **No objective pressure:** it barely moves (2.5 moves a match against about 4–5 for others)
+    and deals little tower damage.
+- Damage is not the measure of a champion here; towers and the nexus are. The owner's test,
+  "its team loses even with good teammates", flags Mortar clearly, and Pyre, Talon, Briar and
+  Bastion more mildly.
+
+**Caveat.** "Mates" counts teammates' win rates including the matches they played with this
+champion, so drag is slightly understated for the weakest and strongest.
+
 ## Open questions for the owner
 
 1. **Synergy strength.** ×1.5 turned out *very small* in win-rate terms: a group-built draft

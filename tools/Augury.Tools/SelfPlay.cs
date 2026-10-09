@@ -28,6 +28,7 @@ public static class SelfPlay
         // Draft quality: synergy score of each side (pairs in shared groups) and the result.
         public readonly List<(int SynA, int SynB, Team Winner, Team Drafter)> Drafts = new();
         public readonly Dictionary<string, (int Teams, int Wins)> Groups = new();
+        public readonly ChampionStats ChampionStats = new();
     }
 
     public static void Run(string[] args)
@@ -58,6 +59,7 @@ public static class SelfPlay
         }
 
         Report(game, stats, aName, bName, sw.Elapsed.TotalSeconds);
+        stats.ChampionStats.Report();
         DraftReport(game, stats, draftMode);
     }
 
@@ -87,6 +89,8 @@ public static class SelfPlay
     private static void PlayOne(Game game, IAgent a, IAgent b, Stats st, IAgent draftA, IAgent draftB, Team synSide)
     {
         MatchState s = game.NewMatch();
+        var tally = new ChampionStats.MatchTally();
+        tally.SetTeams(s);   // slots 0–4 are A, 5–9 B from the start
         var log = new List<GameEvent>();
         var legal = new List<Command>();
         bool opened = false;
@@ -135,7 +139,8 @@ public static class SelfPlay
 
             int roundBefore = s.Round;
             Phase phaseBefore = s.Phase;
-            game.Apply(ref s, c, log);
+            tally.Command(c);
+            game.Apply(ref s, c, log, tally);
             if (phaseBefore == Phase.Opening && s.Phase != Phase.Opening)
             {
                 // How close the teams stand when the opening ends: each champion's distance
@@ -174,6 +179,7 @@ public static class SelfPlay
         if (hits > 0) st.MatchesNexusHit++;
 
         st.Matches++;
+        st.ChampionStats.Add(game, s, tally);
         int[] defsA = Enumerable.Range(0, 5).Select(i => (int)s.Champions[i].Def).ToArray();
         int[] defsB = Enumerable.Range(5, 5).Select(i => (int)s.Champions[i].Def).ToArray();
         st.Drafts.Add((game.Content.SynergyScore(defsA), game.Content.SynergyScore(defsB), s.Winner, synSide));

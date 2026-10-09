@@ -7,7 +7,7 @@ namespace Augury.Sim;
 /// match state explicitly, so the AI can clone state by assignment and search freely.
 /// </summary>
 /// <remarks>
-/// <para>The single mutation path (ADR-0004) is <see cref="Apply"/>. After every command
+/// <para>The single mutation path (ADR-0004) is <see cref="Apply(ref MatchState, in Command, List{GameEvent}?)"/>. After every command
 /// the engine advances automatically through anything that needs no decision — skipped
 /// basics, exhausted ladders, round close — and stops at the next real decision.</para>
 /// <para>Rules are stated in <c>design/mvp-rules.md</c>; section numbers are cited inline.</para>
@@ -210,7 +210,27 @@ public sealed partial class Game
     /// for passing a command from <c>Legal</c>; illegal commands are not re-validated
     /// on the hot path.
     /// </summary>
-    public void Apply(ref MatchState s, in Command cmd, List<GameEvent>? log = null)
+    public void Apply(ref MatchState s, in Command cmd, List<GameEvent>? log = null) => Apply(ref s, cmd, log, null);
+
+    /// <summary>As <see cref="Apply(ref MatchState, in Command, List{GameEvent}?)"/>, reporting to an observer (statistics only).</summary>
+    public void Apply(ref MatchState s, in Command cmd, List<GameEvent>? log, IMatchObserver? observer)
+    {
+        IMatchObserver? outer = _observer;
+        _observer = observer;
+        try
+        {
+            ApplyCore(ref s, cmd, log);
+        }
+        finally
+        {
+            _observer = outer;
+        }
+    }
+
+    // Per thread, and only for the duration of one Apply: the AI's searches never report.
+    [ThreadStatic] private static IMatchObserver? _observer;
+
+    private void ApplyCore(ref MatchState s, in Command cmd, List<GameEvent>? log)
     {
         switch (cmd.Kind)
         {

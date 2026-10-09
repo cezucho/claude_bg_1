@@ -185,7 +185,7 @@ public sealed partial class Game
             case TargetKind.Tower:
             case TargetKind.Nexus:
                 Log(log, EventKind.Basic, $"{Name(s, cmd.Champion)} basic-attacks {StructureName(cmd.Target)}");
-                DamageStructure(ref s, team, cmd.Target, Math.Max(1, raw), log);
+                DamageStructure(ref s, team, cmd.Target, Math.Max(1, raw), log, source: cmd.Champion);
                 break;
 
             case TargetKind.Beacon:

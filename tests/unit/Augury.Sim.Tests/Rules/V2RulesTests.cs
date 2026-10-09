@@ -155,6 +155,34 @@ public sealed class V2RulesTests : IDisposable
         Assert.Equal(Math.Max(hit * 3 / 2, hit + 2) + 3, Loss(3));
     }
 
+    private sealed class Recorder : IMatchObserver
+    {
+        public readonly List<(int Source, int Target, int Lost)> Hits = new();
+        public void ChampionDamaged(int source, int target, int hpLost, int absorbed) => Hits.Add((source, target, hpLost));
+        public void ChampionHealed(int source, int target, int amount) { }
+        public void Shielded(int source, int target, int amount) { }
+        public void StructureDamaged(int source, int amount, bool nexus) { }
+        public void Payoff(int source, int target) { }
+        public void Slam(int source, int target) { }
+        public void Died(int victim) { }
+    }
+
+    [Fact]
+    public void Observer_ReportsWhoHitWhom_OnlyForTheCallItIsGiven()
+    {
+        MatchState s = Ladder(Team.A);
+        s.Champions[6].Pos = new HexCoord(2, -1);
+        int before = s.Champions[6].Hp;
+        var rec = new Recorder();
+
+        MatchState copy = s;
+        _game.Apply(ref copy, new Command(CommandKind.Ability, 3, 0, Target.Champ(6)));   // e.g. the AI searching
+        Assert.Empty(rec.Hits);
+
+        _game.Apply(ref s, new Command(CommandKind.Ability, 3, 0, Target.Champ(6)), null, rec);
+        Assert.Contains((3, 6, before - s.Champions[6].Hp), rec.Hits);   // Ranger (slot 3) hit Viper (slot 6)
+    }
+
     [Fact]
     public void Speed_NeverMoldsBelowOne()
     {

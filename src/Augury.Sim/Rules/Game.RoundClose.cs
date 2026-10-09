@@ -35,6 +35,7 @@ public sealed partial class Game
             c.RootHalves = c.ExhaustHalves = c.UnstoppableHalves = 0;
             c.BurnAmount = c.BurnRounds = c.Mark = c.WoundRounds = 0;
             s.NexusHp[TeamIndex(c.Team)] -= Rules.KillSiege;
+            _observer?.Died(i);
             Log(log, EventKind.Death, $"  ✝ {Name(s, i)} dies (respawn in {respawn}). NEXUS {c.Team} −{Rules.KillSiege} → {Math.Max(0, s.NexusHp[TeamIndex(c.Team)])}");
         }
 
@@ -57,6 +58,7 @@ public sealed partial class Game
             ref Champion c = ref s.Champions[i];
             if (!c.OnBoard || c.PoisonRounds == 0) continue;
             c.Hp -= c.PoisonAmount;
+            _observer?.ChampionDamaged(-1, i, c.PoisonAmount, 0);
             c.PoisonRounds--;
             Log(log, EventKind.Damage, $"  {Name(s, i)} suffers {c.PoisonAmount} poison → {c.Hp} HP");
             if (c.PoisonRounds == 0) c.PoisonAmount = 0;
@@ -72,6 +74,7 @@ public sealed partial class Game
                 if (c.OnBoard && c.Team != tower.Owner && HexCoord.Distance(c.Pos, tower.Pos) <= 1)
                 {
                     c.Hp -= Rules.TowerShot;
+                    _observer?.ChampionDamaged(-1, i, Rules.TowerShot, 0);
                     Log(log, EventKind.Damage, $"  tower {Fmt(tower.Pos)} shoots {Name(s, i)} for {Rules.TowerShot} → {c.Hp} HP");
                 }
             }
