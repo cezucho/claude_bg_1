@@ -73,12 +73,13 @@ public sealed class V2RulesTests : IDisposable
     {
         ContentDb db = _game.Content;
         Assert.NotEmpty(db.Synergies);
-        Assert.All(db.Champions.Select((_, i) => i), i => Assert.NotEmpty(db.GroupsOf(i)));   // nobody is left out
+        Assert.Empty(db.PartnersOf(Oriel));   // a solo pick by design
 
-        // Lockdown: Anchor, Gunner, Seer → 3 pairs. Called Shot: Lens, Talon, Seer → 3 pairs.
-        Assert.Equal(6, db.SynergyScore([Anchor, Talon, Lens, Gunner, Seer]));
-        // Bulwark and Lens share Crush; Lens and Ranger share Called Shot.
-        Assert.Equal(2, db.SynergyScore([Bulwark, Ember, Lens, Ranger, Oriel]));
+        // A pair is one giving what the other wants. Lens and Seer mark for Anchor and Talon
+        // (4 pairs); Anchor roots for Gunner (1). Two givers of the same status are not a pair.
+        Assert.Equal(5, db.SynergyScore([Anchor, Talon, Lens, Gunner, Seer]));
+        // A tragic draft exists: nobody gives what anybody else wants.
+        Assert.Equal(0, db.SynergyScore([Anchor, Talon, Tempest, Ranger, Bastion]));
         Assert.Equal(0, db.SynergyScore([255, 255]));
     }
 
@@ -97,7 +98,7 @@ public sealed class V2RulesTests : IDisposable
     [Fact]
     public void Slam_RootedOrWalledTarget_TakesExtraDamage_UnstoppableDoesNot()
     {
-        // B's Bulwark (slot 5) shoves A's Ember (slot 1), which has no on-damage passive.
+        // B's Tempest (slot 7) Gusts A's Ember (slot 1), which has no on-damage passive.
         // Arrangements mutate a one-element array so the struct state is changed in place.
         MatchState Prepare(Action<MatchState[]> f) { var arr = new[] { Ladder(Team.B) }; f(arr); return arr[0]; }
 
@@ -105,13 +106,13 @@ public sealed class V2RulesTests : IDisposable
         {
             MatchState s = Prepare(arr =>
             {
-                arr[0].Champions[5].Pos = new HexCoord(1, 0);
+                arr[0].Champions[7].Pos = new HexCoord(1, 0);
                 arr[0].Champions[1].Pos = new HexCoord(1, -1);
                 arrange(arr);
             });
             int before = s.Champions[1].Hp;
             log = new List<GameEvent>();
-            _game.Apply(ref s, new Command(CommandKind.Ability, 5, 0, Target.Champ(1)), log);
+            _game.Apply(ref s, new Command(CommandKind.Ability, 7, 1, Target.Champ(1)), log);
             pos = s.Champions[1].Pos;
             return before - s.Champions[1].Hp;
         }
@@ -123,7 +124,7 @@ public sealed class V2RulesTests : IDisposable
         int rooted = Loss(arr => arr[0].Champions[1].RootHalves = 1, out HexCoord p1, out var l1);
         Assert.Equal(new HexCoord(1, -1), p1);
         Assert.Contains(l1, e => e.Text.Contains("SLAMS"));
-        Assert.Equal(plain + 3, rooted);   // Shove's slam is 3
+        Assert.Equal(plain + 3, rooted);   // Gust's slam is 3
 
         int walled = Loss(arr =>
         {
@@ -137,22 +138,27 @@ public sealed class V2RulesTests : IDisposable
     }
 
     [Fact]
-    public void BonusVsMarked_AddsOnTopOfTheMark()
+    public void Payoff_WantedStatusHitsHarder_AndAMarkAddsOnTop()
     {
-        // A's Ranger (slot 3) Volleys B's Viper (slot 6, no armour): ×1.5 vs marked with a floor
-        // of +2 (D-052), plus the mark itself (+3).
-        int Loss(int mark)
+        // A's Gunner (slot 3, wants Rooted) Snipes B's Viper (slot 6, no armour). The payoff is
+        // the rules' want bonus with its floor (D-056); a mark adds its own +3 to any hit.
+        int[] withGunner = [Anchor, Ember, Lens, Gunner, Oriel];
+        int Loss(bool rooted, int mark)
         {
-            MatchState s = Ladder(Team.A);
+            MatchState s = Ladder(Team.A, withGunner);
             s.Champions[6].Pos = new HexCoord(2, -1);
+            s.Champions[6].RootHalves = (byte)(rooted ? 2 : 0);
             s.Champions[6].Mark = (byte)mark;
             int before = s.Champions[6].Hp;
             _game.Apply(ref s, new Command(CommandKind.Ability, 3, 0, Target.Champ(6)));
             return before - s.Champions[6].Hp;
         }
 
-        int hit = Loss(0);
-        Assert.Equal(Math.Max(hit * 3 / 2, hit + 2) + 3, Loss(3));
+        int hit = Loss(false, 0);
+        RulesConfig r = _game.Rules;
+        int extra = Math.Max(hit * (r.WantBonus - 1000) / 1000, r.WantFloor) * r.PayoffScale / 1000;
+        Assert.Equal(hit + extra, Loss(true, 0));
+        Assert.Equal(hit + 3, Loss(false, 3));
     }
 
     private sealed class Recorder : IMatchObserver

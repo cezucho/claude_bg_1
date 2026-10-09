@@ -438,12 +438,83 @@ in `production/qa/evidence/v2/round3-champion-stats-400.txt`.
 **Caveat.** "Mates" counts teammates' win rates including the matches they played with this
 champion, so drag is slightly understated for the weakest and strongest.
 
+## Synergy rebuilt: give and want (2026-10-09)
+
+**The owner's target.** The draft should matter, but not win the match on its own:
+- a good draft against a tragic one (no synergy at all) should win about **65/35**;
+- one or two working pairs should be enough to compete;
+- a great draft should still be beatable by a decent one played well.
+
+**What was wrong.** The groups overlapped so much that every possible team had at least one
+pair, and many champions combo'd with themselves: Ember both burned and paid off on burning. A
+"tragic" draft could not exist, and pairs barely mattered.
+
+**The new model (D-056).**
+- **Every champion gives one status** with its abilities, and **wants another**.
+  - A champion's "want" is a trait: **everything** it deals to an enemy carrying that status
+    hits harder, basic attacks included.
+  - No champion wants what it gives, so combos need a partner.
+- **A pair** is two teammates where one gives what the other wants. The groups in
+  `assets/data/synergies.json` list each status's givers and wanters.
+- **Oriel gives and wants nothing**, a strong solo pick by design.
+- **How many pairs teams get:** a random team averages 1.8, and **12% of teams have none**. The
+  best teams have 4–5.
+
+| Status | Givers | Wanters |
+|---|---|---|
+| Rooted (Lockdown) | Anchor, Briar, Ranger | Viper, Gunner |
+| Marked (Called Shot) | Lens, Seer | Anchor, Talon |
+| Burning (Wildfire) | Ember, Pyre | Lens, Mortar |
+| Poisoned (Venom) | Viper | Briar |
+| Exhausted (Smother) | Talon, Tempest, Bastion | Ember |
+| Pinned by walls (Crush) | Bulwark, Mortar | Tempest (Gust's slam) |
+
+**Other changes.**
+- Kits trimmed so each champion gives exactly what the table says:
+  - Seer's root became Curse (wound);
+  - Pyre's exhaust became Wound;
+  - Briar's wall became Snare;
+  - slam is only on Gust;
+  - roots and exhausts last 2 halves.
+- **Payoffs are now ×2, at least +3** (`wantBonus`, `wantFloor` in `rules_config.json`). The
+  harness's `payoffScale` dial sweeps them.
+- **Balancing pass (D-057).** Five automated iterations nudged each champion's POW by its
+  distance from 50% in random drafts. The spread went from 32–59% to **43–55%**, about the noise
+  floor for ~450 picks.
+
+**Results** (200 matches each, sides alternate, combo-playing AI):
+
+| Matchup | Wins | Synergy hits per match |
+|---|---|---|
+| Great vs tragic, **payoffs switched off** | 45% | 0 |
+| **Great vs tragic** | **52%** | 12.9 |
+| Decent vs tragic | 54% | 8.8 |
+| Great vs decent | 47% | 15.6 |
+
+**Reading it.**
+- **Synergy now happens:** about 13 synergy hits per match, up from about 1. It is worth about
+  **+7 points**: 45% with payoffs off against 52% with them on.
+- **That is still far from 65/35.** Two reasons:
+  1. **Matches are decided by towers, not fights.** About 80% end by siege. More damage in fights
+     moves the result only a little; see `design/match-reports/2026-10-09-two-ai-matches.md`.
+  2. **Pairs are not equal.**
+     - **Wildfire carries almost all the payoffs.** Lens and Mortar land about 8 each per match,
+       because burn lasts two rounds, spreads to many targets, and the Ignite spell gives anyone
+       burn.
+     - **Called Shot and Lockdown rarely fire.** A mark is used up by the first hit from anyone,
+       and a root lasts a round.
+     - So a "5-pair" mark draft can lose 0–30 to a "2-pair" fire draft.
+
 ## Open questions for the owner
 
-1. **Synergy strength.** ×1.5 turned out *very small* in win-rate terms: a group-built draft
-   wins about 51–53%. If "medium" means about 55–58% for a clearly better draft, the next
-   step is ×1.75 with a floor of +3. Alternatively, wait until champion strength is tuned,
-   since the 33–64% spread currently hides synergy.
-2. **When to balance champions.** The roster isn't final, so the plan is still to wait
-   (D-051). Wildfire and Mortar are the outliers if you want an exception.
-3. Earlier, still open: the opening fallback on Field 7.
+1. **How should synergy reach 65/35?** Options, roughly in order of how much they change the game:
+   - **Make the weak pairs as reliable as Wildfire.** Marks last a round instead of being spent
+     by the first hit, and roots last longer. Cheap, and probably worth +3–5 points.
+   - **Let synergy reach the objectives.** For example, an enemy carrying a status your team
+     wants doesn't count as a tower defender. Draft choices then move towers, which decide
+     matches.
+   - **Make fights matter more.** A kill costs the nexus more than 3. This changes the pace of
+     the whole game.
+2. **Spells.** Ignite and Exhaust give every team burn and exhaust, which dilutes the draft.
+   Should spells stay generic, or be removed from the give/want web?
+3. The opening fallback on Field 7 is still open.

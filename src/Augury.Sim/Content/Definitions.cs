@@ -217,8 +217,16 @@ public sealed record EffectDef(EffectKind Kind, int Power, int Amount, int Round
 /// <param name="Id">Stable id.</param>
 /// <param name="Name">Display name.</param>
 /// <param name="Idea">One sentence: what the group does together.</param>
-/// <param name="Members">Champion ids.</param>
-public sealed record SynergyGroup(string Id, string Name, string Idea, IReadOnlyList<string> Members);
+/// <param name="Members">Champion ids: givers and wanters.</param>
+/// <param name="Givers">Champions that apply the group's status (or make walls).</param>
+/// <param name="Wanters">Champions with a payoff on it.</param>
+public sealed record SynergyGroup(string Id, string Name, string Idea, IReadOnlyList<string> Members,
+    IReadOnlyList<string> Givers, IReadOnlyList<string> Wanters)
+{
+    /// <summary>True when one of the two gives what the other wants (D-056).</summary>
+    public bool Links(string a, string b) =>
+        (Givers.Contains(a) && Wanters.Contains(b)) || (Givers.Contains(b) && Wanters.Contains(a));
+}
 
 /// <summary>One of an ability's three opening instructions.</summary>
 /// <param name="Kind">Move or PlaceBeacon.</param>
@@ -343,6 +351,13 @@ public sealed record ChampionDef
 
     /// <summary>True for a v2 champion (three abilities, a signature opening and a spell slot).</summary>
     public bool HasSpellSlot => Signature is not null;
+
+    /// <summary>
+    /// v2 (D-056): the status this champion thrives on. Everything it deals to an enemy carrying it
+    /// — abilities and basic attacks — hits harder (<see cref="RulesConfig.WantBonus"/>). Its own
+    /// kit never applies it; a teammate has to.
+    /// </summary>
+    public StatusKind Wants { get; init; }
 
     /// <summary>v2: how the champion is meant to be played, in one sentence (may be empty).</summary>
     public string Line { get; init; } = "";

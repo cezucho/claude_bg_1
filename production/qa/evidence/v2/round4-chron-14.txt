@@ -1,0 +1,138 @@
+CHRONICLE — seed 14, team A drafts great, team B drafts decent, board field7, payoff scale 1000
+
+DRAFT (pick order)
+  A drafts Anchor (Top).
+  B drafts Ember (Jungle).
+  B drafts Mortar (Bottom).
+  A drafts Lens (Mid).
+  A drafts Seer (Support).
+  B drafts Pyre (Mid).
+  B drafts Oriel (Support).
+  A drafts Talon (Jungle).
+  A drafts Gunner (Bottom).
+  B drafts Briar (Top).
+  Team A: Anchor, Talon, Lens, Gunner, Seer — synergy 5 pair(s): Anchor+Lens (Called Shot), Anchor+Gunner (Lockdown), Anchor+Seer (Called Shot), Talon+Lens (Called Shot), Talon+Seer (Called Shot)
+  Team B: Briar, Ember, Pyre, Mortar, Oriel — synergy 2 pair(s): Ember+Mortar (Wildfire), Pyre+Mortar (Wildfire)
+  Spells A: Anchor Teleport, Talon Smite, Lens Ignite, Gunner Heal, Seer Exhaust
+  Spells B: Briar Teleport, Ember Smite, Pyre Ignite, Mortar Heal, Oriel Exhaust
+
+OPENING
+  A:Anchor plays Iron March in the opening.
+  B:Ember plays Kindle in the opening.
+  B:Ember casts (opening) Kindle [init 1] → A:Anchor
+  A:Anchor is BURNING (2 each time it acts, 2 rounds)
+  A:Gunner plays Snipe in the opening.
+  A:Anchor casts (opening) Chain Hook [init 2] → B:Ember
+  B:Ember is ROOTED
+  A:Gunner casts (opening) Snipe [init 1] → B:Ember
+  B:Briar plays Bloom in the opening.
+  A:Talon plays Execute in the opening.
+  A:Talon casts Rend — nothing in reach, it fizzles (on cooldown 1).
+  A:Talon casts Execute — nothing in reach, it fizzles (on cooldown 2).
+  B:Mortar plays Shell in the opening.
+  B:Mortar casts Shell — nothing in reach, it fizzles (on cooldown 1).
+  A:Lens plays Mark in the opening.
+  B:Oriel plays Mend in the opening.
+  B:Oriel casts (opening) Mend [init 1] → B:Ember
+  A:Seer plays Omen in the opening.
+  A:Seer casts (opening) Omen [init 1] → B:Ember
+  B:Ember is MARKED (+3 on the next hit)
+  B:Pyre plays Scorch in the opening.
+  B:Pyre casts (opening) Scorch [init 1] → A:Anchor
+  A:Anchor is BURNING (2 each time it acts, 2 rounds)
+  ── after the opening: NEXUS A 60 · B 60 │ towers C0:– a1:A a2:A b3:B b4:B │ alive A 5 (134 HP) · B 5 (126 HP)
+     this stretch: damage A 9 · B 1 │ to structures A 0 · B 0 │ healing A 0 · B 2 │ combos (payoffs+slams) A 1 · B 0
+
+ROUND 1
+  PAYOFF: B:Mortar on A:Anchor, who is burning (+3)
+  PAYOFF: A:Anchor on B:Ember, who is marked (+3)
+  B:Pyre casts Ignite [init 2] → A:Lens
+  A:Lens casts Ignite [init 2] → B:Oriel
+  B:Mortar casts Heal [init 1] → B:Mortar
+  A:Talon casts Smite [init 1] → tower (0,0)
+  B:Ember casts Smite [init 1] → tower (0,0)
+  ⚑ B CAPTURES tower (0,0)
+  A:Gunner casts Heal [init 1] → A:Gunner
+  ── end of round 1: NEXUS A 57 · B 58 │ towers C0:B a1:A a2:A b3:B b4:B │ alive A 5 (94 HP) · B 5 (96 HP)
+     this stretch: damage A 36 · B 31 │ to structures A 10 · B 10 │ healing A 4 · B 6 │ combos (payoffs+slams) A 1 · B 1
+
+ROUND 2
+  PAYOFF: B:Mortar on A:Anchor, who is burning (+3)
+  PAYOFF: B:Mortar on A:Gunner, who is burning (+3)
+  PAYOFF: B:Mortar on A:Anchor, who is burning (+3)
+  A:Seer casts Exhaust [init 2] → B:Mortar
+  ── end of round 2: NEXUS A 54 · B 56 │ towers C0:B a1:A a2:A b3:B b4:B │ alive A 5 (65 HP) · B 5 (89 HP)
+     this stretch: damage A 9 · B 21 │ to structures A 0 · B 0 │ healing A 0 · B 4 │ combos (payoffs+slams) A 0 · B 3
+
+ROUND 3
+  PAYOFF: B:Mortar on A:Talon, who is burning (+3)
+  PAYOFF: A:Anchor on B:Briar, who is marked (+3)
+  PAYOFF: B:Mortar on A:Lens, who is burning (+3)
+  ✝ A:Lens killed B:Ember
+  ── end of round 3: NEXUS A 51 · B 51 │ towers C0:B a1:A a2:A b3:B b4:B │ alive A 5 (39 HP) · B 4 (79 HP)
+     this stretch: damage A 15 · B 20 │ to structures A 4 · B 0 │ healing A 0 · B 4 │ combos (payoffs+slams) A 1 · B 2
+
+ROUND 4
+  PAYOFF: B:Mortar on A:Seer, who is burning (+3)
+  PAYOFF: B:Mortar on A:Seer, who is burning (+3)
+  ✝ B:Briar killed A:Talon
+  ✝ B:Briar killed A:Lens
+  ✝ A:Lens killed B:Briar
+  ── end of round 4: NEXUS A 42 · B 46 │ towers C0:B a1:A a2:A b3:B b4:B │ alive A 3 (12 HP) · B 4 (65 HP)
+     this stretch: damage A 21 · B 24 │ to structures A 13 · B 3 │ healing A 0 · B 4 │ combos (payoffs+slams) A 0 · B 2
+
+ROUND 5
+  PAYOFF: B:Mortar on A:Seer, who is burning (+3)
+  B:Ember casts Smite [init 1] → tower (-2,-1)
+  ⚑ A CAPTURES tower (2,1)
+  PAYOFF: A:Anchor on B:Pyre, who is marked (+3)
+  ✝ B:Mortar killed A:Anchor
+  ✝ B:Mortar killed A:Seer
+  ── end of round 5: NEXUS A 34 · B 43 │ towers C0:B a1:A a2:A b3:A b4:B │ alive A 3 (8 HP) · B 5 (76 HP)
+     this stretch: damage A 11 · B 6 │ to structures A 6 · B 8 │ healing A 0 · B 3 │ combos (payoffs+slams) A 1 · B 1
+
+ROUND 6
+  PAYOFF: A:Talon on B:Mortar, who is marked (+3)
+  ⚑ B CAPTURES tower (-2,-1)
+  A:Gunner casts Heal [init 1] → A:Gunner
+  NEXUS A takes 1 (1 defending) → 33
+  NEXUS A takes 1 (1 defending) → 32
+  NEXUS A takes 4 (1 defending) → 28
+  B:Mortar casts Heal [init 1] → B:Mortar
+  A:Talon casts Smite [init 1] → tower (0,0)
+  ── end of round 6: NEXUS A 25 · B 41 │ towers C0:B a1:B a2:A b3:A b4:B │ alive A 5 (48 HP) · B 5 (101 HP)
+     this stretch: damage A 19 · B 9 │ to structures A 8 · B 11 │ healing A 4 · B 9 │ combos (payoffs+slams) A 1 · B 0
+
+ROUND 7
+  NEXUS A takes 1 (1 defending) → 24
+  NEXUS A takes 1 (2 defending) → 23
+  NEXUS A takes 1 (2 defending) → 22
+  NEXUS A takes 1 (2 defending) → 21
+  NEXUS A takes 1 (2 defending) → 20
+  NEXUS A takes 1 (2 defending) → 19
+  NEXUS A takes 1 (2 defending) → 18
+  A:Seer casts Exhaust [init 2] → B:Ember
+  ── end of round 7: NEXUS A 15 · B 39 │ towers C0:B a1:B a2:A b3:A b4:B │ alive A 5 (104 HP) · B 5 (80 HP)
+     this stretch: damage A 24 · B 5 │ to structures A 5 · B 7 │ healing A 0 · B 1 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 8
+  NEXUS A takes 1 (3 defending) → 14
+  NEXUS A takes 1 (3 defending) → 13
+  NEXUS A takes 1 (3 defending) → 12
+  NEXUS A takes 1 (3 defending) → 11
+  NEXUS A takes 1 (3 defending) → 10
+  NEXUS A takes 4 (2 defending) → 6
+  ⚑ A CAPTURES tower (0,0)
+  ✝ A:Lens killed B:Ember
+  ✝ A:Lens killed B:Mortar
+  ── end of round 8: NEXUS A 4 · B 30 │ towers C0:A a1:B a2:A b3:A b4:B │ alive A 5 (93 HP) · B 3 (73 HP)
+     this stretch: damage A 15 · B 11 │ to structures A 10 · B 9 │ healing A 0 · B 1 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 9
+  NEXUS A takes 1 (2 defending) → 3
+  NEXUS A takes 3 (2 defending) → 0
+  B wins — NEXUS A destroyed. Nexus A 0 – B 30.
+  ── end of round 9: NEXUS A 0 · B 30 │ towers C0:A a1:B a2:A b3:A b4:B │ alive A 5 (81 HP) · B 3 (73 HP)
+     this stretch: damage A 0 · B 14 │ to structures A 0 · B 4 │ healing A 0 · B 0 │ combos (payoffs+slams) A 0 · B 0
+
+B wins — NEXUS A destroyed. Nexus A 0 – B 30.

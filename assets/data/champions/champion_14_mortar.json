@@ -6,7 +6,7 @@
   "line": "Shells enemies from far back, into walls, towers and each other.",
   "stats": {
     "vit": 24000,
-    "pow": 1100,
+    "pow": 1410,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
@@ -25,12 +25,11 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 800
+          "power": 900
         },
         {
           "kind": "Displace",
-          "amount": 1,
-          "slam": 4
+          "amount": 1
         }
       ],
       "scalesFrom": "pow",
@@ -126,5 +125,6 @@
       "move mid forward-left",
       "beacon bottom 1"
     ]
-  }
+  },
+  "wants": "Burning"
 }

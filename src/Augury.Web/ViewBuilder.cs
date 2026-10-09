@@ -84,7 +84,8 @@ public static class ViewBuilder
             walls = Enumerable.Range(0, 4).Where(w => s.Walls[w].Rounds > 0)
                 .Select(w => new { q = s.Walls[w].Pos.Q, r = s.Walls[w].Pos.R, rounds = (int)s.Walls[w].Rounds }).ToArray(),
             spells = g.Content.Spells.Select((sp, i) => SpellView(g, sp, i)).ToArray(),
-            synergies = g.Content.Synergies.Select(sy => new { id = sy.Id, name = sy.Name, idea = sy.Idea, members = sy.Members }).ToArray(),
+            payoff = new { times = g.Rules.WantBonus * g.Rules.PayoffScale / 1000 / 1000.0 + (1 - g.Rules.PayoffScale / 1000.0), floor = g.Rules.WantFloor * g.Rules.PayoffScale / 1000 },
+            synergies = g.Content.Synergies.Select(sy => new { id = sy.Id, name = sy.Name, idea = sy.Idea, members = sy.Members, givers = sy.Givers, wanters = sy.Wanters }).ToArray(),
             synergy = new[] { Team.A, Team.B }.Select(t => g.Content.SynergyScore(
                 Enumerable.Range(MatchState.FirstSlot(t), 5).Select(i => (int)s.Champions[i].Def))).ToArray(),
             spawns = new[] { Team.A, Team.B }.SelectMany(t => Enum.GetValues<Role>().Select(r =>
@@ -310,6 +311,7 @@ public static class ViewBuilder
         },
         passive = new { name = d.Passive.Name, text = Describe.Passive(d.Passive) },
         line = d.Line,
+        wants = d.Wants == StatusKind.None ? null : d.Wants.ToString().ToLowerInvariant(),
         groups = g.Content.GroupsOf(index).Select(sy => sy.Id).ToArray(),
         abilities = d.Abilities.Select((ab, a) => new
         {

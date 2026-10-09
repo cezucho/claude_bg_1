@@ -6,7 +6,7 @@
   "line": "Marks one target for the whole team, and reshapes the board with walls.",
   "stats": {
     "vit": 25000,
-    "pow": 1150,
+    "pow": 1140,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
@@ -123,5 +123,6 @@
       "move jungle forward-left",
       "beacon jungle 2"
     ]
-  }
+  },
+  "wants": "Burning"
 }

@@ -6,7 +6,7 @@
   "line": "Bursts from safety, hardest on a target that can't move.",
   "stats": {
     "vit": 26000,
-    "pow": 1150,
+    "pow": 990,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
@@ -25,10 +25,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1100,
-          "bonusVs": "Rooted",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 1100
         }
       ],
       "scalesFrom": "pow",
@@ -98,8 +95,7 @@
         },
         {
           "kind": "Displace",
-          "amount": 1,
-          "slam": 3
+          "amount": 1
         }
       ],
       "scalesFrom": "pow",
@@ -126,5 +122,6 @@
       "move mid forward-left",
       "move support forward-left"
     ]
-  }
+  },
+  "wants": "Rooted"
 }

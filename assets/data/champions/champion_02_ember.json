@@ -6,7 +6,7 @@
   "line": "Sets enemies alight so every action they take hurts — then cashes in.",
   "stats": {
     "vit": 26000,
-    "pow": 1200,
+    "pow": 1320,
     "arm": 0,
     "rch": 2000,
     "spd": 3000
@@ -92,10 +92,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1500,
-          "bonusVs": "Burning",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 1500
         }
       ],
       "scalesFrom": "pow",
@@ -122,5 +119,6 @@
       "move jungle forward-right",
       "move bottom forward-left"
     ]
-  }
+  },
+  "wants": "Exhausted"
 }

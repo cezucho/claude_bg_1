@@ -872,6 +872,7 @@ function draftView() {
       const card = h(`<div class="dcard ${pick ? 'pickable' : ''} ${taken ? 'taken' : ''}">
         <div class="top">${portrait(d.id, d.glyph, taken ? taken.team : pick ? V.active : 'N')}<div><b>${esc(d.name)}</b>${taken ? ` <span class="${taken.team}-c taken-lbl">picked by ${taken.team}</span>` : ''}<div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div></div></div>
         ${d.line ? `<div class="dline">${esc(d.line)}</div>` : ''}
+        <div class="dwants">${wantText(d)}</div>
         <div class="dgroups">${d.groups.map(id => { const g = V.synergies.find(x => x.id === id); return `<span class="syn-chip small ${groupState(id, d.id)}" title="${esc(g.idea)} — ${esc(g.members.filter(m => m !== d.id).map(nameOf).join(', '))}">${esc(g.name)}${partnerNote(id, d.id)}</span>`; }).join('')}</div>
         ${d.abilities.map(x => `<div class="dab"><i style="background:var(--t${x.init})">${x.init}</i><span><b>${esc(x.name)}</b> · ${esc(x.effects)} <span class="tt-dim">· cd ${x.cooldown}${x.printedSigil ? ` · sigil ${x.printedSigil}` : ''}${x.slotSigil ? ` · slot ${x.slotSigil}` : ''}</span>${x.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>`).join('')}
         ${d.signature ? `<div class="dab"><i class="spell">✦</i><span><b>Summoner spell</b> <span class="tt-dim">· chosen after the draft · opening: ${esc(d.signature.name)}</span>${d.signature.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>` : ''}
@@ -925,6 +926,16 @@ function spellView() {
 }
 
 // ───────────────────────────── synergy (draft) ─────────────────────────────
+
+// What a champion wants from its team, and what it gives (D-056).
+function wantText(d) {
+  const gives = V.synergies.filter(g => g.givers.includes(d.id)).map(g => g.name);
+  const wantsIn = V.synergies.filter(g => g.wanters.includes(d.id));
+  const give = gives.length ? ` Sets up: ${esc(gives.join(', '))}.` : '';
+  if (d.wants) return `Thrives on <b>${esc(d.wants)}</b> enemies: hits them ×${V.payoff.times}, at least +${V.payoff.floor} — a teammate must apply it.${give}`;
+  if (wantsIn.length) return `Thrives in <b>${esc(wantsIn.map(g => g.name).join(', '))}</b>: ${esc(wantsIn[0].idea)}${give}`;
+  return gives.length ? `Wants nothing for itself — it sets up others.${give}` : '<span class="tt-dim">A solo pick: gives and wants nothing.</span>';
+}
 
 function nameOf(id) { return (V.roster || []).find(d => d.id === id)?.name || id; }
 function teamIds(team) { return V.champions.filter(c => c.team === team && c.drafted).map(c => c.id); }

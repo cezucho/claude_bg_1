@@ -3,75 +3,84 @@
     {
       "id": "lockdown",
       "name": "Lockdown",
-      "members": [
+      "status": "Rooted",
+      "givers": [
         "anchor",
         "briar",
-        "seer",
-        "ranger",
+        "ranger"
+      ],
+      "wanters": [
+        "viper",
         "gunner"
       ],
-      "idea": "Root a target, then hit what can't move: Snipe and Groundswell hit half again as hard, and a rooted target slams when pushed."
+      "idea": "Root a target; Viper's Ambush and Gunner's Snipe hit it half again as hard."
     },
     {
       "id": "called-shot",
       "name": "Called Shot",
-      "members": [
+      "status": "Marked",
+      "givers": [
         "lens",
-        "seer",
-        "talon",
-        "ranger"
+        "seer"
       ],
-      "idea": "Mark one enemy and spend the mark: Execute and Volley hit half again as hard, and every hit adds the mark."
+      "wanters": [
+        "anchor",
+        "talon"
+      ],
+      "idea": "Mark a target; Anchor's Groundswell and Talon's Execute hit it half again as hard, on top of the mark."
     },
     {
       "id": "wildfire",
       "name": "Wildfire",
-      "members": [
+      "status": "Burning",
+      "givers": [
         "ember",
         "pyre"
       ],
-      "idea": "Set the line alight; Wildfire and Inferno hit burning targets half again as hard."
+      "wanters": [
+        "lens",
+        "mortar"
+      ],
+      "idea": "Set the line alight; Lens's Lance and Mortar's Barrage hit burning targets half again as hard."
     },
     {
       "id": "venom",
       "name": "Venom",
-      "members": [
-        "viper",
+      "status": "Poisoned",
+      "givers": [
+        "viper"
+      ],
+      "wanters": [
         "briar"
       ],
-      "idea": "Poison first; Ambush and Bloom hit poisoned targets half again as hard."
+      "idea": "Viper poisons for Briar's Bloom, and Briar roots for Viper's Ambush: a two-way pair."
+    },
+    {
+      "id": "smother",
+      "name": "Smother",
+      "status": "Exhausted",
+      "givers": [
+        "talon",
+        "tempest",
+        "bastion"
+      ],
+      "wanters": [
+        "ember"
+      ],
+      "idea": "Exhaust an enemy; Ember's Wildfire hits it half again as hard."
     },
     {
       "id": "crush",
       "name": "Crush",
-      "members": [
+      "status": "Pinned",
+      "givers": [
         "bulwark",
-        "tempest",
-        "mortar",
-        "lens"
+        "mortar"
       ],
-      "idea": "Walls and pushes: shove enemies into walls, towers and each other \u2014 a stopped push slams for extra damage."
-    },
-    {
-      "id": "dive",
-      "name": "Dive and Retrieve",
-      "members": [
-        "viper",
-        "talon",
-        "oriel"
+      "wanters": [
+        "tempest"
       ],
-      "idea": "Divers go deep for the kill; Oriel's Tether and Mend bring them back out."
-    },
-    {
-      "id": "hold",
-      "name": "Hold the Line",
-      "members": [
-        "bastion",
-        "bulwark",
-        "anchor",
-        "briar"
-      ],
-      "idea": "Stand in front of your towers: shields, unstoppable front-liners and thorns that punish whoever hits them."
+      "idea": "Walls give Tempest's Gust something to slam enemies into."
     }
   ]
 }

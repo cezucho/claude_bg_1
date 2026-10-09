@@ -3,10 +3,10 @@
   "name": "Ranger",
   "role": "Bottom",
   "glyph": "R",
-  "line": "Shoots from the back line and cashes in the marks its team sets.",
+  "line": "Pins enemies from the back line so its divers can land.",
   "stats": {
     "vit": 25000,
-    "pow": 1100,
+    "pow": 1020,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
@@ -26,10 +26,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1000,
-          "bonusVs": "Marked",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 1000
         }
       ],
       "scalesFrom": "pow",
@@ -59,7 +56,7 @@
         },
         {
           "kind": "Root",
-          "amount": 1
+          "amount": 2
         }
       ],
       "scalesFrom": "pow",

@@ -179,7 +179,7 @@ public sealed partial class Game
             case TargetKind.Champion:
                 int dmg = Math.Max(1, raw - Armour(s.Champions[cmd.Target.Index]));
                 Log(log, EventKind.Basic, $"{Name(s, cmd.Champion)} basic-attacks {Name(s, cmd.Target.Index)}");
-                DamageChampion(ref s, cmd.Target.Index, dmg, cmd.Champion, fromPassive: false, log);
+                DamageChampion(ref s, cmd.Target.Index, dmg + WantedExtra(s, cmd.Champion, cmd.Target.Index, dmg, log), cmd.Champion, fromPassive: false, log);
                 break;
 
             case TargetKind.Tower:

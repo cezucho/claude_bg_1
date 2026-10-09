@@ -32,8 +32,11 @@ switch (command)
     case "selfplay":
         SelfPlay.Run(args);
         break;
+    case "chronicle":
+        Chronicle.Run(args);
+        break;
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, openings, trace, selfplay");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known: applicability, board, sigils, beacon, mobility, opening, openings, trace, selfplay, chronicle");
         return 1;
 }
 

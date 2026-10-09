@@ -17,5 +17,7 @@
   "friendliesBlock": true,
   "nexusGateTowers": 1,
   "roundOneOpener": "B",
-  "board": "field7"
+  "board": "field7",
+  "wantBonus": 2000,
+  "wantFloor": 3
 }

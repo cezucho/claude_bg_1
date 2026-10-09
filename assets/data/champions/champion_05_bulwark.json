@@ -6,7 +6,7 @@
   "line": "Holds the ground in front of its tower: shoves enemies off it and walls the way.",
   "stats": {
     "vit": 33000,
-    "pow": 900,
+    "pow": 830,
     "arm": 2000,
     "rch": 1000,
     "spd": 2000
@@ -29,8 +29,7 @@
         },
         {
           "kind": "Displace",
-          "amount": 2,
-          "slam": 3
+          "amount": 2
         }
       ],
       "scalesFrom": "pow",

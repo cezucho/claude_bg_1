@@ -6,7 +6,7 @@
   "line": "Hunts the isolated: poisons a target, then dives on it.",
   "stats": {
     "vit": 25000,
-    "pow": 1200,
+    "pow": 1020,
     "arm": 0,
     "rch": 1000,
     "spd": 3000
@@ -93,10 +93,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600,
-          "bonusVs": "Poisoned",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 1600
         }
       ],
       "scalesFrom": "pow",
@@ -122,5 +119,6 @@
       "move jungle forward-right",
       "move top forward-left"
     ]
-  }
+  },
+  "wants": "Rooted"
 }

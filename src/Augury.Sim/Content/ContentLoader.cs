@@ -40,11 +40,13 @@ public static class ContentLoader
         var groups = new List<SynergyGroup>();
         foreach (JsonElement g in doc.RootElement.GetProperty("groups").EnumerateArray())
         {
-            var members = g.GetProperty("members").EnumerateArray().Select(m => m.GetString()!).ToList();
             string id = Str(g, "id");
-            if (members.Count < 2) throw new ContentException($"synergies.json: group '{id}' needs at least two members.");
+            List<string> Ids(string key) => g.TryGetProperty(key, out JsonElement a) ? a.EnumerateArray().Select(m => m.GetString()!).ToList() : [];
+            List<string> givers = Ids("givers"), wanters = Ids("wanters");
+            if (givers.Count == 0 || wanters.Count == 0) throw new ContentException($"synergies.json: group '{id}' needs givers and wanters.");
+            var members = givers.Concat(wanters).Distinct().ToList();
             foreach (string m in members) db.IndexOf(m);   // throws on an unknown champion
-            groups.Add(new SynergyGroup(id, Str(g, "name"), Str(g, "idea"), members));
+            groups.Add(new SynergyGroup(id, Str(g, "name"), Str(g, "idea"), members, givers, wanters));
         }
 
         return groups;
@@ -146,6 +148,7 @@ public static class ContentLoader
                 Passive = passive,
                 Signature = signature,
                 Line = root.TryGetProperty("line", out JsonElement line) ? line.GetString() ?? "" : "",
+                Wants = root.TryGetProperty("wants", out JsonElement wants) ? Enum<StatusKind>(wants.GetString()!) : StatusKind.None,
             };
         }
         catch (ContentException)
@@ -360,21 +363,28 @@ public sealed class ContentDb
     public IReadOnlyList<SynergyGroup> Synergies { get; internal set; } = [];
 
     /// <summary>
-    /// How well a team's champions fit together: for each group, the number of pairs of its
-    /// members on the team (k members → k(k−1)/2). Content indices; 255 (undrafted) is ignored.
+    /// How well a team's champions fit together: the number of pairs on it where one gives what
+    /// the other wants, in any group (D-056). Each pair counts once. Content indices; 255
+    /// (undrafted) is ignored.
     /// </summary>
     public int SynergyScore(IEnumerable<int> team)
     {
-        var ids = team.Where(d => d >= 0 && d < Champions.Count).Select(d => Champions[d].Id).ToHashSet();
+        var ids = team.Where(d => d >= 0 && d < Champions.Count).Select(d => Champions[d].Id).ToList();
         int score = 0;
-        foreach (SynergyGroup g in Synergies)
+        for (int i = 0; i < ids.Count; i++)
         {
-            int k = g.Members.Count(ids.Contains);
-            score += k * (k - 1) / 2;
+            for (int j = i + 1; j < ids.Count; j++)
+            {
+                if (Synergies.Any(g => g.Links(ids[i], ids[j]))) score++;
+            }
         }
 
         return score;
     }
+
+    /// <summary>The champions <paramref name="def"/> forms a synergy pair with.</summary>
+    public IEnumerable<int> PartnersOf(int def) =>
+        Enumerable.Range(0, Champions.Count).Where(o => o != def && Synergies.Any(g => g.Links(Champions[def].Id, Champions[o].Id)));
 
     /// <summary>The synergy groups a champion belongs to.</summary>
     public IEnumerable<SynergyGroup> GroupsOf(int def) => Synergies.Where(g => g.Members.Contains(Champions[def].Id));

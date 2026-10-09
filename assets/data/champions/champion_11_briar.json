@@ -3,10 +3,10 @@
   "name": "Briar",
   "role": "Top",
   "glyph": "R",
-  "line": "Roots an enemy in thorns and lets the poison, and the team, finish it.",
+  "line": "Roots an enemy in thorns and blooms on whatever its jungler has poisoned.",
   "stats": {
     "vit": 33000,
-    "pow": 950,
+    "pow": 1050,
     "arm": 1000,
     "rch": 2000,
     "spd": 2000
@@ -29,12 +29,7 @@
         },
         {
           "kind": "Root",
-          "amount": 1
-        },
-        {
-          "kind": "Poison",
-          "amount": 1,
-          "rounds": 2
+          "amount": 2
         }
       ],
       "scalesFrom": "pow",
@@ -54,23 +49,26 @@
       ]
     },
     {
-      "name": "Thornwall",
+      "name": "Snare",
       "initiative": 2,
-      "cooldown": 3,
-      "target": "EmptyHex",
+      "cooldown": 2,
       "effects": [
         {
-          "kind": "Wall",
-          "amount": 2
+          "kind": "Damage",
+          "power": 700
+        },
+        {
+          "kind": "Displace",
+          "amount": -1
         }
       ],
-      "scalesFrom": "arm",
+      "scalesFrom": "pow",
       "moldUp": [
         "vit",
         30
       ],
       "moldDown": [
-        "pow",
+        "spd",
         25
       ],
       "opening": [
@@ -108,10 +106,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 2000,
-          "bonusVs": "Poisoned",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 2000
         }
       ],
       "scalesFrom": "pow",
@@ -137,5 +132,6 @@
       "move top right",
       "move jungle forward-right"
     ]
-  }
+  },
+  "wants": "Poisoned"
 }

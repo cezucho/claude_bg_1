@@ -3,10 +3,10 @@
   "name": "Pyre",
   "role": "Mid",
   "glyph": "P",
-  "line": "Spreads fire along the enemy line, then burns it down with Ember.",
+  "line": "Spreads fire across the enemy line for its team to cash in.",
   "stats": {
     "vit": 23000,
-    "pow": 1150,
+    "pow": 1310,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
@@ -56,11 +56,11 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 500
+          "power": 600
         },
         {
-          "kind": "Exhaust",
-          "amount": 1
+          "kind": "Wound",
+          "rounds": 2
         }
       ],
       "scalesFrom": "pow",
@@ -103,10 +103,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1600,
-          "bonusVs": "Burning",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 1800
         }
       ],
       "scalesFrom": "pow",

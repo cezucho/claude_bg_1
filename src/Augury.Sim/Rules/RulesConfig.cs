@@ -32,6 +32,21 @@ public sealed record RulesConfig
     /// <summary>Basic-attack base damage before POW and ARM (D-008).</summary>
     public int BasicBase { get; init; } = 2;
 
+    /// <summary>
+    /// Scales every synergy payoff — the extra part of a status bonus and of a slam — in permille
+    /// (1000 = as authored). One dial for how much the draft decides (D-056).
+    /// </summary>
+    public int PayoffScale { get; init; } = 1000;
+
+    /// <summary>
+    /// A champion's damage to an enemy carrying the status it wants, permille (1500 = ×1.5), before
+    /// <see cref="PayoffScale"/> (D-056).
+    /// </summary>
+    public int WantBonus { get; init; } = 1500;
+
+    /// <summary>The least extra damage a wanted-status hit adds, so cheap hits still pay off.</summary>
+    public int WantFloor { get; init; } = 2;
+
     /// <summary>Ability base damage, ladder F3's <c>base_power</c>.</summary>
     public int AbilityBase { get; init; } = 3;
 

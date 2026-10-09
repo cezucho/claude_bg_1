@@ -3,10 +3,10 @@
   "name": "Seer",
   "role": "Support",
   "glyph": "E",
-  "line": "Calls the target: marks and binds one enemy so the whole team knows where to hit.",
+  "line": "Calls the target: marks one enemy so the whole team knows where to hit.",
   "stats": {
     "vit": 27000,
-    "pow": 900,
+    "pow": 970,
     "arm": 1000,
     "rch": 3000,
     "spd": 2000
@@ -45,18 +45,18 @@
       ]
     },
     {
-      "name": "Bind",
+      "name": "Curse",
       "initiative": 2,
       "cooldown": 2,
       "rangeBonus": -1,
       "effects": [
         {
           "kind": "Damage",
-          "power": 500
+          "power": 600
         },
         {
-          "kind": "Root",
-          "amount": 2
+          "kind": "Wound",
+          "rounds": 2
         }
       ],
       "scalesFrom": "pow",
@@ -100,15 +100,11 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1200
+          "power": 1400
         },
         {
           "kind": "Mark",
           "amount": 2
-        },
-        {
-          "kind": "Exhaust",
-          "amount": 1
         }
       ],
       "scalesFrom": "pow",

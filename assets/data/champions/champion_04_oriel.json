@@ -6,7 +6,7 @@
   "line": "Keeps one ally standing, and pulls it out of trouble.",
   "stats": {
     "vit": 28000,
-    "pow": 1000,
+    "pow": 850,
     "arm": 1000,
     "rch": 2000,
     "spd": 2000

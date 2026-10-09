@@ -35,7 +35,9 @@ public static class SelfPlay
     {
         // Positional: matches, a-agent, b-agent. Any "key=value" overrides a rules_config.json field.
         string draftMode = args.FirstOrDefault(a => a.StartsWith("draft="))?["draft=".Length..] ?? "random";
-        args = args.Where(a => !a.StartsWith("draft=")).ToArray();
+        // seed=N offsets every match's seeds, so parallel runs sample different matches.
+        uint offset = uint.TryParse(args.FirstOrDefault(a => a.StartsWith("seed="))?["seed=".Length..], out uint so) ? so : 0;
+        args = args.Where(a => !a.StartsWith("draft=") && !a.StartsWith("seed=")).ToArray();
         var positional = args.Skip(1).Where(a => !a.Contains('=')).ToList();
         int n = positional.Count > 0 ? int.Parse(positional[0]) : 100;
         string aName = positional.Count > 1 ? positional[1] : "heuristic";
@@ -48,14 +50,15 @@ public static class SelfPlay
 
         for (int m = 0; m < n; m++)
         {
-            IAgent a = Make(aName, game, (uint)(1000 + m));
-            IAgent b = Make(bName, game, (uint)(5000 + m));
-            // In mixed mode the synergy drafter alternates sides: even matches A, odd matches B.
-            Team synSide = draftMode switch { "synergy" => Team.None, "mixed" => m % 2 == 0 ? Team.A : Team.B, _ => Team.None };
-            IAgent DraftAgent(Team t, uint seed) => draftMode == "synergy" || (draftMode == "mixed" && t == synSide)
-                ? new SynergyDrafter(game, seed) { NoisePermille = 100 }
-                : new RandomAgent(seed);
-            PlayOne(game, a, b, stats, DraftAgent(Team.A, (uint)(77 + m)), DraftAgent(Team.B, (uint)(9077 + m)), synSide);
+            IAgent a = Make(aName, game, offset + (uint)(1000 + m));
+            IAgent b = Make(bName, game, offset + (uint)(5000 + m));
+            // draft=X-Y: style X drafts for one side, Y for the other; X alternates between A
+            // (even matches) and B (odd) so side bias cancels. random, synergy and mixed are
+            // the earlier names for random-random, great-great and great-random.
+            (string x, string y) = Styles(draftMode);
+            Team synSide = x == y ? Team.None : m % 2 == 0 ? Team.A : Team.B;
+            IAgent DraftAgent(Team t, uint seed) => Drafter(game, (synSide == Team.None || t == synSide) ? x : y, seed);
+            PlayOne(game, a, b, stats, DraftAgent(Team.A, offset + (uint)(77 + m)), DraftAgent(Team.B, offset + (uint)(9077 + m)), synSide);
         }
 
         Report(game, stats, aName, bName, sw.Elapsed.TotalSeconds);
@@ -63,7 +66,26 @@ public static class SelfPlay
         DraftReport(game, stats, draftMode);
     }
 
-    private static RulesConfig Override(RulesConfig rules, IEnumerable<string> pairs)
+    internal static (string, string) Styles(string mode) => mode switch
+    {
+        "synergy" => ("great", "great"),
+        "mixed" => ("great", "random"),
+        "random" => ("random", "random"),
+        _ when mode.Contains('-') => (mode.Split('-')[0], mode.Split('-')[1]),
+        _ => (mode, mode),
+    };
+
+    /// <summary>A drafting style: random, great (most pairs), decent (one or two pairs), tragic (no pairs).</summary>
+    internal static IAgent Drafter(Game game, string style, uint seed) => style switch
+    {
+        "great" => new SynergyDrafter(game, seed) { NoisePermille = 100 },
+        "decent" => new SynergyDrafter(game, seed) { TargetPairs = 2, NoisePermille = 100 },
+        "tragic" => new SynergyDrafter(game, seed) { TargetPairs = 0, NoisePermille = 100 },
+        "random" => new RandomAgent(seed),
+        _ => throw new ArgumentException($"Unknown draft style '{style}' (random, great, decent, tragic)."),
+    };
+
+    internal static RulesConfig Override(RulesConfig rules, IEnumerable<string> pairs)
     {
         var json = System.Text.Json.JsonSerializer.SerializeToNode(rules)!.AsObject();
         foreach (string pair in pairs)
@@ -188,7 +210,8 @@ public static class SelfPlay
             var ids = defs.Select(d => game.Content.Champions[d].Id).ToHashSet();
             foreach (Sim.Content.SynergyGroup g in game.Content.Synergies)
             {
-                if (g.Members.Count(ids.Contains) < 2) continue;   // a group "on" the team: two or more members
+                // A group is "on" the team when it has a working pair: a giver and a wanter.
+                if (!g.Givers.Any(ids.Contains) || !g.Wanters.Any(w => ids.Contains(w) && g.Givers.Any(gv => gv != w && ids.Contains(gv)))) continue;
                 var (n, w) = st.Groups.GetValueOrDefault(g.Name);
                 st.Groups[g.Name] = (n + 1, w + (s.Winner == t ? 1 : 0));
             }
@@ -369,7 +392,8 @@ public static class SelfPlay
         {
             double wr = mixed.Count(d => d.Winner == d.Drafter) / (double)mixed.Count;
             double edge = mixed.Average(d => d.Drafter == Team.A ? d.SynA - d.SynB : d.SynB - d.SynA);
-            Console.WriteLine($"    synergy drafter vs random drafter: wins {wr:P0} of {mixed.Count} (sides alternate); average synergy edge {edge:+0.0;-0.0}");
+            (string x, string y) = Styles(mode);
+            Console.WriteLine($"    {x} drafter vs {y} drafter: {x} wins {wr:P0} of {mixed.Count} (sides alternate); average synergy edge {edge:+0.0;-0.0} pairs");
         }
 
         Console.WriteLine("    groups on a team (2+ members): matches, win rate");

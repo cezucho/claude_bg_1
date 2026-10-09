@@ -6,7 +6,7 @@
   "line": "Throws the enemy line around: knockbacks that set up its allies.",
   "stats": {
     "vit": 23000,
-    "pow": 1100,
+    "pow": 1050,
     "arm": 0,
     "rch": 3000,
     "spd": 2000
@@ -113,6 +113,10 @@
         {
           "kind": "Displace",
           "amount": 1
+        },
+        {
+          "kind": "Exhaust",
+          "amount": 2
         }
       ],
       "scalesFrom": "pow",

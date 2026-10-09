@@ -108,10 +108,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 2600,
-          "bonusVs": "Rooted",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 2600
         }
       ],
       "scalesFrom": "pow",
@@ -137,5 +134,6 @@
       "move top forward-right",
       "move top forward-left"
     ]
-  }
+  },
+  "wants": "Marked"
 }

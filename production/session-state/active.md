@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-10-08*
+*Last updated: 2026-10-09*
 
 ## Current Task
+
+**DRAFT MUST MATTER + MATCH REPORT — 2026-10-09.** Owner: good vs tragic draft ~65/35; wanted a readable account of an AI match. Done: per-champion in-match stats (D-055); give/want synergy model, champion "wants" trait ×2 floor 3, tragic drafts now possible (D-056); balancing pass 43–55% (D-057); drafter styles great/decent/tragic, `selfplay draft=X-Y`, `payoffScale`; `chronicle` tool + `design/match-reports/2026-10-09-two-ai-matches.md`. Result: great vs tragic 52% (synergy worth +7; towers decide matches; Wildfire dominant, marks/roots weak). 109 tests. Next: owner chooses how to reach 65/35 (reliable marks/roots, synergy affects towers, or kills worth more).
 
 **SYNERGY ROUND 2 — 2026-10-08.** Owner: synergy medium-leaning-small, combo AI, fix Mortar. Done: payoffs ×1.5 floor +2, slam 3/4 (D-052); Mortar SPD 2 + global speed floor 1 (D-053); depth-3 combo AI default (wins 62% vs old; setup pricing measured useless, off) (D-054); payoff/slam counters in selfplay. Draft re-run: side bias gone; synergy drafter 51%; payoffs 7.0 vs 4.9/match; Mortar 33–39%; Wildfire & Hold the Line weak. Results in `design/v2-champions.md`. 108 tests pass. Next: owner on whether ×1.5 is enough (proposal ×1.75 +3).
 

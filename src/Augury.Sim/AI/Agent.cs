@@ -343,11 +343,13 @@ public static class Evaluation
                     foreach (EffectDef ef in a.Effects)
                     {
                         int bonus = 0;
-                        if (ef.Kind == EffectKind.Damage && ef.BonusVs != StatusKind.None && Has(foe, ef.BonusVs))
+                        StatusKind wants = game.Def(c).Wants;
+                        if (ef.Kind == EffectKind.Damage && wants != StatusKind.None && Has(foe, wants))
                         {
+                            // The champion's trait (D-056): every hit on a target carrying what it wants.
                             int raw = ef.Power > 0 ? (int)Arith.FloorDiv((long)game.Rules.AbilityBase * ef.Power * game.Pow(c), 1_000_000) : ef.Amount;
                             int hit = Math.Max(1, raw - game.Armour(foe));
-                            bonus = ef.BonusPermille > 0 ? Math.Max(hit * ef.BonusPermille / 1000 - hit, ef.BonusFlat) : ef.BonusDouble ? hit + ef.BonusFlat : ef.BonusFlat;
+                            bonus = Math.Max(hit * (game.Rules.WantBonus - 1000) / 1000, game.Rules.WantFloor) * game.Rules.PayoffScale / 1000;
                         }
                         else if (ef.Kind == EffectKind.Displace && ef.Slam > 0 && ef.Amount > 0 && !foe.Unstoppable
                                  && (foe.Rooted || Pinned(game, s, foe.Pos)))
@@ -400,11 +402,17 @@ public sealed class SynergyDrafter(Game game, uint seed = 0) : IAgent
     private readonly Game _game = game;
     private uint _rng = seed;
 
+    /// <summary>
+    /// How many synergy pairs to aim for: <see cref="int.MaxValue"/> builds the best team it can
+    /// (a "great" draft), 0 avoids every pair (a "tragic" one), 2 stops at a pair or two ("decent").
+    /// </summary>
+    public int TargetPairs { get; init; } = int.MaxValue;
+
     /// <summary>Permille chance of a uniformly random legal pick instead of the best one.</summary>
     public int NoisePermille { get; init; }
 
     /// <inheritdoc/>
-    public string Name => "Synergy drafter";
+    public string Name => TargetPairs == int.MaxValue ? "Synergy drafter" : $"Synergy drafter (aims for {TargetPairs} pairs)";
 
     /// <inheritdoc/>
     public Command Choose(in MatchState s, IReadOnlyList<Command> legal)
@@ -440,16 +448,17 @@ public sealed class SynergyDrafter(Game game, uint seed = 0) : IAgent
             var rolesAfter = new HashSet<Content.Role>(open);
             rolesAfter.Remove(db.Champions[def].Role);
             int potential = 0;
-            foreach (SynergyGroup g in db.GroupsOf(def))
+            foreach (int other in db.PartnersOf(def))
             {
-                foreach (string id in g.Members)
-                {
-                    int other = db.IndexOf(id);
-                    if (other != def && !taken.Contains(other) && rolesAfter.Contains(db.Champions[other].Role)) potential++;
-                }
+                if (!taken.Contains(other) && rolesAfter.Contains(db.Champions[other].Role)) potential++;
             }
 
-            int value = gain * 10 + potential;
+            int after = baseScore + gain;
+            int value = TargetPairs == int.MaxValue
+                ? gain * 10 + potential
+                : after <= TargetPairs
+                    ? gain * 10 + (after < TargetPairs ? potential : -potential)   // build up to the target, then stay clear
+                    : -(after - TargetPairs) * 10 - potential;
             if (value > bestValue)
             {
                 bestValue = value;

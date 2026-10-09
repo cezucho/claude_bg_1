@@ -408,3 +408,5 @@ svg.mini { display: block; max-width: 100%; }
 .dcard .dgroups { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0 4px; }
 .det-syn { font-size: 11px; color: #cfe6ff; margin: 2px 0; }
 .det-syn b { color: var(--gold); }
+.dcard .dwants { font-size: 11px; color: #ffd9a0; margin: 2px 0 3px; }
+.dcard .dwants b { color: var(--gold); }

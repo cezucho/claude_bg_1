@@ -1,0 +1,166 @@
+CHRONICLE — seed 12, team A drafts great, team B drafts decent, board field7, payoff scale 1000
+
+DRAFT (pick order)
+  A drafts Ember (Jungle).
+  B drafts Anchor (Top).
+  B drafts Viper (Jungle).
+  A drafts Tempest (Mid).
+  A drafts Mortar (Bottom).
+  B drafts Ranger (Bottom).
+  B drafts Pyre (Mid).
+  A drafts Bastion (Support).
+  A drafts Bulwark (Top).
+  B drafts Oriel (Support).
+  Team A: Bulwark, Ember, Tempest, Mortar, Bastion — synergy 5 pair(s): Bulwark+Tempest (Crush), Ember+Tempest (Smother), Ember+Mortar (Wildfire), Ember+Bastion (Smother), Tempest+Mortar (Crush)
+  Team B: Anchor, Viper, Pyre, Ranger, Oriel — synergy 2 pair(s): Anchor+Viper (Lockdown), Viper+Ranger (Lockdown)
+  Spells A: Bulwark Teleport, Ember Smite, Tempest Ignite, Mortar Heal, Bastion Exhaust
+  Spells B: Anchor Teleport, Viper Smite, Pyre Ignite, Ranger Heal, Oriel Exhaust
+
+OPENING
+  A:Bulwark plays Rampart in the opening.
+  B:Anchor plays Iron March in the opening.
+  A:Tempest plays Eye of the Storm in the opening.
+  A:Bulwark casts Shove — nothing in reach, it fizzles (on cooldown 1).
+  A:Ember casts (opening) Kindle [init 1] → B:Anchor
+  B:Anchor is BURNING (2 each time it acts, 2 rounds)
+  A:Tempest casts (opening) Zap [init 1] → B:Anchor
+  B:Pyre plays Smoke in the opening.
+  A:Bastion plays Judgement in the opening.
+  A:Bastion casts (opening) Judgement [init 4] (fixed pattern)
+  B:Viper plays Fang in the opening.
+  B:Viper casts (opening) Lunge [init 1] → (-1,-1)
+  B:Viper casts (opening) Fang [init 2] → A:Ember
+  A:Ember takes the fallback → (0,-1)
+  A:Mortar takes the fallback → (2,-2)
+  B:Ranger plays Volley in the opening.
+  B:Pyre casts (opening) Scorch [init 1] → A:Ember
+  A:Ember is BURNING (2 each time it acts, 2 rounds)
+  B:Ranger casts (opening) Volley [init 1] → A:Ember
+  B:Oriel plays Mend in the opening.
+  B:Oriel casts (opening) Mend [init 1] → B:Pyre
+  ── after the opening: NEXUS A 60 · B 60 │ towers C0:– a1:A a2:A b3:B b4:B │ alive A 5 (129 HP) · B 5 (130 HP)
+     this stretch: damage A 7 · B 7 │ to structures A 4 · B 0 │ healing A 0 · B 2 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 1
+  A:Tempest casts Ignite [init 2] → B:Ranger
+  B:Ranger casts Heal [init 1] → B:Ranger
+  PAYOFF: A:Mortar on B:Ranger, who is burning (+3)
+  B:Viper casts Smite [init 1] → tower (-2,-1)
+  A:Mortar casts Heal [init 1] → A:Mortar
+  ── end of round 1: NEXUS A 58 · B 58 │ towers C0:– a1:A a2:A b3:B b4:B │ alive A 5 (108 HP) · B 5 (116 HP)
+     this stretch: damage A 14 · B 27 │ to structures A 0 · B 9 │ healing A 6 · B 6 │ combos (payoffs+slams) A 1 · B 0
+
+ROUND 2
+  B:Viper SLAMS into something
+  B:Pyre casts Ignite [init 2] → A:Mortar
+  PAYOFF: A:Mortar on B:Pyre, who is burning (+3)
+  A:Bastion casts Exhaust [init 2] → B:Pyre
+  PAYOFF: A:Mortar on B:Pyre, who is burning (+3)
+  ✝ B:Pyre killed A:Ember
+  ── end of round 2: NEXUS A 53 · B 56 │ towers C0:– a1:A a2:A b3:B b4:B │ alive A 4 (90 HP) · B 5 (84 HP)
+     this stretch: damage A 26 · B 18 │ to structures A 0 · B 0 │ healing A 3 · B 2 │ combos (payoffs+slams) A 3 · B 0
+
+ROUND 3
+  PAYOFF: B:Viper on A:Mortar, who is rooted (+3)
+  PAYOFF: A:Mortar on B:Pyre, who is burning (+3)
+  PAYOFF: B:Viper on A:Mortar, who is rooted (+5)
+  ✝ B:Ranger killed A:Mortar
+  ✝ A:Tempest killed B:Viper
+  ✝ A:Tempest killed B:Pyre
+  ── end of round 3: NEXUS A 48 · B 48 │ towers C0:– a1:A a2:A b3:B b4:B │ alive A 4 (70 HP) · B 3 (69 HP)
+     this stretch: damage A 17 · B 21 │ to structures A 0 · B 4 │ healing A 0 · B 2 │ combos (payoffs+slams) A 1 · B 2
+
+ROUND 4
+  A:Bulwark casts Teleport [init 4] → (-3,0)
+  A:Ember casts Smite [init 1] → tower (-3,1)
+  ── end of round 4: NEXUS A 46 · B 46 │ towers C0:– a1:A a2:A b3:B b4:B │ alive A 5 (71 HP) · B 5 (62 HP)
+     this stretch: damage A 8 · B 22 │ to structures A 6 · B 7 │ healing A 2 · B 2 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 5
+  B:Pyre casts Ignite [init 2] → A:Bulwark
+  A:Mortar casts Heal [init 1] → A:Mortar
+  ⚑ A CAPTURES tower (0,0)
+  B:Viper casts Smite [init 1] → tower (-2,-1)
+  ⚑ B CAPTURES tower (-2,-1)
+  ── end of round 5: NEXUS A 43 · B 44 │ towers C0:A a1:B a2:A b3:B b4:B │ alive A 5 (78 HP) · B 5 (92 HP)
+     this stretch: damage A 19 · B 17 │ to structures A 8 · B 10 │ healing A 4 · B 3 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 6
+  PAYOFF: A:Mortar on B:Anchor, who is burning (+3)
+  B:Ranger casts Heal [init 1] → B:Ranger
+  PAYOFF: A:Mortar on B:Anchor, who is burning (+3)
+  ── end of round 6: NEXUS A 40 · B 42 │ towers C0:A a1:B a2:A b3:B b4:B │ alive A 5 (62 HP) · B 5 (84 HP)
+     this stretch: damage A 16 · B 8 │ to structures A 0 · B 0 │ healing A 0 · B 13 │ combos (payoffs+slams) A 2 · B 0
+
+ROUND 7
+  B:Ranger SLAMS into something
+  ✝ B:Ranger killed A:Ember
+  ✝ B:Ranger killed A:Tempest
+  ✝ A:Mortar killed B:Viper
+  ── end of round 7: NEXUS A 31 · B 37 │ towers C0:A a1:B a2:A b3:B b4:B │ alive A 3 (49 HP) · B 4 (74 HP)
+     this stretch: damage A 16 · B 10 │ to structures A 5 · B 2 │ healing A 0 · B 5 │ combos (payoffs+slams) A 1 · B 0
+
+ROUND 8
+  B:Oriel casts Exhaust [init 2] → A:Bastion
+  ⚑ A CAPTURES tower (-3,1)
+  ── end of round 8: NEXUS A 29 · B 34 │ towers C0:A a1:B a2:A b3:B b4:A │ alive A 5 (41 HP) · B 5 (68 HP)
+     this stretch: damage A 3 · B 2 │ to structures A 8 · B 12 │ healing A 2 · B 5 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 9
+  ⚑ B CAPTURES tower (0,0)
+  A:Ember casts Smite [init 1] → tower (-2,-1)
+  B:Viper casts Smite [init 1] → tower (-3,1)
+  ⚑ A CAPTURES tower (-2,-1)
+  NEXUS B takes 3 (1 defending) → 31
+  ── end of round 9: NEXUS A 27 · B 28 │ towers C0:B a1:A a2:A b3:B b4:A │ alive A 5 (71 HP) · B 5 (92 HP)
+     this stretch: damage A 2 · B 16 │ to structures A 14 · B 8 │ healing A 0 · B 4 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 10
+  PAYOFF: A:Mortar on B:Anchor, who is burning (+3)
+  PAYOFF: A:Mortar on B:Anchor, who is burning (+8)
+  B:Pyre casts Ignite [init 2] → A:Bulwark
+  A:Mortar casts Heal [init 1] → A:Mortar
+  ✝ A:Mortar killed B:Anchor
+  ✝ A:Tempest killed B:Ranger
+  ── end of round 10: NEXUS A 25 · B 19 │ towers C0:B a1:A a2:A b3:B b4:A │ alive A 5 (56 HP) · B 3 (62 HP)
+     this stretch: damage A 35 · B 12 │ to structures A 0 · B 0 │ healing A 6 · B 3 │ combos (payoffs+slams) A 2 · B 0
+
+ROUND 11
+  A:Tempest casts Ignite [init 2] → B:Pyre
+  ✝ B:Pyre killed A:Tempest
+  ── end of round 11: NEXUS A 20 · B 16 │ towers C0:B a1:A a2:A b3:B b4:A │ alive A 4 (42 HP) · B 3 (47 HP)
+     this stretch: damage A 11 · B 8 │ to structures A 0 · B 4 │ healing A 0 · B 0 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 12
+  NEXUS B takes 3 (1 defending) → 13
+  ⚑ B CAPTURES tower (-3,1)
+  ✝ B:Pyre killed A:Bulwark
+  ── end of round 12: NEXUS A 14 · B 11 │ towers C0:B a1:A a2:A b3:B b4:B │ alive A 3 (38 HP) · B 5 (35 HP)
+     this stretch: damage A 13 · B 0 │ to structures A 14 · B 6 │ healing A 0 · B 5 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 13
+  B:Ranger casts Heal [init 1] → B:Ranger
+  ── end of round 13: NEXUS A 11 · B 9 │ towers C0:B a1:A a2:A b3:B b4:B │ alive A 4 (26 HP) · B 5 (97 HP)
+     this stretch: damage A 5 · B 10 │ to structures A 4 · B 0 │ healing A 2 · B 9 │ combos (payoffs+slams) A 0 · B 0
+
+ROUND 14
+  ⚑ A CAPTURES tower (0,0)
+  B:Viper SLAMS into something
+  B:Viper casts Smite [init 1] → tower (-2,-1)
+  B:Anchor casts Teleport [init 4] → (0,1)
+  ✝ B:Ranger killed A:Ember
+  ✝ A:Tempest killed B:Viper
+  ── end of round 14: NEXUS A 6 · B 3 │ towers C0:A a1:A a2:A b3:B b4:B │ alive A 4 (41 HP) · B 4 (86 HP)
+     this stretch: damage A 12 · B 7 │ to structures A 1 · B 6 │ healing A 0 · B 1 │ combos (payoffs+slams) A 1 · B 0
+
+ROUND 15
+  B:Pyre casts Ignite [init 2] → A:Mortar
+  A:Mortar casts Heal [init 1] → A:Mortar
+  A:Tempest casts Ignite [init 2] → B:Ranger
+  B:Oriel casts Exhaust [init 2] → A:Bastion
+  A wins — NEXUS B destroyed. Nexus A 4 – B 0.
+  ✝ A:Mortar killed B:Pyre
+  ── end of round 15: NEXUS A 4 · B 0 │ towers C0:A a1:A a2:A b3:B b4:B │ alive A 4 (68 HP) · B 3 (78 HP)
+     this stretch: damage A 4 · B 5 │ to structures A 0 · B 5 │ healing A 8 · B 4 │ combos (payoffs+slams) A 0 · B 0
+
+A wins — NEXUS B destroyed. Nexus A 4 – B 0.

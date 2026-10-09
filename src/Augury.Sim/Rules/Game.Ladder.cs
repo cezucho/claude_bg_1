@@ -443,7 +443,8 @@ public sealed partial class Game
                             _observer?.Payoff(slot, t);
                         }
 
-                        DamageChampion(ref s, t, HitDamage(s, t, raw, e), slot, fromPassive: false, log);
+                        int hit = HitDamage(s, t, raw, e);
+                        DamageChampion(ref s, t, hit + WantedExtra(s, slot, t, hit, log), slot, fromPassive: false, log);
                     }
 
                     foreach (Target st in structTargets)
@@ -491,7 +492,7 @@ public sealed partial class Game
                         {
                             Log(log, EventKind.Damage, $"  {Name(s, t)} SLAMS into something");
                             _observer?.Slam(slot, t);
-                            DamageChampion(ref s, t, e.Slam, slot, fromPassive: false, log);
+                            DamageChampion(ref s, t, Math.Max(1, e.Slam * Rules.PayoffScale / 1000), slot, fromPassive: false, log);
                         }
                     }
 
@@ -660,8 +661,10 @@ public sealed partial class Game
         {
             if (e.BonusPermille > 0)
             {
-                // Multiplier, with the flat amount as a floor so cheap hits still pay off.
-                dmg = Math.Max(dmg * e.BonusPermille / 1000, dmg + e.BonusFlat);
+                // Multiplier, with the flat amount as a floor so cheap hits still pay off. Only the
+                // extra is scaled by PayoffScale.
+                int extra = Math.Max(dmg * (e.BonusPermille - 1000) / 1000, e.BonusFlat);
+                dmg += extra * Rules.PayoffScale / 1000;
             }
             else
             {
@@ -674,6 +677,21 @@ public sealed partial class Game
     }
 
     /// <summary>A burning champion takes its burn each time it acts (v2): through shields, never killing in the opening.</summary>
+    /// <summary>
+    /// Extra damage when the attacker wants a status the target carries (D-056): the synergy
+    /// payoff, on every hit — abilities and basic attacks.
+    /// </summary>
+    private int WantedExtra(in MatchState s, int source, int target, int hit, List<GameEvent>? log)
+    {
+        StatusKind wants = Def(s.Champions[source]).Wants;
+        if (wants == StatusKind.None || !BonusApplies(s.Champions[target], wants)) return 0;
+        int extra = Math.Max(hit * (Rules.WantBonus - 1000) / 1000, Rules.WantFloor) * Rules.PayoffScale / 1000;
+        if (extra <= 0) return 0;
+        Log(log, EventKind.Damage, $"  PAYOFF: {Name(s, source)} on {Name(s, target)}, who is {wants.ToString().ToLowerInvariant()} (+{extra})");
+        _observer?.Payoff(source, target);
+        return extra;
+    }
+
     private static bool BonusApplies(in Champion t, StatusKind k) => k switch
     {
         StatusKind.Rooted => t.Rooted,

@@ -3,10 +3,10 @@
   "name": "Talon",
   "role": "Jungle",
   "glyph": "N",
-  "line": "Dives onto whatever its team has marked, and doubles down on it.",
+  "line": "Cripples its prey, then executes whatever its team has marked.",
   "stats": {
     "vit": 25000,
-    "pow": 1200,
+    "pow": 1370,
     "arm": 0,
     "rch": 1000,
     "spd": 3000
@@ -28,7 +28,7 @@
           "power": 900
         },
         {
-          "kind": "Mark",
+          "kind": "Exhaust",
           "amount": 2
         }
       ],
@@ -91,10 +91,7 @@
       "effects": [
         {
           "kind": "Damage",
-          "power": 1400,
-          "bonusVs": "Marked",
-          "bonusPermille": 1500,
-          "bonusFlat": 2
+          "power": 1400
         }
       ],
       "scalesFrom": "pow",
@@ -121,5 +118,6 @@
       "move jungle forward-right",
       "beacon jungle 1"
     ]
-  }
+  },
+  "wants": "Marked"
 }
