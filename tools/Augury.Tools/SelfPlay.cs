@@ -104,6 +104,7 @@ public static class SelfPlay
         "random" => new RandomAgent(seed),
         "greedy" => new HeuristicAgent(game),
         "plain" => new HeuristicAgent(game, seed) { NoisePermille = 150, ComboAware = false },
+        "badopening" => new OpeningOverride(new HeuristicAgent(game, seed) { NoisePermille = 150 }, new RandomAgent(seed + 31)),
         "setups" => new HeuristicAgent(game, seed) { NoisePermille = 150, ValueSetups = true },
         _ => new HeuristicAgent(game, seed) { NoisePermille = 150 },
     };
@@ -409,5 +410,14 @@ public static class SelfPlay
     {
         string shown = pct ? value.ToString("P0") : value.ToString("F1");
         Console.WriteLine($"    {(ok(value) ? "PASS" : "FAIL")}  {label,-52} {shown,8}");
+    }
+
+    /// <summary>Plays the opening with one agent and everything else with another — to measure what the opening is worth.</summary>
+    private sealed class OpeningOverride(IAgent main, IAgent opening) : IAgent
+    {
+        public string Name => $"{main.Name}, opening by {opening.Name}";
+
+        public Command Choose(in MatchState s, IReadOnlyList<Command> legal) =>
+            s.Phase == Phase.Opening ? opening.Choose(s, legal) : main.Choose(s, legal);
     }
 }

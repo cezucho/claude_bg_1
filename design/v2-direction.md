@@ -120,6 +120,31 @@ larger, but not very small. With a large roster (say 50), players will learn the
 **Bans in the draft** then keep combos interesting. Implemented as ×1.5 with a floor of +2
 (D-052).
 
+### The opening must shape the endgame · Owner, 2026-10-11 · *brainstorm, not decided*
+
+**The feeling the owner wants.** After the draft, a player picks a strategy — a win condition, as
+in League of Legends. The opening is where they start fulfilling it. Between two good drafts, the
+player with the better opening should find the endgame much easier, because their champions
+stand where they can do more.
+
+**Measured today.** An AI that plays its opening at random wins **48.5%** against the same AI
+choosing its opening (400 matches, sides alternate). The opening makes no measurable
+difference. Also approved the same day: making marks and roots as dependable as burn, and
+letting synergy affect towers.
+
+**Why the opening doesn't matter (Claude's diagnosis).**
+1. **Nothing the opening builds persists.** Positions are reshuffled within a round or two:
+   - every half both teams move twice, and dashes and pushes move champions more;
+   - the board is small;
+   - the opening's beacons break after two hits.
+2. **Nothing accumulates from position.** In League, position early earns gold and experience,
+   which become power later. Here the only things that carry forward are nexus HP and stat
+   molding, and molding depends on which abilities you use, not where you stand.
+
+The brainstorm itself — earning power from position, making positions stick, objectives on a
+timetable, and the measure — is in the 2026-10-11 conversation and summarised below once the
+owner chooses.
+
 ## Idea parking lot
 
 ### Bans in the draft (owner, 2026-10-08)
