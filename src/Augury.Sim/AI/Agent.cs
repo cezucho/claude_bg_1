@@ -75,6 +75,8 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
         Team me = s.Active;
         if (s.Phase == Phase.SpellPick) return PickSpell(s, legal);
 
+        if (s.Phase == Phase.Opening && PlanOpening) return Pick(OpeningPlan(s, me, legal));
+
         bool ladder = s.Phase == Phase.Ladder;
         var scored = new List<(Command Cmd, int Value)>(legal.Count);
         foreach (Command c in legal)
@@ -126,6 +128,49 @@ public sealed class HeuristicAgent(Game game, uint seed = 0) : IAgent
         }
 
         return legal[0];
+    }
+
+    /// <summary>
+    /// Plan the whole opening (D-061): judge each play by the board at the end of the opening,
+    /// after both teams finish theirs greedily — so a play is chosen for the formation and the
+    /// quests it leads to, not for the step alone. Default on.
+    /// </summary>
+    public bool PlanOpening { get; init; } = true;
+
+    private List<(Command Cmd, int Value)> OpeningPlan(in MatchState s, Team me, IReadOnlyList<Command> legal)
+    {
+        var scored = new List<(Command Cmd, int Value)>(legal.Count);
+        var buffer = new List<Command>();
+        foreach (Command c in legal)
+        {
+            MatchState next = s;
+            _game.Apply(ref next, c);
+            for (int guard = 0; next.Phase == Phase.Opening && guard < 12; guard++)
+            {
+                buffer.Clear();
+                _game.Legal(next, buffer);
+                Team side = next.Active;
+                Command best = buffer[0];
+                int bestValue = int.MinValue;
+                foreach (Command reply in buffer)
+                {
+                    MatchState after = next;
+                    _game.Apply(ref after, reply);
+                    int v = Evaluation.Score(_game, after, side, Setups);
+                    if (v > bestValue)
+                    {
+                        bestValue = v;
+                        best = reply;
+                    }
+                }
+
+                _game.Apply(ref next, best);
+            }
+
+            scored.Add((c, Evaluation.Score(_game, next, me, Setups)));
+        }
+
+        return scored;
     }
 
     private Command Pick(List<(Command Cmd, int Value)> scored)
@@ -241,6 +286,15 @@ public static class Evaluation
     public static int Score(Game game, in MatchState s, Team me, bool combo = false) =>
         Side(game, s, me, combo) - Side(game, s, MatchState.Other(me), combo);
 
+    /// <summary>Value of one quest stack.</summary>
+    public static int QuestStackValue { get; set; } = 20;
+
+    /// <summary>Extra value at each upgrade threshold (2 and 4 stacks).</summary>
+    public static int QuestSpikeValue { get; set; } = 30;
+
+    /// <summary>Value of meeting the quest right now (a stack at the next round close).</summary>
+    public static int QuestMetValue { get; set; } = 15;
+
     private static int Side(Game game, in MatchState s, Team t, bool combo)
     {
         if (s.Phase == Phase.MatchOver)
@@ -288,6 +342,14 @@ public static class Evaluation
             }
 
             v += Math.Min(c.Hp, game.MaxHp(c)) * 5 + c.Shield * 2;
+
+            // Quests (D-059): stacks are lasting power, the upgrades at 2 and 4 most of all; standing
+            // where the quest is met now is a stack at the next round close. ⚠ Guessed weights.
+            if (game.Def(c).Quest is not null)
+            {
+                v += c.QuestStacks * QuestStackValue + (c.QuestStacks >= 2 ? QuestSpikeValue : 0) + (c.QuestStacks >= 4 ? QuestSpikeValue : 0);
+                if (c.QuestStacks < 4 && game.QuestMet(s, slot)) v += QuestMetValue;
+            }
             v -= c.PoisonAmount * c.PoisonRounds * 3;
 
             // v2 statuses. ⚠ Guessed weights: a status is worth roughly the damage it threatens.

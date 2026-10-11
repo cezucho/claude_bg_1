@@ -19,6 +19,19 @@ internal sealed class ChampionStats
         public readonly int[] Dealt = new int[10], Taken = new int[10], Healed = new int[10], Shields = new int[10];
         public readonly int[] Structure = new int[10], Kills = new int[10], Deaths = new int[10];
         public readonly int[] Payoffs = new int[10], Slams = new int[10], Abilities = new int[10], BasicAttacks = new int[10], Moves = new int[10];
+        public readonly int[] MaxStacks = new int[10], RoundAt2 = new int[10], RoundAt4 = new int[10];
+
+        /// <summary>Follows quest progress after each command.</summary>
+        public void Track(in MatchState s)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                int k = s.Champions[i].QuestStacks;
+                if (k > MaxStacks[i]) MaxStacks[i] = k;
+                if (k >= 2 && RoundAt2[i] == 0) RoundAt2[i] = Math.Max(1, s.Round);
+                if (k >= 4 && RoundAt4[i] == 0) RoundAt4[i] = Math.Max(1, s.Round);
+            }
+        }
 
         /// <summary>Teams of each slot (fixed for the match).</summary>
         public void SetTeams(in MatchState s)
@@ -76,6 +89,7 @@ internal sealed class ChampionStats
     {
         public int Games, Wins;
         public long Dealt, Taken, Healed, Shields, Structure, Kills, Deaths, Payoffs, Slams, Abilities, BasicAttacks, Moves;
+        public long MaxStacks, Reached2, Reached4, Round2Sum, Round4Sum;
         public readonly Dictionary<string, (int Games, int Wins)> Lane = new();
     }
 
@@ -106,6 +120,9 @@ internal sealed class ChampionStats
             a.Abilities += t.Abilities[i];
             a.BasicAttacks += t.BasicAttacks[i];
             a.Moves += t.Moves[i];
+            a.MaxStacks += t.MaxStacks[i];
+            if (t.RoundAt2[i] > 0) { a.Reached2++; a.Round2Sum += t.RoundAt2[i]; }
+            if (t.RoundAt4[i] > 0) { a.Reached4++; a.Round4Sum += t.RoundAt4[i]; }
 
             // Its lane: the enemy drafted into the same role.
             string rival = names[i < 5 ? i + 5 : i - 5];
@@ -147,6 +164,14 @@ internal sealed class ChampionStats
         }
 
         Console.WriteLine("    win = its team's win rate · mates = its teammates' usual win rate · drag = the difference, in points");
+        Console.WriteLine();
+        Console.WriteLine("  QUESTS — best stacks reached, how often the upgrades at 2 and 4 came, and when (mean round)");
+        foreach (var (name, a) in _agg.OrderByDescending(kv => kv.Value.Reached4 / (double)kv.Value.Games))
+        {
+            double g = a.Games;
+            Console.WriteLine($"    {name,-9} best {a.MaxStacks / g,4:F1}   reached 2: {a.Reached2 / g,5:P0} (round {(a.Reached2 > 0 ? a.Round2Sum / (double)a.Reached2 : 0),4:F1})   reached 4: {a.Reached4 / g,5:P0} (round {(a.Reached4 > 0 ? a.Round4Sum / (double)a.Reached4 : 0),4:F1})   win {wr[name],5:P0}");
+        }
+
         Console.WriteLine("    (strongly negative: its team loses even with good teammates)");
         Console.WriteLine();
         Console.WriteLine("  LANE — win rate against the enemy in the same role");

@@ -58,7 +58,7 @@ ROSTER = [
          ["move mid forward-left", "move mid forward-right", "move support forward-left"], "rch", ["vit", 30], ["pow", 25], target="EmptyHex", rb=-1),
        A("Lance", 3, 1, [dmg(1800, bonusVs="Burning", bonusPermille=1500, bonusFlat=2)],
          ["move mid forward-left", "cast mid e", "move mid back-right"], "pow", ["rch", 30], ["vit", 60], pattern=[[0, 1], [0, 2], [0, 3]], printed=2)],
-      "Vantage", ["move mid forward-left", "move jungle forward-left", "beacon jungle 2"],
+      "Vantage", ["move mid forward-left", "move mid forward-left", "beacon mid 2"],
       "Marks one target for the whole team, and reshapes the board with walls."),
     C(4, "oriel", "Oriel", "Support", "O", [28000, 850, 1000, 2000, 2000],
       {"name": "Grace", "trigger": "OnRoundClose", "effect": "HealSelf", "amount": 2},
@@ -108,7 +108,7 @@ ROSTER = [
          ["move bottom forward-left", "move support forward-left", "beacon bottom 0"], "pow", ["spd", 40], ["vit", 40]),
        A("Rain of Arrows", 4, 3, [dmg(2400)],
          ["move bottom forward-right", "move support forward-right", "move jungle forward-left"], "pow", ["arm", 60], ["spd", 60], pattern=[[0, 2], [-1, 2], [-1, 3], [0, 3], [1, 2]])],
-      "Fall Back", ["move bottom forward-left", "move bottom right", "move support forward-right"],
+      "Overwatch Post", ["move bottom forward-right", "move bottom forward-right", "beacon bottom 0"],
       "Pins enemies from the back line so its divers can land."),
     C(9, "gunner", "Gunner", "Bottom", "G", [26000, 990, 0, 3000, 2000],
       {"name": "Overwatch", "trigger": "OnEnemyEntersReach", "effect": "Strike", "amount": 1},
@@ -138,7 +138,7 @@ ROSTER = [
          ["move top forward-left", "beacon top 1", "move jungle forward-right"], "pow", ["vit", 30], ["spd", 25]),
        A("Bloom", 4, 3, [dmg(2000, bonusVs="Poisoned", bonusPermille=1500, bonusFlat=2)],
          ["move top forward-right", "move top forward-right", "move mid forward-left"], "pow", ["vit", 60], ["rch", 60], pattern=[[-1, 1], [0, 1], [-1, 2], [0, 2], [-2, 2]])],
-      "Overgrowth", ["move top forward-left", "move top right", "move jungle forward-right"],
+      "Into the Thicket", ["move top forward-left", "move top forward-left", "move jungle forward-left"],
       "Roots an enemy in thorns and blooms on whatever its jungler has poisoned."),
     C(12, "talon", "Talon", "Jungle", "N", [25000, 1370, 0, 1000, 3000],
       {"name": "Scent", "trigger": "OnEnemyEntersReach", "effect": "Strike", "amount": 1},
@@ -158,7 +158,7 @@ ROSTER = [
          ["move mid forward-left", "move bottom forward-left", "move mid forward-right"], "pow", ["arm", 30], ["spd", 30]),
        A("Inferno", 4, 3, [dmg(1800)],
          ["move mid forward-right", "move mid forward-left", "move support forward-left"], "pow", ["vit", 60], ["spd", 60], pattern=[[0, 1], [-1, 2], [0, 2], [-1, 3]], printed=2)],
-      "Heat Haze", ["move mid forward-left", "beacon mid 2", "move jungle forward-left"],
+      "Heat Haze", ["move mid forward-right", "move mid forward-right", "move mid forward-right"],
       "Spreads fire across the enemy line for its team to cash in."),
     C(14, "mortar", "Mortar", "Bottom", "M", [24000, 1410, 0, 3000, 2000],
       {"name": "Entrenched", "trigger": "OnRoundClose", "effect": "ShieldSelf", "amount": 2},
@@ -254,6 +254,77 @@ out = f"{ROOT}/assets/data/champions"
 os.makedirs(out, exist_ok=True)
 for f in os.listdir(out):
     if f.endswith(".json"): os.remove(os.path.join(out, f))
+
+# Quests (D-059): each champion's way to grow, met by where it stands at round close. Stacks 0-4;
+# an upgrade at 2 (a stat) and 4 (a stronger ability). Dying costs a stack. Wording is what the
+# player reads on the card.
+import copy
+def up_stat(at, stat, amount, text): return {"at": at, "stat": stat, "amount": amount, "text": text}
+def up_ability(at, slot, change, text): return {"at": at, "slot": slot, "change": change, "text": text}
+def eff(a, kind): return next(e for e in a["effects"] if e["kind"] == kind)
+def scale_dmg(a, power):
+    eff(a, "Damage")["power"] = power
+    return a
+
+QUESTS = {
+    "anchor": ("Anchor Point", "Ends the round next to an enemy champion.", {"enemiesN": 1, "enemiesD": 1},
+               [up_stat(2, "vit", 6000, "+6 max HP"),
+                up_ability(4, 1, lambda a: (eff(a, "Root").update(amount=3), a.update(rangeBonus=1), a)[-1], "Chain Hook reaches 1 further and roots for 3 halves")]),
+    "ember": ("Spreading Flames", "Ends the round with a burning enemy within 2.", {"status": "Burning", "statusN": 1, "statusD": 2},
+              [up_stat(2, "pow", 150, "+15% power"),
+               up_ability(4, 0, lambda a: (eff(a, "Burn").update(amount=3), a)[-1], "Kindle burns for 3")]),
+    "lens": ("Vantage", "Ends the round on a hill.", {"on": "Hill"},
+             [up_stat(2, "rch", 1000, "+1 reach"),
+              up_ability(4, 2, lambda a: (a.update(pattern=[[0, 1], [0, 2], [0, 3], [0, 4]]), scale_dmg(a, 2000))[-1], "Lance pierces 4 hexes and hits harder")]),
+    "oriel": ("Bond", "Ends the round next to 2 or more allies, with an enemy within 2.", {"alliesN": 2, "alliesD": 1, "enemiesN": 1, "enemiesD": 2},
+              [up_stat(2, "vit", 5000, "+5 max HP"),
+               up_ability(4, 0, lambda a: (eff(a, "Heal").update(power=1400), a["effects"].append({"kind": "Shield", "amount": 3}), a)[-1], "Mend heals more and shields 3")]),
+    "bulwark": ("Hold the Line", "Ends the round next to the centre tower while its team holds it.", {"centreTower": True},
+                [up_stat(2, "arm", 1000, "+1 armour"),
+                 up_ability(4, 1, lambda a: (eff(a, "Wall").update(amount=3), a)[-1], "Rampart walls stand for 3 rounds"),
+                 up_ability(4, 0, lambda a: (eff(a, "Displace").update(amount=3), a)[-1], "Shove pushes 3")]),
+    "viper": ("Stalk", "Ends the round in the enemy half with no ally next to it.", {"enemyHalf": True, "noAllyWithin": 1},
+              [up_stat(2, "spd", 1000, "+1 speed"),
+               up_ability(4, 1, lambda a: (eff(a, "Poison").update(amount=3), a)[-1], "Fang poisons for 3 a round")]),
+    "tempest": ("Eye of the Storm", "Ends the round with 2 or more enemies within 2.", {"enemiesN": 2, "enemiesD": 2},
+                [up_stat(2, "pow", 150, "+15% power"),
+                 up_ability(4, 1, lambda a: (eff(a, "Displace").update(amount=3, slam=4), a)[-1], "Gust pushes 3 and slams for 4")]),
+    "ranger": ("Overwatch", "Ends the round on a hill.", {"on": "Hill"},
+               [up_stat(2, "rch", 1000, "+1 reach"),
+                up_ability(4, 1, lambda a: (eff(a, "Root").update(amount=3), a.update(rangeBonus=1), a)[-1], "Pin Shot reaches 1 further and roots for 3 halves")]),
+    "gunner": ("Hold Position", "Ends the round without having moved, with an enemy within 2.", {"stationary": True, "enemiesN": 1, "enemiesD": 2},
+               [up_stat(2, "pow", 150, "+15% power"),
+                up_ability(4, 0, lambda a: (scale_dmg(a, 1500), a.update(rangeBonus=1), a)[-1], "Snipe reaches 1 further and hits harder")]),
+    "bastion": ("Guardian", "Ends the round next to an ally below half HP.", {"woundedAllyWithin": 1},
+                [up_stat(2, "vit", 5000, "+5 max HP"),
+                 up_ability(4, 0, lambda a: (eff(a, "Shield").update(amount=8), a)[-1], "Aegis shields 8")]),
+    "briar": ("Overgrowth", "Ends the round in a swamp, with an enemy within 2.", {"on": "Swamp", "enemiesN": 1, "enemiesD": 2},
+              [up_stat(2, "vit", 5000, "+5 max HP"),
+               up_ability(4, 2, lambda a: scale_dmg(a, 2600), "Bloom hits much harder")]),
+    "talon": ("Deep Hunt", "Ends the round in the enemy half.", {"enemyHalf": True},
+              [up_stat(2, "pow", 150, "+15% power"),
+               up_ability(4, 1, lambda a: (eff(a, "Dash").update(amount=4), a.update(cooldown=1), a)[-1], "Pounce leaps 4 and is ready every round")]),
+    "pyre": ("Riverfire", "Ends the round on the river row or beyond it.", {"advanced": True},
+             [up_stat(2, "pow", 150, "+15% power"),
+              up_ability(4, 2, lambda a: (a["pattern"].append([1, 1]), scale_dmg(a, 2200))[-1], "Inferno covers 5 hexes and burns hotter")]),
+    "mortar": ("Dig In", "Ends the round without having moved, with 2 or more enemies within 3.", {"stationary": True, "enemiesN": 2, "enemiesD": 3},
+               [up_stat(2, "rch", 1000, "+1 reach"),
+                up_ability(4, 2, lambda a: scale_dmg(a, 2700), "Barrage hits much harder")]),
+    "seer": ("Prophecy", "Ends the round with an enemy marked this round within 2.", {"status": "Marked", "statusN": 1, "statusD": 2},
+             [up_stat(2, "rch", 1000, "+1 reach"),
+              up_ability(4, 2, lambda a: (eff(a, "Mark").update(amount=3), scale_dmg(a, 1700), a)[-1], "Revelation marks for 3 and hits harder")]),
+}
+
+def quest_json(cid, c):
+    name, text, when, ups = QUESTS[cid]
+    out = []
+    for u in ups:
+        if "stat" in u: out.append(u)
+        else:
+            a = u["change"](copy.deepcopy(c["abilities"][u["slot"]]))
+            out.append({"at": u["at"], "slot": u["slot"], "ability": a, "text": u["text"]})
+    return {"name": name, "text": text, "when": when, "upgrades": out}
+
 WANTS = {w: g["status"] for g in SYNERGIES if g["status"] in ("Rooted", "Marked", "Burning", "Poisoned", "Exhausted") for w in g["wanters"]}
 for num, cid, c in ROSTER:
     # Synergy payoffs are a champion trait (D-056), not an ability bonus.
@@ -261,6 +332,7 @@ for num, cid, c in ROSTER:
         for e in a["effects"]:
             for k in ("bonusVs", "bonusPermille", "bonusFlat"): e.pop(k, None)
     if cid in WANTS: c["wants"] = WANTS[cid]
+    if cid in QUESTS: c["quest"] = quest_json(cid, c)
     with open(f"{out}/champion_{num:02d}_{cid}.json", "w") as fh:
         fh.write(json.dumps(c, indent=2, ensure_ascii=False) + "\n")
 with open(f"{ROOT}/assets/data/spells.json", "w") as fh:
@@ -271,4 +343,6 @@ for g in SYNERGIES:
     if missing: sys.exit(f"synergy {g['id']}: unknown {missing}")
 with open(f"{ROOT}/assets/data/synergies.json", "w") as fh:
     fh.write(json.dumps({"groups": SYNERGIES}, indent=2) + "\n")
+missing_q = [cid for _, cid, _ in ROSTER if cid not in QUESTS]
+if missing_q: sys.exit(f"no quest for {missing_q}")
 print("wrote", len(ROSTER), "champions,", len(SPELLS), "spells and", len(SYNERGIES), "synergy groups")

@@ -99,6 +99,89 @@ public enum EffectKind : byte
     HealWoundedAlly
 }
 
+/// <summary>v2 (D-060): what a hex is made of.</summary>
+public enum Terrain : byte
+{
+    /// <summary>Open ground.</summary>
+    Plain,
+
+    /// <summary>High ground: +1 reach while standing on it.</summary>
+    Hill,
+
+    /// <summary>Mud: a move into it ends there, and a champion starting a move in it can step one hex.</summary>
+    Swamp
+}
+
+/// <summary>
+/// v2 (D-059): when a champion's quest is met at round close. Every clause given must hold.
+/// </summary>
+public sealed record QuestCondition
+{
+    /// <summary>Standing on this terrain.</summary>
+    public Terrain? On { get; init; }
+
+    /// <summary>In the enemy half (beyond the river row).</summary>
+    public bool EnemyHalf { get; init; }
+
+    /// <summary>On the river row (row 0).</summary>
+    public bool River { get; init; }
+
+    /// <summary>On the river row or beyond it.</summary>
+    public bool Advanced { get; init; }
+
+    /// <summary>Next to the centre tower while its team holds it.</summary>
+    public bool CentreTower { get; init; }
+
+    /// <summary>Did not move itself this round.</summary>
+    public bool Stationary { get; init; }
+
+    /// <summary>Next to a tower its team holds.</summary>
+    public bool NextToFriendlyTower { get; init; }
+
+    /// <summary>At least <c>AlliesN</c> allies within <c>AlliesD</c>.</summary>
+    public int AlliesN { get; init; }
+
+    /// <inheritdoc cref="AlliesN"/>
+    public int AlliesD { get; init; }
+
+    /// <summary>At least <c>EnemiesN</c> enemies within <c>EnemiesD</c>.</summary>
+    public int EnemiesN { get; init; }
+
+    /// <inheritdoc cref="EnemiesN"/>
+    public int EnemiesD { get; init; }
+
+    /// <summary>At least <c>StatusN</c> enemies within <c>StatusD</c> carrying (or exposed to) this status.</summary>
+    public StatusKind Status { get; init; }
+
+    /// <inheritdoc cref="Status"/>
+    public int StatusN { get; init; }
+
+    /// <inheritdoc cref="Status"/>
+    public int StatusD { get; init; }
+
+    /// <summary>No ally within this distance (−1: not checked).</summary>
+    public int NoAllyWithin { get; init; } = -1;
+
+    /// <summary>An ally below half HP within this distance (−1: not checked).</summary>
+    public int WoundedAllyWithin { get; init; } = -1;
+}
+
+/// <summary>One quest upgrade: a stat boost or a replacement ability, from <c>At</c> stacks.</summary>
+/// <param name="At">Stacks needed (2 or 4).</param>
+/// <param name="Stat">Stat raised, or null.</param>
+/// <param name="Amount">Permille added to the stat (reach: 1000 = one hex, beyond the usual cap).</param>
+/// <param name="Slot">Ability slot replaced, or −1.</param>
+/// <param name="Ability">The replacement ability.</param>
+/// <param name="Text">What it does, for players.</param>
+public sealed record QuestUpgrade(int At, Stat? Stat, int Amount, int Slot, AbilityDef? Ability, string Text);
+
+/// <summary>v2 (D-059): a champion's quest — its way to grow, met by where it stands.</summary>
+/// <param name="Name">Short name.</param>
+/// <param name="Text">The condition, in one sentence.</param>
+/// <param name="When">The condition as data.</param>
+/// <param name="Upgrades">Upgrades by stacks.</param>
+public sealed record QuestDef(string Name, string Text, QuestCondition When, IReadOnlyList<QuestUpgrade> Upgrades);
+
 /// <summary>A status an effect can key a bonus on (v2).</summary>
 public enum StatusKind : byte
 {
@@ -358,6 +441,9 @@ public sealed record ChampionDef
     /// kit never applies it; a teammate has to.
     /// </summary>
     public StatusKind Wants { get; init; }
+
+    /// <summary>v2 (D-059): its quest, or null.</summary>
+    public QuestDef? Quest { get; init; }
 
     /// <summary>v2: how the champion is meant to be played, in one sentence (may be empty).</summary>
     public string Line { get; init; } = "";

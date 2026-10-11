@@ -74,7 +74,8 @@ public static class ViewBuilder
                 sigil = Game.SigilName(s.Beacons[b].Sigil),
                 durability = (int)s.Beacons[b].Durability,
             }).ToArray(),
-            hexes = Board.AllHexes.Select(h => new { q = h.Q, r = h.R, zone = Zone(h) }).ToArray(),
+            hexes = Board.AllHexes.Select(h => new { q = h.Q, r = h.R, zone = Zone(h), terrain = Board.TerrainAt(h).ToString().ToLowerInvariant() }).ToArray(),
+            questPow = g.Rules.QuestStackPow,
             board = new
             {
                 name = Board.Layout.Name,
@@ -154,6 +155,14 @@ public static class ViewBuilder
             openingDone = c.Has(ChampFlags.OpeningDone),
             poison = c.PoisonRounds > 0 ? new { amount = (int)c.PoisonAmount, rounds = (int)c.PoisonRounds } : null,
             status = Statuses(c),
+            quest = d.Quest is null ? null : new
+            {
+                name = d.Quest.Name,
+                text = d.Quest.Text,
+                stacks = (int)c.QuestStacks,
+                met = placed && g.QuestMet(s, slot),
+                upgrades = d.Quest.Upgrades.Select(u => new { at = u.At, text = u.Text, reached = c.QuestStacks >= u.At }).ToArray(),
+            },
             respawnIn = c.Presence == Presence.Dead && placed ? Math.Max(0, c.RespawnIn - 1) : 0,
             passive = new { name = d.Passive.Name, text = Describe.Passive(d.Passive) },
             abilities = Enumerable.Range(0, 4).Select(a => AbilityView(g, s, slot, a, ladder, singles, chainParts, SpellVisible(s, c.Team, humans))).ToArray(),
@@ -312,6 +321,7 @@ public static class ViewBuilder
         passive = new { name = d.Passive.Name, text = Describe.Passive(d.Passive) },
         line = d.Line,
         wants = d.Wants == StatusKind.None ? null : d.Wants.ToString().ToLowerInvariant(),
+        quest = d.Quest is null ? null : new { name = d.Quest.Name, text = d.Quest.Text, upgrades = d.Quest.Upgrades.Select(u => new { at = u.At, text = u.Text }).ToArray() },
         groups = g.Content.GroupsOf(index).Select(sy => sy.Id).ToArray(),
         abilities = d.Abilities.Select((ab, a) => new
         {

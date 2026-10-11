@@ -219,6 +219,7 @@ function card(c) {
         <div class="txt">${c.presence === 'dead' ? 'DEAD' : `${c.hp} / ${c.maxHp}`}</div></div>
       <div class="statline">POW <b>${pow}</b> · ARM <b>${c.stats.arm}</b> · RCH <b>${c.stats.rch}</b> · SPD <b>${c.stats.spd}</b></div>
       <div class="chips">${chips.join('')}</div>
+      ${c.quest ? questLine(c) : ''}
       <div class="abilities"></div>
     </div>
   </div>`);
@@ -233,6 +234,15 @@ function card(c) {
   node.querySelector('.portrait').addEventListener('mouseleave', hideTip);
   if (basics.length) node.addEventListener('click', e => { if (!e.target.closest('.ab')) selectBasic(c.slot); });
   return node;
+}
+
+// Quest (D-059): name, four stack pips, and whether it would be met if the round closed now.
+function questLine(c) {
+  const q = c.quest;
+  const pips = [1, 2, 3, 4].map(n => `<i class="qpip ${n <= q.stacks ? 'on' : ''} ${n === 2 || n === 4 ? 'spike' : ''}"></i>`).join('');
+  const next = q.upgrades.find(u => !u.reached);
+  return `<div class="quest ${q.met ? 'met' : ''}" title="${esc(q.text)}${next ? ` · next at ${next.at}: ${esc(next.text)}` : ' · fully upgraded'}">
+    <span class="qname">★ ${esc(q.name)}</span>${pips}${q.met ? '<span class="qmet">met</span>' : ''}</div>`;
 }
 
 function respawnText(c) { return c.respawnIn === 0 ? 'respawns at this round close' : `respawns in ${c.respawnIn + 1} round closes`; }
@@ -291,7 +301,9 @@ function renderMap() {
   for (const n of V.nexus) for (const [q, r] of n.hexes) nexusOf[key(q, r)] = n.team;
   for (const t of V.hexes) {
     const nx = nexusOf[key(t.q, t.r)];
-    const poly = el('polygon', { points: hexPath(t.q, t.r), class: `hex ${nx ? 'nexus' + nx : t.zone}` }, layers.tiles);
+    const poly = el('polygon', { points: hexPath(t.q, t.r), class: `hex ${nx ? 'nexus' + nx : t.zone} ${t.terrain !== 'plain' ? 't-' + t.terrain : ''}` }, layers.tiles);
+    if (t.terrain === 'hill') { const [hx, hy] = px(t.q, t.r); el('path', { d: `M${hx - 11},${hy + 6} L${hx - 3},${hy - 5} L${hx + 2},${hy + 1} L${hx + 6},${hy - 3} L${hx + 12},${hy + 6} Z`, class: 'hill-mark' }, layers.tiles); }
+    if (t.terrain === 'swamp') { const [sx, sy] = px(t.q, t.r); for (const dy of [-4, 2]) el('path', { d: `M${sx - 10},${sy + dy} q5,-4 10,0 t10,0`, class: 'swamp-mark' }, layers.tiles); }
     poly.addEventListener('mouseenter', e => hexHover(e, t.q, t.r));
     poly.addEventListener('mousemove', moveTip);
     poly.addEventListener('mouseleave', hideTip);
@@ -365,6 +377,10 @@ function drawToken(c) {
   if (sel && sel.champ === c.slot) cls.push('selected');
   if (isLastActor(c.slot)) cls.push('last-actor');
   const g = el('g', { class: cls.join(' '), 'data-slot': c.slot }, layers.tokens);
+  if (c.quest?.met && c.presence === 'board') {
+    const [qx, qy] = px(c.q, c.r);
+    el('text', { x: qx + HEX * 0.55, y: qy - HEX * 0.42, class: 'quest-star' }, g).textContent = '★';
+  }
   slideIn(g, c);
   el('circle', { cx, cy, r: HEX * 0.62, class: 'body' }, g);
   // The role, not the champion: every top looks the same, only the colour says whose.
@@ -503,6 +519,9 @@ function hexHover(e, q, r) {
   const zone = V.hexes.find(x => x.q === q && x.r === r)?.zone;
   const lines = [`<h4>Hex (${q},${r})</h4><div class="tt-sub">${nx ? `Nexus of team ${nx.team}` : zone}</div>`];
   if (nx) lines.push(`<div class="tt-row">${nx.hp}/${nx.max} HP. ${nx.open ? 'OPEN — can be damaged.' : 'Closed until team ' + nx.team + ' loses a home tower.'}</div>`);
+  const terr = V.hexes.find(x => x.q === q && x.r === r)?.terrain;
+  if (terr === 'hill') lines.push('<div class="tt-row"><b>Hill</b> — +1 reach while standing here.</div>');
+  if (terr === 'swamp') lines.push('<div class="tt-row"><b>Swamp</b> — a move into it ends here; starting a move here, you can step only one hex.</div>');
   showTip(e, lines.join(''));
 }
 
@@ -873,6 +892,7 @@ function draftView() {
         <div class="top">${portrait(d.id, d.glyph, taken ? taken.team : pick ? V.active : 'N')}<div><b>${esc(d.name)}</b>${taken ? ` <span class="${taken.team}-c taken-lbl">picked by ${taken.team}</span>` : ''}<div class="tt-dim">HP ${d.stats.hp} · POW ${(d.stats.pow / 1000).toFixed(2)} · ARM ${d.stats.arm} · RCH ${d.stats.rch} · SPD ${d.stats.spd}</div></div></div>
         ${d.line ? `<div class="dline">${esc(d.line)}</div>` : ''}
         <div class="dwants">${wantText(d)}</div>
+        ${d.quest ? `<div class="dquest">★ <b>${esc(d.quest.name)}</b>: ${esc(d.quest.text)} <span class="tt-dim">${d.quest.upgrades.map(u => `${u.at}: ${esc(u.text)}`).join(' · ')}</span></div>` : ''}
         <div class="dgroups">${d.groups.map(id => { const g = V.synergies.find(x => x.id === id); return `<span class="syn-chip small ${groupState(id, d.id)}" title="${esc(g.idea)} — ${esc(g.members.filter(m => m !== d.id).map(nameOf).join(', '))}">${esc(g.name)}${partnerNote(id, d.id)}</span>`; }).join('')}</div>
         ${d.abilities.map(x => `<div class="dab"><i style="background:var(--t${x.init})">${x.init}</i><span><b>${esc(x.name)}</b> · ${esc(x.effects)} <span class="tt-dim">· cd ${x.cooldown}${x.printedSigil ? ` · sigil ${x.printedSigil}` : ''}${x.slotSigil ? ` · slot ${x.slotSigil}` : ''}</span>${x.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>`).join('')}
         ${d.signature ? `<div class="dab"><i class="spell">✦</i><span><b>Summoner spell</b> <span class="tt-dim">· chosen after the draft · opening: ${esc(d.signature.name)}</span>${d.signature.casts ? ' <span class="cast-tag">opening attack</span>' : ''}</span></div>` : ''}
@@ -970,6 +990,8 @@ function showHelp() {
     <h3>Reading the screen</h3>Hover anything. Ability icons show initiative (big number), key, sigil and cooldown. Hovering an ability shows its reach (faint) and what it could hit (gold); on your turn, the hexes it can be played on. Hover a marker, a chain or Pass to preview the exact result. <b>Undo</b> takes back your last decision. <span style="color:var(--last)"><b>Magenta</b> always marks the last action</span> — the champion who acted (and its ability icon), the hexes it covered, a line to what it hit, where anyone moved from, and the numbers that changed.
     <h3>Champions and spells</h3>Each champion has three abilities (Q W E) and a fourth slot (R) for a <b>summoner spell</b>, chosen after the draft from a shared pool of eight — hidden from the opponent until the opening, never twice in a team. The R slot's opening belongs to the champion, not the spell.
     <h3>Opening</h3>Each champion plays one of its four openings, whose three instructions move your team into formation. Moves are strict: an opening that would walk off the board or into a champion, tower or wall can't be played. One opening per champion <b>casts</b>: "mid casts E" fires whatever ability your mid has in E, aimed at the nearest target. With nothing in reach it fizzles — and either way that ability starts round 1 on cooldown. Opening damage can't kill. If no opening fits, one champion steps one hex.
+    <h3>Quests</h3>Every champion has a quest — a place to be or a situation to be in when the round closes (the opening's end counts too). Each time it's met, the champion gains a stack (most 4); each stack adds power, and at 2 and 4 it gets an upgrade. Dying costs a stack. A ★ on a token means the quest would be met if the round closed now. Choosing whose quests to feed is your plan for the match.
+    <h3>Terrain</h3><b>Hills</b> give +1 reach. <b>Swamps</b> stop movement: a move into one ends there, and from one you can step only one hex.
     <h3>Statuses</h3><b>Root</b> can't move or be moved · <b>Burn</b> takes damage each time it acts · <b>Mark</b> the next hit deals more · <b>Exhaust</b> deals half damage · <b>Unstoppable</b> immune to root, push and pull · <b>Wound</b> healing halved · <b>Wall</b> an impassable hex. Towers are solid: nothing may enter them. Hover a status pip on the board or a chip on a card for the details.</div>`;
   document.getElementById('help-close').onclick = () => { helpOpen = false; renderOverlay(); };
 }

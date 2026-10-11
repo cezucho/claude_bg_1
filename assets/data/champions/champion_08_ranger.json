@@ -123,11 +123,61 @@
     }
   ],
   "signature": {
-    "name": "Fall Back",
+    "name": "Overwatch Post",
     "opening": [
-      "move bottom forward-left",
-      "move bottom right",
-      "move support forward-right"
+      "move bottom forward-right",
+      "move bottom forward-right",
+      "beacon bottom 0"
+    ]
+  },
+  "quest": {
+    "name": "Overwatch",
+    "text": "Ends the round on a hill.",
+    "when": {
+      "on": "Hill"
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "rch",
+        "amount": 1000,
+        "text": "+1 reach"
+      },
+      {
+        "at": 4,
+        "slot": 1,
+        "ability": {
+          "name": "Pin Shot",
+          "initiative": 2,
+          "cooldown": 2,
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 1100
+            },
+            {
+              "kind": "Root",
+              "amount": 3
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "spd",
+            40
+          ],
+          "moldDown": [
+            "vit",
+            40
+          ],
+          "opening": [
+            "move bottom forward-left",
+            "move support forward-left",
+            "beacon bottom 0"
+          ],
+          "rangeBonus": 1
+        },
+        "text": "Pin Shot reaches 1 further and roots for 3 halves"
+      }
     ]
   }
 }

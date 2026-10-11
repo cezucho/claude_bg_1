@@ -123,5 +123,54 @@
       "move support forward-left"
     ]
   },
-  "wants": "Rooted"
+  "wants": "Rooted",
+  "quest": {
+    "name": "Hold Position",
+    "text": "Ends the round without having moved, with an enemy within 2.",
+    "when": {
+      "stationary": true,
+      "enemiesN": 1,
+      "enemiesD": 2
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "pow",
+        "amount": 150,
+        "text": "+15% power"
+      },
+      {
+        "at": 4,
+        "slot": 0,
+        "ability": {
+          "name": "Snipe",
+          "initiative": 1,
+          "cooldown": 1,
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 1500
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "spd",
+            25
+          ],
+          "moldDown": [
+            "arm",
+            25
+          ],
+          "slotSigil": 2,
+          "opening": [
+            "cast top w",
+            "cast bottom q",
+            "move bottom forward-right"
+          ],
+          "rangeBonus": 1
+        },
+        "text": "Snipe reaches 1 further and hits harder"
+      }
+    ]
+  }
 }

@@ -141,9 +141,32 @@ letting synergy affect towers.
    which become power later. Here the only things that carry forward are nexus HP and stat
    molding, and molding depends on which abilities you use, not where you stand.
 
-The brainstorm itself — earning power from position, making positions stick, objectives on a
-timetable, and the measure — is in the 2026-10-11 conversation and summarised below once the
-owner chooses.
+**Owner's decisions (2026-10-11).**
+- **Champion quests: go.** Each champion has one positional task, met at round close, earning
+  stacks; at 2 and 4 stacks it gets a champion-specific upgrade, its power spike. After the
+  draft, a player chooses whose quests to feed: that is the win condition. The opening starts
+  them.
+- **Terrain: go, combined with quests.** Hills and swamps on the board; some quests use them.
+- **Lane farm: no.** It would feel unnatural.
+- **Neutral objectives** (the Dragon or Baron feeling, the highlight of a match): wanted, but not
+  copied from League. To be thought through later.
+- **Targets.** A good opening against a random one should win **60–65%** between equal drafts.
+  A good draft against a tragic one should win about **65/35**. *"A better player — who drafts
+  well, who knows how to play the opening — should have an easier endgame."*
+
+**Built and measured (2026-10-11).** Both targets are met:
+- a good opening beats a random one **61%**;
+- a great draft beats a tragic one **71.5%**.
+
+The levers were:
+- quests, with the opening's end counting as a quest check;
+- terrain;
+- one basic action per half instead of two;
+- +8% POW per quest stack;
+- openings that can reach quest spots;
+- an AI that plans its whole opening.
+
+Details in `design/v2-champions.md` → "Quests and terrain"; decisions D-058 to D-061.
 
 ## Idea parking lot
 

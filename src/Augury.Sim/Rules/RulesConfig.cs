@@ -44,6 +44,15 @@ public sealed record RulesConfig
     /// </summary>
     public int WantBonus { get; init; } = 1500;
 
+    /// <summary>
+    /// POW permille each quest stack adds (D-061): a lead in stacks is a lead in power, as gold is
+    /// in League. 0 turns it off.
+    /// </summary>
+    public int QuestStackPow { get; init; }
+
+    /// <summary>Stacks a quest met when the opening ends earns (D-061): how much a good opening starts the win condition.</summary>
+    public int OpeningQuestStacks { get; init; } = 1;
+
     /// <summary>The least extra damage a wanted-status hit adds, so cheap hits still pay off.</summary>
     public int WantFloor { get; init; } = 2;
 

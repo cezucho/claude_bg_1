@@ -12,12 +12,13 @@
   "beaconDurability": 2,
   "respawnBase": 1,
   "respawnEvery": 8,
-  "basicsPerHalf": 2,
+  "basicsPerHalf": 1,
   "towersBlock": true,
   "friendliesBlock": true,
   "nexusGateTowers": 1,
   "roundOneOpener": "B",
   "board": "field7",
   "wantBonus": 2000,
-  "wantFloor": 3
+  "wantFloor": 3,
+  "questStackPow": 80
 }

@@ -120,5 +120,57 @@
       "move top forward-left"
     ]
   },
-  "wants": "Rooted"
+  "wants": "Rooted",
+  "quest": {
+    "name": "Stalk",
+    "text": "Ends the round in the enemy half with no ally next to it.",
+    "when": {
+      "enemyHalf": true,
+      "noAllyWithin": 1
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "spd",
+        "amount": 1000,
+        "text": "+1 speed"
+      },
+      {
+        "at": 4,
+        "slot": 1,
+        "ability": {
+          "name": "Fang",
+          "initiative": 2,
+          "cooldown": 1,
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 1200
+            },
+            {
+              "kind": "Poison",
+              "amount": 3,
+              "rounds": 2
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "spd",
+            40
+          ],
+          "moldDown": [
+            "vit",
+            40
+          ],
+          "slotSigil": 1,
+          "opening": [
+            "move jungle forward-left",
+            "cast jungle q",
+            "cast jungle w"
+          ]
+        },
+        "text": "Fang poisons for 3 a round"
+      }
+    ]
+  }
 }

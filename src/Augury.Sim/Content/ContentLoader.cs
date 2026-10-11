@@ -149,6 +149,7 @@ public static class ContentLoader
                 Signature = signature,
                 Line = root.TryGetProperty("line", out JsonElement line) ? line.GetString() ?? "" : "",
                 Wants = root.TryGetProperty("wants", out JsonElement wants) ? Enum<StatusKind>(wants.GetString()!) : StatusKind.None,
+                Quest = root.TryGetProperty("quest", out JsonElement quest) ? ParseQuest(quest, where) : null,
             };
         }
         catch (ContentException)
@@ -159,6 +160,47 @@ public static class ContentLoader
         {
             throw new ContentException($"{where}: {e.Message}");
         }
+    }
+
+    private static QuestDef ParseQuest(JsonElement q, string where)
+    {
+        JsonElement w = q.GetProperty("when");
+        int Get(string key, int fallback = 0) => w.TryGetProperty(key, out JsonElement v) ? v.GetInt32() : fallback;
+        bool Flag(string key) => w.TryGetProperty(key, out JsonElement v) && v.GetBoolean();
+        var when = new QuestCondition
+        {
+            On = w.TryGetProperty("on", out JsonElement on) ? Enum<Terrain>(on.GetString()!) : null,
+            EnemyHalf = Flag("enemyHalf"),
+            River = Flag("river"),
+            Advanced = Flag("advanced"),
+            CentreTower = Flag("centreTower"),
+            Stationary = Flag("stationary"),
+            NextToFriendlyTower = Flag("nextToFriendlyTower"),
+            AlliesN = Get("alliesN"),
+            AlliesD = Get("alliesD"),
+            EnemiesN = Get("enemiesN"),
+            EnemiesD = Get("enemiesD"),
+            Status = w.TryGetProperty("status", out JsonElement st) ? Enum<StatusKind>(st.GetString()!) : StatusKind.None,
+            StatusN = Get("statusN"),
+            StatusD = Get("statusD"),
+            NoAllyWithin = Get("noAllyWithin", -1),
+            WoundedAllyWithin = Get("woundedAllyWithin", -1),
+        };
+
+        var upgrades = new List<QuestUpgrade>();
+        foreach (JsonElement u in q.GetProperty("upgrades").EnumerateArray())
+        {
+            int at = u.GetProperty("at").GetInt32();
+            if (at is not (2 or 4)) throw new ContentException($"{where}: quest upgrades come at 2 or 4 stacks.");
+            Stat? stat = u.TryGetProperty("stat", out JsonElement s) ? Enum<Stat>(s.GetString()!) : null;
+            int slot = u.TryGetProperty("slot", out JsonElement sl) ? sl.GetInt32() : -1;
+            AbilityDef? ability = u.TryGetProperty("ability", out JsonElement ab) ? ParseAbility(ab) : null;
+            if ((stat is null) == (ability is null)) throw new ContentException($"{where}: a quest upgrade is a stat or an ability.");
+            if (ability is not null && slot is < 0 or > 2) throw new ContentException($"{where}: an upgraded ability needs a slot 0–2.");
+            upgrades.Add(new QuestUpgrade(at, stat, u.TryGetProperty("amount", out JsonElement am) ? am.GetInt32() : 0, slot, ability, Str(u, "text")));
+        }
+
+        return new QuestDef(Str(q, "name"), Str(q, "text"), when, upgrades);
     }
 
     private static AbilityDef ParseAbility(JsonElement a)

@@ -135,5 +135,62 @@
       "beacon support 0",
       "move support left"
     ]
+  },
+  "quest": {
+    "name": "Bond",
+    "text": "Ends the round next to 2 or more allies, with an enemy within 2.",
+    "when": {
+      "alliesN": 2,
+      "alliesD": 1,
+      "enemiesN": 1,
+      "enemiesD": 2
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "vit",
+        "amount": 5000,
+        "text": "+5 max HP"
+      },
+      {
+        "at": 4,
+        "slot": 0,
+        "ability": {
+          "name": "Mend",
+          "initiative": 1,
+          "cooldown": 1,
+          "target": "Ally",
+          "effects": [
+            {
+              "kind": "Heal",
+              "power": 1400
+            },
+            {
+              "kind": "Cleanse"
+            },
+            {
+              "kind": "Shield",
+              "amount": 3
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "vit",
+            25
+          ],
+          "moldDown": [
+            "spd",
+            25
+          ],
+          "slotSigil": 1,
+          "opening": [
+            "move support forward-left",
+            "cast support q",
+            "beacon support 1"
+          ]
+        },
+        "text": "Mend heals more and shields 3"
+      }
+    ]
   }
 }

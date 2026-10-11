@@ -130,5 +130,74 @@
       "move support left",
       "beacon support 2"
     ]
+  },
+  "quest": {
+    "name": "Prophecy",
+    "text": "Ends the round with an enemy marked this round within 2.",
+    "when": {
+      "status": "Marked",
+      "statusN": 1,
+      "statusD": 2
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "rch",
+        "amount": 1000,
+        "text": "+1 reach"
+      },
+      {
+        "at": 4,
+        "slot": 2,
+        "ability": {
+          "name": "Revelation",
+          "initiative": 4,
+          "cooldown": 3,
+          "pattern": [
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              -1,
+              1
+            ]
+          ],
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 1700
+            },
+            {
+              "kind": "Mark",
+              "amount": 3
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "arm",
+            60
+          ],
+          "moldDown": [
+            "spd",
+            60
+          ],
+          "opening": [
+            "move support forward-left",
+            "move support forward-right",
+            "move bottom forward-left"
+          ]
+        },
+        "text": "Revelation marks for 3 and hits harder"
+      }
+    ]
   }
 }

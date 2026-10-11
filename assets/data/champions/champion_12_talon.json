@@ -119,5 +119,51 @@
       "beacon jungle 1"
     ]
   },
-  "wants": "Marked"
+  "wants": "Marked",
+  "quest": {
+    "name": "Deep Hunt",
+    "text": "Ends the round in the enemy half.",
+    "when": {
+      "enemyHalf": true
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "pow",
+        "amount": 150,
+        "text": "+15% power"
+      },
+      {
+        "at": 4,
+        "slot": 1,
+        "ability": {
+          "name": "Pounce",
+          "initiative": 2,
+          "cooldown": 1,
+          "target": "EmptyHex",
+          "effects": [
+            {
+              "kind": "Dash",
+              "amount": 4
+            }
+          ],
+          "scalesFrom": "spd",
+          "moldUp": [
+            "pow",
+            25
+          ],
+          "moldDown": [
+            "vit",
+            25
+          ],
+          "opening": [
+            "move jungle forward-right",
+            "move jungle forward-right",
+            "move top forward-right"
+          ]
+        },
+        "text": "Pounce leaps 4 and is ready every round"
+      }
+    ]
+  }
 }

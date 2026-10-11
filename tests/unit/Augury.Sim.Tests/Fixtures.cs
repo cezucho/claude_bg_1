@@ -19,7 +19,8 @@ internal static class Fixtures
     private static Game MakeV1()
     {
         Board.Use(BoardLayout.Classic);
-        RulesConfig rules = RulesConfig.LoadDefault() with { Board = "classic", TowersBlock = false };
+        // The v1 rules: two basics per half, no quest power (v2 changes those in rules_config.json).
+        RulesConfig rules = RulesConfig.LoadDefault() with { Board = "classic", TowersBlock = false, BasicsPerHalf = 2, QuestStackPow = 0 };
         return new Game(ContentLoader.LoadDirectory(V1Champions), rules);
     }
 

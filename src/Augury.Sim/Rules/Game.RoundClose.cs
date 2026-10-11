@@ -34,6 +34,8 @@ public sealed partial class Game
             c.Shield = 0;
             c.RootHalves = c.ExhaustHalves = c.UnstoppableHalves = 0;
             c.BurnAmount = c.BurnRounds = c.Mark = c.WoundRounds = 0;
+            c.Exposed = 0;
+            if (c.QuestStacks > 0) c.QuestStacks--;   // dying costs a quest stack (D-059: a check on snowballing)
             s.NexusHp[TeamIndex(c.Team)] -= Rules.KillSiege;
             _observer?.Died(i);
             Log(log, EventKind.Death, $"  ✝ {Name(s, i)} dies (respawn in {respawn}). NEXUS {c.Team} −{Rules.KillSiege} → {Math.Max(0, s.NexusHp[TeamIndex(c.Team)])}");
@@ -101,10 +103,15 @@ public sealed partial class Game
             Log(log, EventKind.Score, $"  Siege: {t}'s {towers} tower{(towers == 1 ? "" : "s")} fire at NEXUS {enemy} −{towers * Rules.TowerSiege} → {Math.Max(0, s.NexusHp[TeamIndex(enemy)])}");
         }
 
-        // 4. Upkeep.
+        // 4. Quests (D-059): every champion still standing that meets its quest gains a stack.
+        CheckQuests(ref s, log);
+
+        // 5. Upkeep.
         for (int i = 0; i < 10; i++)
         {
             ref Champion c = ref s.Champions[i];
+            c.Exposed = 0;
+            c.Flags &= ~ChampFlags.Moved;
             for (int a = 0; a < 4; a++)
             {
                 if (c.Cooldowns[a] > 0) c.Cooldowns[a]--;
@@ -131,7 +138,7 @@ public sealed partial class Game
 
         for (int i = 0; i < 10; i++) FirePassive(ref s, i, PassiveTrigger.OnRoundClose, -1, log);
 
-        // 5. Win check. If both fall together, the nexus with more left stands.
+        // 6. Win check. If both fall together, the nexus with more left stands.
         int a0 = s.NexusHp[0], b0 = s.NexusHp[1];
         Team leader = a0 == b0 ? Team.None : a0 > b0 ? Team.A : Team.B;
         if (a0 <= 0 || b0 <= 0)
@@ -154,5 +161,65 @@ public sealed partial class Game
         }
 
         return n;
+    }
+
+    private void CheckQuests(ref MatchState s, List<GameEvent>? log, int gain = 1)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            ref Champion c = ref s.Champions[i];
+            QuestDef? q = c.Def == 255 ? null : Def(c).Quest;
+            if (q is null || !c.OnBoard || c.Hp <= 0 || c.QuestStacks >= 4 || !QuestMet(s, i)) continue;
+            int before = c.QuestStacks;
+            int stacks = c.QuestStacks = (byte)Math.Min(4, before + gain);
+            string upgrades = string.Join("; ", q.Upgrades.Where(u => u.At > before && u.At <= stacks).Select(u => u.Text));
+            Log(log, EventKind.Heal, $"  ★ {Name(s, i)}: {q.Name} {stacks}/4{(upgrades.Length > 0 ? $" — UPGRADE: {upgrades}" : "")}");
+        }
+    }
+
+    /// <summary>True when the champion in <paramref name="slot"/> meets its quest right now (D-059).</summary>
+    public bool QuestMet(in MatchState s, int slot)
+    {
+        Champion c = s.Champions[slot];
+        QuestCondition? w = c.Def == 255 ? null : Def(c).Quest?.When;
+        if (w is null || !c.OnBoard) return false;
+        HexCoord at = c.Pos;
+        if (w.On is { } terrain && Board.TerrainAt(at) != terrain) return false;
+        int forward = c.Team == Team.A ? at.R : -at.R;
+        if (w.EnemyHalf && forward <= 0) return false;
+        if (w.River && at.R != 0) return false;
+        if (w.Advanced && forward < 0) return false;
+        if (w.CentreTower && (s.Towers[0].Owner != c.Team || HexCoord.Distance(s.Towers[0].Pos, at) != 1)) return false;
+        if (w.Stationary && c.Has(ChampFlags.Moved)) return false;
+        if (w.NextToFriendlyTower)
+        {
+            bool next = false;
+            for (int t = 0; t < 5; t++) next |= s.Towers[t].Owner == c.Team && HexCoord.Distance(s.Towers[t].Pos, at) == 1;
+            if (!next) return false;
+        }
+
+        int allies = 0, enemies = 0, status = 0;
+        bool allyClose = false, woundedClose = false;
+        for (int i = 0; i < 10; i++)
+        {
+            if (i == slot) continue;
+            Champion o = s.Champions[i];
+            if (!o.OnBoard) continue;
+            int d = HexCoord.Distance(o.Pos, at);
+            if (o.Team == c.Team)
+            {
+                if (w.AlliesN > 0 && d <= w.AlliesD) allies++;
+                if (w.NoAllyWithin >= 0 && d <= w.NoAllyWithin) allyClose = true;
+                if (w.WoundedAllyWithin >= 0 && d <= w.WoundedAllyWithin && o.Hp * 2 < MaxHp(o)) woundedClose = true;
+            }
+            else
+            {
+                if (w.EnemiesN > 0 && d <= w.EnemiesD) enemies++;
+                if (w.StatusN > 0 && d <= w.StatusD && BonusApplies(o, w.Status)) status++;
+            }
+        }
+
+        return allies >= w.AlliesN && enemies >= w.EnemiesN && status >= w.StatusN && !allyClose
+               && (w.WoundedAllyWithin < 0 || woundedClose);
     }
 }

@@ -126,9 +126,77 @@
   "signature": {
     "name": "Heat Haze",
     "opening": [
-      "move mid forward-left",
-      "beacon mid 2",
-      "move jungle forward-left"
+      "move mid forward-right",
+      "move mid forward-right",
+      "move mid forward-right"
+    ]
+  },
+  "quest": {
+    "name": "Riverfire",
+    "text": "Ends the round on the river row or beyond it.",
+    "when": {
+      "advanced": true
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "pow",
+        "amount": 150,
+        "text": "+15% power"
+      },
+      {
+        "at": 4,
+        "slot": 2,
+        "ability": {
+          "name": "Inferno",
+          "initiative": 4,
+          "cooldown": 3,
+          "pattern": [
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              -1,
+              3
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 2200
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "vit",
+            60
+          ],
+          "moldDown": [
+            "spd",
+            60
+          ],
+          "printedSigil": 2,
+          "opening": [
+            "move mid forward-right",
+            "move mid forward-left",
+            "move support forward-left"
+          ]
+        },
+        "text": "Inferno covers 5 hexes and burns hotter"
+      }
     ]
   }
 }

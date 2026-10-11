@@ -38,6 +38,13 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
 - **Summoner spells** come after the draft: give each of your champions one of eight spells
   (no spell twice in a team). The other team's spells stay hidden until the opening. A spell
   sits in slot R with a dashed gold border; slot R's opening is still the champion's own.
+- **Quests** (★ on each card): every champion has a positional task. When the round closes
+  (and when the opening ends), each champion meeting its quest gains a stack: four pips, each
+  worth +8% power, with upgrades at 2 and 4. A ★ on a token means its quest would be met right
+  now. Dying costs a stack. Choosing whose quests to feed is your plan for the match.
+- **Terrain**: hills (mountain marks) give +1 reach; swamps (wave marks) stop movement — a move
+  into one ends there, and from one you can step only one hex. Each half, each team now takes
+  **one** basic action.
 - **Statuses** show twice: as chips on the card (hover for the rule) and as lettered pips
   above the token — **R**oot, **B**urn, **M**ark, e**X**haust, **U**nstoppable, **W**ound,
   **P**oison. **Walls** are stone hexes on the map with the round closes they have left.

@@ -1,0 +1,116 @@
+
+SELF-PLAY — 100 matches, A = heuristic, B = heuristic, 273.4s
+  rules: nexus HP 60, kill siege 3, tower siege 1/round, tower HP 16, tower shot 2, defender 500
+
+  Results       A   48 %   B   51 %   draw    1 %
+  Endings       siege 63.0 %   direct nexus kill 37.0 %   round cap  0.0 %   comebacks 25.0 %
+  Decisions       205 per match with a real choice (both teams, after the draft)
+  Board         field7: 59 hexes; front lines 6 rows apart; towers solid
+  Contact       after the opening, each champion's nearest enemy is  1.9 hexes away on average
+  Abilities     resolved by initiative tier: 1 66 % · 2 20 % · 3  6 % · 4  8 %
+  Patterns      ready tier-3/4 abilities with a target on the ladder:  64 %
+  Rounds        mean  12.5   median 13   min 6   max 18
+  Per round     deaths 0.64   captures 0.49   resolutions  11.3   chains 0.54
+  Nexus open    in  100 % of matches, 42.6 % of decisions; hit in   98 % of matches (11.9 hits/match)
+  Quests        stacks earned by the opening: A 1.60 · B 1.93 per match
+  Synergy       payoff hits 10.1 per match · slams  1.2 per match
+  Basics        moves   48 %   attacks   52 %
+  Opening       team-openings hitting the fallback   33 %   (Opening #10 wants 10–25%); 1.1 champions left when it does
+  AI time       mean   13.2 ms   max   295.6 ms   (budget 1500 ms)
+
+  CHAMPIONS (win rate when picked; mirrors count once per side)
+    Tempest        80 %  (56 picks)  ▲ strong
+    Seer           76 %  (37 picks)  ▲ strong
+    Ember          71 %  (98 picks)  ▲ strong
+    Mortar         71 %  (80 picks)  ▲ strong
+    Anchor         67 %  (78 picks)  ▲ strong
+    Bastion        61 %  (74 picks)  ▲ strong
+    Lens           59 %  (61 picks)  ▲ strong
+    Briar          57 %  (49 picks)  ▲ strong
+    Gunner         42 %  (60 picks)  ▼ weak
+    Talon          30 %  (82 picks)  ▼ weak
+    Oriel          29 %  (89 picks)  ▼ weak
+    Ranger         28 %  (60 picks)  ▼ weak
+    Bulwark        26 %  (73 picks)  ▼ weak
+    Pyre           22 %  (83 picks)  ▼ weak
+    Viper          20 %  (20 picks)  ▼ weak
+
+  ACCEPTANCE CRITERIA (from the GDDs)
+    PASS  ladder opened in ≥70% of halves (Movement #12)          100 %
+    FAIL  halves ending by deliberate pass ≥50% (Sigils #14)       21 %
+    PASS  every match ends with a nexus falling (v2)              100 %
+    PASS  some matches are comebacks (Map #25, v2 reading)         25 %
+    PASS  chains occur in a minority of halves (Sigils #15)        28 %
+    PASS  basic attacks ≤80% of basics (Movement #11)              52 %
+    PASS  ≤16 ability resolutions per round (Ladder F5)            11.3
+    PASS  AI max decision ≤1500 ms                                295.6
+
+  CHAMPIONS IN THE MATCH (per match drafted; damage = HP + shield removed from enemy champions)
+    champion    win  mates   drag │  dealt  taken  heal  shld  tower │    K    D │ payof  slam │  abil  atk  move
+    Tempest    80 %   60 %   +20  │   34.5   39.8   0.0   0.0   16.9 │  0.9  1.1 │   0.0   2.1 │  17.6  2.9   3.3
+    Seer       76 %   62 %   +14  │   16.6   23.8   0.0   0.0    5.3 │  0.2  0.5 │   0.0   0.0 │  15.2  2.5   1.5
+    Ember      71 %   64 %    +7  │   16.4   43.3   0.0   0.0   24.1 │  0.5  1.1 │   0.3   0.0 │  11.0  2.1   2.8
+    Mortar     71 %   66 %    +5  │  105.0   21.7  15.2   0.0   17.1 │  2.6  0.3 │   6.3   0.0 │  16.9  8.8   0.3
+    Anchor     67 %   63 %    +4  │   25.8   30.1   0.0  20.8   11.5 │  0.8  0.4 │   1.1   0.0 │  10.6  2.7   2.6
+    Bastion    61 %   62 %    -1  │    7.6   18.7   8.1  58.6    3.6 │  0.0  0.2 │   0.0   0.0 │  15.8  0.2   0.6
+    Lens       59 %   61 %    -2  │   75.4   24.2   0.0   0.0   15.4 │  2.1  0.5 │   5.9   0.0 │  17.6  5.7   1.5
+    Briar      57 %   48 %    +9  │   15.9   35.7   0.0   0.0    7.9 │  0.4  0.5 │   0.0   0.0 │   7.1  0.9   2.4
+    Gunner     42 %   42 %    -1  │   37.6   50.9  15.4   0.0   18.8 │  1.0  1.2 │   0.6   0.0 │  15.3  1.1   2.3
+    Talon      30 %   34 %    -4  │   12.1   68.4   0.0   0.0   29.9 │  0.2  2.1 │   0.0   0.0 │  11.2  1.6   4.5
+    Oriel      29 %   34 %    -5  │    0.2   31.0  38.5  12.1    0.1 │  0.1  0.3 │   0.0   0.0 │  14.6  0.2   1.4
+    Ranger     28 %   35 %    -7  │   50.2   48.7  13.9   0.0   20.8 │  1.4  1.1 │   0.0   0.0 │  19.1  2.8   3.6
+    Bulwark    26 %   36 %   -10  │   11.0   28.7   0.0   0.0    7.1 │  0.2  0.4 │   0.0   0.0 │   7.8  0.3   2.6
+    Pyre       22 %   34 %   -12  │   33.4   44.1   5.8   0.0   10.3 │  1.1  1.1 │   0.0   0.0 │  14.3  4.3   2.7
+    Viper      20 %   39 %   -19  │   14.4   67.5   0.0   0.0   27.3 │  0.3  2.0 │   0.1   0.0 │  14.9  2.1   4.0
+    win = its team's win rate · mates = its teammates' usual win rate · drag = the difference, in points
+
+  QUESTS — best stacks reached, how often the upgrades at 2 and 4 came, and when (mean round)
+    Mortar    best  3.5   reached 2:  93 % (round  2.4)   reached 4:  79 % (round  5.0)   win  71 %
+    Bastion   best  2.9   reached 2:  78 % (round  7.1)   reached 4:  58 % (round  9.1)   win  61 %
+    Seer      best  3.2   reached 2:  92 % (round  4.2)   reached 4:  57 % (round  7.2)   win  76 %
+    Anchor    best  3.1   reached 2:  88 % (round  4.8)   reached 4:  56 % (round  7.6)   win  67 %
+    Viper     best  3.2   reached 2: 100 % (round  5.8)   reached 4:  50 % (round  8.9)   win  20 %
+    Gunner    best  2.9   reached 2:  83 % (round  3.8)   reached 4:  47 % (round  5.9)   win  42 %
+    Ranger    best  2.2   reached 2:  60 % (round  4.6)   reached 4:  35 % (round  7.0)   win  28 %
+    Oriel     best  2.5   reached 2:  75 % (round  4.3)   reached 4:  35 % (round  6.4)   win  29 %
+    Briar     best  2.2   reached 2:  57 % (round  5.4)   reached 4:  35 % (round  7.0)   win  57 %
+    Lens      best  1.8   reached 2:  49 % (round  5.3)   reached 4:  33 % (round  6.0)   win  59 %
+    Talon     best  2.6   reached 2:  77 % (round  6.1)   reached 4:  32 % (round  7.3)   win  30 %
+    Pyre      best  1.8   reached 2:  47 % (round  2.4)   reached 4:  30 % (round  4.7)   win  22 %
+    Ember     best  2.6   reached 2:  82 % (round  4.6)   reached 4:  28 % (round  8.6)   win  71 %
+    Bulwark   best  1.2   reached 2:  32 % (round  8.2)   reached 4:  25 % (round 10.3)   win  26 %
+    Tempest   best  1.9   reached 2:  59 % (round  3.0)   reached 4:  14 % (round  4.8)   win  80 %
+    (strongly negative: its team loses even with good teammates)
+
+  LANE — win rate against the enemy in the same role
+    Anchor    vs Briar 56 % (27)   vs Bulwark 73 % (51)
+    Bastion   vs Oriel 67 % (63)   vs Seer 27 % (11)
+    Briar     vs Anchor 44 % (27)   vs Bulwark 73 % (22)
+    Bulwark   vs Anchor 25 % (51)   vs Briar 27 % (22)
+    Ember     vs Talon 70 % (80)   vs Viper 78 % (18)
+    Gunner    vs Mortar 23 % (40)   vs Ranger 80 % (20)
+    Lens      vs Pyre 75 % (44)   vs Tempest 18 % (17)
+    Mortar    vs Gunner 78 % (40)   vs Ranger 65 % (40)
+    Oriel     vs Bastion 32 % (63)   vs Seer 23 % (26)
+    Pyre      vs Lens 23 % (44)   vs Tempest 21 % (39)
+    Ranger    vs Gunner 20 % (20)   vs Mortar 33 % (40)
+    Seer      vs Bastion 73 % (11)   vs Oriel 77 % (26)
+    Talon     vs Ember 29 % (80)   vs Viper 100 % (2)
+    Tempest   vs Lens 82 % (17)   vs Pyre 79 % (39)
+    Viper     vs Ember 22 % (18)   vs Talon  0 % (2)
+
+  DRAFT QUALITY — draft=great-tragic; synergy score = pairs of champions on one team that share a group
+    mean synergy  A 2.00   B 2.09   (max seen 5)
+    synergy edge (yours − theirs)   matches   your win rate
+    ≤ −3                                99       28 %
+    −1                                   1        0 %
+    +1                                   1      100 %
+    ≥ +3                                99       71 %
+    great drafter vs tragic drafter: great wins 71 % of 100 (sides alternate); average synergy edge +3.9 pairs
+    groups on a team (2+ members): matches, win rate
+      Crush                   49     80 %
+      Wildfire                97     72 %
+      Smother                 74     69 %
+      Called Shot             61     67 %
+      Lockdown                26     62 %
+

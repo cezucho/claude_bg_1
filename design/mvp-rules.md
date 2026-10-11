@@ -66,6 +66,22 @@ Agreed with the owner in `design/v2-direction.md`. Roster, spells and measuremen
   It can be stopped by a wall, a solid tower, a champion, the edge of the board, or a root.
   Unstoppable targets aren't moved and never slam.
 - **Speed is never below 1** (D-053). Molding can slow a champion but never strand it.
+- **Give and want** (D-056). Each champion's kit gives one status. Each champion **wants**
+  another as a trait: everything it deals to an enemy carrying that status hits ×2, at least +3.
+- **Exposure** (D-058). A status counts for its wanters until the round closes, even after it is
+  spent or has worn off. A tower defender carrying a status the attackers want doesn't count as
+  a defender.
+- **Basics** (D-061). **One basic action per team per half** (`basicsPerHalf` 1).
+- **Terrain** (D-060).
+  - **Hill:** +1 reach while standing on it (also beyond the usual cap of 3).
+  - **Swamp:** a basic move into a swamp ends there, and a champion starting its move in one
+    can step only one hex.
+- **Quests** (D-059, D-061).
+  - **When checked:** at every round close, after the siege, and once when the opening ends.
+    Every champion on the board and alive that meets its quest gains a stack, up to 4.
+  - **What a stack is worth:** **+8% POW** each (`questStackPow` 80). At 2 and 4 stacks the
+    champion's upgrades apply: a stat, or a replacement ability.
+  - **Losing stacks:** a death costs one stack.
 
 
 ## 1. Match flow

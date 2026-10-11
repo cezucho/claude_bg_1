@@ -158,7 +158,21 @@ public sealed partial class Game
     public AbilityDef? Kit(in Champion c, int slot)
     {
         ChampionDef d = Def(c);
-        if (slot < d.Abilities.Count) return d.Abilities[slot];
+        if (slot < d.Abilities.Count)
+        {
+            // A quest upgrade may replace the ability (D-059); the highest one reached wins.
+            AbilityDef ab = d.Abilities[slot];
+            if (d.Quest is not null)
+            {
+                foreach (QuestUpgrade u in d.Quest.Upgrades)
+                {
+                    if (u.Slot == slot && u.Ability is not null && c.QuestStacks >= u.At) ab = u.Ability;
+                }
+            }
+
+            return ab;
+        }
+
         if (slot == 3 && c.Spell < Content.Spells.Count) return Content.Spells[c.Spell];
         return null;
     }
@@ -178,7 +192,28 @@ public sealed partial class Game
     }
 
     /// <summary>Base plus drift, permille.</summary>
-    public int StatPermille(in Champion c, Stat s) => Def(c).Base(s) + c.Drift[(int)s];
+    public int StatPermille(in Champion c, Stat s) => Def(c).Base(s) + c.Drift[(int)s] + (s == Stat.Rch ? 0 : QuestStat(c, s))
+        + (s == Stat.Pow ? c.QuestStacks * Rules.QuestStackPow : 0);
+
+    /// <summary>Permille a champion's reached quest upgrades add to a stat (D-059).</summary>
+    public int QuestStat(in Champion c, Stat s)
+    {
+        QuestDef? q = Def(c).Quest;
+        if (q is null || c.QuestStacks == 0) return 0;
+        int sum = 0;
+        foreach (QuestUpgrade u in q.Upgrades)
+        {
+            if (u.Stat == s && c.QuestStacks >= u.At) sum += u.Amount;
+        }
+
+        return sum;
+    }
+
+    /// <summary>
+    /// Reach beyond the usual cap of 3: +1 on a hill (D-060), plus reach from quest upgrades.
+    /// </summary>
+    public int ExtraReach(in Champion c) =>
+        (c.OnBoard && Board.TerrainAt(c.Pos) == Terrain.Hill ? 1 : 0) + QuestStat(c, Stat.Rch) / 1000;
 
     /// <summary>Maximum HP.</summary>
     public int MaxHp(in Champion c) => Math.Max(1, (int)Arith.FloorDiv(StatPermille(c, Stat.Vit), 1000));
@@ -194,14 +229,14 @@ public sealed partial class Game
     public int Armour(in Champion c) => Math.Max(0, (int)Arith.FloorDiv(StatPermille(c, Stat.Arm), 1000));
 
     /// <summary>Reach in hexes, 1–3.</summary>
-    public int Reach(in Champion c) => Math.Clamp((int)Arith.FloorDiv(StatPermille(c, Stat.Rch), 1000), 1, 3);
+    public int Reach(in Champion c) => Math.Clamp((int)Arith.FloorDiv(StatPermille(c, Stat.Rch), 1000), 1, 3) + ExtraReach(c);
 
     /// <summary>Speed in hexes per basic move.</summary>
     /// <remarks>Never below 1 (D-053): molding may slow a champion but never strand it.</remarks>
     public int Speed(in Champion c) => Math.Max(1, (int)Arith.FloorDiv(StatPermille(c, Stat.Spd), 1000));
 
     /// <summary>Free-targeting range of an ability for this champion, 1–3.</summary>
-    public int Range(in Champion c, AbilityDef a) => Math.Clamp(Reach(c) + a.RangeBonus, 1, 3);
+    public int Range(in Champion c, AbilityDef a) => Math.Clamp(Reach(c) + a.RangeBonus, 1, 3 + ExtraReach(c));
 
     // ───────────────────────────── flow ─────────────────────────────
 
@@ -315,6 +350,9 @@ public sealed partial class Game
                 case Phase.Opening:
                     if (OpeningComplete(s, Team.A) && OpeningComplete(s, Team.B))
                     {
+                        // The opening ends with a quest check (D-061): a good opening starts the win condition.
+                        Log(log, EventKind.Phase, "The opening ends — quest check.");
+                        CheckQuests(ref s, log, Rules.OpeningQuestStacks);
                         TickHalf(ref s, log);   // the opening counts as a half for half-based statuses
                         StartRound(ref s, 1, log);
                         continue;
@@ -353,6 +391,12 @@ public sealed partial class Game
 
     private void StartRound(ref MatchState s, int round, List<GameEvent>? log)
     {
+        if (round == 1)
+        {
+            // The opening's moves don't count against a quest's "didn't move this round".
+            for (int i = 0; i < 10; i++) s.Champions[i].Flags &= ~ChampFlags.Moved;
+        }
+
         s.Round = round;
         s.RoundOpener = round == 1 ? _roundOneOpener : MatchState.Other(s.RoundOpener);
         s.Half = 1;

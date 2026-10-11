@@ -477,6 +477,7 @@ public sealed partial class Game
                         if (e.Amount >= v.PoisonAmount)
                         {
                             v.PoisonAmount = (byte)e.Amount;
+                            Expose(ref v, StatusKind.Poisoned);
                             v.PoisonRounds = (byte)e.Rounds;
                             Log(log, EventKind.Damage, $"  {Name(s, t)} is poisoned ({e.Amount}/round for {e.Rounds})");
                         }
@@ -504,6 +505,7 @@ public sealed partial class Game
                     bool fromSpawn = mover.Presence == Presence.InSpawn;
                     mover.Pos = hexTarget;
                     mover.Presence = Presence.OnBoard;
+                    mover.Flags |= ChampFlags.Moved;
                     Log(log, EventKind.Move, $"  {Name(s, slot)} {(e.Kind == EffectKind.Teleport ? (fromSpawn ? "teleports from spawn" : "teleports") : "dashes")} to {Fmt(hexTarget)}");
                     break;
 
@@ -518,6 +520,7 @@ public sealed partial class Game
                         }
 
                         v.RootHalves = (byte)Math.Max(v.RootHalves, e.Amount);
+                        Expose(ref v, StatusKind.Rooted);
                         Log(log, EventKind.Move, $"  {Name(s, t)} is ROOTED");
                     }
 
@@ -528,6 +531,7 @@ public sealed partial class Game
                     {
                         ref Champion v = ref s.Champions[t];
                         v.BurnAmount = (byte)Math.Max(v.BurnAmount, e.Amount);
+                        Expose(ref v, StatusKind.Burning);
                         v.BurnRounds = (byte)Math.Max(v.BurnRounds, e.Rounds);
                         Log(log, EventKind.Damage, $"  {Name(s, t)} is BURNING ({e.Amount} each time it acts, {e.Rounds} rounds)");
                     }
@@ -539,6 +543,7 @@ public sealed partial class Game
                     {
                         ref Champion v = ref s.Champions[t];
                         v.Mark = (byte)Math.Max(v.Mark, e.Amount);
+                        Expose(ref v, StatusKind.Marked);
                         Log(log, EventKind.Damage, $"  {Name(s, t)} is MARKED (+{e.Amount} on the next hit)");
                     }
 
@@ -553,6 +558,7 @@ public sealed partial class Game
                     {
                         if (s.Champions[t].Rooted || s.Champions[slot].Rooted) continue;
                         (s.Champions[slot].Pos, s.Champions[t].Pos) = (s.Champions[t].Pos, s.Champions[slot].Pos);
+                        s.Champions[slot].Flags |= ChampFlags.Moved;
                         Log(log, EventKind.Move, $"  {Name(s, slot)} and {Name(s, t)} swap places");
                     }
 
@@ -586,6 +592,7 @@ public sealed partial class Game
                         v.Mark = 0;
                         v.ExhaustHalves = 0;
                         v.WoundRounds = 0;
+                        v.Exposed = 0;
                         if (any) Log(log, EventKind.Heal, $"  {Name(s, t)} is cleansed");
                     }
 
@@ -596,6 +603,7 @@ public sealed partial class Game
                     {
                         ref Champion v = ref s.Champions[t];
                         v.ExhaustHalves = (byte)Math.Max(v.ExhaustHalves, e.Amount);
+                        Expose(ref v, StatusKind.Exhausted);
                         Log(log, EventKind.Damage, $"  {Name(s, t)} is EXHAUSTED (half damage)");
                     }
 
@@ -692,7 +700,11 @@ public sealed partial class Game
         return extra;
     }
 
-    private static bool BonusApplies(in Champion t, StatusKind k) => k switch
+    /// <summary>
+    /// True when the target carries the status now, or had it applied this round (D-058): a status
+    /// counts for its wanters until the round closes, so a spent mark or a broken root still pays.
+    /// </summary>
+    private static bool BonusApplies(in Champion t, StatusKind k) => k != StatusKind.None && ((t.Exposed & (1 << (int)k)) != 0 || k switch
     {
         StatusKind.Rooted => t.Rooted,
         StatusKind.Burning => t.Burning,
@@ -700,7 +712,23 @@ public sealed partial class Game
         StatusKind.Marked => t.Mark > 0,
         StatusKind.Exhausted => t.ExhaustHalves > 0,
         _ => false,
-    };
+    });
+
+    private static void Expose(ref Champion v, StatusKind k) => v.Exposed |= (byte)(1 << (int)k);
+
+    /// <summary>True when some champion of <paramref name="team"/> wants a status <paramref name="c"/> carries.</summary>
+    private bool WantedBy(in MatchState s, Team team, in Champion c)
+    {
+        int first = MatchState.FirstSlot(team);
+        for (int i = first; i < first + 5; i++)
+        {
+            if (s.Champions[i].Def == 255) continue;
+            StatusKind w = Def(s.Champions[i]).Wants;
+            if (w != StatusKind.None && BonusApplies(c, w)) return true;
+        }
+
+        return false;
+    }
 
     private void BurnOnAct(ref MatchState s, int slot, List<GameEvent>? log)
     {
@@ -821,7 +849,8 @@ public sealed partial class Game
         for (int i = 0; i < 10; i++)
         {
             Champion c = s.Champions[i];
-            if (c.Team == defending && c.OnBoard && hexes.Any(h => HexCoord.Distance(h, c.Pos) <= 1)) defenders++;
+            // A defender carrying a status the attackers want doesn't count (D-058): synergy reaches the towers.
+            if (c.Team == defending && c.OnBoard && hexes.Any(h => HexCoord.Distance(h, c.Pos) <= 1) && !WantedBy(s, attacker, c)) defenders++;
         }
 
         if (ignoreDefenders) defenders = 0;

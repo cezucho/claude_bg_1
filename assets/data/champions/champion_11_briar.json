@@ -126,12 +126,81 @@
     }
   ],
   "signature": {
-    "name": "Overgrowth",
+    "name": "Into the Thicket",
     "opening": [
       "move top forward-left",
-      "move top right",
-      "move jungle forward-right"
+      "move top forward-left",
+      "move jungle forward-left"
     ]
   },
-  "wants": "Poisoned"
+  "wants": "Poisoned",
+  "quest": {
+    "name": "Overgrowth",
+    "text": "Ends the round in a swamp, with an enemy within 2.",
+    "when": {
+      "on": "Swamp",
+      "enemiesN": 1,
+      "enemiesD": 2
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "vit",
+        "amount": 5000,
+        "text": "+5 max HP"
+      },
+      {
+        "at": 4,
+        "slot": 2,
+        "ability": {
+          "name": "Bloom",
+          "initiative": 4,
+          "cooldown": 3,
+          "pattern": [
+            [
+              -1,
+              1
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 2600
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "vit",
+            60
+          ],
+          "moldDown": [
+            "rch",
+            60
+          ],
+          "opening": [
+            "move top forward-right",
+            "move top forward-right",
+            "move mid forward-left"
+          ]
+        },
+        "text": "Bloom hits much harder"
+      }
+    ]
+  }
 }

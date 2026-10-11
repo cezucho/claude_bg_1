@@ -90,7 +90,10 @@ public enum ChampFlags : byte
     BasicUsed = 4,
 
     /// <summary>Has played its opening ability (or taken the fallback).</summary>
-    OpeningDone = 8
+    OpeningDone = 8,
+
+    /// <summary>v2: moved itself this round (basic move, dash, teleport, swap). Quests read it.</summary>
+    Moved = 16
 }
 
 /// <summary>Five stat drifts, indexed by <see cref="Stat"/>.</summary>
@@ -172,6 +175,15 @@ public struct Champion
 
     /// <summary>v2: rounds of halved healing left.</summary>
     public byte WoundRounds;
+
+    /// <summary>
+    /// v2 (D-058): statuses applied to it this round, one bit per <c>StatusKind</c>. A status counts
+    /// for its wanters until the round closes, even after it is spent or has worn off.
+    /// </summary>
+    public byte Exposed;
+
+    /// <summary>v2 (D-059): quest stacks, 0–4. Upgrades at 2 and 4.</summary>
+    public byte QuestStacks;
 
     /// <summary>True while rooted.</summary>
     public readonly bool Rooted => RootHalves > 0;

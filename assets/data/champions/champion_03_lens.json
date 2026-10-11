@@ -120,9 +120,73 @@
     "name": "Vantage",
     "opening": [
       "move mid forward-left",
-      "move jungle forward-left",
-      "beacon jungle 2"
+      "move mid forward-left",
+      "beacon mid 2"
     ]
   },
-  "wants": "Burning"
+  "wants": "Burning",
+  "quest": {
+    "name": "Vantage",
+    "text": "Ends the round on a hill.",
+    "when": {
+      "on": "Hill"
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "rch",
+        "amount": 1000,
+        "text": "+1 reach"
+      },
+      {
+        "at": 4,
+        "slot": 2,
+        "ability": {
+          "name": "Lance",
+          "initiative": 3,
+          "cooldown": 1,
+          "pattern": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              4
+            ]
+          ],
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 2000
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "rch",
+            30
+          ],
+          "moldDown": [
+            "vit",
+            60
+          ],
+          "printedSigil": 2,
+          "opening": [
+            "move mid forward-left",
+            "cast mid e",
+            "move mid back-right"
+          ]
+        },
+        "text": "Lance pierces 4 hexes and hits harder"
+      }
+    ]
+  }
 }

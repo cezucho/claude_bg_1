@@ -126,5 +126,70 @@
       "beacon bottom 1"
     ]
   },
-  "wants": "Burning"
+  "wants": "Burning",
+  "quest": {
+    "name": "Dig In",
+    "text": "Ends the round without having moved, with 2 or more enemies within 3.",
+    "when": {
+      "stationary": true,
+      "enemiesN": 2,
+      "enemiesD": 3
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "rch",
+        "amount": 1000,
+        "text": "+1 reach"
+      },
+      {
+        "at": 4,
+        "slot": 2,
+        "ability": {
+          "name": "Barrage",
+          "initiative": 4,
+          "cooldown": 3,
+          "pattern": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              -1,
+              3
+            ],
+            [
+              -1,
+              4
+            ]
+          ],
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 2700
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "arm",
+            60
+          ],
+          "moldDown": [
+            "vit",
+            60
+          ],
+          "opening": [
+            "move support forward-left",
+            "move bottom right",
+            "move mid forward-right"
+          ]
+        },
+        "text": "Barrage hits much harder"
+      }
+    ]
+  }
 }

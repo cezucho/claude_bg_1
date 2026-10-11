@@ -120,5 +120,54 @@
       "move bottom forward-left"
     ]
   },
-  "wants": "Exhausted"
+  "wants": "Exhausted",
+  "quest": {
+    "name": "Spreading Flames",
+    "text": "Ends the round with a burning enemy within 2.",
+    "when": {
+      "status": "Burning",
+      "statusN": 1,
+      "statusD": 2
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "pow",
+        "amount": 150,
+        "text": "+15% power"
+      },
+      {
+        "at": 4,
+        "slot": 0,
+        "ability": {
+          "name": "Kindle",
+          "initiative": 1,
+          "cooldown": 1,
+          "effects": [
+            {
+              "kind": "Burn",
+              "amount": 3,
+              "rounds": 2
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "spd",
+            25
+          ],
+          "moldDown": [
+            "arm",
+            25
+          ],
+          "slotSigil": 1,
+          "opening": [
+            "move jungle forward-right",
+            "move jungle forward-right",
+            "cast jungle q"
+          ]
+        },
+        "text": "Kindle burns for 3"
+      }
+    ]
+  }
 }

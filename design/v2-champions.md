@@ -505,16 +505,101 @@ pair, and many champions combo'd with themselves: Ember both burned and paid off
        and a root lasts a round.
      - So a "5-pair" mark draft can lose 0–30 to a "2-pair" fire draft.
 
+## Quests and terrain: the opening shapes the endgame (2026-10-11)
+
+**The owner's goal** (`design/v2-direction.md`): after the draft, choose a strategy; a good
+opening starts fulfilling it, and between equal drafts the better opening should make the endgame
+easier. Targets: a good opening against a random one about **60–65%**; a good draft against a
+tragic one about **65/35**.
+
+### What was built
+
+- **Quests (D-059).**
+  - Every champion has a positional task, met at round close, and **the end of the opening
+    counts too** (D-061).
+  - Each time it's met the champion gains a stack, up to 4. Each stack adds **+8% POW**, so a
+    lead in stacks is a lead in power, as gold is in League.
+  - At **2 stacks** a stat upgrade; at **4** a stronger version of one ability.
+  - **Dying costs a stack**, a check on snowballing.
+- **Terrain (D-060)** on Field 7, mirror-symmetric:
+  - **six hills** (+1 reach): a vantage hill on each side of the centre in each half, and one at
+    each end of the river row;
+  - **six swamps** (a move into one ends there; from one you step only one hex): beside the centre
+    tower and two in each jungle.
+- **One basic action per half** instead of two (D-061). With two, any position was reachable
+  within a round, so no formation lasted long enough to matter.
+- **Openings that reach quest spots.** Lens and Ranger can open onto a hill, Briar into a swamp,
+  and Pyre to the river.
+- **The AI plans its opening.** It plays out the rest of the opening for each candidate play
+  before choosing.
+- **Dependable synergy (D-058).**
+  - A status counts for its wanters until the round closes, even after a mark is spent or a root
+    wears off.
+  - A tower defender carrying a status the attackers want doesn't count as a defender.
+
+### The quests
+
+| Champion | Role | Quest | Upgrades |
+|---|---|---|---|
+| **Anchor** | Top | Anchor Point — Ends the round next to an enemy champion. | 2: +6 max HP · 4: Chain Hook reaches 1 further and roots for 3 halves |
+| **Ember** | Jungle | Spreading Flames — Ends the round with a burning enemy within 2. | 2: +15% power · 4: Kindle burns for 3 |
+| **Lens** | Mid | Vantage — Ends the round on a hill. | 2: +1 reach · 4: Lance pierces 4 hexes and hits harder |
+| **Oriel** | Support | Bond — Ends the round next to 2 or more allies, with an enemy within 2. | 2: +5 max HP · 4: Mend heals more and shields 3 |
+| **Bulwark** | Top | Hold the Line — Ends the round next to the centre tower while its team holds it. | 2: +1 armour · 4: Rampart walls stand for 3 rounds · 4: Shove pushes 3 |
+| **Viper** | Jungle | Stalk — Ends the round in the enemy half with no ally next to it. | 2: +1 speed · 4: Fang poisons for 3 a round |
+| **Tempest** | Mid | Eye of the Storm — Ends the round with 2 or more enemies within 2. | 2: +15% power · 4: Gust pushes 3 and slams for 4 |
+| **Ranger** | Bottom | Overwatch — Ends the round on a hill. | 2: +1 reach · 4: Pin Shot reaches 1 further and roots for 3 halves |
+| **Gunner** | Bottom | Hold Position — Ends the round without having moved, with an enemy within 2. | 2: +15% power · 4: Snipe reaches 1 further and hits harder |
+| **Bastion** | Support | Guardian — Ends the round next to an ally below half HP. | 2: +5 max HP · 4: Aegis shields 8 |
+| **Briar** | Top | Overgrowth — Ends the round in a swamp, with an enemy within 2. | 2: +5 max HP · 4: Bloom hits much harder |
+| **Talon** | Jungle | Deep Hunt — Ends the round in the enemy half. | 2: +15% power · 4: Pounce leaps 4 and is ready every round |
+| **Pyre** | Mid | Riverfire — Ends the round on the river row or beyond it. | 2: +15% power · 4: Inferno covers 5 hexes and burns hotter |
+| **Mortar** | Bottom | Dig In — Ends the round without having moved, with 2 or more enemies within 3. | 2: +1 reach · 4: Barrage hits much harder |
+| **Seer** | Support | Prophecy — Ends the round with an enemy marked this round within 2. | 2: +1 reach · 4: Revelation marks for 3 and hits harder |
+
+### Results
+
+The good opening is the planning AI; the random opening is the same AI with its opening played
+at random. All matches use equal-strength play after the opening, and sides alternate.
+
+| Step | Good opening wins | Opening stacks (good vs random) |
+|---|---|---|
+| Before quests and terrain (2026-10-11) | 48.5% | — |
+| + quests, terrain, dependable synergy | 52% | 1.7 vs 1.2 |
+| + quest check at the end of the opening | 48.5% | — |
+| + openings that reach quest spots, AI plans its opening | 49.5% | 2.2 vs 1.0 |
+| + one basic action per half | 54.5% | 2.2 vs 1.0 |
+| + 6–10% POW per stack | 57% | — |
+| **+ 8% POW per stack (shipped)** | **61%**, the same on both sides | 2.2 vs 1.0 |
+| 2 stacks for the opening instead of 1 | 60.5% | not worth it |
+
+| Shipped rules (2026-10-11) | |
+|---|---|
+| Great draft vs tragic draft | **71.5%** (200 matches) |
+| Rounds per match | 12.4 (6–18) |
+| Endings | siege 62–80%, direct nexus kill 20–38% |
+| Comebacks | 16–26% |
+| Side | A wins 54.5% with random drafts |
+| AI decision time | max 514 ms (budget 1,500) |
+| Quests reaching 4 stacks | 17–62% of matches by champion, around rounds 6–9; reaching 2: 36–91% |
+
+**Reading it.**
+- Both of the owner's targets are met.
+- **Mobility was the hidden blocker.** With two moves a half, a bad opening could simply walk to
+  the right places in round 1.
+- **The stacks needed to be worth something on their own.** A lead of one or two stacks only
+  matters if each stack is power.
+- **To watch:**
+  - Side A now wins 54.5% (team A places first in the opening; B opens round 1).
+  - The draft effect overshoots slightly (71.5% against a 65% target).
+  - Champion win rates need a fresh balance pass once the quest numbers settle.
+
 ## Open questions for the owner
 
-1. **How should synergy reach 65/35?** Options, roughly in order of how much they change the game:
-   - **Make the weak pairs as reliable as Wildfire.** Marks last a round instead of being spent
-     by the first hit, and roots last longer. Cheap, and probably worth +3–5 points.
-   - **Let synergy reach the objectives.** For example, an enemy carrying a status your team
-     wants doesn't count as a tower defender. Draft choices then move towers, which decide
-     matches.
-   - **Make fights matter more.** A kill costs the nexus more than 3. This changes the pace of
-     the whole game.
-2. **Spells.** Ignite and Exhaust give every team burn and exhaust, which dilutes the draft.
-   Should spells stay generic, or be removed from the give/want web?
-3. The opening fallback on Field 7 is still open.
+1. **Play it.** The numbers say a good opening and a good draft now pay off. Whether it *feels*
+   like fulfilling a strategy can only be judged at the table. Do the quests read clearly, and
+   do the stars on the board help?
+2. **Neutral objectives** (the Dragon and Baron feeling): parked, as you said. Quests and terrain
+   give them a natural home, for example a shrine on a contested hill.
+3. **One basic action per half** changes the pace: fewer moves, more weight on each. Does it
+   feel too slow?

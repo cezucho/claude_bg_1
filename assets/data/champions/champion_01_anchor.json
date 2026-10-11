@@ -135,5 +135,61 @@
       "move top forward-left"
     ]
   },
-  "wants": "Marked"
+  "wants": "Marked",
+  "quest": {
+    "name": "Anchor Point",
+    "text": "Ends the round next to an enemy champion.",
+    "when": {
+      "enemiesN": 1,
+      "enemiesD": 1
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "vit",
+        "amount": 6000,
+        "text": "+6 max HP"
+      },
+      {
+        "at": 4,
+        "slot": 1,
+        "ability": {
+          "name": "Chain Hook",
+          "initiative": 2,
+          "cooldown": 2,
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 1100
+            },
+            {
+              "kind": "Displace",
+              "amount": -1
+            },
+            {
+              "kind": "Root",
+              "amount": 3
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "arm",
+            25
+          ],
+          "moldDown": [
+            "spd",
+            25
+          ],
+          "slotSigil": 0,
+          "opening": [
+            "move top forward-right",
+            "move top forward-right",
+            "cast top w"
+          ],
+          "rangeBonus": 1
+        },
+        "text": "Chain Hook reaches 1 further and roots for 3 halves"
+      }
+    ]
+  }
 }

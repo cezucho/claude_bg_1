@@ -47,6 +47,7 @@ public sealed partial class Game
         int speed = Speed(c);
         var result = new List<HexCoord>();
         if (speed <= 0 || c.Rooted) return result;
+        if (Board.TerrainAt(c.Pos) == Terrain.Swamp) speed = 1;   // stuck in the mud (D-060)
 
         var seen = new HashSet<HexCoord> { c.Pos };
         var frontier = new List<HexCoord> { c.Pos };
@@ -67,8 +68,8 @@ public sealed partial class Game
                         continue;
                     }
 
-                    next.Add(to);
                     result.Add(to);
+                    if (Board.TerrainAt(to) != Terrain.Swamp) next.Add(to);   // a move into a swamp ends there
                 }
             }
 
@@ -144,7 +145,7 @@ public sealed partial class Game
         bool entering = c.Presence == Presence.InSpawn;
         c.Pos = cmd.Target.Hex;
         c.Presence = Presence.OnBoard;
-        c.Flags |= ChampFlags.BasicUsed;
+        c.Flags |= ChampFlags.BasicUsed | ChampFlags.Moved;
         Team team = c.Team;
         s.BasicsTaken[TeamIndex(team)]++;
         Log(log, EventKind.Basic, $"{Name(s, cmd.Champion)} {(entering ? "enters play at" : "moves to")} {Fmt(cmd.Target.Hex)}");

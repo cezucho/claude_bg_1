@@ -99,7 +99,7 @@ public static class Chronicle
             {
                 w.WriteLine();
                 w.WriteLine("OPENING");
-                foreach (GameEvent e in log.Skip(logStart).Where(e => e.Kind == EventKind.Opening && !e.Text.StartsWith("  ") || e.Text.Contains("casts (opening)") || e.Text.Contains("fizzles") || e.Text.Contains("ROOTED") || e.Text.Contains("BURNING") || e.Text.Contains("MARKED")))
+                foreach (GameEvent e in log.Skip(logStart).Where(e => e.Kind == EventKind.Opening && !e.Text.StartsWith("  ") || e.Text.Contains("casts (opening)") || e.Text.Contains("fizzles") || e.Text.Contains("ROOTED") || e.Text.Contains("BURNING") || e.Text.Contains("MARKED") || e.Text.Contains("★")))
                 {
                     w.WriteLine("  " + e.Text.Trim());
                 }
@@ -113,7 +113,7 @@ public static class Chronicle
             {
                 w.WriteLine();
                 w.WriteLine($"ROUND {round}");
-                foreach (GameEvent e in log.Skip(logStart).Where(e => e.Text.Contains("CAPTURES") || e.Text.Contains("PAYOFF") || e.Text.Contains("SLAMS") || e.Text.Contains("NEXUS") && e.Kind == EventKind.Structure || e.Kind == EventKind.MatchOver || (e.Kind == EventKind.AbilityResolved && SpellCast(game, e.Text))))
+                foreach (GameEvent e in log.Skip(logStart).Where(e => e.Text.Contains("CAPTURES") || e.Text.Contains("★") || e.Text.Contains("PAYOFF") || e.Text.Contains("SLAMS") || e.Text.Contains("NEXUS") && e.Kind == EventKind.Structure || e.Kind == EventKind.MatchOver || (e.Kind == EventKind.AbilityResolved && SpellCast(game, e.Text))))
                 {
                     w.WriteLine("  " + e.Text.Trim());
                 }

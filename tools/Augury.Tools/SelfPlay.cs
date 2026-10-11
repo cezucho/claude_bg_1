@@ -18,7 +18,7 @@ public static class SelfPlay
         public int Matches, WinsA, WinsB, Draws, Nexus, Siege, Cap, Comebacks;
         public long Rounds, Halves, HalvesOpened, HalvesByPass, Resolutions, Chains, Deaths, Captures;
         public long BasicMoves, BasicAttacks, OpeningFallbackTeams, OpeningFallbackChamps, Decisions, PlayerDecisions, NexusOpenDecisions, MatchesNexusOpened, NexusHits, MatchesNexusHit;
-        public long PatternChecks, PatternLive, GapSamples, GapTotal, Payoffs, Slams;
+        public long PatternChecks, PatternLive, GapSamples, GapTotal, Payoffs, Slams, OpeningStacksA, OpeningStacksB;
         public readonly long[] ResolvedByTier = new long[5];
         public double AiMsTotal, AiMsMax;
         public long AiCalls;
@@ -164,8 +164,11 @@ public static class SelfPlay
             Phase phaseBefore = s.Phase;
             tally.Command(c);
             game.Apply(ref s, c, log, tally);
+            tally.Track(s);
             if (phaseBefore == Phase.Opening && s.Phase != Phase.Opening)
             {
+                for (int i = 0; i < 5; i++) st.OpeningStacksA += s.Champions[i].QuestStacks;
+                for (int i = 5; i < 10; i++) st.OpeningStacksB += s.Champions[i].QuestStacks;
                 // How close the teams stand when the opening ends: each champion's distance
                 // to its nearest enemy.
                 for (int i = 0; i < 10; i++)
@@ -323,6 +326,7 @@ public static class SelfPlay
         Console.WriteLine($"  Rounds        mean {st.Rounds / m,5:F1}   median {st.RoundCounts[st.RoundCounts.Count / 2]}   min {st.RoundCounts[0]}   max {st.RoundCounts[^1]}");
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");
         Console.WriteLine($"  Nexus open    in {st.MatchesNexusOpened / m,6:P0} of matches, {st.NexusOpenDecisions / (double)st.Decisions,6:P1} of decisions; hit in {st.MatchesNexusHit / m,6:P0} of matches ({st.NexusHits / m:F1} hits/match)");
+        Console.WriteLine($"  Quests        stacks earned by the opening: A {st.OpeningStacksA / m,4:F2} · B {st.OpeningStacksB / m,4:F2} per match");
         Console.WriteLine($"  Synergy       payoff hits {st.Payoffs / m,4:F1} per match · slams {st.Slams / m,4:F1} per match");
         Console.WriteLine($"  Basics        moves {st.BasicMoves / (double)(st.BasicMoves + st.BasicAttacks),6:P0}   attacks {st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks),6:P0}");
         Console.WriteLine($"  Opening       team-openings hitting the fallback {st.OpeningFallbackTeams / (2 * m),6:P0}   (Opening #10 wants 10–25%); {(double)st.OpeningFallbackChamps / Math.Max(1, st.OpeningFallbackTeams):0.0} champions left when it does");

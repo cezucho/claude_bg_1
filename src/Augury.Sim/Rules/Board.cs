@@ -18,6 +18,7 @@ public static class Board
     private static BoardLayout _layout = BoardLayout.Classic;
     private static bool[] _playable = Index(BoardLayout.Classic);
     private static HexCoord[] _mirrored = BoardLayout.Classic.Hexes.Select(Hex.Mirror).ToArray();
+    private static Terrain[] _terrain = TerrainIndex(BoardLayout.Classic);
 
     /// <summary>The layout in use.</summary>
     public static BoardLayout Layout => _layout;
@@ -31,6 +32,7 @@ public static class Board
         layout.Validate(layout.Name);
         _playable = Index(layout);
         _mirrored = layout.Hexes.Select(Hex.Mirror).ToArray();
+        _terrain = TerrainIndex(layout);
         _layout = layout;
     }
 
@@ -42,6 +44,18 @@ public static class Board
 
     /// <summary>All playable hexes, in a fixed order (row, then column).</summary>
     public static HexCoord[] AllHexes => _layout.Hexes;
+
+    /// <summary>v2 (D-060): the terrain of a hex; off the board is plain.</summary>
+    public static Terrain TerrainAt(HexCoord h) =>
+        h.Q >= -Span && h.Q <= Span && h.R >= -Span && h.R <= Span ? _terrain[Key(h)] : Terrain.Plain;
+
+    private static Terrain[] TerrainIndex(BoardLayout layout)
+    {
+        var t = new Terrain[(2 * Span + 1) * (2 * Span + 1)];
+        foreach (HexCoord h in layout.Hills) t[Key(h)] = Terrain.Hill;
+        foreach (HexCoord h in layout.Swamps) t[Key(h)] = Terrain.Swamp;
+        return t;
+    }
 
     /// <summary>True when on the playable board.</summary>
     public static bool Playable(HexCoord h) =>

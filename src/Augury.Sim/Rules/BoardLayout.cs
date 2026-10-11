@@ -41,6 +41,12 @@ public sealed record BoardLayout
     /// <summary>Jungle hexes. Presentation only.</summary>
     public HexCoord[] Jungle { get; init; } = [];
 
+    /// <summary>v2 (D-060): hill hexes (+1 reach). Mirror-symmetric.</summary>
+    public HexCoord[] Hills { get; init; } = [];
+
+    /// <summary>v2 (D-060): swamp hexes (slow). Mirror-symmetric.</summary>
+    public HexCoord[] Swamps { get; init; } = [];
+
     /// <summary>The original board: a hexagon of radius 4, 61 hexes, front lines 8 apart.</summary>
     public static readonly BoardLayout Classic = BuildClassic();
 
@@ -80,6 +86,8 @@ public sealed record BoardLayout
             SpawnA = Hexes("spawnA"),
             Lanes = Hexes("lanes", required: false),
             Jungle = Hexes("jungle", required: false),
+            Hills = Hexes("hills", required: false),
+            Swamps = Hexes("swamps", required: false),
         };
         layout.Validate(source);
         return layout;
@@ -104,6 +112,14 @@ public sealed record BoardLayout
             if (Board.File(StartA[i]) <= Board.File(StartA[i - 1])) Fail("start hexes must run top to support, left to right.");
         }
 
+        foreach ((string name, HexCoord[] cells) in new[] { ("hills", Hills), ("swamps", Swamps) })
+        {
+            var tset = cells.ToHashSet();
+            if (cells.Any(h => !set.Contains(h) || Towers.Contains(h))) Fail($"{name} must be playable and not on towers.");
+            if (tset.Any(h => !tset.Contains(Hex.Mirror(h)))) Fail($"{name} are not mirror-symmetric.");
+        }
+
+        if (Hills.Intersect(Swamps).Any()) Fail("a hex can't be both hill and swamp.");
         if (SpawnA.Length != 5 || SpawnA.Distinct().Count() != 5 || SpawnA.Any(set.Contains)) Fail("needs five distinct off-board spawn hexes.");
         foreach (HexCoord s in SpawnA)
         {

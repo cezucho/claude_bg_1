@@ -142,5 +142,57 @@
       "move mid forward-left",
       "move jungle forward-left"
     ]
+  },
+  "quest": {
+    "name": "Eye of the Storm",
+    "text": "Ends the round with 2 or more enemies within 2.",
+    "when": {
+      "enemiesN": 2,
+      "enemiesD": 2
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "pow",
+        "amount": 150,
+        "text": "+15% power"
+      },
+      {
+        "at": 4,
+        "slot": 1,
+        "ability": {
+          "name": "Gust",
+          "initiative": 2,
+          "cooldown": 1,
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 700
+            },
+            {
+              "kind": "Displace",
+              "amount": 3,
+              "slam": 4
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "rch",
+            30
+          ],
+          "moldDown": [
+            "vit",
+            30
+          ],
+          "slotSigil": 2,
+          "opening": [
+            "move mid forward-left",
+            "beacon mid 2",
+            "move bottom forward-left"
+          ]
+        },
+        "text": "Gust pushes 3 and slams for 4"
+      }
+    ]
   }
 }

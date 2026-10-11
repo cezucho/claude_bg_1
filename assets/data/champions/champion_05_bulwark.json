@@ -129,5 +129,86 @@
       "move top right",
       "move jungle forward-right"
     ]
+  },
+  "quest": {
+    "name": "Hold the Line",
+    "text": "Ends the round next to the centre tower while its team holds it.",
+    "when": {
+      "centreTower": true
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "arm",
+        "amount": 1000,
+        "text": "+1 armour"
+      },
+      {
+        "at": 4,
+        "slot": 1,
+        "ability": {
+          "name": "Rampart",
+          "initiative": 2,
+          "cooldown": 3,
+          "target": "EmptyHex",
+          "effects": [
+            {
+              "kind": "Wall",
+              "amount": 3
+            }
+          ],
+          "scalesFrom": "arm",
+          "moldUp": [
+            "vit",
+            30
+          ],
+          "moldDown": [
+            "pow",
+            25
+          ],
+          "opening": [
+            "move top forward-right",
+            "move jungle forward-right",
+            "move mid forward-right"
+          ]
+        },
+        "text": "Rampart walls stand for 3 rounds"
+      },
+      {
+        "at": 4,
+        "slot": 0,
+        "ability": {
+          "name": "Shove",
+          "initiative": 1,
+          "cooldown": 1,
+          "effects": [
+            {
+              "kind": "Damage",
+              "power": 1000
+            },
+            {
+              "kind": "Displace",
+              "amount": 3
+            }
+          ],
+          "scalesFrom": "pow",
+          "moldUp": [
+            "vit",
+            25
+          ],
+          "moldDown": [
+            "spd",
+            25
+          ],
+          "printedSigil": 0,
+          "opening": [
+            "move top forward-left",
+            "move jungle forward-left",
+            "beacon top 0"
+          ]
+        },
+        "text": "Shove pushes 3"
+      }
+    ]
   }
 }

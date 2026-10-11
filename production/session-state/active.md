@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-10-09*
+*Last updated: 2026-10-11*
 
 ## Current Task
+
+**OPENING MUST MATTER — 2026-10-11.** Owner: after the draft choose a strategy; a good opening should make the endgame easier; quests (A1) + terrain (B1) go; objectives parked; targets: good vs random opening 60–65%, good vs tragic draft ~65/35. Done: exposure + towers ignore wanted defenders (D-058); quests with 2/4 upgrades, 15 authored and tuned (D-059); hills/swamps on Field 7 (D-060); opening-end quest check, 1 basic per half, +8% POW per stack, planning opening AI (D-061); browser shows terrain, quests, stars. Results: good opening 61%, great vs tragic draft 71.5%, 12.4 rounds. 113 tests. Next: owner playtests; objectives later.
 
 **DRAFT MUST MATTER + MATCH REPORT — 2026-10-09.** Owner: good vs tragic draft ~65/35; wanted a readable account of an AI match. Done: per-champion in-match stats (D-055); give/want synergy model, champion "wants" trait ×2 floor 3, tragic drafts now possible (D-056); balancing pass 43–55% (D-057); drafter styles great/decent/tragic, `selfplay draft=X-Y`, `payoffScale`; `chronicle` tool + `design/match-reports/2026-10-09-two-ai-matches.md`. Result: great vs tragic 52% (synergy worth +7; towers decide matches; Wildfire dominant, marks/roots weak). 109 tests. Next: owner chooses how to reach 65/35 (reliable marks/roots, synergy affects towers, or kills worth more).
 

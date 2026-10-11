@@ -126,5 +126,52 @@
       "beacon support 1",
       "move mid forward-right"
     ]
+  },
+  "quest": {
+    "name": "Guardian",
+    "text": "Ends the round next to an ally below half HP.",
+    "when": {
+      "woundedAllyWithin": 1
+    },
+    "upgrades": [
+      {
+        "at": 2,
+        "stat": "vit",
+        "amount": 5000,
+        "text": "+5 max HP"
+      },
+      {
+        "at": 4,
+        "slot": 0,
+        "ability": {
+          "name": "Aegis",
+          "initiative": 1,
+          "cooldown": 1,
+          "target": "Ally",
+          "effects": [
+            {
+              "kind": "Shield",
+              "amount": 8
+            }
+          ],
+          "scalesFrom": "arm",
+          "moldUp": [
+            "vit",
+            25
+          ],
+          "moldDown": [
+            "pow",
+            25
+          ],
+          "slotSigil": 2,
+          "opening": [
+            "move support forward-left",
+            "move bottom forward-left",
+            "beacon support 2"
+          ]
+        },
+        "text": "Aegis shields 8"
+      }
+    ]
   }
 }

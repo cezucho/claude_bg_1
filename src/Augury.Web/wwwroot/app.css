@@ -410,3 +410,19 @@ svg.mini { display: block; max-width: 100%; }
 .det-syn b { color: var(--gold); }
 .dcard .dwants { font-size: 11px; color: #ffd9a0; margin: 2px 0 3px; }
 .dcard .dwants b { color: var(--gold); }
+
+/* ───────── quests and terrain (D-059, D-060) ───────── */
+.hex.t-hill { fill: #3a3424; }
+.hex.t-swamp { fill: #1c3330; }
+.hill-mark { fill: rgba(232,196,106,.25); stroke: rgba(232,196,106,.55); stroke-width: 1; pointer-events: none; }
+.swamp-mark { fill: none; stroke: rgba(120,200,170,.5); stroke-width: 1.5; pointer-events: none; }
+.quest { display: flex; align-items: center; gap: 3px; font-size: 10px; color: var(--dim); margin: 2px 0; cursor: help; }
+.quest .qname { margin-right: 3px; }
+.quest.met .qname { color: var(--gold); }
+.qpip { width: 7px; height: 7px; border-radius: 50%; background: #2a3350; display: inline-block; }
+.qpip.spike { border-radius: 2px; }
+.qpip.on { background: var(--gold); }
+.qmet { font-size: 9px; color: #000; background: var(--gold); border-radius: 6px; padding: 0 4px; margin-left: 3px; }
+.quest-star { font-size: 13px; fill: var(--gold); stroke: #000; stroke-width: .6; text-anchor: middle; pointer-events: none; }
+.dcard .dquest { font-size: 11px; color: #e9dcb4; margin: 2px 0 4px; }
+.dcard .dquest b { color: var(--gold); }

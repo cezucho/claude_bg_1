@@ -190,6 +190,64 @@ public sealed class V2RulesTests : IDisposable
     }
 
     [Fact]
+    public void Swamp_StartingInItAllowsOneStep_AndAMoveIntoItEndsThere()
+    {
+        MatchState s = Ladder(Team.A);
+        s.Champions[2].Pos = new HexCoord(1, 0);   // A's mid in the swamp beside the centre tower
+        Assert.All(_game.MoveDestinations(s, 2), h => Assert.Equal(1, HexCoord.Distance(h, new HexCoord(1, 0))));
+
+        s.Champions[2].Pos = new HexCoord(2, -1);  // one step from the swamp at (1,0)
+        Assert.Contains(new HexCoord(1, 0), _game.MoveDestinations(s, 2));
+    }
+
+
+    [Fact]
+    public void Hill_GivesOneMoreReach()
+    {
+        MatchState s = Ladder(Team.A);
+        int flat = _game.Reach(s.Champions[2]);
+        s.Champions[2].Pos = new HexCoord(-1, -1);   // a hill
+        Assert.Equal(flat + 1, _game.Reach(s.Champions[2]));
+    }
+
+    [Fact]
+    public void ExposedStatus_StillPaysOff_AfterItIsGone()
+    {
+        // Gunner wants Rooted. A root that has worn off this round still counts (D-058).
+        int[] withGunner = [Anchor, Ember, Lens, Gunner, Oriel];
+        int Loss(bool exposed)
+        {
+            MatchState s = Ladder(Team.A, withGunner);
+            s.Champions[6].Pos = new HexCoord(2, -1);
+            if (exposed) s.Champions[6].Exposed = (byte)(1 << (int)StatusKind.Rooted);
+            int before = s.Champions[6].Hp;
+            _game.Apply(ref s, new Command(CommandKind.Ability, 3, 0, Target.Champ(6)));
+            return before - s.Champions[6].Hp;
+        }
+
+        Assert.True(Loss(true) > Loss(false));
+    }
+
+    [Fact]
+    public void Quest_MetOnItsTerrain_AndUpgradesApplyAtTwoAndFour()
+    {
+        MatchState s = Ladder(Team.A);
+        Assert.False(_game.QuestMet(s, 2));            // Lens on its start hex
+        s.Champions[2].Pos = new HexCoord(-1, -1);     // a hill: Vantage
+        Assert.True(_game.QuestMet(s, 2));
+
+        // Anchor (slot 0): +6 max HP at 2 stacks; Chain Hook roots for 3 at 4.
+        int hp0 = _game.MaxHp(s.Champions[0]);
+        int pow0 = _game.Pow(s.Champions[0]);
+        s.Champions[0].QuestStacks = 2;
+        Assert.Equal(hp0 + 6, _game.MaxHp(s.Champions[0]));
+        Assert.Equal(pow0 + 2 * _game.Rules.QuestStackPow, _game.Pow(s.Champions[0]));
+        Assert.Equal(2, _game.Kit(s.Champions[0], 1)!.Effects.First(e => e.Kind == EffectKind.Root).Amount);
+        s.Champions[0].QuestStacks = 4;
+        Assert.Equal(3, _game.Kit(s.Champions[0], 1)!.Effects.First(e => e.Kind == EffectKind.Root).Amount);
+    }
+
+    [Fact]
     public void Speed_NeverMoldsBelowOne()
     {
         MatchState s = Opening(Team.A);
