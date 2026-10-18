@@ -714,6 +714,19 @@ public sealed partial class Game
         _ => false,
     });
 
+    /// <summary>No ally within <see cref="RulesConfig.IsolationDistance"/>: caught alone.</summary>
+    public bool IsIsolated(in MatchState s, int slot)
+    {
+        Champion c = s.Champions[slot];
+        for (int i = 0; i < 10; i++)
+        {
+            Champion o = s.Champions[i];
+            if (i != slot && o.Team == c.Team && o.OnBoard && HexCoord.Distance(o.Pos, c.Pos) <= Rules.IsolationDistance) return false;
+        }
+
+        return true;
+    }
+
     private static void Expose(ref Champion v, StatusKind k) => v.Exposed |= (byte)(1 << (int)k);
 
     /// <summary>True when some champion of <paramref name="team"/> wants a status <paramref name="c"/> carries.</summary>
@@ -811,6 +824,13 @@ public sealed partial class Game
             t.Mark = 0;
         }
 
+        string alone = "";
+        if (!fromPassive && source >= 0 && Rules.IsolationBonus > 1000 && s.Champions[source].Team != t.Team && IsIsolated(s, target))
+        {
+            amount = amount * Rules.IsolationBonus / 1000;   // caught alone (momentum lever)
+            alone = " (caught alone)";
+        }
+
         int absorbed = Math.Min(t.Shield, amount);
         t.Shield -= (short)absorbed;
         int loss = amount - absorbed;
@@ -818,7 +838,7 @@ public sealed partial class Game
         t.Hp -= loss;
         _observer?.ChampionDamaged(source, target, loss, absorbed);
         Log(log, EventKind.Damage,
-            $"  {Name(s, target)} takes {amount}{marked}{(absorbed > 0 ? $" ({absorbed} shielded)" : "")} → {t.Hp} HP");
+            $"  {Name(s, target)} takes {amount}{marked}{alone}{(absorbed > 0 ? $" ({absorbed} shielded)" : "")} → {t.Hp} HP");
 
         if (!fromPassive && source >= 0 && s.Champions[source].Team != t.Team)
         {

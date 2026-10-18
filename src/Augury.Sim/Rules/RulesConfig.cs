@@ -68,6 +68,26 @@ public sealed record RulesConfig
     /// <summary>Enemy basic attacks a beacon survives (D-010).</summary>
     public int BeaconDurability { get; init; } = 2;
 
+    // ── Momentum levers (2026-10-18 experiment): shipped values are the status quo until decided.
+
+    /// <summary>Extra respawn rounds per quest stack the victim had (0: off). A carry's death is an event.</summary>
+    public int RespawnPerStack { get; init; }
+
+    /// <summary>Quest stacks a death costs; with <see cref="DeathLosesHalfStacks"/> it is half, rounded up.</summary>
+    public int DeathStackLoss { get; init; } = 1;
+
+    /// <inheritdoc cref="DeathStackLoss"/>
+    public bool DeathLosesHalfStacks { get; init; }
+
+    /// <summary>Damage multiplier, permille, on a champion with no ally within <see cref="IsolationDistance"/> (0: off). Caught alone.</summary>
+    public int IsolationBonus { get; init; }
+
+    /// <inheritdoc cref="IsolationBonus"/>
+    public int IsolationDistance { get; init; } = 1;
+
+    /// <summary>Also run the death check when the first half ends, so a burst kills at once instead of a round later.</summary>
+    public bool DeathCheckEachHalf { get; init; }
+
     /// <summary>Respawn timer = base + round / every (D-016).</summary>
     public int RespawnBase { get; init; } = 1;
 

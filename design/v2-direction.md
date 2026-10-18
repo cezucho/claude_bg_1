@@ -168,6 +168,41 @@ The levers were:
 
 Details in `design/v2-champions.md` → "Quests and terrain"; decisions D-058 to D-061.
 
+### Momentum: picks that shift the match · Owner, 2026-10-18 · *brainstorm, measured, not decided*
+
+**The feeling the owner wants.** In League, a weaker team ambushes the enemy's carry and the
+whole match turns: they take the Baron, the lead flips. "One team solved the riddle quicker",
+or "one team made the error and the other used it". Today AUGURY feels like attrition: champions
+trade damage, kills are delayed, nothing shifts in a moment. The owner is torn: the growth from
+quests feels right, but the swings are missing. Is it necessary?
+
+**Measured (400 matches, shipped rules).**
+- 8.5 deaths a match, and only **14% are bursts** (killed from 60%+ HP within one round).
+- A carry (3+ stacks) dies **3.5 times a match**. Two rounds after killing one, the killer's lead
+  has grown only 47% of the time.
+- **When only one team kills a carry, that team wins 43%.** Killing the carry is a non-event, if
+  not a mistake.
+- The lead changes hands 0.75 times a match; 17% of rounds swing by 5 or more.
+
+**Why (Claude's diagnosis).** Four rules smooth every swing: a kill is delayed to the round's
+death check; respawn takes 1–2 rounds; a death costs 1 of 4 stacks; a kill is 3 of 60 nexus HP.
+And nothing converts a pick: no objective becomes available when the enemy is a champion down.
+
+**Levers tried, behind flags in `rules_config.json` (shipped off, D-062):**
+- `respawnPerStack` — respawn rounds per stack the victim had (a carry's death is an event);
+- `deathLosesHalfStacks` — a death costs half the stacks, rounded up (the spike is lost);
+- `isolationBonus` — ×1.5 damage on a champion with no ally within 1 ("caught alone");
+- `deathCheckEachHalf` — a death check at the end of half 1 too (a burst kills at once).
+
+| | Burst kills | Carry deaths/match | Team that alone killed a carry wins |
+|---|---|---|---|
+| Shipped | 14% | 3.5 | **43%** |
+| All four levers | 17–20% | 2.5–2.9 | **59–70%** |
+
+Comebacks stay at 20–24%; rounds 12.0–12.4. The AI neither hunts carries nor protects them, so
+self-play understates the feeling; the levers change what a pick is *worth*, which is what the
+numbers show.
+
 ## Idea parking lot
 
 ### Bans in the draft (owner, 2026-10-08)

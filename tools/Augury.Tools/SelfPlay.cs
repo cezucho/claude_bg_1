@@ -29,6 +29,10 @@ public static class SelfPlay
         public readonly List<(int SynA, int SynB, Team Winner, Team Drafter)> Drafts = new();
         public readonly Dictionary<string, (int Teams, int Wins)> Groups = new();
         public readonly ChampionStats ChampionStats = new();
+
+        // Momentum: lead changes, biggest one-round swing, kills by burst vs attrition, and what
+        // follows the death of a champion with 3+ stacks (a "carry").
+        public long CarryKillMatches, CarryKillWins, LeadChanges, RoundsScored, BigSwingRounds, MaxSwingSum, DeathsTotal, DeathsFromHighHp, CarryDeaths, CarryDeathsLeadGain, CarryDeathsLeadGainSum;
     }
 
     public static void Run(string[] args)
@@ -114,6 +118,8 @@ public static class SelfPlay
         MatchState s = game.NewMatch();
         var tally = new ChampionStats.MatchTally();
         tally.SetTeams(s);   // slots 0–4 are A, 5–9 B from the start
+        tally.SetMaxHp(i => game.MaxHp(s.Champions[i]));
+        var leads = new List<int>();   // A's nexus lead at each round close
         var log = new List<GameEvent>();
         var legal = new List<Command>();
         bool opened = false;
@@ -191,6 +197,7 @@ public static class SelfPlay
                 int lead = s.NexusHp[0] - s.NexusHp[1];
                 maxLeadA = Math.Max(maxLeadA, lead);
                 maxLeadB = Math.Max(maxLeadB, -lead);
+                if (s.Round != roundBefore) leads.Add(lead);
             }
             if (Game.NexusVulnerable(s, Team.A) || Game.NexusVulnerable(s, Team.B))
             {
@@ -243,6 +250,44 @@ public static class SelfPlay
             case EndReason.Nexus: st.Nexus++; break;
             case EndReason.Siege: st.Siege++; break;
             case EndReason.RoundCap: st.Cap++; break;
+        }
+
+        // Momentum.
+        int sign = 0, maxSwing = 0;
+        for (int r = 0; r < leads.Count; r++)
+        {
+            int swing = Math.Abs(leads[r] - (r == 0 ? 0 : leads[r - 1]));
+            maxSwing = Math.Max(maxSwing, swing);
+            st.RoundsScored++;
+            if (swing >= 5) st.BigSwingRounds++;
+            int sg = Math.Sign(leads[r]);
+            if (sg != 0 && sign != 0 && sg != sign) st.LeadChanges++;
+            if (sg != 0) sign = sg;
+        }
+
+        st.MaxSwingSum += maxSwing;
+        // Matches where only one team killed a carry: did it win?
+        bool aKilled = tally.DeathDetail.Any(d => d.Stacks >= 3 && d.Victim >= 5), bKilled = tally.DeathDetail.Any(d => d.Stacks >= 3 && d.Victim < 5);
+        if (aKilled != bKilled)
+        {
+            st.CarryKillMatches++;
+            if (s.Winner == (aKilled ? Team.A : Team.B)) st.CarryKillWins++;
+        }
+
+        foreach (var (victim, stacks, hpAtStart, round) in tally.DeathDetail)
+        {
+            st.DeathsTotal++;
+            if (hpAtStart >= 600) st.DeathsFromHighHp++;
+            if (stacks >= 3 && round >= 1 && round - 1 < leads.Count)
+            {
+                st.CarryDeaths++;
+                // The killer's view of the lead at that round close, and two rounds on.
+                int view = victim < 5 ? -1 : 1;
+                int then = leads[round - 1] * view;
+                int later = (round + 1 < leads.Count ? leads[round + 1] : leads[^1]) * view;
+                if (later > then) st.CarryDeathsLeadGain++;
+                st.CarryDeathsLeadGainSum += later - then;
+            }
         }
 
         // A comeback: the winner trailed the nexus race by at least 5 at some round close.
@@ -326,6 +371,8 @@ public static class SelfPlay
         Console.WriteLine($"  Rounds        mean {st.Rounds / m,5:F1}   median {st.RoundCounts[st.RoundCounts.Count / 2]}   min {st.RoundCounts[0]}   max {st.RoundCounts[^1]}");
         Console.WriteLine($"  Per round     deaths {st.Deaths / (double)st.Rounds,4:F2}   captures {st.Captures / (double)st.Rounds,4:F2}   resolutions {st.Resolutions / (double)st.Rounds,5:F1}   chains {st.Chains / (double)st.Rounds,4:F2}");
         Console.WriteLine($"  Nexus open    in {st.MatchesNexusOpened / m,6:P0} of matches, {st.NexusOpenDecisions / (double)st.Decisions,6:P1} of decisions; hit in {st.MatchesNexusHit / m,6:P0} of matches ({st.NexusHits / m:F1} hits/match)");
+        Console.WriteLine($"  Momentum      lead changes {st.LeadChanges / m,4:F2} per match · biggest one-round swing {st.MaxSwingSum / m,4:F1} · rounds swinging ≥5: {st.BigSwingRounds / (double)Math.Max(1, st.RoundsScored),5:P0}");
+        Console.WriteLine($"                kills from ≥60% HP at round start (burst): {st.DeathsFromHighHp / (double)Math.Max(1, st.DeathsTotal),5:P0} of {st.DeathsTotal / m:F1} deaths/match · carry (3+ stacks) deaths {st.CarryDeaths / m:F2}/match, killer's lead grew 2 rounds later in {st.CarryDeathsLeadGain / (double)Math.Max(1, st.CarryDeaths):P0} (mean {st.CarryDeathsLeadGainSum / (double)Math.Max(1, st.CarryDeaths):+0.0;-0.0}); when only one team killed a carry it won {st.CarryKillWins / (double)Math.Max(1, st.CarryKillMatches):P0} of {st.CarryKillMatches}");
         Console.WriteLine($"  Quests        stacks earned by the opening: A {st.OpeningStacksA / m,4:F2} · B {st.OpeningStacksB / m,4:F2} per match");
         Console.WriteLine($"  Synergy       payoff hits {st.Payoffs / m,4:F1} per match · slams {st.Slams / m,4:F1} per match");
         Console.WriteLine($"  Basics        moves {st.BasicMoves / (double)(st.BasicMoves + st.BasicAttacks),6:P0}   attacks {st.BasicAttacks / (double)(st.BasicMoves + st.BasicAttacks),6:P0}");

@@ -21,9 +21,29 @@ internal sealed class ChampionStats
         public readonly int[] Payoffs = new int[10], Slams = new int[10], Abilities = new int[10], BasicAttacks = new int[10], Moves = new int[10];
         public readonly int[] MaxStacks = new int[10], RoundAt2 = new int[10], RoundAt4 = new int[10];
 
+        // Momentum (2026-10-18): each death with the victim's stacks, its HP share at the start of
+        // the round it died in, and the round — to see whether kills are bursts or attrition, and
+        // whether killing a carry shifts the match.
+        public readonly List<(int Victim, int Stacks, int HpPermilleAtRoundStart, int Round)> DeathDetail = new();
+        private readonly int[] _roundStartHp = new int[10];
+        private int _round = -1;
+        private Func<int, int> _maxHp = _ => 1;
+
+        public void SetMaxHp(Func<int, int> maxHp) => _maxHp = maxHp;
+
         /// <summary>Follows quest progress after each command.</summary>
         public void Track(in MatchState s)
         {
+            if (s.Round != _round)
+            {
+                _round = s.Round;
+                for (int i = 0; i < 10; i++) _roundStartHp[i] = s.Champions[i].OnBoard ? Math.Max(0, s.Champions[i].Hp) : -1;
+            }
+
+            // Stacks as of the last command: at a death check the victim's stack has already been
+            // taken, so this is what it had going in.
+            for (int i = 0; i < 10; i++) _stacksNow[i] = s.Champions[i].QuestStacks;
+
             for (int i = 0; i < 10; i++)
             {
                 int k = s.Champions[i].QuestStacks;
@@ -77,9 +97,13 @@ internal sealed class ChampionStats
 
         public void Slam(int source, int target) => Slams[source]++;
 
+        private int[] _stacksNow = new int[10];
+
         public void Died(int victim)
         {
             Deaths[victim]++;
+            int start = _roundStartHp[victim];
+            DeathDetail.Add((victim, _stacksNow[victim], start < 0 ? 0 : start * 1000 / Math.Max(1, _maxHp(victim)), _round));
             if (_lastHitBy[victim] >= 0) Kills[_lastHitBy[victim]]++;   // the last enemy to damage it
             _lastHitBy[victim] = -1;
         }

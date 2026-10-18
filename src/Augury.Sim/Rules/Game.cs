@@ -433,6 +433,7 @@ public sealed partial class Game
         TickHalf(ref s, log);
         if (s.Half == 1)
         {
+            if (Rules.DeathCheckEachHalf) DeathCheck(ref s, log, "Half 1 ends");
             s.Half = 2;
             StartHalf(ref s, log);
             return;

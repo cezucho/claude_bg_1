@@ -14,10 +14,10 @@ public sealed partial class Game
     /// champion's own nexus, and every held tower fires at the enemy nexus. A nexus at zero
     /// after the siege ends the match.
     /// </remarks>
-    private void CloseRound(ref MatchState s, List<GameEvent>? log)
+    /// <summary>Every champion on the board at 0 HP or less dies: respawn timer, stack loss, nexus damage, OnAllyDies.</summary>
+    private void DeathCheck(ref MatchState s, List<GameEvent>? log, string when)
     {
-        // 1. Death check.
-        Log(log, EventKind.DeathCheck, $"Round {s.Round} closes — death check.");
+        Log(log, EventKind.DeathCheck, $"{when} — death check.");
         Span<bool> died = stackalloc bool[10];
         for (int i = 0; i < 10; i++)
         {
@@ -25,7 +25,7 @@ public sealed partial class Game
             if (!c.OnBoard || c.Hp > 0) continue;
 
             died[i] = true;
-            int respawn = Rules.RespawnBase + s.Round / Math.Max(1, Rules.RespawnEvery);
+            int respawn = Rules.RespawnBase + s.Round / Math.Max(1, Rules.RespawnEvery) + c.QuestStacks * Rules.RespawnPerStack;
             c.Presence = Presence.Dead;
             c.RespawnIn = (byte)(respawn + 1);   // this round's upkeep decrements once
             c.Flags &= ~ChampFlags.Dying;
@@ -35,7 +35,8 @@ public sealed partial class Game
             c.RootHalves = c.ExhaustHalves = c.UnstoppableHalves = 0;
             c.BurnAmount = c.BurnRounds = c.Mark = c.WoundRounds = 0;
             c.Exposed = 0;
-            if (c.QuestStacks > 0) c.QuestStacks--;   // dying costs a quest stack (D-059: a check on snowballing)
+            // Dying costs quest stacks (D-059: a check on snowballing; more, and a carry's death is the swing).
+            c.QuestStacks = (byte)Math.Max(0, c.QuestStacks - (Rules.DeathLosesHalfStacks ? (c.QuestStacks + 1) / 2 : Rules.DeathStackLoss));
             s.NexusHp[TeamIndex(c.Team)] -= Rules.KillSiege;
             _observer?.Died(i);
             Log(log, EventKind.Death, $"  ✝ {Name(s, i)} dies (respawn in {respawn}). NEXUS {c.Team} −{Rules.KillSiege} → {Math.Max(0, s.NexusHp[TeamIndex(c.Team)])}");
@@ -52,6 +53,12 @@ public sealed partial class Game
                 }
             }
         }
+    }
+
+    private void CloseRound(ref MatchState s, List<GameEvent>? log)
+    {
+        // 1. Death check.
+        DeathCheck(ref s, log, $"Round {s.Round} closes");
 
         // 2. Status phase: poison, then tower shots. ≤0 here means Dying, not dead.
         Log(log, EventKind.StatusPhase, "  Status phase.");
