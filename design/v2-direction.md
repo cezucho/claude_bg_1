@@ -203,6 +203,87 @@ Comebacks stay at 20–24%; rounds 12.0–12.4. The AI neither hunts carries nor
 self-play understates the feeling; the levers change what a pick is *worth*, which is what the
 numbers show.
 
+**Owner's decision (2026-10-20): switch the four levers on (D-063), and build the shrine.**
+Measured with them on: good opening 61%, great draft 72%, a team that alone kills a carry wins
+60–66%, comebacks 22–24%, 12.3 rounds.
+
+### The shrine — a drafted rule (to react to, not built)
+
+*The thing a pick is converted into: the Baron moment without copying it.*
+
+- **Where:** one neutral **shrine** on the river row, on the hill at its east end on odd
+  rounds and the west end on even rounds? No — simpler: **two shrines**, one on each river hill
+  (the hexes at (−4,0) and (4,0)). Mirror-symmetric, so fair.
+- **Awakening:** a shrine is dormant until **round 4**, then awake until taken; it reawakens
+  **4 rounds** after it was last taken. A countdown shows on the board.
+- **Taking it:** at round close, a team takes an awake shrine if one of its champions stands
+  **on** it and **no enemy champion is adjacent**. (Standing on a hill: +1 reach, so the
+  holder is also a sniper's nest.)
+- **The prize, lasting two rounds:** every champion of the taking team gains **+1 quest stack**
+  (upgrades fire), and the team's **siege is doubled**. Both are visible: pips light up, towers
+  glow.
+- **Why it makes picks matter:** a shrine can only be taken with no enemy adjacent, so a team
+  that is a champion down can't contest both the shrine and its towers. The sequence "catch
+  the carry alone → take the shrine → towers pound the nexus" is three rounds of visible
+  momentum.
+- **Comeback guard:** a shrine's stacks are quest stacks, so dying costs them like any other.
+- **Open:** one shrine or two; the prize (stacks vs siege vs both); whether the AI needs a
+  shrine term in its evaluation (yes: value standing on an awake shrine ≈ a quest met).
+
+### Marvel Snap, and quicker kills · Owner, 2026-10-20 · *an idea, not a decision*
+
+**The owner's idea.** Kills should be quicker; a good combo could wipe three champions at once;
+rounds could be much faster. Marvel Snap, a card game, gives the feeling of building combos and
+positioning characters at a fast pace, and the draft already gives AUGURY the "build a deck for
+one game" pleasure without the deck-building chore. Could Snap's feeling and pace live in this
+hexagonal world, making the game quicker and smoother, with momentum shifts easier to reach?
+
+**What makes Snap feel the way it does (Claude's reading).**
+1. **Few turns, each a big simultaneous reveal.** Six turns; both players commit in secret,
+   then everything resolves at once. The last turns decide the match.
+2. **Escalating resources.** Energy 1 → 6, so turn 6 plays are three times the size of turn 2.
+   Combos are *inside* a turn: this card, then that card, in order.
+3. **Lethality.** Power swings of 10+ against locations held by 5; a single reveal can flip two
+   locations.
+4. **Readable positions.** Three locations, each a visible contest.
+
+AUGURY today has 4 (hexes, nothing hidden) and half of 2 (quests escalate power, but a turn is
+still one ability). It lacks 1 entirely — the ladder alternates single actions, which is what
+makes it feel like trading blows — and 3: hits of 4–8 against 25–35 HP.
+
+**Lethality alone, measured** (`abilityBase` 3→5, `basicBase` 2→3, 120 matches): bursts rose to
+29% of kills, deaths to 10.4 a match, rounds fell to 11.2 — but carries stopped existing (1.3
+carry deaths a match, because everyone dies before 3 stacks) and a carry kill paid nothing
+(50%). Everyone dying is not momentum; it's noise. Lethality needs structure around it.
+
+**Three ways to bring the Snap feeling in, smallest first.**
+
+- **A. Bigger hits, fewer of them (a dial).** Raise damage but also raise the value of a pick
+  (the shipped levers), so kills are fast *and* meaningful. Cheap; probably not enough on its
+  own, see above.
+- **B. Combos that grow with the round.** In round *r*, a team's ladder action may be a
+  **chain of up to min(r, 3) abilities** (today: one, or two with a shared sigil). Round 1 is
+  pokes; round 4 onward, a team can fire three abilities as one unanswerable sequence: root,
+  mark, execute — the three-champion wipe the owner imagines. The ladder, ceiling and Last
+  Word stay. The opponent sees the chain coming (initiative is public) and can answer *after*
+  it, which keeps the "ambush vs error" story. Medium change; measurable in the harness.
+- **C. Every round is an opening.** The owner's favourite phase, generalised. Each round, both
+  teams **secretly program** one play per champion (move, cast, or hold — the opening's
+  instruction language already exists), then **everything reveals and resolves in initiative
+  order**. The ladder goes away. Rounds become fast (one commit, one reveal), combos are
+  planned sequences, and the "they read our plan" and "we solved it first" feelings are built
+  in. It is the Snap turn in hex form. Big change: it replaces the ladder (ADR-0004, a pillar),
+  and it adds hidden information within a round — Pillar 1 ("nothing hidden during play")
+  would bend the way it already bent for spell picks. The AI would need a new planner (the
+  opening planner is a start).
+
+**Claude's opinion.** The owner's complaint at the very start was that the game "drifts toward
+chess"; the alternating ladder is the chess in it. The opening — scripted, simultaneous in
+spirit, geometric — is what the owner keeps saying works. C is the honest conclusion of that,
+and it would deliver pace and swings together. But it is a rewrite of the core phase, so the
+right path is: **B first** (keeps everything, gets the wipe), measured against the momentum
+metrics; then a **prototype of C** on a branch, played at the table, before any decision.
+
 ## Idea parking lot
 
 ### Bans in the draft (owner, 2026-10-08)

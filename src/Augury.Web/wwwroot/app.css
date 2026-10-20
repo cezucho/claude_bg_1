@@ -426,3 +426,5 @@ svg.mini { display: block; max-width: 100%; }
 .quest-star { font-size: 13px; fill: var(--gold); stroke: #000; stroke-width: .6; text-anchor: middle; pointer-events: none; }
 .dcard .dquest { font-size: 11px; color: #e9dcb4; margin: 2px 0 4px; }
 .dcard .dquest b { color: var(--gold); }
+.alone-ring { fill: none; stroke: #ff7a7a; stroke-width: 1.5; stroke-dasharray: 4 3; pointer-events: none; }
+.chip.alone { background: #4a1820; color: #ffb3bb; }

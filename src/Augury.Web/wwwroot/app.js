@@ -205,6 +205,7 @@ function card(c) {
   if (c.poison) chips.push(`<span class="chip poison">poison ${c.poison.amount}×${c.poison.rounds}</span>`);
   for (const st of c.status || []) chips.push(`<span class="chip st-${st.kind}" title="${esc(st.text)}">${esc(st.label)}</span>`);
   if (c.shield > 0) chips.push(`<span class="chip shield">shield ${c.shield}</span>`);
+  if (c.alone) chips.push(`<span class="chip alone" title="No ally beside it: takes ×1.5 damage">caught alone</span>`);
   if (c.acted && (V.phase === 'Ladder' || V.phase === 'LastWord')) chips.push(`<span class="chip acted">acted</span>`);
   if (c.basicUsed && V.phase === 'Basic') chips.push(`<span class="chip acted">basic used</span>`);
   if (c.openingDone && V.phase === 'Opening') chips.push(`<span class="chip acted">opened</span>`);
@@ -377,6 +378,7 @@ function drawToken(c) {
   if (sel && sel.champ === c.slot) cls.push('selected');
   if (isLastActor(c.slot)) cls.push('last-actor');
   const g = el('g', { class: cls.join(' '), 'data-slot': c.slot }, layers.tokens);
+  if (c.alone) el('circle', { cx, cy, r: HEX * 0.74, class: 'alone-ring' }, g);
   if (c.quest?.met && c.presence === 'board') {
     const [qx, qy] = px(c.q, c.r);
     el('text', { x: qx + HEX * 0.55, y: qy - HEX * 0.42, class: 'quest-star' }, g).textContent = '★';
@@ -992,6 +994,7 @@ function showHelp() {
     <h3>Opening</h3>Each champion plays one of its four openings, whose three instructions move your team into formation. Moves are strict: an opening that would walk off the board or into a champion, tower or wall can't be played. One opening per champion <b>casts</b>: "mid casts E" fires whatever ability your mid has in E, aimed at the nearest target. With nothing in reach it fizzles — and either way that ability starts round 1 on cooldown. Opening damage can't kill. If no opening fits, one champion steps one hex.
     <h3>Quests</h3>Every champion has a quest — a place to be or a situation to be in when the round closes (the opening's end counts too). Each time it's met, the champion gains a stack (most 4); each stack adds power, and at 2 and 4 it gets an upgrade. Dying costs a stack. A ★ on a token means the quest would be met if the round closed now. Choosing whose quests to feed is your plan for the match.
     <h3>Terrain</h3><b>Hills</b> give +1 reach. <b>Swamps</b> stop movement: a move into one ends there, and from one you can step only one hex.
+    <h3>Picks</h3>A champion with <b>no ally beside it</b> is caught alone (dashed ring): it takes ×1.5 damage. A champion at 0 HP dies at the end of the half. Dying costs <b>half its quest stacks</b>, and the respawn grows by one round per stack it had — a carry's death is the moment the match can turn.
     <h3>Statuses</h3><b>Root</b> can't move or be moved · <b>Burn</b> takes damage each time it acts · <b>Mark</b> the next hit deals more · <b>Exhaust</b> deals half damage · <b>Unstoppable</b> immune to root, push and pull · <b>Wound</b> healing halved · <b>Wall</b> an impassable hex. Towers are solid: nothing may enter them. Hover a status pip on the board or a chip on a card for the details.</div>`;
   document.getElementById('help-close').onclick = () => { helpOpen = false; renderOverlay(); };
 }

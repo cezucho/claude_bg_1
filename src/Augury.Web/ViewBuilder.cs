@@ -155,6 +155,7 @@ public static class ViewBuilder
             openingDone = c.Has(ChampFlags.OpeningDone),
             poison = c.PoisonRounds > 0 ? new { amount = (int)c.PoisonAmount, rounds = (int)c.PoisonRounds } : null,
             status = Statuses(c),
+            alone = placed && c.OnBoard && g.Rules.IsolationBonus > 1000 && g.IsIsolated(s, slot),
             quest = d.Quest is null ? null : new
             {
                 name = d.Quest.Name,

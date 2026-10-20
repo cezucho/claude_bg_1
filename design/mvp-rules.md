@@ -81,7 +81,13 @@ Agreed with the owner in `design/v2-direction.md`. Roster, spells and measuremen
     Every champion on the board and alive that meets its quest gains a stack, up to 4.
   - **What a stack is worth:** **+8% POW** each (`questStackPow` 80). At 2 and 4 stacks the
     champion's upgrades apply: a stat, or a replacement ability.
-  - **Losing stacks:** a death costs one stack.
+  - **Losing stacks:** a death costs **half its stacks, rounded up** (D-063).
+- **Picks** (D-063, 2026-10-20).
+  - **Caught alone:** a champion with no ally within 1 takes ×1.5 damage from enemy champions
+    (not from poison, burn or towers).
+  - **Death check at the end of each half**, not only at round close. A champion at 0 HP or
+    less dies then; the status phase's "Dying" rule is unchanged.
+  - **Respawn** = 1 + round/8 **+ 1 per quest stack the victim had**.
 
 
 ## 1. Match flow

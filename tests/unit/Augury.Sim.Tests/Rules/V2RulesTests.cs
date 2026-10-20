@@ -108,6 +108,7 @@ public sealed class V2RulesTests : IDisposable
             {
                 arr[0].Champions[7].Pos = new HexCoord(1, 0);
                 arr[0].Champions[1].Pos = new HexCoord(1, -1);
+                arr[0].Champions[0].Pos = new HexCoord(2, -2);   // an ally beside Ember: not "caught alone"
                 arrange(arr);
             });
             int before = s.Champions[1].Hp;
@@ -147,6 +148,7 @@ public sealed class V2RulesTests : IDisposable
         {
             MatchState s = Ladder(Team.A, withGunner);
             s.Champions[6].Pos = new HexCoord(2, -1);
+            s.Champions[7].Pos = new HexCoord(2, 0);   // an ally beside Viper: not "caught alone"
             s.Champions[6].RootHalves = (byte)(rooted ? 2 : 0);
             s.Champions[6].Mark = (byte)mark;
             int before = s.Champions[6].Hp;
@@ -245,6 +247,41 @@ public sealed class V2RulesTests : IDisposable
         Assert.Equal(2, _game.Kit(s.Champions[0], 1)!.Effects.First(e => e.Kind == EffectKind.Root).Amount);
         s.Champions[0].QuestStacks = 4;
         Assert.Equal(3, _game.Kit(s.Champions[0], 1)!.Effects.First(e => e.Kind == EffectKind.Root).Amount);
+    }
+
+    [Fact]
+    public void CaughtAlone_TakesMoreDamage_ThanWithAnAllyBeside()
+    {
+        int Loss(bool allyBeside)
+        {
+            MatchState s = Ladder(Team.A);
+            s.Champions[6].Pos = new HexCoord(2, -1);
+            s.Champions[7].Pos = allyBeside ? new HexCoord(2, 0) : new HexCoord(-3, 3);
+            int before = s.Champions[6].Hp;
+            _game.Apply(ref s, new Command(CommandKind.Ability, 3, 0, Target.Champ(6)));   // Ranger's Volley
+            return before - s.Champions[6].Hp;
+        }
+
+        int together = Loss(true);
+        Assert.Equal(together * _game.Rules.IsolationBonus / 1000, Loss(false));
+    }
+
+    [Fact]
+    public void CarryDeath_CostsHalfItsStacks_AndRespawnsLater()
+    {
+        MatchState s = Ladder(Team.A);
+        s.Champions[6].QuestStacks = 4;
+        s.Champions[6].Hp = 0;
+        s.Champions[8].QuestStacks = 0;
+        s.Champions[8].Hp = 0;
+        s.Half = 2;
+        s.Active = Team.A;
+        _game.Apply(ref s, Command.PassCmd);   // A passes; B declines → the round closes
+        List<Command> l = _game.Legal(s);
+        if (s.Phase == Phase.LastWord) _game.Apply(ref s, Command.DeclineCmd);
+        Assert.Equal(Presence.Dead, s.Champions[6].Presence);
+        Assert.Equal(2, s.Champions[6].QuestStacks);
+        Assert.True(s.Champions[6].RespawnIn > s.Champions[8].RespawnIn, "a carry stays dead longer");
     }
 
     [Fact]

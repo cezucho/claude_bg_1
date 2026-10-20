@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-10-11*
+*Last updated: 2026-10-20*
 
 ## Current Task
+
+**MOMENTUM — 2026-10-18/20.** Owner wants League-style swings (ambush the carry → take the objective). Measured: carry kills were a non-event (43% win). Four levers shipped (D-062/D-063): respawn per stack, death costs half stacks, caught alone ×1.5, death check each half → carry-kill win 60–66%; opening/draft targets hold. Shrine drafted (not built) in v2-direction. Owner's Marvel Snap idea analysed there: options A (lethality dial — measured: noise), B (chains grow with the round), C (every round an opening: secret programs, reveal, resolve). Recommendation B then prototype C. 115 tests. Next: owner reacts to shrine + B/C.
 
 **OPENING MUST MATTER — 2026-10-11.** Owner: after the draft choose a strategy; a good opening should make the endgame easier; quests (A1) + terrain (B1) go; objectives parked; targets: good vs random opening 60–65%, good vs tragic draft ~65/35. Done: exposure + towers ignore wanted defenders (D-058); quests with 2/4 upgrades, 15 authored and tuned (D-059); hills/swamps on Field 7 (D-060); opening-end quest check, 1 basic per half, +8% POW per stack, planning opening AI (D-061); browser shows terrain, quests, stars. Results: good opening 61%, great vs tragic draft 71.5%, 12.4 rounds. 113 tests. Next: owner playtests; objectives later.
 

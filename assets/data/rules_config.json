@@ -20,5 +20,10 @@
   "board": "field7",
   "wantBonus": 2000,
   "wantFloor": 3,
-  "questStackPow": 80
+  "questStackPow": 80,
+  "respawnPerStack": 1,
+  "deathLosesHalfStacks": true,
+  "isolationBonus": 1500,
+  "isolationDistance": 1,
+  "deathCheckEachHalf": true
 }

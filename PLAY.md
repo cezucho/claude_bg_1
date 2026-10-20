@@ -45,6 +45,9 @@ Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A*
 - **Terrain**: hills (mountain marks) give +1 reach; swamps (wave marks) stop movement — a move
   into one ends there, and from one you can step only one hex. Each half, each team now takes
   **one** basic action.
+- **Picks**: a champion with no ally beside it is **caught alone** (dashed ring) and takes
+  ×1.5 damage. A champion at 0 HP dies at the end of the half. Dying costs half its quest
+  stacks, and the respawn grows by a round per stack it had — killing a carry is the swing.
 - **Statuses** show twice: as chips on the card (hover for the rule) and as lettered pips
   above the token — **R**oot, **B**urn, **M**ark, e**X**haust, **U**nstoppable, **W**ound,
   **P**oison. **Walls** are stone hexes on the map with the round closes they have left.
