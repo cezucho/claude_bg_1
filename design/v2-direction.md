@@ -284,6 +284,14 @@ and it would deliver pace and swings together. But it is a rewrite of the core p
 right path is: **B first** (keeps everything, gets the wipe), measured against the momentum
 metrics; then a **prototype of C** on a branch, played at the table, before any decision.
 
+### Programmed rounds · Owner, 2026-10-21 · *brainstorm, see `design/v3-programmed-rounds.md`*
+
+The owner's idea: each round both teams secretly program one ability per champion, then a
+descending-initiative ladder resolves them, with the starting team choosing where the ceiling
+opens and higher programs discarded. Three specialists (core loop, pace, Neuroshima Hex)
+analysed it; the synthesis, the disagreements and a streamlined prototype rule set are in the
+v3 document. Nothing built; v2 is untouched by it.
+
 ## Idea parking lot
 
 ### Bans in the draft (owner, 2026-10-08)
