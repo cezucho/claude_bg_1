@@ -1,0 +1,696 @@
+<title>Augury Programmed Rounds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+/* Layout: a one-screen command table — board centre, your orders left, the enemy right; on a phone the three stack. Single dark look by choice. */
+:root {
+  --bg: #0b0e16; --bg2: #121726; --bg3: #1b2236; --line: #2a3350; --fg: #e3e8f4; --dim: #8a94ad;
+  --gold: #e8c46a; --A: #4aa8ff; --A-dark: #15365a; --B: #ff5566; --B-dark: #5a1a24;
+  --good: #5fdc8f; --bad: #ff6b6b; --hill: #4a4330; --cut: #c08aff;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif; --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 8px; }
+h1, h2, h3, .display { font-family: var(--display); }
+h1 { font-size: 18px; margin: 0; letter-spacing: .08em; text-transform: uppercase; }
+button { font: inherit; color: var(--fg); background: var(--bg3); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--gold); }
+button.primary { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 700; }
+button.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.top { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding: 6px 0 10px; border-bottom: 1px solid var(--line); }
+.top .stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.top .lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.top .val { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums; }
+.A-c { color: var(--A); } .B-c { color: var(--B); }
+.energy { display: flex; gap: 3px; align-items: center; }
+.energy i { width: 10px; height: 16px; border-radius: 2px; background: var(--bg3); border: 1px solid var(--line); }
+.energy i.on { background: var(--gold); border-color: var(--gold); }
+.energy i.spent { background: #6b5a2a; border-color: #6b5a2a; }
+.grid { display: grid; grid-template-columns: 290px minmax(0, 1fr) 290px; gap: 12px; padding-top: 10px; }
+@media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+.panel { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.card { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.card.sel { border-color: var(--gold); box-shadow: 0 0 10px rgba(232,196,106,.25); }
+.card.dead { opacity: .5; }
+.card .name { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.card .name b { font-family: var(--display); font-size: 15px; }
+.card .role { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.hp { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; position: relative; }
+.hp i { display: block; height: 100%; background: var(--A); }
+.card.B .hp i { background: var(--B); }
+.hp .sh { position: absolute; top: 0; height: 100%; background: #cfe3ff; opacity: .8; }
+.hp b { position: absolute; right: 4px; top: -6px; font-size: 10px; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.chip { font-size: 9.5px; padding: 0 5px; border-radius: 6px; background: var(--bg3); color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
+.chip.Rooted { color: #d8b67a; } .chip.Marked { color: #ffd84a; } .chip.Burning { color: #ff8a3d; } .chip.Exhausted { color: #9bb0ff; }
+.chip.alone { color: #ffb3bb; background: #4a1820; }
+.chip.want { color: var(--gold); }
+.abs { display: flex; gap: 4px; flex-wrap: wrap; }
+.ab { flex: 1 1 70px; text-align: left; padding: 4px 6px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ab .k { font-family: var(--display); font-size: 12px; display: flex; justify-content: space-between; }
+.ab .k i { font-style: normal; color: #000; background: var(--gold); border-radius: 3px; padding: 0 4px; font-weight: 700; }
+.ab .k i.t1 { background: #3fd6a0; } .ab .k i.t2 { background: #5a9dff; } .ab .k i.t3 { background: #b07aff; } .ab .k i.t4 { background: #ff9a3c; }
+.ab small { color: var(--dim); font-size: 10px; white-space: normal; }
+.ab.programmed { border-color: var(--gold); background: #2a2614; }
+.order { font-size: 11px; color: var(--gold); min-height: 14px; }
+.order .cut { color: var(--cut); text-decoration: line-through; }
+.boardwrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+svg#board { width: 100%; max-width: 640px; height: auto; margin: 0 auto; display: block; touch-action: manipulation; }
+.hex { fill: #1a2032; stroke: #2c3652; stroke-width: 1; }
+.hex.hill { fill: var(--hill); }
+.hex.tower { fill: #3a3f50; stroke: #8891a8; }
+.hex.nexusA { fill: var(--A-dark); } .hex.nexusB { fill: var(--B-dark); }
+.hex.pick { fill: #2f3a24; stroke: var(--gold); cursor: pointer; }
+.hex.pick:hover { fill: #46552f; }
+.hex.pat { fill: rgba(255,90,90,.45); stroke: #ff9b9b; }
+.hex.pat.ally { fill: rgba(95,220,143,.45); stroke: #a6f5c3; }
+.hex.threat { stroke: #ff6b6b; stroke-dasharray: 3 3; }
+.coord { font-size: 8px; fill: #4e5a78; text-anchor: middle; pointer-events: none; }
+.tok circle.body { stroke: #000; stroke-width: 1.5; }
+.tok.A circle.body { fill: var(--A); } .tok.B circle.body { fill: var(--B); }
+.tok text.g { font-family: var(--display); font-weight: 700; font-size: 15px; fill: #fff; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.tok.sel circle.body { stroke: var(--gold); stroke-width: 3; }
+.tok.pick circle.body { stroke: var(--gold); stroke-width: 2.5; cursor: pointer; }
+.tok.dead { opacity: .25; }
+.alone-ring { fill: none; stroke: #ff7a7a; stroke-width: 1.5; stroke-dasharray: 4 3; pointer-events: none; }
+.ghost { fill: none; stroke: var(--gold); stroke-width: 1.5; stroke-dasharray: 3 3; pointer-events: none; }
+.arrow { stroke: var(--gold); stroke-width: 2; fill: none; marker-end: url(#ah); pointer-events: none; }
+.num { font-family: var(--display); font-weight: 700; font-size: 14px; text-anchor: middle; paint-order: stroke; stroke: #000; stroke-width: 3px; pointer-events: none; }
+.num.bad { fill: #ff6b6b; } .num.good { fill: var(--good); } .num.info { fill: var(--gold); }
+.tokhp { fill: #0a0d14; } .tokhp i { }
+.tier { font-family: var(--display); font-size: 22px; fill: var(--gold); text-anchor: middle; opacity: .9; }
+.prompt { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.prompt .txt { flex: 1 1 200px; min-width: 0; }
+.log { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; height: 220px; overflow-y: auto; font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+.log .b { padding: 2px 4px; border-left: 3px solid var(--line); }
+.log .b.now { border-left-color: var(--gold); background: #1e2214; }
+.log .b.t4 { border-left-color: #ff9a3c; } .log .b.t3 { border-left-color: #b07aff; } .log .b.t2 { border-left-color: #5a9dff; } .log .b.t1 { border-left-color: #3fd6a0; }
+.log .b.lost { color: var(--cut); } .log .b.fizz { color: var(--dim); } .log .b.death { color: var(--bad); font-weight: 700; } .log .b.round { color: var(--gold); font-weight: 700; margin-top: 4px; }
+.overlay { position: fixed; inset: 0; background: rgba(5,7,12,.9); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; z-index: 20; padding: 20px max(16px, env(safe-area-inset-left, 0px)); }
+.overlay .box { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 16px; max-width: 1100px; width: 100%; }
+.dcols { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 800px) { .dcols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dcard { background: var(--bg3); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+.dcard.pickable { border-color: var(--gold); cursor: pointer; }
+.dcard.taken { opacity: .4; }
+.dcard b.n { font-family: var(--display); font-size: 15px; }
+.dcard .ab { flex: 0 0 auto; }
+.help { font-size: 13px; line-height: 1.5; max-width: 70ch; }
+.help h3 { margin: 10px 0 4px; }
+.stats { font-size: 11px; color: var(--dim); display: flex; gap: 10px; flex-wrap: wrap; }
+.stats b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.hidden { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="top">
+  <h1>Augury · Programmed Rounds</h1>
+  <div class="stat"><span class="lbl">Round</span><span class="val" id="t-round">–</span></div>
+  <div class="stat"><span class="lbl A-c">Nexus A</span><span class="val A-c" id="t-nexA">40</span></div>
+  <div class="stat"><span class="lbl B-c">Nexus B</span><span class="val B-c" id="t-nexB">40</span></div>
+  <div class="stat"><span class="lbl">Energy A</span><div class="energy" id="t-energy"></div></div>
+  <div class="stat"><span class="lbl">Priority token</span><span class="val" id="t-token">A</span></div>
+  <div class="stat"><span class="lbl">Phase</span><span class="val" id="t-phase">Draft</span></div>
+  <div class="modes" style="margin-left:auto">
+    <button id="btn-new">New: play A vs AI</button>
+    <button id="btn-watch">New: watch AI vs AI</button>
+    <button id="btn-threat">Threat overlay</button>
+    <button id="btn-help">Rules</button>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="panel" id="panel-A"></div>
+  <div class="boardwrap">
+    <svg id="board" viewBox="0 0 100 100"></svg>
+    <div class="prompt"><div class="txt" id="prompt">Draft a team.</div><div id="buttons"></div></div>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="panel">
+    <div id="panel-B"></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<script>
+'use strict';
+// ───────────── geometry ─────────────
+const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+const DIRNAME = ['right','up-right','up-left','left','down-left','down-right'];
+const R = 3, HEX = 34, SQ3 = Math.sqrt(3);
+const key = (q, r) => q + ',' + r;
+const dist = (a, b) => (Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[0]+a[1]-b[0]-b[1])) / 2;
+const add = (a, b) => [a[0]+b[0], a[1]+b[1]];
+const same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1];
+const rot60 = ([q, r]) => [-r, q + r];
+function rot(h, n) { let p = h; for (let i = 0; i < ((n % 6) + 6) % 6; i++) p = rot60(p); return p; }
+const HEXES = []; for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) if (Math.abs(q + r) <= R) HEXES.push([q, r]);
+const onBoard = h => Math.abs(h[0]) <= R && Math.abs(h[1]) <= R && Math.abs(h[0] + h[1]) <= R;
+const NEXUS = { A: [0,-3], B: [0,3] };
+const TOWERS = [[0,0],[0,-1],[0,1]];   // centre, A's home, B's home
+const HILLS = [[-3,0],[3,0]];
+const SOLID = new Set([...TOWERS, NEXUS.A, NEXUS.B].map(h => key(...h)));
+const START = { A: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]], B: [[1,2],[0,2],[-1,2],[-2,2],[-3,2]] };
+const FWD = { A: 1, B: -1 };   // forward is +r for A, −r for B
+const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r];
+const other = t => t === 'A' ? 'B' : 'A';
+
+// ───────────── content ─────────────
+// kinds: track (tier 1: commits a champion, follows it) · hex (tier 2: commits a hex) · rot (tier 3: commits a facing) · fixed (tier 4: forward pattern)
+const LINE = [[1,0],[2,0],[3,0]], CONE = [[1,0],[1,-1],[2,-1],[2,0],[3,-1]];
+const BLAST = [[0,1],[-1,1],[1,0],[0,2],[-1,2]];   // forward frame (+r), rotated for B
+const ROSTER = [
+  { id:'anchor', name:'Anchor', role:'Top', hp:28, gives:'Rooted', wants:'Marked', abilities:[
+    { name:'Chain Hook', init:2, kind:'hex', range:2, dmg:4, status:'Rooted' },
+    { name:'Stand Firm', init:1, kind:'self', shield:5 },
+    { name:'Groundswell', init:4, kind:'fixed', pattern:BLAST, dmg:6 } ] },
+  { id:'bulwark', name:'Bulwark', role:'Top', hp:30, gives:'Exhausted', wants:null, abilities:[
+    { name:'Shove', init:1, kind:'track', range:1, dmg:3, status:'Exhausted' },
+    { name:'Rampart', init:2, kind:'self', shield:6 },
+    { name:'Quake', init:4, kind:'fixed', pattern:BLAST, dmg:5, status:'Exhausted' } ] },
+  { id:'ember', name:'Ember', role:'Jungle', hp:22, gives:'Burning', wants:'Exhausted', abilities:[
+    { name:'Kindle', init:1, kind:'track', range:2, dmg:2, status:'Burning' },
+    { name:'Flare', init:2, kind:'hex', range:3, dmg:4, status:'Burning' },
+    { name:'Wildfire', init:3, kind:'rot', pattern:CONE, dmg:5 } ] },
+  { id:'viper', name:'Viper', role:'Jungle', hp:22, gives:null, wants:'Rooted', abilities:[
+    { name:'Fang', init:1, kind:'track', range:1, dmg:6 },
+    { name:'Lunge', init:2, kind:'hex', range:2, dmg:4 },
+    { name:'Ambush', init:3, kind:'rot', pattern:LINE, dmg:5 } ] },
+  { id:'lens', name:'Lens', role:'Mid', hp:22, gives:'Marked', wants:'Burning', abilities:[
+    { name:'Mark', init:2, kind:'hex', range:3, dmg:2, status:'Marked' },
+    { name:'Lance', init:3, kind:'rot', pattern:LINE, dmg:5 },
+    { name:'Refraction', init:4, kind:'fixed', pattern:BLAST, dmg:4, status:'Marked' } ] },
+  { id:'tempest', name:'Tempest', role:'Mid', hp:22, gives:'Exhausted', wants:null, abilities:[
+    { name:'Zap', init:1, kind:'track', range:3, dmg:3 },
+    { name:'Gust', init:2, kind:'hex', range:2, dmg:3, status:'Exhausted' },
+    { name:'Eye of the Storm', init:4, kind:'fixed', pattern:BLAST, dmg:6 } ] },
+  { id:'ranger', name:'Ranger', role:'Bottom', hp:23, gives:'Rooted', wants:null, abilities:[
+    { name:'Volley', init:1, kind:'track', range:3, dmg:4 },
+    { name:'Pin Shot', init:2, kind:'hex', range:3, dmg:3, status:'Rooted' },
+    { name:'Rain of Arrows', init:4, kind:'fixed', pattern:BLAST, dmg:6 } ] },
+  { id:'gunner', name:'Gunner', role:'Bottom', hp:24, gives:null, wants:'Rooted', abilities:[
+    { name:'Snipe', init:1, kind:'track', range:3, dmg:5 },
+    { name:'Recoil', init:2, kind:'hex', range:2, dmg:4 },
+    { name:'Buckshot', init:3, kind:'rot', pattern:CONE, dmg:4 } ] },
+  { id:'oriel', name:'Oriel', role:'Support', hp:26, gives:null, wants:null, abilities:[
+    { name:'Mend', init:1, kind:'track', range:2, heal:7, ally:true },
+    { name:'Tether', init:2, kind:'track', range:2, shield:5, ally:true },
+    { name:'Sanctuary', init:4, kind:'fixed', pattern:BLAST, heal:4, ally:true } ] },
+  { id:'seer', name:'Seer', role:'Support', hp:25, gives:'Marked', wants:null, abilities:[
+    { name:'Omen', init:1, kind:'track', range:3, dmg:1, status:'Marked' },
+    { name:'Curse', init:2, kind:'hex', range:2, dmg:3 },
+    { name:'Revelation', init:4, kind:'fixed', pattern:BLAST, dmg:3, status:'Marked' } ] },
+];
+const ROLES = ['Top','Jungle','Mid','Bottom','Support'];
+const RULES = { nexus: 40, rounds: 8, spd: 2, killTax: 4, burn: 2, gateHit: 3, alone: 1.5, want: 2, wantFloor: 3, respawn: 2, carryCap: 3 };
+const energyFor = r => Math.min(10, 5 + Math.ceil(r / 2));
+
+// ───────────── state ─────────────
+let G = null;        // the match
+let UI = { sel: null, mode: null, target: null, threat: false, autoTimer: null, revealing: false };
+let STATS = { deaths: 0, bursts: 0, lost: 0, fizz: 0, leadChanges: 0, lastSign: 0, decisions: 0, matches: 0, winsA: 0 };
+
+function newMatch(watch) {
+  clearTimeout(UI.autoTimer);
+  G = { phase: 'draft', round: 0, humans: watch ? [] : ['A'], picks: { A: [null,null,null,null,null], B: [null,null,null,null,null] },
+        draftOrder: ['A','B','B','A','A','B','B','A','A','B'], draftIdx: 0, taken: new Set(),
+        champs: [], nexus: { A: RULES.nexus, B: RULES.nexus }, token: 'B', carry: { A: 0, B: 0 },
+        orders: { A: null, B: null }, log: [], beats: [], beatIdx: 0, winner: null };
+  UI.sel = null; UI.mode = null; UI.revealing = false;
+  render();
+  if (!G.humans.length) draftAiLoop();
+}
+
+// ───────────── draft ─────────────
+function draftPick(def) {
+  const team = G.draftOrder[G.draftIdx];
+  const role = ROLES.indexOf(def.role);
+  if (G.picks[team][role] || G.taken.has(def.id)) return;
+  G.picks[team][role] = def; G.taken.add(def.id); G.draftIdx++;
+  if (G.draftIdx >= 10) startMatch(); else { render(); draftAiLoop(); }
+}
+function draftAiLoop() {
+  if (G.phase !== 'draft') return;
+  const team = G.draftOrder[G.draftIdx];
+  if (G.humans.includes(team)) return;
+  UI.autoTimer = setTimeout(() => { draftPick(aiDraft(team)); }, 350);
+}
+function aiDraft(team) {
+  const mine = G.picks[team].filter(Boolean);
+  let best = null, bestV = -1e9;
+  for (const d of ROSTER) {
+    if (G.taken.has(d.id) || G.picks[team][ROLES.indexOf(d.role)]) continue;
+    let v = d.hp / 10 + d.abilities.reduce((s, a) => s + (a.dmg || 0), 0) / 3;
+    for (const m of mine) { if (d.gives && d.gives === m.wants) v += 6; if (m.gives && m.gives === d.wants) v += 6; }
+    // potential partners still free
+    for (const o of ROSTER) if (!G.taken.has(o.id) && o !== d && !G.picks[team][ROLES.indexOf(o.role)]) { if (d.gives && d.gives === o.wants) v += 1; if (o.gives && o.gives === d.wants) v += 1; }
+    if (v > bestV) { bestV = v; best = d; }
+  }
+  return best;
+}
+function startMatch() {
+  G.phase = 'program'; G.round = 1;
+  G.champs = [];
+  for (const team of ['A','B']) G.picks[team].forEach((def, i) => G.champs.push({ id: G.champs.length, team, def, role: def.role, pos: START[team][i], home: START[team][i], hp: def.hp, max: def.hp, shield: 0, status: {}, dead: false, respawnAt: 0, hpRoundStart: def.hp }));
+  G.token = 'B';   // the team that picked second holds the token in round 1
+  logLine('round', `Round 1 — program your orders. Energy ${energyFor(1)}.`);
+  beginProgramming();
+}
+
+// ───────────── programming ─────────────
+function beginProgramming() {
+  G.phase = 'program';
+  for (const t of ['A','B']) G.orders[t] = { focus: null, moves: {}, abilities: {}, energy: energyFor(G.round) + G.carry[t] };
+  for (const c of G.champs) c.hpRoundStart = c.hp;
+  UI.sel = null; UI.mode = null;
+  if (!G.humans.includes('A')) aiProgram('A');
+  if (!G.humans.includes('B')) aiProgram('B');
+  render();
+  if (!G.humans.length) UI.autoTimer = setTimeout(lockIn, 500);
+}
+const alive = t => G.champs.filter(c => c.team === t && !c.dead);
+const champAt = h => G.champs.find(c => !c.dead && same(c.pos, h));
+const hasStatus = (c, s) => !!c.status[s];
+function spent(team) {
+  const o = G.orders[team]; let e = 0;
+  for (const id in o.moves) e += 1;
+  for (const id in o.abilities) for (const a of o.abilities[id]) e += G.champs[id].def.abilities[a.ab].init;
+  return e;
+}
+const energyLeft = team => G.orders[team].energy - spent(team);
+function plannedPos(c) { const m = G.orders[c.team].moves[c.id]; return m || c.pos; }
+function moveTargets(c) {
+  if (hasStatus(c, 'Rooted')) return [];
+  const out = [], seen = new Set([key(...c.pos)]); let frontier = [c.pos];
+  for (let step = 1; step <= RULES.spd; step++) {
+    const next = [];
+    for (const at of frontier) for (const d of DIRS) {
+      const to = add(at, d), k = key(...to);
+      if (!onBoard(to) || SOLID.has(k) || seen.has(k)) continue;
+      seen.add(k);
+      const occ = champAt(to);
+      if (occ && occ.team !== c.team) continue;   // can't pass enemies
+      next.push(to);
+      if (!occ) out.push(to);
+    }
+    frontier = next;
+  }
+  return out;
+}
+function canProgram(c, abIdx) {
+  const o = G.orders[c.team], list = o.abilities[c.id] || [], ab = c.def.abilities[abIdx];
+  if (list.length >= 2) return 'two abilities at most';
+  if (list.some(x => x.ab === abIdx)) return 'already programmed';
+  if (list.length === 1 && c.def.abilities[list[0].ab].init <= ab.init) return 'the second ability must have lower initiative';
+  if (energyLeft(c.team) < ab.init) return `needs ${ab.init} energy`;
+  return null;
+}
+function patternCells(c, ab, facing, from) {
+  const at = from || plannedPos(c);
+  if (ab.kind === 'fixed') return ab.pattern.map(p => FWD[c.team] > 0 ? add(at, p) : add(at, [-p[0], -p[1]])).filter(onBoard);
+  if (ab.kind === 'rot') return ab.pattern.map(p => add(at, rot(p, facing))).filter(onBoard);
+  return [];
+}
+function selectChamp(c) { if (G.phase !== 'program' || !G.humans.includes(c.team)) return; UI.sel = c.id; UI.mode = null; render(); }
+function setMode(mode, ab) {
+  const c = G.champs[UI.sel]; if (!c) return;
+  if (mode === 'ability') {
+    const why = canProgram(c, ab); if (why) { prompt(why); return; }
+    const a = c.def.abilities[ab];
+    if (a.kind === 'fixed' || a.kind === 'self') { addAbility(c, ab, null); return; }
+  }
+  if (mode === 'move' && hasStatus(c, 'Rooted')) { prompt(`${c.def.name} is rooted and can't move this round.`); return; }
+  if (mode === 'move' && !G.orders[c.team].moves[c.id] && energyLeft(c.team) < 1) { prompt('No energy left for a move.'); return; }
+  UI.mode = { kind: mode, ab }; render();
+}
+function addAbility(c, ab, target) {
+  const o = G.orders[c.team]; (o.abilities[c.id] = o.abilities[c.id] || []).push({ ab, target });
+  STATS.decisions++; UI.mode = null; render();
+}
+function clearOrders(c) { const o = G.orders[c.team]; delete o.moves[c.id]; delete o.abilities[c.id]; UI.mode = null; render(); }
+function boardClick(h) {
+  if (G.phase !== 'program' || !UI.mode) { const c = champAt(h); if (c && G.humans.includes(c.team)) selectChamp(c); return; }
+  const c = G.champs[UI.sel], m = UI.mode;
+  if (m.kind === 'focus') { const e = champAt(h); if (e && e.team !== c.team) { G.orders[c.team].focus = e.id; STATS.decisions++; UI.mode = null; render(); } return; }
+  if (m.kind === 'move') { if (moveTargets(c).some(t => same(t, h))) { G.orders[c.team].moves[c.id] = h; STATS.decisions++; UI.mode = null; render(); } return; }
+  const ab = c.def.abilities[m.ab], from = plannedPos(c);
+  if (ab.kind === 'track') { const e = champAt(h); if (e && (ab.ally ? e.team === c.team : e.team !== c.team) && dist(from, e.pos) <= ab.range) addAbility(c, m.ab, { champ: e.id }); return; }
+  if (ab.kind === 'hex') { if (dist(from, h) <= ab.range && !SOLID.has(key(...h))) addAbility(c, m.ab, { hex: h }); return; }
+  if (ab.kind === 'rot') { const d = DIRS.findIndex(dd => same(add(from, dd), h)); if (d >= 0) addAbility(c, m.ab, { facing: d }); return; }
+}
+function lockIn() {
+  if (G.phase !== 'program') return;
+  G.phase = 'reveal'; UI.mode = null; UI.sel = null;
+  resolveRound();
+}
+
+// ───────────── AI programming (commits before reading the other side) ─────────────
+function aiProgram(team) {
+  const o = G.orders[team], foes = alive(other(team)), mine = alive(team);
+  if (!foes.length) return;
+  o.focus = foes.reduce((a, b) => b.hp < a.hp ? b : a).id;
+  const plans = [];
+  for (const c of mine) {
+    const spots = [c.pos, ...moveTargets(c)];
+    for (const p of spots) {
+      const moveCost = same(p, c.pos) ? 0 : 1;
+      const alonePen = mine.some(m => m !== c && dist(m.pos, p) <= 1) ? 0 : 3;
+      const nearNexus = -0.25 * dist(p, NEXUS[other(team)]);
+      const base = nearNexus - alonePen;
+      let bestA = { v: -1e9, abs: [] };
+      // single abilities and descending pairs
+      const singles = c.def.abilities.map((ab, i) => ({ i, ab, v: aiValue(c, ab, p, foes, mine), target: aiTarget(c, ab, p, foes, mine) })).filter(x => x.target !== undefined);
+      for (const s of singles) { const v = s.v - s.ab.init * 0.6; if (v > bestA.v) bestA = { v, abs: [s] }; }
+      for (const s of singles) for (const t of singles) if (s.ab.init > t.ab.init) { const v = s.v + t.v - (s.ab.init + t.ab.init) * 0.6; if (v > bestA.v) bestA = { v, abs: [s, t] }; }
+      if (bestA.v < -1e8) bestA = { v: 0, abs: [] };
+      plans.push({ c, p, moveCost, abs: bestA.abs, v: base + bestA.v, cost: moveCost + bestA.abs.reduce((s, a) => s + a.ab.init, 0) });
+    }
+  }
+  // greedy by value per champion, respecting energy
+  const done = new Set();
+  plans.sort((a, b) => b.v - a.v);
+  for (const pl of plans) {
+    if (done.has(pl.c.id)) continue;
+    let abs = pl.abs.slice(), cost = pl.cost;
+    while (cost > energyLeft(team) && abs.length) { const dropped = abs.pop(); cost -= dropped.ab.init; }
+    if (cost > energyLeft(team)) continue;
+    done.add(pl.c.id);
+    if (pl.moveCost) o.moves[pl.c.id] = pl.p;
+    if (abs.length) o.abilities[pl.c.id] = abs.map(a => ({ ab: a.i, target: a.target }));
+  }
+}
+function aiTarget(c, ab, p, foes, mine) {
+  if (ab.kind === 'self' || ab.kind === 'fixed') return null;
+  if (ab.kind === 'track') { const pool = (ab.ally ? mine : foes).filter(e => dist(p, e.pos) <= ab.range && (!ab.ally || e.hp < e.max || ab.shield)); if (!pool.length) return undefined; const foc = pool.find(e => e.id === G.orders[c.team].focus); return { champ: (foc || pool.reduce((a, b) => b.hp < a.hp ? b : a)).id }; }
+  if (ab.kind === 'hex') { const pool = foes.filter(e => dist(p, e.pos) <= ab.range); if (!pool.length) return undefined; const foc = pool.find(e => e.id === G.orders[c.team].focus); return { hex: (foc || pool.reduce((a, b) => b.hp < a.hp ? b : a)).pos.slice() }; }
+  if (ab.kind === 'rot') { let best = -1, bf = 0; for (let f = 0; f < 6; f++) { const n = patternCells(c, ab, f, p).filter(h => foes.some(e => same(e.pos, h))).length; if (n > best) { best = n; bf = f; } } return best > 0 ? { facing: bf } : undefined; }
+  return null;
+}
+function aiValue(c, ab, p, foes, mine) {
+  const t = aiTarget(c, ab, p, foes, mine);
+  if (t === undefined) return -1e9;
+  if (ab.kind === 'self') return c.hp < c.max * 0.6 ? (ab.shield || 0) * 0.6 : (ab.shield || 0) * 0.15;
+  let cells = [];
+  if (ab.kind === 'track') cells = [G.champs[t.champ].pos];
+  else if (ab.kind === 'hex') cells = [t.hex];
+  else cells = patternCells(c, ab, t ? t.facing : 0, p);
+  let v = 0;
+  for (const h of cells) {
+    const e = champAt(h); if (!e) continue;
+    if (ab.ally) { if (e.team === c.team) v += (ab.heal ? Math.min(ab.heal, e.max - e.hp) * 0.8 : 0) + (ab.shield || 0) * 0.4; continue; }
+    if (e.team === c.team) continue;
+    let d = ab.dmg || 0;
+    if (c.def.wants && hasStatus(e, c.def.wants)) d = Math.max(d * RULES.want, d + RULES.wantFloor);
+    if (!mine.some(m => m !== e && m.team === e.team) || !alive(e.team).some(m => m !== e && dist(m.pos, e.pos) <= 1)) d = Math.floor(d * RULES.alone);
+    v += Math.min(d, e.hp + e.shield) + (d >= e.hp + e.shield ? 8 : 0) + (ab.status ? 2 : 0) + (e.id === G.orders[c.team].focus ? 1 : 0);
+  }
+  if (ab.kind === 'fixed' && v === 0) return -1e9;
+  return v;
+}
+
+// ───────────── resolution ─────────────
+function resolveRound() {
+  const beats = [];
+  const r = G.round;
+  beats.push({ kind: 'reveal' });
+  // programs
+  const progs = [];
+  for (const t of ['A','B']) { const o = G.orders[t]; for (const id in o.abilities) for (const a of o.abilities[id]) progs.push({ team: t, c: G.champs[id], ab: G.champs[id].def.abilities[a.ab], abIdx: a.ab, target: a.target, state: 'pending' }); }
+  G.progs = progs;
+  beats.push({ kind: 'moves' });
+  for (let tier = 4; tier >= 1; tier--) { if (progs.some(p => p.ab.init === tier)) beats.push({ kind: 'tier', tier, phase: 'control' }, { kind: 'tier', tier, phase: 'damage' }, { kind: 'deaths', tier }); }
+  beats.push({ kind: 'close' });
+  G.beats = beats; G.beatIdx = 0; UI.revealing = true;
+  render();
+  stepBeat();
+}
+function stepBeat() {
+  if (!UI.revealing) return;
+  const b = G.beats[G.beatIdx];
+  if (!b) { UI.revealing = false; endOfRound(); return; }
+  runBeat(b); G.beatIdx++;
+  render();
+  if (G.winner) { UI.revealing = false; render(); return; }
+  UI.autoTimer = setTimeout(stepBeat, G.humans.length ? 950 : 350);
+}
+function skipReveal() { clearTimeout(UI.autoTimer); while (UI.revealing && G.beats[G.beatIdx] && !G.winner) { runBeat(G.beats[G.beatIdx]); G.beatIdx++; } if (!G.winner) { UI.revealing = false; endOfRound(); } render(); }
+function runBeat(b) {
+  G.marks = [];   // board annotations for this beat
+  if (b.kind === 'reveal') {
+    logLine('round', `Round ${G.round} — reveal. Token: ${G.token}. Focus A: ${nameOf(G.orders.A.focus)} · Focus B: ${nameOf(G.orders.B.focus)}.`);
+    for (const p of G.progs) logLine('t' + p.ab.init, `${label(p.c)} programs ${p.ab.name} [${p.ab.init}]${targetText(p)}`);
+    return;
+  }
+  if (b.kind === 'moves') {
+    const movers = G.champs.filter(c => !c.dead && G.orders[c.team].moves[c.id] && !hasStatus(c, 'Rooted')).map(c => ({ c, to: G.orders[c.team].moves[c.id], ok: true }));
+    // conflicts: same destination → token holder; others stay
+    for (const m of movers) for (const n of movers) if (m !== n && same(m.to, n.to)) { const loser = m.c.team === G.token ? n : m; loser.ok = false; }
+    // blocked by a champion that does not move away
+    let changed = true; while (changed) { changed = false; for (const m of movers) { if (!m.ok) continue; const occ = champAt(m.to); if (occ && occ !== m.c) { const mv = movers.find(x => x.c === occ); if (!mv || !mv.ok) { m.ok = false; changed = true; } } } }
+    for (const m of movers) { if (m.ok) { G.marks.push({ kind: 'arrow', from: m.c.pos, to: m.to }); logLine('b', `${label(m.c)} moves to ${fmt(m.to)}`); } else logLine('fizz', `${label(m.c)} is blocked and stays at ${fmt(m.c.pos)}`); }
+    for (const m of movers) if (m.ok) m.c.pos = m.to;
+    return;
+  }
+  if (b.kind === 'tier') {
+    const list = G.progs.filter(p => p.ab.init === b.tier && p.state === 'pending');
+    if (b.phase === 'control') {
+      G.tierLabel = b.tier;
+      for (const p of list) {
+        if (p.c.dead) { p.state = 'lost'; STATS.lost++; G.carry[p.team] = Math.min(RULES.carryCap, G.carry[p.team] + p.ab.init); logLine('lost', `✗ ${label(p.c)}'s ${p.ab.name} is LOST — ${p.c.def.name} died before tier ${b.tier} (energy refunded)`); continue; }
+        p.hits = resolveTargets(p);
+        if (p.hits === null) { p.state = 'fizzled'; STATS.fizz++; logLine('fizz', `~ ${label(p.c)}'s ${p.ab.name} FIZZLES — nothing in its ${p.ab.kind === 'track' ? 'range' : 'pattern'}`); continue; }
+        for (const h of p.hits) G.marks.push({ kind: 'cell', hex: h, ally: !!p.ab.ally });
+        if (p.ab.status === 'Rooted' || p.ab.status === 'Exhausted') {
+          for (const h of p.hits) { const e = champAt(h); if (!e || e.team === p.team) continue; applyStatus(e, p.ab.status); G.marks.push({ kind: 'num', hex: e.pos, text: p.ab.status.toUpperCase(), cls: 'info' });
+            if (p.ab.status === 'Exhausted') for (const q of G.progs) if (q.c === e && q.state === 'pending' && q !== p) { q.state = 'lost'; STATS.lost++; G.carry[q.team] = Math.min(RULES.carryCap, G.carry[q.team] + q.ab.init); logLine('lost', `✗ ${label(e)}'s ${q.ab.name} is LOST — exhausted by ${p.c.def.name}`); } }
+          logLine('t' + b.tier, `${label(p.c)} ${p.ab.name}: ${p.ab.status.toLowerCase()}s ${p.hits.map(h => champAt(h)).filter(e => e && e.team !== p.team).map(label).join(', ') || 'nobody'}`);
+        }
+      }
+    } else {
+      for (const p of list) {
+        if (p.state !== 'pending') continue;
+        p.state = 'played';
+        const parts = [];
+        for (const h of p.hits) { const e = champAt(h); if (!e) continue;
+          if (p.ab.ally) { if (e.team !== p.team) continue; if (p.ab.heal) { const g = Math.min(p.ab.heal, e.max - e.hp); e.hp += g; parts.push(`${label(e)} +${g}`); G.marks.push({ kind: 'num', hex: e.pos, text: '+' + g, cls: 'good' }); } if (p.ab.shield) { e.shield += p.ab.shield; parts.push(`${label(e)} shield ${p.ab.shield}`); G.marks.push({ kind: 'num', hex: e.pos, text: 'shield', cls: 'good' }); } continue; }
+          if (e.team === p.team) continue;
+          if (p.ab.dmg) { let d = p.ab.dmg, tags = [];
+            if (p.c.def.wants && hasStatus(e, p.c.def.wants)) { d = Math.max(d * RULES.want, d + RULES.wantFloor); tags.push('×2 ' + p.c.def.wants.toLowerCase()); }
+            if (isAlone(e)) { d = Math.floor(d * RULES.alone); tags.push('alone'); }
+            const absorbed = Math.min(e.shield, d); e.shield -= absorbed; e.hp -= d - absorbed;
+            parts.push(`${label(e)} −${d}${tags.length ? ' (' + tags.join(', ') + ')' : ''}${absorbed ? ` (${absorbed} shielded)` : ''}`);
+            G.marks.push({ kind: 'num', hex: e.pos, text: '−' + d, cls: 'bad' }); }
+          if (p.ab.status === 'Marked' || p.ab.status === 'Burning') { applyStatus(e, p.ab.status); parts.push(p.ab.status.toLowerCase()); }
+        }
+        if (p.ab.kind === 'self') { p.c.shield += p.ab.shield; parts.push(`shield ${p.ab.shield}`); G.marks.push({ kind: 'num', hex: p.c.pos, text: 'shield', cls: 'good' }); }
+        if (p.ab.dmg || p.ab.heal || p.ab.shield) logLine('t' + b.tier, `${label(p.c)} ${p.ab.name}: ${parts.join(' · ') || 'no effect'}`);
+      }
+    }
+    return;
+  }
+  if (b.kind === 'deaths') {
+    for (const c of G.champs) if (!c.dead && c.hp <= 0) {
+      c.dead = true; c.respawnAt = G.round + RULES.respawn; c.status = {}; c.shield = 0; G.nexus[c.team] -= RULES.killTax;
+      STATS.deaths++; if (c.hpRoundStart >= c.max * 0.6) STATS.bursts++;
+      G.marks.push({ kind: 'num', hex: c.pos, text: 'KILLED', cls: 'bad' });
+      logLine('death', `✝ ${label(c)} dies at the end of tier ${b.tier} — nexus ${c.team} −${RULES.killTax} → ${Math.max(0, G.nexus[c.team])}`);
+    }
+    checkWin();
+    return;
+  }
+  if (b.kind === 'close') {
+    G.tierLabel = null;
+    logLine('round', `Round ${G.round} closes.`);
+    for (const c of G.champs) if (!c.dead && hasStatus(c, 'Burning')) { c.hp -= RULES.burn; logLine('b', `${label(c)} burns for ${RULES.burn}`); if (c.hp <= 0) { c.dead = true; c.respawnAt = G.round + RULES.respawn; c.status = {}; G.nexus[c.team] -= RULES.killTax; STATS.deaths++; logLine('death', `✝ ${label(c)} burns to death — nexus ${c.team} −${RULES.killTax}`); } }
+    for (const t of ['A','B']) { const foe = other(t); let gate = 0; for (const c of alive(t)) if (dist(c.pos, NEXUS[foe]) <= 1) gate += RULES.gateHit; if (gate) { G.nexus[foe] -= gate; logLine('b', `At the gates: team ${t} hits NEXUS ${foe} for ${gate}`); } }
+    const cA = alive('A').filter(c => dist(c.pos, [0,0]) <= 1).length, cB = alive('B').filter(c => dist(c.pos, [0,0]) <= 1).length;
+    if (cA !== cB) { const h = cA > cB ? 'A' : 'B'; G.nexus[other(h)] -= 1; logLine('b', `Centre held by ${h}: NEXUS ${other(h)} −1`); }
+    for (const c of G.champs) for (const s in c.status) if (c.status[s] <= G.round) delete c.status[s];
+    for (const c of G.champs) if (c.dead && c.respawnAt <= G.round) { c.dead = false; c.hp = c.max; c.shield = 0; c.pos = freeNear(c.home); logLine('b', `${label(c)} returns at ${fmt(c.pos)}`); }
+    G.token = other(G.token);
+    const lead = G.nexus.A - G.nexus.B, sg = Math.sign(lead); if (sg && STATS.lastSign && sg !== STATS.lastSign) STATS.leadChanges++; if (sg) STATS.lastSign = sg;
+    checkWin();
+    if (!G.winner && G.round >= RULES.rounds) { G.winner = G.nexus.A > G.nexus.B ? 'A' : G.nexus.B > G.nexus.A ? 'B' : alive('A').length > alive('B').length ? 'A' : alive('B').length > alive('A').length ? 'B' : 'draw'; logLine('round', `Round ${RULES.rounds} is the last: ${G.winner === 'draw' ? 'a draw' : 'team ' + G.winner + ' wins'} (nexus A ${Math.max(0, G.nexus.A)} – B ${Math.max(0, G.nexus.B)})`); }
+    if (G.winner) finish();
+  }
+}
+function resolveTargets(p) {
+  const c = p.c, ab = p.ab, t = p.target;
+  if (ab.kind === 'self') return [c.pos];
+  if (ab.kind === 'track') { const e = G.champs[t.champ]; if (e.dead || dist(c.pos, e.pos) > ab.range) return null; return [e.pos]; }
+  if (ab.kind === 'hex') { if (dist(c.pos, t.hex) > ab.range) return null; const e = champAt(t.hex); return e && e.team !== c.team ? [t.hex] : null; }
+  const cells = patternCells(c, ab, t ? t.facing : 0, c.pos);
+  const any = cells.some(h => { const e = champAt(h); return e && (ab.ally ? e.team === c.team : e.team !== c.team); });
+  return any ? cells : null;
+}
+function applyStatus(e, s) { e.status[s] = G.round + 1; }   // active through the next round close
+function isAlone(e) { return !alive(e.team).some(m => m !== e && dist(m.pos, e.pos) <= 1); }
+function freeNear(h) { if (!champAt(h)) return h; for (const d of DIRS) { const n = add(h, d); if (onBoard(n) && !SOLID.has(key(...n)) && !champAt(n)) return n; } return h; }
+function checkWin() { if (G.winner) return; if (G.nexus.A <= 0 || G.nexus.B <= 0) { G.winner = G.nexus.A <= 0 && G.nexus.B <= 0 ? (G.nexus.A > G.nexus.B ? 'A' : G.nexus.B > G.nexus.A ? 'B' : 'draw') : G.nexus.A <= 0 ? 'B' : 'A'; logLine('round', `NEXUS destroyed — ${G.winner === 'draw' ? 'a draw' : 'team ' + G.winner + ' wins'}`); finish(); } }
+function finish() { G.phase = 'over'; UI.revealing = false; STATS.matches++; if (G.winner === 'A') STATS.winsA++; if (!G.humans.length) UI.autoTimer = setTimeout(() => newMatch(true), 1500); }
+function endOfRound() {
+  if (G.winner) { render(); return; }
+  G.round++; logLine('round', `Round ${G.round} — program your orders. Energy ${energyFor(G.round)}${G.carry.A || G.carry.B ? ` (carry A +${G.carry.A}, B +${G.carry.B})` : ''}.`);
+  beginProgramming();
+  G.carry = { A: 0, B: 0 };
+}
+
+// ───────────── helpers ─────────────
+const fmt = h => `(${h[0]},${h[1]})`;
+const label = c => `${c.team}:${c.def.name}`;
+const nameOf = id => id == null ? '—' : G.champs[id].def.name;
+function targetText(p) { const t = p.target; if (!t) return ''; if (t.champ != null) return ` → ${nameOf(t.champ)}`; if (t.hex) return ` → ${fmt(t.hex)}`; if (t.facing != null) return ` facing ${DIRNAME[t.facing]}`; return ''; }
+function logLine(cls, text) { G.log.push({ cls, text }); }
+function prompt(text) { const el = document.getElementById('prompt'); el.textContent = text; }
+
+// ───────────── render ─────────────
+function render() {
+  if (!G) return;
+  document.getElementById('t-round').textContent = G.round ? `${G.round} / ${RULES.rounds}` : '–';
+  document.getElementById('t-nexA').textContent = Math.max(0, G.nexus.A);
+  document.getElementById('t-nexB').textContent = Math.max(0, G.nexus.B);
+  document.getElementById('t-token').textContent = G.token;
+  document.getElementById('t-phase').textContent = G.phase === 'draft' ? 'Draft' : G.phase === 'program' ? 'Program' : G.phase === 'reveal' ? (G.tierLabel ? `Tier ${G.tierLabel}` : 'Reveal') : 'Over';
+  const en = document.getElementById('t-energy'); en.innerHTML = '';
+  if (G.phase !== 'draft') { const o = G.orders.A, used = spent('A'); for (let i = 0; i < o.energy; i++) en.appendChild(h(`<i class="${i < used ? 'spent' : 'on'}"></i>`)); }
+  document.getElementById('btn-threat').classList.toggle('on', UI.threat);
+  renderPanel('A'); renderPanel('B'); renderBoard(); renderPrompt(); renderLog(); renderStats(); renderOverlay();
+}
+function sv(html) { const w = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); w.innerHTML = html.trim(); return w.firstElementChild; }
+function h(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function renderPanel(team) {
+  const el = document.getElementById('panel-' + team); el.innerHTML = '';
+  if (G.phase === 'draft') { el.appendChild(h(`<div class="card"><div class="name"><b class="${team}-c">Team ${team}</b><span class="role">${G.humans.includes(team) ? 'you' : 'AI'}</span></div><div>${G.picks[team].map((d, i) => `${ROLES[i]}: ${d ? d.name : '—'}`).join(' · ')}</div></div>`)); return; }
+  const human = G.humans.includes(team), hidden = !human && G.phase === 'program';
+  for (const c of G.champs.filter(c => c.team === team)) {
+    const o = G.orders[team] || { moves: {}, abilities: {} };
+    const abs = o.abilities[c.id] || [], mv = o.moves[c.id];
+    const chips = Object.keys(c.status).map(s => `<span class="chip ${s}">${s}</span>`);
+    if (!c.dead && isAlone(c)) chips.push('<span class="chip alone" title="no ally beside it: takes ×1.5">alone</span>');
+    if (c.shield) chips.push(`<span class="chip">shield ${c.shield}</span>`);
+    if (c.def.wants) chips.push(`<span class="chip want" title="hits ${c.def.wants} enemies ×2">wants ${c.def.wants}</span>`);
+    if (c.def.gives) chips.push(`<span class="chip">gives ${c.def.gives}</span>`);
+    const orderTxt = hidden ? '<span class="chip">orders hidden</span>' : [mv ? `move → ${fmt(mv)}` : '', ...abs.map(a => { const p = (G.progs || []).find(p => p.c === c && p.abIdx === a.ab); const cls = p && (p.state === 'lost' || p.state === 'fizzled') ? 'cut' : ''; return `<span class="${cls}">${c.def.abilities[a.ab].name} [${c.def.abilities[a.ab].init}]${targetText({ target: a.target })}</span>`; })].filter(Boolean).join(' · ');
+    const card = h(`<div class="card ${team} ${c.dead ? 'dead' : ''} ${UI.sel === c.id ? 'sel' : ''}">
+      <div class="name"><b>${esc(c.def.name)}</b><span class="role">${c.role}${c.dead ? ` · back round ${c.respawnAt}` : ''}</span></div>
+      <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c.max)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c.max)}%;width:${Math.min(100 - Math.max(0, 100 * c.hp / c.max), 100 * c.shield / c.max)}%"></span><b>${Math.max(0, c.hp)}/${c.max}</b></div>
+      <div class="chips">${chips.join('')}</div>
+      <div class="abs">${c.def.abilities.map((a, i) => `<button class="ab ${abs.some(x => x.ab === i) && !hidden ? 'programmed' : ''}" data-ab="${i}" ${!human || G.phase !== 'program' || c.dead ? 'disabled' : ''}><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${abText(a)}</small></button>`).join('')}</div>
+      <div class="order">${orderTxt}</div>
+      ${human && G.phase === 'program' && !c.dead ? `<div class="abs"><button data-act="move" class="${mv ? 'on' : ''}">Move (1)</button><button data-act="focus" class="${G.orders[team].focus != null ? 'on' : ''}">Focus${G.orders[team].focus != null ? ': ' + nameOf(G.orders[team].focus) : ''}</button><button data-act="clear">Clear</button></div>` : ''}
+    </div>`);
+    card.addEventListener('click', e => { if (!e.target.closest('button')) selectChamp(c); });
+    card.querySelectorAll('button[data-ab]').forEach(b => b.addEventListener('click', () => { UI.sel = c.id; setMode('ability', +b.dataset.ab); }));
+    card.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => { UI.sel = c.id; const a = b.dataset.act; if (a === 'clear') clearOrders(c); else setMode(a); }));
+    el.appendChild(card);
+  }
+}
+function abText(a) {
+  const kind = { track: `tier 1 · follows a ${a.ally ? 'ally' : 'target'} · range ${a.range}`, hex: `tier 2 · a hex · range ${a.range}`, rot: 'tier 3 · pattern, you choose the facing', fixed: 'tier 4 · fixed pattern, forward', self: 'self' }[a.kind];
+  const fx = [a.dmg ? `${a.dmg} dmg` : '', a.heal ? `heal ${a.heal}` : '', a.shield ? `shield ${a.shield}` : '', a.status ? a.status.toLowerCase() : ''].filter(Boolean).join(' + ');
+  return `${fx} · ${kind}`;
+}
+function renderBoard() {
+  const svg = document.getElementById('board'); svg.innerHTML = '';
+  const pts = HEXES.map(hh => px(...hh)); const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); const pad = HEX * 1.4;
+  svg.setAttribute('viewBox', `${Math.min(...xs) - pad} ${Math.min(...ys) - pad} ${Math.max(...xs) - Math.min(...xs) + 2 * pad} ${Math.max(...ys) - Math.min(...ys) + 2 * pad}`);
+  svg.appendChild(sv(`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#e8c46a"/></marker></defs>`));
+  const sel = UI.sel != null ? G.champs[UI.sel] : null, m = UI.mode;
+  let pick = new Set(), pat = [];
+  if (G.phase === 'program' && sel && m) {
+    const from = plannedPos(sel);
+    if (m.kind === 'move') moveTargets(sel).forEach(t => pick.add(key(...t)));
+    if (m.kind === 'focus') alive(other(sel.team)).forEach(e => pick.add(key(...e.pos)));
+    if (m.kind === 'ability') { const ab = sel.def.abilities[m.ab];
+      if (ab.kind === 'track') (ab.ally ? alive(sel.team) : alive(other(sel.team))).filter(e => dist(from, e.pos) <= ab.range).forEach(e => pick.add(key(...e.pos)));
+      if (ab.kind === 'hex') HEXES.filter(hh => dist(from, hh) <= ab.range && !SOLID.has(key(...hh))).forEach(hh => pick.add(key(...hh)));
+      if (ab.kind === 'rot') DIRS.forEach(d => { const n = add(from, d); if (onBoard(n)) pick.add(key(...n)); }); }
+  }
+  // programmed patterns preview for the selected champion
+  if (G.phase === 'program' && sel) { const abs = (G.orders[sel.team].abilities[sel.id] || []); for (const a of abs) { const ab = sel.def.abilities[a.ab]; if (ab.kind === 'rot' || ab.kind === 'fixed') pat.push(...patternCells(sel, ab, a.target ? a.target.facing : 0).map(hh => ({ hex: hh, ally: !!ab.ally }))); if (ab.kind === 'hex') pat.push({ hex: a.target.hex, ally: false }); } }
+  if (UI.revealing && G.marks) for (const mk of G.marks) if (mk.kind === 'cell') pat.push(mk);
+  let threat = new Set();
+  if (UI.threat && G.phase === 'program') for (const e of alive(G.humans[0] ? other(G.humans[0]) : 'A')) { const reach = RULES.spd + Math.max(...e.def.abilities.map(a => a.range || 3)); HEXES.filter(hh => dist(e.pos, hh) <= reach).forEach(hh => threat.add(key(...hh))); }
+  for (const hh of HEXES) {
+    const k = key(...hh), [cx, cy] = px(...hh);
+    const cls = ['hex']; if (HILLS.some(x => same(x, hh))) cls.push('hill'); if (TOWERS.some(x => same(x, hh))) cls.push('tower'); if (same(hh, NEXUS.A)) cls.push('nexusA'); if (same(hh, NEXUS.B)) cls.push('nexusB');
+    if (pick.has(k)) cls.push('pick'); const pm = pat.find(p => same(p.hex, hh)); if (pm) cls.push('pat', pm.ally ? 'ally' : ''); if (threat.has(k) && !pick.has(k)) cls.push('threat');
+    const poly = sv(`<polygon class="${cls.join(' ')}" points="${hexPts(cx, cy)}"></polygon>`);
+    poly.addEventListener('click', () => boardClick(hh));
+    svg.appendChild(poly);
+    if (TOWERS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:11px;fill:#cfd6e6">${same(hh, [0,0]) ? '♜ centre' : '♜'}</text>`));
+    else if (same(hh, NEXUS.A) || same(hh, NEXUS.B)) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:10px;fill:#fff">NEXUS ${same(hh, NEXUS.A) ? 'A' : 'B'}</text>`));
+    else if (HILLS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:10px;fill:#e8c46a">▲ hill</text>`));
+    else svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + HEX * 0.7}">${hh[0]},${hh[1]}</text>`));
+  }
+  // ghosts of planned moves (own team)
+  if (G.phase === 'program') for (const t of G.humans) for (const id in G.orders[t].moves) { const c = G.champs[id], to = G.orders[t].moves[id]; const [x1, y1] = px(...c.pos), [x2, y2] = px(...to); svg.appendChild(sv(`<circle class="ghost" cx="${x2}" cy="${y2}" r="${HEX * 0.55}"></circle>`)); svg.appendChild(sv(`<line class="arrow" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * 0.35}" y2="${y2 - (y2 - y1) * 0.35}"></line>`)); }
+  for (const c of G.champs) { if (c.dead) continue; const [cx, cy] = px(...c.pos);
+    const g = sv(`<g class="tok ${c.team} ${UI.sel === c.id ? 'sel' : ''} ${pick.has(key(...c.pos)) ? 'pick' : ''}"><circle class="body" cx="${cx}" cy="${cy}" r="${HEX * 0.58}"></circle><text class="g" x="${cx}" y="${cy}">${esc(c.def.name[0])}</text><rect class="tokhp" x="${cx - HEX * 0.55}" y="${cy + HEX * 0.5}" width="${HEX * 1.1}" height="5" rx="1"></rect><rect x="${cx - HEX * 0.55}" y="${cy + HEX * 0.5}" width="${HEX * 1.1 * Math.max(0, c.hp) / c.max}" height="5" rx="1" fill="${c.team === 'A' ? '#4aa8ff' : '#ff5566'}"></rect></g>`);
+    if (isAlone(c)) g.appendChild(sv(`<circle class="alone-ring" cx="${cx}" cy="${cy}" r="${HEX * 0.72}"></circle>`));
+    if (G.phase === 'program' && !G.humans.includes(c.team) && G.humans.length) { /* enemy orders hidden */ }
+    g.addEventListener('click', () => boardClick(c.pos));
+    svg.appendChild(g); }
+  if (UI.revealing && G.marks) { const stack = {}; for (const mk of G.marks) { if (mk.kind === 'arrow') { const [x1, y1] = px(...mk.from), [x2, y2] = px(...mk.to); svg.appendChild(sv(`<line class="arrow" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * 0.4}" y2="${y2 - (y2 - y1) * 0.4}"></line>`)); } if (mk.kind === 'num') { const k = key(...mk.hex); const n = stack[k] = (stack[k] || 0) + 1; const [cx, cy] = px(...mk.hex); svg.appendChild(sv(`<text class="num ${mk.cls}" x="${cx}" y="${cy - HEX * 0.75 - (n - 1) * 14}">${esc(mk.text)}</text>`)); } }
+    if (G.tierLabel) svg.appendChild(sv(`<text class="tier" x="${Math.min(...xs) + 10}" y="${Math.min(...ys) - 10}">TIER ${G.tierLabel}</text>`)); }
+}
+function hexPts(cx, cy) { const p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); p.push(`${(cx + HEX * 0.96 * Math.cos(a)).toFixed(1)},${(cy + HEX * 0.96 * Math.sin(a)).toFixed(1)}`); } return p.join(' '); }
+function renderPrompt() {
+  const b = document.getElementById('buttons'); b.innerHTML = '';
+  const p = document.getElementById('prompt');
+  if (G.phase === 'draft') { p.textContent = `Draft — ${G.draftOrder[G.draftIdx]} picks (snake A B B A A B B A A B).`; return; }
+  if (G.phase === 'program') {
+    if (!G.humans.length) { p.textContent = 'Both AIs are programming…'; return; }
+    const sel = UI.sel != null ? G.champs[UI.sel] : null, m = UI.mode;
+    if (m && sel) { const ab = m.ab != null ? sel.def.abilities[m.ab] : null;
+      p.textContent = m.kind === 'move' ? `${sel.def.name}: click a green hex to move there (up to ${RULES.spd}).` : m.kind === 'focus' ? 'Click the enemy your team focuses (auto-aim prefers it).' : ab.kind === 'track' ? `${ab.name}: click a ${ab.ally ? 'ally' : 'target'} within ${ab.range} of where ${sel.def.name} will stand. It follows the target.` : ab.kind === 'hex' ? `${ab.name}: click a hex within ${ab.range}. It hits whoever is there at tier ${ab.init}.` : `${ab.name}: click a neighbouring hex to set the facing.`; }
+    else p.textContent = `Round ${G.round}: energy ${energyLeft('A')} of ${G.orders.A.energy} left. Select a champion, then Move (1) or an ability (costs its initiative, two per champion in descending initiative). Lock in when done.`;
+    const lock = h(`<button class="primary">Lock in</button>`); lock.addEventListener('click', lockIn); b.appendChild(lock);
+    if (m) { const cancel = h('<button>Cancel</button>'); cancel.addEventListener('click', () => { UI.mode = null; render(); }); b.appendChild(cancel); }
+    return;
+  }
+  if (G.phase === 'reveal') { p.textContent = G.tierLabel ? `Tier ${G.tierLabel}: both teams resolve at once — control, then damage, then deaths.` : 'Reveal: orders shown, moves resolve together.'; const s = h('<button>Skip to the end</button>'); s.addEventListener('click', skipReveal); b.appendChild(s); return; }
+  if (G.phase === 'over') { p.textContent = G.winner === 'draw' ? 'A draw.' : `Team ${G.winner} wins.`; }
+}
+function renderLog() { const el = document.getElementById('log'); el.innerHTML = ''; const start = Math.max(0, G.log.length - 80); G.log.slice(start).forEach((l, i, arr) => el.appendChild(h(`<div class="b ${l.cls} ${i === arr.length - 1 ? 'now' : ''}">${esc(l.text)}</div>`))); el.scrollTop = el.scrollHeight; }
+function renderStats() { const s = STATS; document.getElementById('stats').innerHTML = `<span>matches <b>${s.matches}</b> (A <b>${s.matches ? Math.round(100 * s.winsA / s.matches) : 0}%</b>)</span><span>deaths <b>${s.deaths}</b></span><span>burst kills <b>${s.deaths ? Math.round(100 * s.bursts / s.deaths) : 0}%</b></span><span>lost orders <b>${s.lost}</b></span><span>fizzled <b>${s.fizz}</b></span><span>lead changes <b>${s.leadChanges}</b></span><span>your decisions <b>${s.decisions}</b></span>`; }
+function renderOverlay() {
+  const ov = document.getElementById('overlay');
+  if (UI.help) { ov.className = 'overlay'; ov.innerHTML = `<div class="box help"><button id="help-close" style="float:right">Close</button><h2>Programmed rounds — the prototype rules</h2>
+    <h3>Each round</h3>Both teams secretly write orders, then everything reveals and resolves. Energy per round: ${[1,2,3,4,5,6,7,8].map(energyFor).join(' · ')}. A <b>move</b> costs 1 (up to ${RULES.spd} hexes). An <b>ability</b> costs its initiative. A champion may hold one move and up to two abilities in strictly descending initiative (a 3 then a 1: give, then cash in). Each team also names a <b>Focus</b> enemy that auto-aim prefers.
+    <h3>Commitment by tier</h3>Tier 4 abilities are fixed patterns, forward. Tier 3 commit a facing. Tier 2 commit a hex. Tier 1 commit a champion and follow it. Moving out of a pattern is dodging.
+    <h3>Resolution</h3>Moves first, all at once (a contested hex goes to the priority token holder; the token alternates). Then tiers 4 → 3 → 2 → 1: within a tier both teams act at once — control (root, exhaust) first, then damage, then deaths. The dead finish their tier. <b>Exhaust cancels the target's remaining orders.</b> An order whose caster died earlier is <b>lost</b> (energy refunded next round, up to ${RULES.carryCap}); one with nothing to hit <b>fizzles</b>.
+    <h3>Damage</h3>Each champion <b>wants</b> a status: it hits enemies carrying it ×${RULES.want} (at least +${RULES.wantFloor}). A champion with no ally beside it is <b>alone</b> and takes ×${RULES.alone}. Statuses last through the next round. Rooted can't move. Burning takes ${RULES.burn} at round close.
+    <h3>Score</h3>Nexus ${RULES.nexus}. A death costs its nexus ${RULES.killTax}. At round close: champions beside the enemy nexus hit it for ${RULES.gateHit}; the team with more champions beside the centre tower deals 1. The dead return after ${RULES.respawn} rounds. After round ${RULES.rounds} the higher nexus wins.
+    <h3>What to watch</h3>Burst kills (a champion killed from 60%+ HP in one round), lost orders (the undercut problem), and whether the reveal produces the swing. The bottom strip counts them.</div>`;
+    document.getElementById('help-close').onclick = () => { UI.help = false; render(); }; return; }
+  if (G.phase !== 'draft') { ov.className = 'overlay hidden'; ov.innerHTML = ''; return; }
+  ov.className = 'overlay';
+  const team = G.draftOrder[G.draftIdx], human = G.humans.includes(team);
+  const box = h(`<div class="box"><div class="modes" style="float:right"><button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="help">Rules</button></div><h2>Draft — ${human ? 'your pick' : 'AI picks'} (team ${team})</h2><p style="color:var(--dim)">Snake order A B B A A B B A A B. One champion per role; a champion taken is gone for both. Pairs: a champion that <b>gives</b> a status feeds a teammate that <b>wants</b> it.</p><div class="dcols"></div></div>`);
+  const cols = box.querySelector('.dcols');
+  for (const role of ROLES) { const col = h(`<div><h3>${role}</h3></div>`);
+    for (const d of ROSTER.filter(x => x.role === role)) { const taken = G.taken.has(d.id), pickable = human && !taken && !G.picks[team][ROLES.indexOf(role)];
+      const card = h(`<div class="dcard ${pickable ? 'pickable' : ''} ${taken ? 'taken' : ''}"><b class="n">${esc(d.name)}</b><span style="color:var(--dim)">HP ${d.hp}${d.gives ? ' · gives ' + d.gives : ''}${d.wants ? ' · wants ' + d.wants : ''}</span>${d.abilities.map((a, i) => `<div class="ab"><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${abText(a)}</small></div>`).join('')}</div>`);
+      if (pickable) card.addEventListener('click', () => draftPick(d)); col.appendChild(card); }
+    cols.appendChild(col); }
+  box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m; if (m === 'help') { UI.help = true; render(); } else newMatch(m === 'watch'); }));
+  ov.innerHTML = ''; ov.appendChild(box);
+}
+
+// ───────────── wiring ─────────────
+document.getElementById('btn-new').addEventListener('click', () => newMatch(false));
+document.getElementById('btn-watch').addEventListener('click', () => newMatch(true));
+document.getElementById('btn-threat').addEventListener('click', () => { UI.threat = !UI.threat; render(); });
+document.getElementById('btn-help').addEventListener('click', () => { UI.help = true; render(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.help) { UI.help = false; render(); } else if (UI.mode) { UI.mode = null; render(); } } });
+newMatch(false);
+</script>
