@@ -68,7 +68,9 @@ svg#board { width: 100%; max-width: 640px; height: auto; margin: 0 auto; display
 .hex.pick:hover { fill: #46552f; }
 .hex.pat { fill: rgba(255,90,90,.45); stroke: #ff9b9b; }
 .hex.pat.ally { fill: rgba(95,220,143,.45); stroke: #a6f5c3; }
-.hex.threat { stroke: #ff6b6b; stroke-dasharray: 3 3; }
+.hex.threat { stroke: #b84a4a; stroke-dasharray: 3 3; }
+.hex.threat.hot { fill: #2a1a22; stroke: #ff6b6b; }
+.threat-n { font-size: 9px; fill: #ff8a8a; text-anchor: middle; pointer-events: none; font-family: var(--display); }
 .coord { font-size: 8px; fill: #4e5a78; text-anchor: middle; pointer-events: none; }
 .tok circle.body { stroke: #000; stroke-width: 1.5; }
 .tok.A circle.body { fill: var(--A); } .tok.B circle.body { fill: var(--B); }
@@ -119,6 +121,7 @@ svg#board { width: 100%; max-width: 640px; height: auto; margin: 0 auto; display
   <div class="modes" style="margin-left:auto">
     <button id="btn-new">New: play A vs AI</button>
     <button id="btn-watch">New: watch AI vs AI</button>
+    <button id="btn-board">Board</button>
     <button id="btn-threat">Threat overlay</button>
     <button id="btn-help">Rules</button>
   </div>
@@ -144,21 +147,37 @@ svg#board { width: 100%; max-width: 640px; height: auto; margin: 0 auto; display
 // ───────────── geometry ─────────────
 const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
 const DIRNAME = ['right','up-right','up-left','left','down-left','down-right'];
-const R = 3, HEX = 34, SQ3 = Math.sqrt(3);
+const HEX = 34, SQ3 = Math.sqrt(3);
 const key = (q, r) => q + ',' + r;
 const dist = (a, b) => (Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[0]+a[1]-b[0]-b[1])) / 2;
 const add = (a, b) => [a[0]+b[0], a[1]+b[1]];
 const same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1];
 const rot60 = ([q, r]) => [-r, q + r];
 function rot(h, n) { let p = h; for (let i = 0; i < ((n % 6) + 6) % 6; i++) p = rot60(p); return p; }
-const HEXES = []; for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) if (Math.abs(q + r) <= R) HEXES.push([q, r]);
-const onBoard = h => Math.abs(h[0]) <= R && Math.abs(h[1]) <= R && Math.abs(h[0] + h[1]) <= R;
-const NEXUS = { A: [0,-3], B: [0,3] };
-const TOWERS = [[0,0],[0,-1],[0,1]];   // centre, A's home, B's home
-const HILLS = [[-3,0],[3,0]];
-const SOLID = new Set([...TOWERS, NEXUS.A, NEXUS.B].map(h => key(...h)));
-const START = { A: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]], B: [[1,2],[0,2],[-1,2],[-2,2],[-3,2]] };
-const FWD = { A: 1, B: -1 };   // forward is +r for A, −r for B
+// Team B is team A's mirror image across the river row (x kept, r negated), so each role
+// starts opposite the same role — the lanes line up, as in the main game.
+const mirror = ([q, r]) => [q + r, -r];
+const frame = (team, off) => team === 'A' ? off : mirror(off);
+const hexagon = n => { const o = []; for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) if (Math.abs(q + r) <= n) o.push([q, r]); return o; };
+const BOARDS = {
+  small: { name: 'Small (37 hexes)', hexes: hexagon(3), nexusA: [1,-3], centre: [0,0], homeA: [[0,-1]], hills: [[-3,0],[3,0]],
+    startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]], openingSteps: 2 },
+  field7: { name: 'Field 7 (59 hexes)', hexes: [[-2,-3],[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3],[4,-3],[5,-3],[-3,-2],[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2],[4,-2],[5,-2],[-3,-1],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[3,-1],[4,-1],[-4,0],[-3,0],[-2,0],[-1,0],[0,0],[1,0],[2,0],[3,0],[4,0],[-4,1],[-3,1],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,1],[-5,2],[-4,2],[-3,2],[-2,2],[-1,2],[0,2],[1,2],[2,2],[3,2],[-5,3],[-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],[2,3]],
+    nexusA: [1,-3], centre: [0,0], homeA: [[-2,-1],[3,-1]], hills: [[-1,-1],[2,-1],[-4,0],[4,0]],
+    startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]], openingSteps: 3 },
+};
+let HEXES, HEXSET, NEXUS, TOWERS, HILLS, SOLID, START, BOARD;
+function setBoard(name) {
+  BOARD = BOARDS[name] || BOARDS.small;
+  HEXES = BOARD.hexes; HEXSET = new Set(HEXES.map(h => key(...h)));
+  NEXUS = { A: BOARD.nexusA, B: mirror(BOARD.nexusA) };
+  TOWERS = [BOARD.centre, ...BOARD.homeA, ...BOARD.homeA.map(mirror)];
+  HILLS = [...BOARD.hills, ...BOARD.hills.map(mirror).filter(h => !BOARD.hills.some(x => same(x, h)))];
+  SOLID = new Set([...TOWERS, NEXUS.A, NEXUS.B].map(h => key(...h)));
+  START = { A: BOARD.startA, B: BOARD.startA.map(mirror) };
+}
+setBoard('small');
+const onBoard = h => HEXSET.has(key(...h));
 const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r];
 const other = t => t === 'A' ? 'B' : 'A';
 
@@ -209,16 +228,17 @@ const ROSTER = [
     { name:'Revelation', init:4, kind:'fixed', pattern:BLAST, dmg:3, status:'Marked' } ] },
 ];
 const ROLES = ['Top','Jungle','Mid','Bottom','Support'];
-const RULES = { nexus: 40, rounds: 8, spd: 2, killTax: 4, burn: 2, gateHit: 3, alone: 1.5, want: 2, wantFloor: 3, respawn: 2, carryCap: 3 };
+const RULES = { nexus: 40, rounds: 8, openingPlays: 5, spd: 2, killTax: 4, burn: 2, gateHit: 3, alone: 1.5, want: 2, wantFloor: 3, respawn: 2, carryCap: 3 };
 const energyFor = r => Math.min(10, 5 + Math.ceil(r / 2));
 
 // ───────────── state ─────────────
 let G = null;        // the match
-let UI = { sel: null, mode: null, target: null, threat: false, autoTimer: null, revealing: false };
+let UI = { sel: null, mode: null, target: null, threat: true, autoTimer: null, revealing: false, board: 'small' };
 let STATS = { deaths: 0, bursts: 0, lost: 0, fizz: 0, leadChanges: 0, lastSign: 0, decisions: 0, matches: 0, winsA: 0 };
 
 function newMatch(watch) {
   clearTimeout(UI.autoTimer);
+  setBoard(UI.board);
   G = { phase: 'draft', round: 0, humans: watch ? [] : ['A'], picks: { A: [null,null,null,null,null], B: [null,null,null,null,null] },
         draftOrder: ['A','B','B','A','A','B','B','A','A','B'], draftIdx: 0, taken: new Set(),
         champs: [], nexus: { A: RULES.nexus, B: RULES.nexus }, token: 'B', carry: { A: 0, B: 0 },
@@ -256,12 +276,63 @@ function aiDraft(team) {
   return best;
 }
 function startMatch() {
-  G.phase = 'program'; G.round = 1;
   G.champs = [];
   for (const team of ['A','B']) G.picks[team].forEach((def, i) => G.champs.push({ id: G.champs.length, team, def, role: def.role, pos: START[team][i], home: START[team][i], hp: def.hp, max: def.hp, shield: 0, status: {}, dead: false, respawnAt: 0, hpRoundStart: def.hp }));
   G.token = 'B';   // the team that picked second holds the token in round 1
-  logLine('round', `Round 1 — program your orders. Energy ${energyFor(1)}.`);
-  beginProgramming();
+  G.phase = 'opening'; G.round = 0; G.openingDone = new Set(); G.openingTurn = 'A';
+  logLine('round', `Opening — teams alternate, each play moves one champion up to ${BOARD.openingSteps} hexes, in the open. A places first.`);
+  render();
+  openingAiLoop();
+}
+
+// ───────────── opening: visible, alternating, closes the distance ─────────────
+function openingTargets(c) {
+  const out = [], seen = new Set([key(...c.pos)]); let frontier = [c.pos];
+  for (let step = 1; step <= BOARD.openingSteps; step++) {
+    const next = [];
+    for (const at of frontier) for (const d of DIRS) {
+      const to = add(at, d), k = key(...to);
+      if (!onBoard(to) || SOLID.has(k) || seen.has(k)) continue;
+      seen.add(k);
+      const occ = champAt(to);
+      if (occ && occ.team !== c.team) continue;
+      next.push(to);
+      if (!occ) out.push(to);
+    }
+    frontier = next;
+  }
+  return out;
+}
+function openingPlay(c, to) {
+  if (G.phase !== 'opening' || c.team !== G.openingTurn || G.openingDone.has(c.id)) return;
+  logLine('b', `${label(c)} opens: ${fmt(c.pos)} → ${fmt(to)}`);
+  c.pos = to; G.openingDone.add(c.id); STATS.decisions += G.humans.includes(c.team) ? 1 : 0;
+  const otherTeam = other(c.team);
+  const left = t => G.champs.some(x => x.team === t && !G.openingDone.has(x.id));
+  if (left(otherTeam)) G.openingTurn = otherTeam; else if (!left(c.team)) { G.round = 1; logLine('round', `The armies are in reach. Round 1 — program your orders in secret. Energy ${energyFor(1)}.`); UI.sel = null; UI.mode = null; beginProgramming(); return; }
+  UI.sel = null; UI.mode = null; render();
+  openingAiLoop();
+}
+function openingAiLoop() {
+  if (G.phase !== 'opening' || G.humans.includes(G.openingTurn)) return;
+  UI.autoTimer = setTimeout(() => { const t = G.openingTurn; const c = G.champs.find(x => x.team === t && !G.openingDone.has(x.id)); openingPlay(c, aiOpeningHex(c)); }, G.humans.length ? 600 : 150);
+}
+// How many enemy champions (of the team facing `team`) could hit this hex next round: a move of SPD plus the range of their longest hostile ability.
+function threatCount(h, team) {
+  let n = 0;
+  for (const e of alive(other(team))) { const reach = RULES.spd + Math.max(0, ...e.def.abilities.filter(a => !a.ally && a.kind !== 'self').map(a => a.range || 3)); if (dist(e.pos, h) <= reach) n++; }
+  return n;
+}
+function aiOpeningHex(c) {
+  // Advance toward the centre, prefer fewer enemies in reach, like a hill, stay beside an ally.
+  const mine = alive(c.team);
+  let best = c.pos, bestV = -1e9;
+  for (const h of [c.pos, ...openingTargets(c)]) {
+    const forward = (h[1] - c.pos[1]) * (c.team === 'A' ? 1 : -1);
+    const v = forward * 1.0 - 0.6 * threatCount(h, c.team) + (HILLS.some(x => same(x, h)) ? 1.2 : 0) + (mine.some(m => m !== c && dist(m.pos, h) <= 1) ? 0.6 : 0) - 0.25 * dist(h, BOARD.centre);
+    if (v > bestV) { bestV = v; best = h; }
+  }
+  return best;
 }
 
 // ───────────── programming ─────────────
@@ -314,11 +385,16 @@ function canProgram(c, abIdx) {
 }
 function patternCells(c, ab, facing, from) {
   const at = from || plannedPos(c);
-  if (ab.kind === 'fixed') return ab.pattern.map(p => FWD[c.team] > 0 ? add(at, p) : add(at, [-p[0], -p[1]])).filter(onBoard);
+  if (ab.kind === 'fixed') return ab.pattern.map(p => add(at, frame(c.team, p))).filter(onBoard);
   if (ab.kind === 'rot') return ab.pattern.map(p => add(at, rot(p, facing))).filter(onBoard);
   return [];
 }
-function selectChamp(c) { if (G.phase !== 'program' || !G.humans.includes(c.team)) return; UI.sel = c.id; UI.mode = null; render(); }
+function selectChamp(c) {
+  if (!G.humans.includes(c.team)) return;
+  if (G.phase === 'opening') { if (c.team !== G.openingTurn || G.openingDone.has(c.id)) return; UI.sel = c.id; UI.mode = { kind: 'open' }; render(); return; }
+  if (G.phase !== 'program') return;
+  UI.sel = c.id; UI.mode = null; render();
+}
 function setMode(mode, ab) {
   const c = G.champs[UI.sel]; if (!c) return;
   if (mode === 'ability') {
@@ -336,6 +412,7 @@ function addAbility(c, ab, target) {
 }
 function clearOrders(c) { const o = G.orders[c.team]; delete o.moves[c.id]; delete o.abilities[c.id]; UI.mode = null; render(); }
 function boardClick(h) {
+  if (G.phase === 'opening') { const c = champAt(h); if (c && G.humans.includes(c.team)) { selectChamp(c); return; } const sel = UI.sel != null ? G.champs[UI.sel] : null; if (sel && UI.mode && UI.mode.kind === 'open' && openingTargets(sel).some(t => same(t, h))) openingPlay(sel, h); return; }
   if (G.phase !== 'program' || !UI.mode) { const c = champAt(h); if (c && G.humans.includes(c.team)) selectChamp(c); return; }
   const c = G.champs[UI.sel], m = UI.mode;
   if (m.kind === 'focus') { const e = champAt(h); if (e && e.team !== c.team) { G.orders[c.team].focus = e.id; STATS.decisions++; UI.mode = null; render(); } return; }
@@ -510,7 +587,7 @@ function runBeat(b) {
     logLine('round', `Round ${G.round} closes.`);
     for (const c of G.champs) if (!c.dead && hasStatus(c, 'Burning')) { c.hp -= RULES.burn; logLine('b', `${label(c)} burns for ${RULES.burn}`); if (c.hp <= 0) { c.dead = true; c.respawnAt = G.round + RULES.respawn; c.status = {}; G.nexus[c.team] -= RULES.killTax; STATS.deaths++; logLine('death', `✝ ${label(c)} burns to death — nexus ${c.team} −${RULES.killTax}`); } }
     for (const t of ['A','B']) { const foe = other(t); let gate = 0; for (const c of alive(t)) if (dist(c.pos, NEXUS[foe]) <= 1) gate += RULES.gateHit; if (gate) { G.nexus[foe] -= gate; logLine('b', `At the gates: team ${t} hits NEXUS ${foe} for ${gate}`); } }
-    const cA = alive('A').filter(c => dist(c.pos, [0,0]) <= 1).length, cB = alive('B').filter(c => dist(c.pos, [0,0]) <= 1).length;
+    const cA = alive('A').filter(c => dist(c.pos, BOARD.centre) <= 1).length, cB = alive('B').filter(c => dist(c.pos, BOARD.centre) <= 1).length;
     if (cA !== cB) { const h = cA > cB ? 'A' : 'B'; G.nexus[other(h)] -= 1; logLine('b', `Centre held by ${h}: NEXUS ${other(h)} −1`); }
     for (const c of G.champs) for (const s in c.status) if (c.status[s] <= G.round) delete c.status[s];
     for (const c of G.champs) if (c.dead && c.respawnAt <= G.round) { c.dead = false; c.hp = c.max; c.shield = 0; c.pos = freeNear(c.home); logLine('b', `${label(c)} returns at ${fmt(c.pos)}`); }
@@ -553,13 +630,14 @@ function prompt(text) { const el = document.getElementById('prompt'); el.textCon
 // ───────────── render ─────────────
 function render() {
   if (!G) return;
-  document.getElementById('t-round').textContent = G.round ? `${G.round} / ${RULES.rounds}` : '–';
+  document.getElementById('t-round').textContent = G.round ? `${G.round} / ${RULES.rounds}` : G.phase === 'opening' ? 'opening' : '–';
+  document.getElementById('btn-board').textContent = `Board: ${BOARDS[UI.board].name}`;
   document.getElementById('t-nexA').textContent = Math.max(0, G.nexus.A);
   document.getElementById('t-nexB').textContent = Math.max(0, G.nexus.B);
   document.getElementById('t-token').textContent = G.token;
-  document.getElementById('t-phase').textContent = G.phase === 'draft' ? 'Draft' : G.phase === 'program' ? 'Program' : G.phase === 'reveal' ? (G.tierLabel ? `Tier ${G.tierLabel}` : 'Reveal') : 'Over';
+  document.getElementById('t-phase').textContent = G.phase === 'draft' ? 'Draft' : G.phase === 'opening' ? `Opening (${G.openingTurn})` : G.phase === 'program' ? 'Program' : G.phase === 'reveal' ? (G.tierLabel ? `Tier ${G.tierLabel}` : 'Reveal') : 'Over';
   const en = document.getElementById('t-energy'); en.innerHTML = '';
-  if (G.phase !== 'draft') { const o = G.orders.A, used = spent('A'); for (let i = 0; i < o.energy; i++) en.appendChild(h(`<i class="${i < used ? 'spent' : 'on'}"></i>`)); }
+  if (G.phase !== 'draft' && G.phase !== 'opening' && G.orders.A) { const o = G.orders.A, used = spent('A'); for (let i = 0; i < o.energy; i++) en.appendChild(h(`<i class="${i < used ? 'spent' : 'on'}"></i>`)); }
   document.getElementById('btn-threat').classList.toggle('on', UI.threat);
   renderPanel('A'); renderPanel('B'); renderBoard(); renderPrompt(); renderLog(); renderStats(); renderOverlay();
 }
@@ -579,15 +657,17 @@ function renderPanel(team) {
     if (c.def.wants) chips.push(`<span class="chip want" title="hits ${c.def.wants} enemies ×2">wants ${c.def.wants}</span>`);
     if (c.def.gives) chips.push(`<span class="chip">gives ${c.def.gives}</span>`);
     const orderTxt = hidden ? '<span class="chip">orders hidden</span>' : [mv ? `move → ${fmt(mv)}` : '', ...abs.map(a => { const p = (G.progs || []).find(p => p.c === c && p.abIdx === a.ab); const cls = p && (p.state === 'lost' || p.state === 'fizzled') ? 'cut' : ''; return `<span class="${cls}">${c.def.abilities[a.ab].name} [${c.def.abilities[a.ab].init}]${targetText({ target: a.target })}</span>`; })].filter(Boolean).join(' · ');
-    const card = h(`<div class="card ${team} ${c.dead ? 'dead' : ''} ${UI.sel === c.id ? 'sel' : ''}">
+    const opened = G.phase === 'opening' && G.openingDone.has(c.id);
+    const card = h(`<div class="card ${team} ${c.dead ? 'dead' : ''} ${UI.sel === c.id ? 'sel' : ''}" style="${opened ? 'opacity:.6' : ''}">
       <div class="name"><b>${esc(c.def.name)}</b><span class="role">${c.role}${c.dead ? ` · back round ${c.respawnAt}` : ''}</span></div>
       <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c.max)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c.max)}%;width:${Math.min(100 - Math.max(0, 100 * c.hp / c.max), 100 * c.shield / c.max)}%"></span><b>${Math.max(0, c.hp)}/${c.max}</b></div>
       <div class="chips">${chips.join('')}</div>
       <div class="abs">${c.def.abilities.map((a, i) => `<button class="ab ${abs.some(x => x.ab === i) && !hidden ? 'programmed' : ''}" data-ab="${i}" ${!human || G.phase !== 'program' || c.dead ? 'disabled' : ''}><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${abText(a)}</small></button>`).join('')}</div>
-      <div class="order">${orderTxt}</div>
+      <div class="order">${G.phase === 'opening' ? (opened ? 'opened' : (human && c.team === G.openingTurn ? 'click to move it' : '')) : orderTxt}</div>
       ${human && G.phase === 'program' && !c.dead ? `<div class="abs"><button data-act="move" class="${mv ? 'on' : ''}">Move (1)</button><button data-act="focus" class="${G.orders[team].focus != null ? 'on' : ''}">Focus${G.orders[team].focus != null ? ': ' + nameOf(G.orders[team].focus) : ''}</button><button data-act="clear">Clear</button></div>` : ''}
     </div>`);
     card.addEventListener('click', e => { if (!e.target.closest('button')) selectChamp(c); });
+    if (G.phase === 'opening') card.querySelectorAll('button').forEach(b => b.disabled = true);
     card.querySelectorAll('button[data-ab]').forEach(b => b.addEventListener('click', () => { UI.sel = c.id; setMode('ability', +b.dataset.ab); }));
     card.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => { UI.sel = c.id; const a = b.dataset.act; if (a === 'clear') clearOrders(c); else setMode(a); }));
     el.appendChild(card);
@@ -605,6 +685,7 @@ function renderBoard() {
   svg.appendChild(sv(`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#e8c46a"/></marker></defs>`));
   const sel = UI.sel != null ? G.champs[UI.sel] : null, m = UI.mode;
   let pick = new Set(), pat = [];
+  if (G.phase === 'opening' && sel && m && m.kind === 'open') openingTargets(sel).forEach(t => pick.add(key(...t)));
   if (G.phase === 'program' && sel && m) {
     const from = plannedPos(sel);
     if (m.kind === 'move') moveTargets(sel).forEach(t => pick.add(key(...t)));
@@ -617,19 +698,20 @@ function renderBoard() {
   // programmed patterns preview for the selected champion
   if (G.phase === 'program' && sel) { const abs = (G.orders[sel.team].abilities[sel.id] || []); for (const a of abs) { const ab = sel.def.abilities[a.ab]; if (ab.kind === 'rot' || ab.kind === 'fixed') pat.push(...patternCells(sel, ab, a.target ? a.target.facing : 0).map(hh => ({ hex: hh, ally: !!ab.ally }))); if (ab.kind === 'hex') pat.push({ hex: a.target.hex, ally: false }); } }
   if (UI.revealing && G.marks) for (const mk of G.marks) if (mk.kind === 'cell') pat.push(mk);
-  let threat = new Set();
-  if (UI.threat && G.phase === 'program') for (const e of alive(G.humans[0] ? other(G.humans[0]) : 'A')) { const reach = RULES.spd + Math.max(...e.def.abilities.map(a => a.range || 3)); HEXES.filter(hh => dist(e.pos, hh) <= reach).forEach(hh => threat.add(key(...hh))); }
+  const threat = {};
+  if (UI.threat && (G.phase === 'program' || G.phase === 'opening')) for (const hh of HEXES) { const n = threatCount(hh, G.humans[0] || 'B'); if (n) threat[key(...hh)] = n; }
   for (const hh of HEXES) {
     const k = key(...hh), [cx, cy] = px(...hh);
     const cls = ['hex']; if (HILLS.some(x => same(x, hh))) cls.push('hill'); if (TOWERS.some(x => same(x, hh))) cls.push('tower'); if (same(hh, NEXUS.A)) cls.push('nexusA'); if (same(hh, NEXUS.B)) cls.push('nexusB');
-    if (pick.has(k)) cls.push('pick'); const pm = pat.find(p => same(p.hex, hh)); if (pm) cls.push('pat', pm.ally ? 'ally' : ''); if (threat.has(k) && !pick.has(k)) cls.push('threat');
+    if (pick.has(k)) cls.push('pick'); const pm = pat.find(p => same(p.hex, hh)); if (pm) cls.push('pat', pm.ally ? 'ally' : ''); if (threat[k]) cls.push('threat', threat[k] >= 3 ? 'hot' : '');
     const poly = sv(`<polygon class="${cls.join(' ')}" points="${hexPts(cx, cy)}"></polygon>`);
     poly.addEventListener('click', () => boardClick(hh));
     svg.appendChild(poly);
-    if (TOWERS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:11px;fill:#cfd6e6">${same(hh, [0,0]) ? '♜ centre' : '♜'}</text>`));
+    if (TOWERS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:11px;fill:#cfd6e6">${same(hh, BOARD.centre) ? '♜ centre' : '♜'}</text>`));
     else if (same(hh, NEXUS.A) || same(hh, NEXUS.B)) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:10px;fill:#fff">NEXUS ${same(hh, NEXUS.A) ? 'A' : 'B'}</text>`));
     else if (HILLS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:10px;fill:#e8c46a">▲ hill</text>`));
     else svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + HEX * 0.7}">${hh[0]},${hh[1]}</text>`));
+    if (threat[k] && !SOLID.has(k)) svg.appendChild(sv(`<text class="threat-n" x="${cx + HEX * 0.55}" y="${cy - HEX * 0.45}">${threat[k]}</text>`));
   }
   // ghosts of planned moves (own team)
   if (G.phase === 'program') for (const t of G.humans) for (const id in G.orders[t].moves) { const c = G.champs[id], to = G.orders[t].moves[id]; const [x1, y1] = px(...c.pos), [x2, y2] = px(...to); svg.appendChild(sv(`<circle class="ghost" cx="${x2}" cy="${y2}" r="${HEX * 0.55}"></circle>`)); svg.appendChild(sv(`<line class="arrow" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * 0.35}" y2="${y2 - (y2 - y1) * 0.35}"></line>`)); }
@@ -647,6 +729,11 @@ function renderPrompt() {
   const b = document.getElementById('buttons'); b.innerHTML = '';
   const p = document.getElementById('prompt');
   if (G.phase === 'draft') { p.textContent = `Draft — ${G.draftOrder[G.draftIdx]} picks (snake A B B A A B B A A B).`; return; }
+  if (G.phase === 'opening') {
+    const mineTurn = G.humans.includes(G.openingTurn);
+    p.textContent = mineTurn ? `Opening — your play: click one of your champions that hasn't moved, then a green hex (up to ${BOARD.openingSteps} away). Red numbers: how many enemy champions could reach that hex next round (their move plus their range).` : `Opening — team ${G.openingTurn} is placing…`;
+    return;
+  }
   if (G.phase === 'program') {
     if (!G.humans.length) { p.textContent = 'Both AIs are programming…'; return; }
     const sel = UI.sel != null ? G.champs[UI.sel] : null, m = UI.mode;
@@ -665,6 +752,7 @@ function renderStats() { const s = STATS; document.getElementById('stats').inner
 function renderOverlay() {
   const ov = document.getElementById('overlay');
   if (UI.help) { ov.className = 'overlay'; ov.innerHTML = `<div class="box help"><button id="help-close" style="float:right">Close</button><h2>Programmed rounds — the prototype rules</h2>
+    <h3>The opening</h3>Before any secret order, the teams alternate visible plays: each play moves one champion up to ${BOARD.openingSteps} hexes; every champion moves once. A places first. The secret rounds begin only when both armies have taken their ground, so the first programs are written with the enemy already in reach. Red numbers on hexes count the enemy champions that could reach that hex next round (their move plus their range); 3 or more turns the hex dark red.
     <h3>Each round</h3>Both teams secretly write orders, then everything reveals and resolves. Energy per round: ${[1,2,3,4,5,6,7,8].map(energyFor).join(' · ')}. A <b>move</b> costs 1 (up to ${RULES.spd} hexes). An <b>ability</b> costs its initiative. A champion may hold one move and up to two abilities in strictly descending initiative (a 3 then a 1: give, then cash in). Each team also names a <b>Focus</b> enemy that auto-aim prefers.
     <h3>Commitment by tier</h3>Tier 4 abilities are fixed patterns, forward. Tier 3 commit a facing. Tier 2 commit a hex. Tier 1 commit a champion and follow it. Moving out of a pattern is dodging.
     <h3>Resolution</h3>Moves first, all at once (a contested hex goes to the priority token holder; the token alternates). Then tiers 4 → 3 → 2 → 1: within a tier both teams act at once — control (root, exhaust) first, then damage, then deaths. The dead finish their tier. <b>Exhaust cancels the target's remaining orders.</b> An order whose caster died earlier is <b>lost</b> (energy refunded next round, up to ${RULES.carryCap}); one with nothing to hit <b>fizzles</b>.
@@ -675,14 +763,14 @@ function renderOverlay() {
   if (G.phase !== 'draft') { ov.className = 'overlay hidden'; ov.innerHTML = ''; return; }
   ov.className = 'overlay';
   const team = G.draftOrder[G.draftIdx], human = G.humans.includes(team);
-  const box = h(`<div class="box"><div class="modes" style="float:right"><button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="help">Rules</button></div><h2>Draft — ${human ? 'your pick' : 'AI picks'} (team ${team})</h2><p style="color:var(--dim)">Snake order A B B A A B B A A B. One champion per role; a champion taken is gone for both. Pairs: a champion that <b>gives</b> a status feeds a teammate that <b>wants</b> it.</p><div class="dcols"></div></div>`);
+  const box = h(`<div class="box"><div class="modes" style="float:right"><button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="help">Rules</button></div><h2>Draft — ${human ? 'your pick' : 'AI picks'} (team ${team})</h2><p style="color:var(--dim)">Snake order A B B A A B B A A B. One champion per role; a champion taken is gone for both. Pairs: a champion that <b>gives</b> a status feeds a teammate that <b>wants</b> it.</p><div class="dcols"></div></div>`);
   const cols = box.querySelector('.dcols');
   for (const role of ROLES) { const col = h(`<div><h3>${role}</h3></div>`);
     for (const d of ROSTER.filter(x => x.role === role)) { const taken = G.taken.has(d.id), pickable = human && !taken && !G.picks[team][ROLES.indexOf(role)];
       const card = h(`<div class="dcard ${pickable ? 'pickable' : ''} ${taken ? 'taken' : ''}"><b class="n">${esc(d.name)}</b><span style="color:var(--dim)">HP ${d.hp}${d.gives ? ' · gives ' + d.gives : ''}${d.wants ? ' · wants ' + d.wants : ''}</span>${d.abilities.map((a, i) => `<div class="ab"><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${abText(a)}</small></div>`).join('')}</div>`);
       if (pickable) card.addEventListener('click', () => draftPick(d)); col.appendChild(card); }
     cols.appendChild(col); }
-  box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m; if (m === 'help') { UI.help = true; render(); } else newMatch(m === 'watch'); }));
+  box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m; if (m === 'help') { UI.help = true; render(); } else if (m === 'board') { UI.board = UI.board === 'small' ? 'field7' : 'small'; newMatch(!G.humans.length); } else newMatch(m === 'watch'); }));
   ov.innerHTML = ''; ov.appendChild(box);
 }
 
@@ -690,6 +778,7 @@ function renderOverlay() {
 document.getElementById('btn-new').addEventListener('click', () => newMatch(false));
 document.getElementById('btn-watch').addEventListener('click', () => newMatch(true));
 document.getElementById('btn-threat').addEventListener('click', () => { UI.threat = !UI.threat; render(); });
+document.getElementById('btn-board').addEventListener('click', () => { UI.board = UI.board === 'small' ? 'field7' : 'small'; newMatch(!G.humans.length); });
 document.getElementById('btn-help').addEventListener('click', () => { UI.help = true; render(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.help) { UI.help = false; render(); } else if (UI.mode) { UI.mode = null; render(); } } });
 newMatch(false);

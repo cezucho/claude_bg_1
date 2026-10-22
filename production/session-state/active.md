@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-10-21*
+*Last updated: 2026-10-22*
 
 ## Current Task
+
+**PROGRAMMED ROUNDS — OPENING ADDED — 2026-10-22.** Owner played the prototype: programming while the armies are far apart feels random; keep the opening, start secret rounds when the units are close; map maybe not smaller. Done in `prototypes/programmed-rounds/index.html`: visible alternating opening (one champion per play, N steps, everyone once) before round 1; board switch small (37) / Field 7 (59, mirrored); per-hex threat count (enemy champions in reach next round) on by default; opening AI uses it. Finding: on the 37-hex board speed 2 + range 3 reaches nearly everything from round 1 — no approach existed. D-065. Headless check: both boards complete AI matches; human draft → opening clicks → program → round 2. Artifact republished. v2 untouched. Next: owner plays both boards and says which feels like "meeting in the middle"; candidates after that: shorter reach / larger map, the scripted opening instructions from v2, armed programs.
 
 **PROGRAMMED ROUNDS PROTOTYPE — 2026-10-21.** Owner asked for an HTML prototype. Built `prototypes/programmed-rounds/index.html` (single file, no server): 10-champion draft with give/want, 37-hex board, energy budget, commitment by tier, simultaneous tiers 4→1 with control→damage→deaths, lost/fizzled, exhaust-as-net, caught alone, 8 rounds, greedy AI committing blind, watch mode, counters strip. README per prototype rules. Published as an artifact. Not in it: opening, quests, spells, ceiling toggle. v2 untouched. Next: owner plays and reports feel.
 
