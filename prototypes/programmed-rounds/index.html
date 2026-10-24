@@ -56,6 +56,10 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .ab .k i.t1 { background: #3fd6a0; } .ab .k i.t2 { background: #5a9dff; } .ab .k i.t3 { background: #b07aff; } .ab .k i.t4 { background: #ff9a3c; }
 .ab small { color: var(--dim); font-size: 10px; white-space: normal; }
 .ab.programmed { border-color: var(--gold); background: #2a2614; }
+.ab.open.blocked { opacity: .4; }
+.ab.open:not([disabled]) { border-color: #4a7; cursor: pointer; }
+.ab.open:not([disabled]):hover { background: #16301f; }
+.ghost.open { stroke: #e8c46a; }
 .order { font-size: 11px; color: var(--gold); min-height: 14px; }
 .order .cut { color: var(--cut); text-decoration: line-through; }
 .boardwrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -160,26 +164,29 @@ const mirror = ([q, r]) => [q + r, -r];
 const frame = (team, off) => team === 'A' ? off : mirror(off);
 const hexagon = n => { const o = []; for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) if (Math.abs(q + r) <= n) o.push([q, r]); return o; };
 const BOARDS = {
-  small: { name: 'Small (37 hexes)', hexes: hexagon(3), nexusA: [1,-3], centre: [0,0], homeA: [[0,-1]], hills: [[-3,0],[3,0]],
-    startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]], openingSteps: 2 },
+  small: { name: 'Small (37 hexes)', hexes: hexagon(3), nexusA: [[1,-3]], centre: [0,0], homeA: [[3,-1]], hills: [[-3,0],[3,0]],
+    startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]] },
   field7: { name: 'Field 7 (59 hexes)', hexes: [[-2,-3],[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3],[4,-3],[5,-3],[-3,-2],[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2],[4,-2],[5,-2],[-3,-1],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[3,-1],[4,-1],[-4,0],[-3,0],[-2,0],[-1,0],[0,0],[1,0],[2,0],[3,0],[4,0],[-4,1],[-3,1],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,1],[-5,2],[-4,2],[-3,2],[-2,2],[-1,2],[0,2],[1,2],[2,2],[3,2],[-5,3],[-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],[2,3]],
-    nexusA: [1,-3], centre: [0,0], homeA: [[-2,-1],[3,-1]], hills: [[-1,-1],[2,-1],[-4,0],[4,0]],
-    startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]], openingSteps: 3 },
+    // the main game's Field 7: the nexus is a line of three hexes on the start line, the fronts six rows apart
+    nexusA: [[0,-3],[1,-3],[2,-3]], centre: [0,0], homeA: [[-2,-1],[3,-1]], hills: [[-1,-1],[2,-1],[-4,0],[4,0]],
+    startA: [[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3]] },
 };
 let HEXES, HEXSET, NEXUS, TOWERS, HILLS, SOLID, START, BOARD;
 function setBoard(name) {
   BOARD = BOARDS[name] || BOARDS.small;
   HEXES = BOARD.hexes; HEXSET = new Set(HEXES.map(h => key(...h)));
-  NEXUS = { A: BOARD.nexusA, B: mirror(BOARD.nexusA) };
+  NEXUS = { A: BOARD.nexusA, B: BOARD.nexusA.map(mirror) };   // nexus hexes are walkable: champions start on them
   TOWERS = [BOARD.centre, ...BOARD.homeA, ...BOARD.homeA.map(mirror)];
   HILLS = [...BOARD.hills, ...BOARD.hills.map(mirror).filter(h => !BOARD.hills.some(x => same(x, h)))];
-  SOLID = new Set([...TOWERS, NEXUS.A, NEXUS.B].map(h => key(...h)));
+  SOLID = new Set(TOWERS.map(h => key(...h)));
   START = { A: BOARD.startA, B: BOARD.startA.map(mirror) };
 }
 setBoard('small');
 const onBoard = h => HEXSET.has(key(...h));
 const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r];
 const other = t => t === 'A' ? 'B' : 'A';
+const nexusDist = (team, h) => Math.min(...NEXUS[team].map(n => dist(n, h)));
+const isNexus = (team, h) => NEXUS[team].some(n => same(n, h));
 
 // ───────────── content ─────────────
 // kinds: track (tier 1: commits a champion, follows it) · hex (tier 2: commits a hex) · rot (tier 3: commits a facing) · fixed (tier 4: forward pattern)
@@ -228,12 +235,31 @@ const ROSTER = [
     { name:'Revelation', init:4, kind:'fixed', pattern:BLAST, dmg:3, status:'Marked' } ] },
 ];
 const ROLES = ['Top','Jungle','Mid','Bottom','Support'];
+// Openings, as in the main game: each ability owns a script of three instructions in the team's
+// frame (forward = toward the enemy). "role dir" moves that role one hex; "cast" fires the ability
+// that owns the script, auto-aimed. Exactly one of a champion's three openings casts. Moves are
+// strict: a script is playable only if all its moves can execute in order.
+const ODIR = { fr: [0, 1], fl: [-1, 1], r: [1, 0], l: [-1, 0], br: [1, -1], bl: [0, -1] };
+const OARROW = { A: { fr: '↗', fl: '↖', r: '→', l: '←', br: '↘', bl: '↙' }, B: { fr: '↘', fl: '↙', r: '→', l: '←', br: '↗', bl: '↖' } };
+const OPENINGS = {   // written for Field 7's back row; three different routes per champion, so one blocked hex doesn't void them all
+  anchor:  [['top fr', 'top fr', 'cast'],            ['top fl', 'top fl', 'jungle fl'],      ['top fr', 'top r', 'mid fr']],
+  bulwark: [['top fl', 'top fl', 'support fl'],      ['top fr', 'top r', 'jungle fl'],       ['top fr', 'top fr', 'cast']],
+  ember:   [['jungle fr', 'jungle fr', 'cast'],      ['jungle fl', 'jungle fr', 'top fr'],   ['jungle fr', 'jungle fl', 'bottom fr']],
+  viper:   [['jungle fl', 'jungle fr', 'mid fr'],    ['jungle fr', 'jungle fr', 'support fl'], ['jungle fr', 'jungle fl', 'cast']],
+  lens:    [['mid fr', 'mid fr', 'cast'],            ['mid fl', 'mid fr', 'bottom fl'],      ['mid fr', 'mid fl', 'support fl']],
+  tempest: [['mid fr', 'mid fr', 'cast'],            ['mid fl', 'mid fl', 'jungle fr'],      ['mid fr', 'mid fl', 'top fr']],
+  ranger:  [['bottom fr', 'bottom fr', 'cast'],      ['bottom fl', 'bottom fl', 'support fl'], ['bottom fr', 'bottom fl', 'mid fr']],
+  gunner:  [['bottom fr', 'bottom fr', 'cast'],      ['bottom fl', 'bottom fr', 'top fr'],   ['bottom fl', 'bottom fl', 'jungle fr']],
+  oriel:   [['support fr', 'support fl', 'bottom fr'], ['support fl', 'support fl', 'cast'], ['support fr', 'support r', 'mid fr']],
+  seer:    [['support fl', 'support fl', 'cast'],    ['support fr', 'support fl', 'jungle fr'], ['support fr', 'support r', 'bottom fr']],
+};
 const RULES = { nexus: 40, rounds: 8, openingPlays: 5, spd: 2, killTax: 4, burn: 2, gateHit: 3, alone: 1.5, want: 2, wantFloor: 3, respawn: 2, carryCap: 3 };
 const energyFor = r => Math.min(10, 5 + Math.ceil(r / 2));
 
 // ───────────── state ─────────────
 let G = null;        // the match
-let UI = { sel: null, mode: null, target: null, threat: true, autoTimer: null, revealing: false, board: 'small' };
+let UI = { sel: null, mode: null, target: null, threat: true, autoTimer: null, revealing: false, board: 'field7', preview: null };
+let QUIET = false;   // the AI tries openings on the real state and undoes them; no log while it does
 let STATS = { deaths: 0, bursts: 0, lost: 0, fizz: 0, leadChanges: 0, lastSign: 0, decisions: 0, matches: 0, winsA: 0 };
 
 function newMatch(watch) {
@@ -242,7 +268,7 @@ function newMatch(watch) {
   G = { phase: 'draft', round: 0, humans: watch ? [] : ['A'], picks: { A: [null,null,null,null,null], B: [null,null,null,null,null] },
         draftOrder: ['A','B','B','A','A','B','B','A','A','B'], draftIdx: 0, taken: new Set(),
         champs: [], nexus: { A: RULES.nexus, B: RULES.nexus }, token: 'B', carry: { A: 0, B: 0 },
-        orders: { A: null, B: null }, log: [], beats: [], beatIdx: 0, winner: null };
+        orders: { A: null, B: null }, log: [], beats: [], beatIdx: 0, winner: null, marks: [] };
   UI.sel = null; UI.mode = null; UI.revealing = false;
   render();
   if (!G.humans.length) draftAiLoop();
@@ -279,43 +305,105 @@ function startMatch() {
   G.champs = [];
   for (const team of ['A','B']) G.picks[team].forEach((def, i) => G.champs.push({ id: G.champs.length, team, def, role: def.role, pos: START[team][i], home: START[team][i], hp: def.hp, max: def.hp, shield: 0, status: {}, dead: false, respawnAt: 0, hpRoundStart: def.hp }));
   G.token = 'B';   // the team that picked second holds the token in round 1
-  G.phase = 'opening'; G.round = 0; G.openingDone = new Set(); G.openingTurn = 'A';
-  logLine('round', `Opening — teams alternate, each play moves one champion up to ${BOARD.openingSteps} hexes, in the open. A places first.`);
+  G.phase = 'opening'; G.round = 0; G.openingDone = new Set(); G.openingTurn = 'A'; G.openingFallback = false;
+  logLine('round', 'Opening — teams alternate scripted plays, in the open. Each champion plays one of its three openings: three instructions, each a one-hex move of a role, and one opening per champion also casts (auto-aimed, can\'t kill). A plays first.');
   render();
   openingAiLoop();
 }
 
-// ───────────── opening: visible, alternating, closes the distance ─────────────
-function openingTargets(c) {
-  const out = [], seen = new Set([key(...c.pos)]); let frontier = [c.pos];
-  for (let step = 1; step <= BOARD.openingSteps; step++) {
-    const next = [];
-    for (const at of frontier) for (const d of DIRS) {
-      const to = add(at, d), k = key(...to);
-      if (!onBoard(to) || SOLID.has(k) || seen.has(k)) continue;
-      seen.add(k);
-      const occ = champAt(to);
-      if (occ && occ.team !== c.team) continue;
-      next.push(to);
-      if (!occ) out.push(to);
-    }
-    frontier = next;
+// ───────────── opening: scripted plays, as in the main game ─────────────
+const openingOf = (c, i) => OPENINGS[c.def.id][i];
+const roleChamp = (team, role) => G.champs.find(x => x.team === team && x.role.toLowerCase() === role);
+const openingText = (c, i) => openingOf(c, i).map(s => { if (s === 'cast') return `cast ${c.def.abilities[i].name}`; const [role, dir] = s.split(' '); return `${role} ${OARROW[c.team][dir]}`; }).join(' · ');
+// Checks the moves of a script against the board as it stands. Returns the moves it would make, or why it can't be played.
+function simulateOpening(c, i) {
+  const pos = new Map(G.champs.filter(x => !x.dead).map(x => [x.id, x.pos]));
+  const moves = [];
+  for (const sI of openingOf(c, i)) {
+    if (sI === 'cast') continue;
+    const [role, dir] = sI.split(' ');
+    const m = roleChamp(c.team, role);
+    if (!m || m.dead) return { ok: false, why: `${role} is dead` };
+    if (hasStatus(m, 'Rooted')) return { ok: false, why: `${m.def.name} is rooted` };
+    const to = add(pos.get(m.id), frame(c.team, ODIR[dir]));
+    if (!onBoard(to)) return { ok: false, why: `${m.def.name} would step off the board` };
+    if (SOLID.has(key(...to))) return { ok: false, why: `${m.def.name} would walk into a tower` };
+    for (const [id, pp] of pos) if (id !== m.id && same(pp, to)) return { ok: false, why: `${fmt(to)} is taken by ${G.champs[id].def.name}` };
+    moves.push({ c: m, from: pos.get(m.id), to }); pos.set(m.id, to);
   }
-  return out;
+  return { ok: true, moves };
 }
-function openingPlay(c, to) {
+const openingCandidates = team => { const out = []; for (const c of alive(team)) if (!G.openingDone.has(c.id)) for (let i = 0; i < 3; i++) if (simulateOpening(c, i).ok) out.push({ c, i }); return out; };
+// Plays a script for real. Returns the value of its cast (0 if none or fizzled) for the AI.
+function playOpening(c, i) {
+  if (!simulateOpening(c, i).ok) return 0;
+  const ab = c.def.abilities[i];
+  if (!QUIET) logLine('b', `${label(c)} opens with ${ab.name}: ${openingText(c, i)}`);
+  let v = 0;
+  for (const sI of openingOf(c, i)) {
+    if (sI === 'cast') { v += openingCast(c, ab); continue; }
+    const [role, dir] = sI.split(' '); const m = roleChamp(c.team, role);
+    m.pos = add(m.pos, frame(c.team, ODIR[dir]));
+  }
+  return v;
+}
+// Opening casts aim themselves (D-043): nearest enemy, lowest HP first; allies: most wounded; patterns face where they hit most. They can't kill (D-042).
+function autoAim(c, ab) {
+  if (ab.kind === 'self') return [c.pos];
+  if (ab.kind === 'track' || ab.kind === 'hex') {
+    const pool = (ab.ally ? alive(c.team).filter(x => x !== c) : alive(other(c.team))).filter(e => dist(c.pos, e.pos) <= ab.range);
+    if (!pool.length) return null;
+    pool.sort((a, b) => ab.ally ? ((b.max - b.hp) - (a.max - a.hp)) || (dist(c.pos, a.pos) - dist(c.pos, b.pos)) : (dist(c.pos, a.pos) - dist(c.pos, b.pos)) || (a.hp - b.hp));
+    return [pool[0].pos];
+  }
+  let best = null, bestN = 0;
+  for (const f of (ab.kind === 'rot' ? [0, 1, 2, 3, 4, 5] : [0])) {
+    const cells = patternCells(c, ab, f, c.pos);
+    const n = cells.filter(hh => { const e = champAt(hh); return e && (ab.ally ? e.team === c.team : e.team !== c.team); }).length;
+    if (n > bestN) { bestN = n; best = cells; }
+  }
+  return best;
+}
+function openingCast(c, ab) {
+  const hits = autoAim(c, ab);
+  if (!hits) { if (!QUIET) logLine('fizz', `~ ${label(c)}'s ${ab.name} fizzles — nothing in ${ab.kind === 'track' || ab.kind === 'hex' ? 'range' : 'its pattern'}`); return 0; }
+  const parts = [];
+  const v = applyEffects(c, ab, hits, parts, { noKill: true, control: true });
+  if (!QUIET) logLine('t' + ab.init, `${label(c)} casts ${ab.name}: ${parts.join(' · ') || 'no effect'}`);
+  return v;
+}
+function openingTargets(c) {   // the fallback move: one hex, or stay
+  const out = [c.pos];
+  for (const d of DIRS) { const to = add(c.pos, d); if (onBoard(to) && !SOLID.has(key(...to)) && !champAt(to)) out.push(to); }
+  return hasStatus(c, 'Rooted') ? [c.pos] : out;
+}
+function openingMove(c, to) {
   if (G.phase !== 'opening' || c.team !== G.openingTurn || G.openingDone.has(c.id)) return;
-  logLine('b', `${label(c)} opens: ${fmt(c.pos)} → ${fmt(to)}`);
-  c.pos = to; G.openingDone.add(c.id); STATS.decisions += G.humans.includes(c.team) ? 1 : 0;
-  const otherTeam = other(c.team);
+  logLine('b', same(to, c.pos) ? `${label(c)} has no opening that fits and stays at ${fmt(c.pos)}` : `${label(c)} has no opening that fits and steps to ${fmt(to)}`);
+  c.pos = to; afterOpeningPlay(c);
+}
+function humanOpening(c, i) {
+  if (G.phase !== 'opening' || !G.humans.includes(c.team) || c.team !== G.openingTurn || G.openingDone.has(c.id) || G.openingFallback) return;
+  if (!playOpening(c, i)) { /* value 0 is fine: the play happened unless the script was blocked */ }
+  afterOpeningPlay(c);
+}
+function afterOpeningPlay(c) {
+  G.openingDone.add(c.id); STATS.decisions += G.humans.includes(c.team) ? 1 : 0; UI.preview = null;
   const left = t => G.champs.some(x => x.team === t && !G.openingDone.has(x.id));
-  if (left(otherTeam)) G.openingTurn = otherTeam; else if (!left(c.team)) { G.round = 1; logLine('round', `The armies are in reach. Round 1 — program your orders in secret. Energy ${energyFor(1)}.`); UI.sel = null; UI.mode = null; beginProgramming(); return; }
+  const nxt = other(c.team);
+  if (left(nxt)) G.openingTurn = nxt;
+  else if (!left(c.team)) { G.round = 1; logLine('round', `The opening is over: the armies are in reach. Round 1 — program your orders in secret. Energy ${energyFor(1)}.`); UI.sel = null; UI.mode = null; beginProgramming(); return; }
+  G.openingFallback = !openingCandidates(G.openingTurn).length;   // no script fits: each remaining champion moves one hex
   UI.sel = null; UI.mode = null; render();
   openingAiLoop();
 }
 function openingAiLoop() {
   if (G.phase !== 'opening' || G.humans.includes(G.openingTurn)) return;
-  UI.autoTimer = setTimeout(() => { const t = G.openingTurn; const c = G.champs.find(x => x.team === t && !G.openingDone.has(x.id)); openingPlay(c, aiOpeningHex(c)); }, G.humans.length ? 600 : 150);
+  UI.autoTimer = setTimeout(() => {
+    const t = G.openingTurn;
+    if (G.openingFallback) { const c = G.champs.find(x => x.team === t && !G.openingDone.has(x.id)); openingMove(c, aiOpeningHex(c)); return; }
+    const k = aiOpeningChoice(t); playOpening(k.c, k.i); afterOpeningPlay(k.c);
+  }, G.humans.length ? 700 : 150);
 }
 // How many enemy champions (of the team facing `team`) could hit this hex next round: a move of SPD plus the range of their longest hostile ability.
 function threatCount(h, team) {
@@ -323,16 +411,46 @@ function threatCount(h, team) {
   for (const e of alive(other(team))) { const reach = RULES.spd + Math.max(0, ...e.def.abilities.filter(a => !a.ally && a.kind !== 'self').map(a => a.range || 3)); if (dist(e.pos, h) <= reach) n++; }
   return n;
 }
-function aiOpeningHex(c) {
-  // Advance toward the centre, prefer fewer enemies in reach, like a hill, stay beside an ally.
-  const mine = alive(c.team);
-  let best = c.pos, bestV = -1e9;
-  for (const h of [c.pos, ...openingTargets(c)]) {
-    const forward = (h[1] - c.pos[1]) * (c.team === 'A' ? 1 : -1);
-    const v = forward * 1.0 - 0.6 * threatCount(h, c.team) + (HILLS.some(x => same(x, h)) ? 1.2 : 0) + (mine.some(m => m !== c && dist(m.pos, h) <= 1) ? 0.6 : 0) - 0.25 * dist(h, BOARD.centre);
-    if (v > bestV) { bestV = v; best = h; }
+// Where a team stands: forward progress, few enemies in reach, hills, an ally beside, near the centre.
+function teamPosScore(team) {
+  let v = 0; const mine = alive(team);
+  for (const c of mine) v += (c.pos[1] - c.home[1]) * (team === 'A' ? 1 : -1) * 1.0 - 0.6 * threatCount(c.pos, team) + (HILLS.some(x => same(x, c.pos)) ? 1.2 : 0) + (mine.some(m => m !== c && dist(m.pos, c.pos) <= 1) ? 0.6 : 0) - 0.25 * dist(c.pos, BOARD.centre);
+  return v;
+}
+const snapshot = () => G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, status: { ...c.status } }));
+const restore = sn => G.champs.forEach((c, i) => { c.pos = sn[i].pos; c.hp = sn[i].hp; c.shield = sn[i].shield; c.status = sn[i].status; });
+function aiOpeningChoice(team) {
+  const cands = openingCandidates(team);
+  let best = cands[0], bestV = -1e9; const base = teamPosScore(team) - teamPosScore(other(team));
+  for (const k of cands) {
+    const sn = snapshot(); QUIET = true; let v = -1e9;
+    try { const cast = playOpening(k.c, k.i); v = teamPosScore(team) - teamPosScore(other(team)) - base + cast; }
+    finally { restore(sn); QUIET = false; }
+    if (v > bestV) { bestV = v; best = k; }
   }
   return best;
+}
+function aiOpeningHex(c) {
+  let best = c.pos, bestV = -1e9; const mine = alive(c.team);
+  for (const hh of openingTargets(c)) {
+    const forward = (hh[1] - c.pos[1]) * (c.team === 'A' ? 1 : -1);
+    const v = forward * 1.0 - 0.6 * threatCount(hh, c.team) + (HILLS.some(x => same(x, hh)) ? 1.2 : 0) + (mine.some(m => m !== c && dist(m.pos, hh) <= 1) ? 0.6 : 0) - 0.25 * dist(hh, BOARD.centre);
+    if (v > bestV) { bestV = v; best = hh; }
+  }
+  return best;
+}
+// Debug: every script of every champion, from the start line of each board, with no enemy on it.
+function debugCheckOpenings() {
+  const out = [], keep = { board: UI.board, G };
+  for (const bd of Object.keys(BOARDS)) { setBoard(bd);
+    for (const team of ['A', 'B']) { G = { champs: [], openingDone: new Set() };
+      ROLES.forEach((role, i) => G.champs.push({ id: i, team, role, pos: START[team][i], home: START[team][i], dead: false, status: {}, def: ROSTER.find(d => d.role === role) }));
+      for (const d of ROSTER) { const c = G.champs.find(x => x.role === d.role); const real = c.def; c.def = d;
+        d.abilities.forEach((a, i) => { const sim = simulateOpening(c, i); if (!sim.ok) out.push(`${bd} ${team} ${d.name} ${a.name}: ${sim.why}`); });
+        if (OPENINGS[d.id].filter(o => o.includes('cast')).length !== 1) out.push(`${d.name}: not exactly one casting opening`);
+        c.def = real; } } }
+  G = keep.G; setBoard(keep.board);
+  return out;
 }
 
 // ───────────── programming ─────────────
@@ -391,7 +509,7 @@ function patternCells(c, ab, facing, from) {
 }
 function selectChamp(c) {
   if (!G.humans.includes(c.team)) return;
-  if (G.phase === 'opening') { if (c.team !== G.openingTurn || G.openingDone.has(c.id)) return; UI.sel = c.id; UI.mode = { kind: 'open' }; render(); return; }
+  if (G.phase === 'opening') { if (c.team !== G.openingTurn || G.openingDone.has(c.id)) return; UI.sel = c.id; UI.mode = G.openingFallback ? { kind: 'open' } : null; render(); return; }
   if (G.phase !== 'program') return;
   UI.sel = c.id; UI.mode = null; render();
 }
@@ -412,7 +530,7 @@ function addAbility(c, ab, target) {
 }
 function clearOrders(c) { const o = G.orders[c.team]; delete o.moves[c.id]; delete o.abilities[c.id]; UI.mode = null; render(); }
 function boardClick(h) {
-  if (G.phase === 'opening') { const c = champAt(h); if (c && G.humans.includes(c.team)) { selectChamp(c); return; } const sel = UI.sel != null ? G.champs[UI.sel] : null; if (sel && UI.mode && UI.mode.kind === 'open' && openingTargets(sel).some(t => same(t, h))) openingPlay(sel, h); return; }
+  if (G.phase === 'opening') { const sel = UI.sel != null ? G.champs[UI.sel] : null; if (sel && UI.mode && UI.mode.kind === 'open' && openingTargets(sel).some(t => same(t, h))) { openingMove(sel, h); return; } const c = champAt(h); if (c && G.humans.includes(c.team)) selectChamp(c); return; }
   if (G.phase !== 'program' || !UI.mode) { const c = champAt(h); if (c && G.humans.includes(c.team)) selectChamp(c); return; }
   const c = G.champs[UI.sel], m = UI.mode;
   if (m.kind === 'focus') { const e = champAt(h); if (e && e.team !== c.team) { G.orders[c.team].focus = e.id; STATS.decisions++; UI.mode = null; render(); } return; }
@@ -439,7 +557,7 @@ function aiProgram(team) {
     for (const p of spots) {
       const moveCost = same(p, c.pos) ? 0 : 1;
       const alonePen = mine.some(m => m !== c && dist(m.pos, p) <= 1) ? 0 : 3;
-      const nearNexus = -0.25 * dist(p, NEXUS[other(team)]);
+      const nearNexus = -0.25 * nexusDist(other(team), p);
       const base = nearNexus - alonePen;
       let bestA = { v: -1e9, abs: [] };
       // single abilities and descending pairs
@@ -555,18 +673,7 @@ function runBeat(b) {
         if (p.state !== 'pending') continue;
         p.state = 'played';
         const parts = [];
-        for (const h of p.hits) { const e = champAt(h); if (!e) continue;
-          if (p.ab.ally) { if (e.team !== p.team) continue; if (p.ab.heal) { const g = Math.min(p.ab.heal, e.max - e.hp); e.hp += g; parts.push(`${label(e)} +${g}`); G.marks.push({ kind: 'num', hex: e.pos, text: '+' + g, cls: 'good' }); } if (p.ab.shield) { e.shield += p.ab.shield; parts.push(`${label(e)} shield ${p.ab.shield}`); G.marks.push({ kind: 'num', hex: e.pos, text: 'shield', cls: 'good' }); } continue; }
-          if (e.team === p.team) continue;
-          if (p.ab.dmg) { let d = p.ab.dmg, tags = [];
-            if (p.c.def.wants && hasStatus(e, p.c.def.wants)) { d = Math.max(d * RULES.want, d + RULES.wantFloor); tags.push('×2 ' + p.c.def.wants.toLowerCase()); }
-            if (isAlone(e)) { d = Math.floor(d * RULES.alone); tags.push('alone'); }
-            const absorbed = Math.min(e.shield, d); e.shield -= absorbed; e.hp -= d - absorbed;
-            parts.push(`${label(e)} −${d}${tags.length ? ' (' + tags.join(', ') + ')' : ''}${absorbed ? ` (${absorbed} shielded)` : ''}`);
-            G.marks.push({ kind: 'num', hex: e.pos, text: '−' + d, cls: 'bad' }); }
-          if (p.ab.status === 'Marked' || p.ab.status === 'Burning') { applyStatus(e, p.ab.status); parts.push(p.ab.status.toLowerCase()); }
-        }
-        if (p.ab.kind === 'self') { p.c.shield += p.ab.shield; parts.push(`shield ${p.ab.shield}`); G.marks.push({ kind: 'num', hex: p.c.pos, text: 'shield', cls: 'good' }); }
+        applyEffects(p.c, p.ab, p.hits, parts);
         if (p.ab.dmg || p.ab.heal || p.ab.shield) logLine('t' + b.tier, `${label(p.c)} ${p.ab.name}: ${parts.join(' · ') || 'no effect'}`);
       }
     }
@@ -586,7 +693,7 @@ function runBeat(b) {
     G.tierLabel = null;
     logLine('round', `Round ${G.round} closes.`);
     for (const c of G.champs) if (!c.dead && hasStatus(c, 'Burning')) { c.hp -= RULES.burn; logLine('b', `${label(c)} burns for ${RULES.burn}`); if (c.hp <= 0) { c.dead = true; c.respawnAt = G.round + RULES.respawn; c.status = {}; G.nexus[c.team] -= RULES.killTax; STATS.deaths++; logLine('death', `✝ ${label(c)} burns to death — nexus ${c.team} −${RULES.killTax}`); } }
-    for (const t of ['A','B']) { const foe = other(t); let gate = 0; for (const c of alive(t)) if (dist(c.pos, NEXUS[foe]) <= 1) gate += RULES.gateHit; if (gate) { G.nexus[foe] -= gate; logLine('b', `At the gates: team ${t} hits NEXUS ${foe} for ${gate}`); } }
+    for (const t of ['A','B']) { const foe = other(t); let gate = 0; for (const c of alive(t)) if (nexusDist(foe, c.pos) <= 1) gate += RULES.gateHit; if (gate) { G.nexus[foe] -= gate; logLine('b', `At the gates: team ${t} hits NEXUS ${foe} for ${gate}`); } }
     const cA = alive('A').filter(c => dist(c.pos, BOARD.centre) <= 1).length, cB = alive('B').filter(c => dist(c.pos, BOARD.centre) <= 1).length;
     if (cA !== cB) { const h = cA > cB ? 'A' : 'B'; G.nexus[other(h)] -= 1; logLine('b', `Centre held by ${h}: NEXUS ${other(h)} −1`); }
     for (const c of G.champs) for (const s in c.status) if (c.status[s] <= G.round) delete c.status[s];
@@ -597,6 +704,26 @@ function runBeat(b) {
     if (!G.winner && G.round >= RULES.rounds) { G.winner = G.nexus.A > G.nexus.B ? 'A' : G.nexus.B > G.nexus.A ? 'B' : alive('A').length > alive('B').length ? 'A' : alive('B').length > alive('A').length ? 'B' : 'draw'; logLine('round', `Round ${RULES.rounds} is the last: ${G.winner === 'draw' ? 'a draw' : 'team ' + G.winner + ' wins'} (nexus A ${Math.max(0, G.nexus.A)} – B ${Math.max(0, G.nexus.B)})`); }
     if (G.winner) finish();
   }
+}
+// Applies an ability to the hexes it hits; fills `parts` for the log; returns a rough value (for the AI).
+// opts.noKill: HP floors at 1 (the opening can't kill). opts.control: also apply root/exhaust (the reveal does those in its control beat).
+function applyEffects(caster, ab, hits, parts, opts = {}) {
+  let v = 0;
+  for (const hh of hits) { const e = champAt(hh); if (!e) continue;
+    if (ab.ally) { if (e.team !== caster.team) continue; if (ab.heal) { const g = Math.min(ab.heal, e.max - e.hp); e.hp += g; v += g * 0.5; parts.push(`${label(e)} +${g}`); G.marks.push({ kind: 'num', hex: e.pos, text: '+' + g, cls: 'good' }); } if (ab.shield) { e.shield += ab.shield; v += ab.shield * 0.4; parts.push(`${label(e)} shield ${ab.shield}`); G.marks.push({ kind: 'num', hex: e.pos, text: 'shield', cls: 'good' }); } continue; }
+    if (e.team === caster.team) continue;
+    if (ab.dmg) { let d = ab.dmg, tags = [];
+      if (caster.def.wants && hasStatus(e, caster.def.wants)) { d = Math.max(d * RULES.want, d + RULES.wantFloor); tags.push('×2 ' + caster.def.wants.toLowerCase()); }
+      if (isAlone(e)) { d = Math.floor(d * RULES.alone); tags.push('alone'); }
+      const absorbed = Math.min(e.shield, d); let dealt = d - absorbed;
+      if (opts.noKill) dealt = Math.min(dealt, Math.max(0, e.hp - 1));
+      e.shield -= absorbed; e.hp -= dealt; v += dealt + absorbed * 0.5;
+      parts.push(`${label(e)} −${absorbed + dealt}${tags.length ? ' (' + tags.join(', ') + ')' : ''}${absorbed ? ` (${absorbed} shielded)` : ''}${opts.noKill && dealt < d - absorbed ? ' (the opening can\'t kill)' : ''}`);
+      G.marks.push({ kind: 'num', hex: e.pos, text: '−' + (absorbed + dealt), cls: 'bad' }); }
+    if (ab.status && (ab.status === 'Marked' || ab.status === 'Burning' || opts.control)) { applyStatus(e, ab.status); v += 2; parts.push(`${label(e)} ${ab.status.toLowerCase()}`); }
+  }
+  if (ab.kind === 'self') { caster.shield += ab.shield; v += ab.shield * 0.4; parts.push(`shield ${ab.shield}`); G.marks.push({ kind: 'num', hex: caster.pos, text: 'shield', cls: 'good' }); }
+  return v;
 }
 function resolveTargets(p) {
   const c = p.c, ab = p.ab, t = p.target;
@@ -662,12 +789,14 @@ function renderPanel(team) {
       <div class="name"><b>${esc(c.def.name)}</b><span class="role">${c.role}${c.dead ? ` · back round ${c.respawnAt}` : ''}</span></div>
       <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c.max)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c.max)}%;width:${Math.min(100 - Math.max(0, 100 * c.hp / c.max), 100 * c.shield / c.max)}%"></span><b>${Math.max(0, c.hp)}/${c.max}</b></div>
       <div class="chips">${chips.join('')}</div>
-      <div class="abs">${c.def.abilities.map((a, i) => `<button class="ab ${abs.some(x => x.ab === i) && !hidden ? 'programmed' : ''}" data-ab="${i}" ${!human || G.phase !== 'program' || c.dead ? 'disabled' : ''}><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${abText(a)}</small></button>`).join('')}</div>
-      <div class="order">${G.phase === 'opening' ? (opened ? 'opened' : (human && c.team === G.openingTurn ? 'click to move it' : '')) : orderTxt}</div>
+      <div class="abs">${G.phase === 'opening'
+        ? c.def.abilities.map((a, i) => { const sim = simulateOpening(c, i); const can = human && c.team === G.openingTurn && !opened && !G.openingFallback && sim.ok; return `<button class="ab open ${sim.ok ? '' : 'blocked'}" data-open="${i}" ${can ? '' : 'disabled'} title="${esc(sim.ok ? 'Opening of ' + a.name : 'Blocked: ' + sim.why)}"><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${esc(openingText(c, i))}</small></button>`; }).join('')
+        : c.def.abilities.map((a, i) => `<button class="ab ${abs.some(x => x.ab === i) && !hidden ? 'programmed' : ''}" data-ab="${i}" ${!human || G.phase !== 'program' || c.dead ? 'disabled' : ''}><span class="k"><span>${'QWE'[i]} ${esc(a.name)}</span><i class="t${a.init}">${a.init}</i></span><small>${abText(a)}</small></button>`).join('')}</div>
+      <div class="order">${G.phase === 'opening' ? (opened ? 'played' : (human && c.team === G.openingTurn ? (G.openingFallback ? 'no opening fits — click it, then a hex beside it (or itself to stay)' : 'pick one of its openings, or another champion\'s') : '')) : orderTxt}</div>
       ${human && G.phase === 'program' && !c.dead ? `<div class="abs"><button data-act="move" class="${mv ? 'on' : ''}">Move (1)</button><button data-act="focus" class="${G.orders[team].focus != null ? 'on' : ''}">Focus${G.orders[team].focus != null ? ': ' + nameOf(G.orders[team].focus) : ''}</button><button data-act="clear">Clear</button></div>` : ''}
     </div>`);
     card.addEventListener('click', e => { if (!e.target.closest('button')) selectChamp(c); });
-    if (G.phase === 'opening') card.querySelectorAll('button').forEach(b => b.disabled = true);
+    card.querySelectorAll('button[data-open]').forEach(b => { b.addEventListener('click', () => humanOpening(c, +b.dataset.open)); b.addEventListener('mouseenter', () => { UI.preview = { c, i: +b.dataset.open }; renderBoard(); }); b.addEventListener('mouseleave', () => { UI.preview = null; renderBoard(); }); });
     card.querySelectorAll('button[data-ab]').forEach(b => b.addEventListener('click', () => { UI.sel = c.id; setMode('ability', +b.dataset.ab); }));
     card.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => { UI.sel = c.id; const a = b.dataset.act; if (a === 'clear') clearOrders(c); else setMode(a); }));
     el.appendChild(card);
@@ -686,6 +815,7 @@ function renderBoard() {
   const sel = UI.sel != null ? G.champs[UI.sel] : null, m = UI.mode;
   let pick = new Set(), pat = [];
   if (G.phase === 'opening' && sel && m && m.kind === 'open') openingTargets(sel).forEach(t => pick.add(key(...t)));
+  const previewMoves = G.phase === 'opening' && UI.preview ? (simulateOpening(UI.preview.c, UI.preview.i).moves || []) : [];
   if (G.phase === 'program' && sel && m) {
     const from = plannedPos(sel);
     if (m.kind === 'move') moveTargets(sel).forEach(t => pick.add(key(...t)));
@@ -702,17 +832,18 @@ function renderBoard() {
   if (UI.threat && (G.phase === 'program' || G.phase === 'opening')) for (const hh of HEXES) { const n = threatCount(hh, G.humans[0] || 'B'); if (n) threat[key(...hh)] = n; }
   for (const hh of HEXES) {
     const k = key(...hh), [cx, cy] = px(...hh);
-    const cls = ['hex']; if (HILLS.some(x => same(x, hh))) cls.push('hill'); if (TOWERS.some(x => same(x, hh))) cls.push('tower'); if (same(hh, NEXUS.A)) cls.push('nexusA'); if (same(hh, NEXUS.B)) cls.push('nexusB');
+    const cls = ['hex']; if (HILLS.some(x => same(x, hh))) cls.push('hill'); if (TOWERS.some(x => same(x, hh))) cls.push('tower'); if (isNexus('A', hh)) cls.push('nexusA'); if (isNexus('B', hh)) cls.push('nexusB');
     if (pick.has(k)) cls.push('pick'); const pm = pat.find(p => same(p.hex, hh)); if (pm) cls.push('pat', pm.ally ? 'ally' : ''); if (threat[k]) cls.push('threat', threat[k] >= 3 ? 'hot' : '');
     const poly = sv(`<polygon class="${cls.join(' ')}" points="${hexPts(cx, cy)}"></polygon>`);
     poly.addEventListener('click', () => boardClick(hh));
     svg.appendChild(poly);
     if (TOWERS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:11px;fill:#cfd6e6">${same(hh, BOARD.centre) ? '♜ centre' : '♜'}</text>`));
-    else if (same(hh, NEXUS.A) || same(hh, NEXUS.B)) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:10px;fill:#fff">NEXUS ${same(hh, NEXUS.A) ? 'A' : 'B'}</text>`));
+    else if (isNexus('A', hh) || isNexus('B', hh)) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + HEX * 0.7}" style="font-size:9px;fill:#fff">NEXUS ${isNexus('A', hh) ? 'A' : 'B'}</text>`));
     else if (HILLS.some(x => same(x, hh))) svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + 4}" style="font-size:10px;fill:#e8c46a">▲ hill</text>`));
     else svg.appendChild(sv(`<text class="coord" x="${cx}" y="${cy + HEX * 0.7}">${hh[0]},${hh[1]}</text>`));
-    if (threat[k] && !SOLID.has(k)) svg.appendChild(sv(`<text class="threat-n" x="${cx + HEX * 0.55}" y="${cy - HEX * 0.45}">${threat[k]}</text>`));
+    if (threat[k] && !SOLID.has(k) && !isNexus('A', hh) && !isNexus('B', hh)) svg.appendChild(sv(`<text class="threat-n" x="${cx + HEX * 0.55}" y="${cy - HEX * 0.45}">${threat[k]}</text>`));
   }
+  for (const mv of previewMoves) { const [x1, y1] = px(...mv.from), [x2, y2] = px(...mv.to); svg.appendChild(sv(`<circle class="ghost open" cx="${x2}" cy="${y2}" r="${HEX * 0.55}"></circle>`)); svg.appendChild(sv(`<line class="arrow" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * 0.35}" y2="${y2 - (y2 - y1) * 0.35}"></line>`)); }
   // ghosts of planned moves (own team)
   if (G.phase === 'program') for (const t of G.humans) for (const id in G.orders[t].moves) { const c = G.champs[id], to = G.orders[t].moves[id]; const [x1, y1] = px(...c.pos), [x2, y2] = px(...to); svg.appendChild(sv(`<circle class="ghost" cx="${x2}" cy="${y2}" r="${HEX * 0.55}"></circle>`)); svg.appendChild(sv(`<line class="arrow" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * 0.35}" y2="${y2 - (y2 - y1) * 0.35}"></line>`)); }
   for (const c of G.champs) { if (c.dead) continue; const [cx, cy] = px(...c.pos);
@@ -731,7 +862,7 @@ function renderPrompt() {
   if (G.phase === 'draft') { p.textContent = `Draft — ${G.draftOrder[G.draftIdx]} picks (snake A B B A A B B A A B).`; return; }
   if (G.phase === 'opening') {
     const mineTurn = G.humans.includes(G.openingTurn);
-    p.textContent = mineTurn ? `Opening — your play: click one of your champions that hasn't moved, then a green hex (up to ${BOARD.openingSteps} away). Red numbers: how many enemy champions could reach that hex next round (their move plus their range).` : `Opening — team ${G.openingTurn} is placing…`;
+    p.textContent = mineTurn ? (G.openingFallback ? 'Opening — none of your remaining openings can be played (a move is blocked). Click a champion that hasn\'t played, then a hex beside it, or itself to stay.' : 'Opening — your play: click one opening on a champion that hasn\'t played (hover to preview its moves). A greyed opening has a blocked move. Exactly one opening per champion casts; casts aim themselves and can\'t kill. Red numbers: enemy champions that could reach that hex next round.') : `Opening — team ${G.openingTurn} is playing…`;
     return;
   }
   if (G.phase === 'program') {
@@ -752,7 +883,7 @@ function renderStats() { const s = STATS; document.getElementById('stats').inner
 function renderOverlay() {
   const ov = document.getElementById('overlay');
   if (UI.help) { ov.className = 'overlay'; ov.innerHTML = `<div class="box help"><button id="help-close" style="float:right">Close</button><h2>Programmed rounds — the prototype rules</h2>
-    <h3>The opening</h3>Before any secret order, the teams alternate visible plays: each play moves one champion up to ${BOARD.openingSteps} hexes; every champion moves once. A places first. The secret rounds begin only when both armies have taken their ground, so the first programs are written with the enemy already in reach. Red numbers on hexes count the enemy champions that could reach that hex next round (their move plus their range); 3 or more turns the hex dark red.
+    <h3>The opening</h3>The main game's opening, in the open. Each ability owns an <b>opening</b>: three instructions in your team's frame — "mid ↗" moves whoever plays mid one hex forward-right; "cast" fires the ability that owns the opening, aimed by itself (nearest enemy, lowest HP first; patterns face where they hit most; allies: the most wounded). Teams alternate; a play is one champion that hasn't played yet and one of its three openings; every champion plays exactly one; A plays first. Moves are <b>strict</b>: an opening with a blocked move (edge, tower, any champion) can't be played, and you must play an opening if any fits — only when none fits do your remaining champions step one hex each. Exactly one opening per champion casts; an opening cast can't kill (1 HP floor) and may fizzle. The secret rounds begin when both teams are done, so the first programs are written with the enemy already in reach. Red numbers on hexes count the enemy champions that could reach that hex next round (their move plus their range); 3 or more turns the hex dark red.
     <h3>Each round</h3>Both teams secretly write orders, then everything reveals and resolves. Energy per round: ${[1,2,3,4,5,6,7,8].map(energyFor).join(' · ')}. A <b>move</b> costs 1 (up to ${RULES.spd} hexes). An <b>ability</b> costs its initiative. A champion may hold one move and up to two abilities in strictly descending initiative (a 3 then a 1: give, then cash in). Each team also names a <b>Focus</b> enemy that auto-aim prefers.
     <h3>Commitment by tier</h3>Tier 4 abilities are fixed patterns, forward. Tier 3 commit a facing. Tier 2 commit a hex. Tier 1 commit a champion and follow it. Moving out of a pattern is dodging.
     <h3>Resolution</h3>Moves first, all at once (a contested hex goes to the priority token holder; the token alternates). Then tiers 4 → 3 → 2 → 1: within a tier both teams act at once — control (root, exhaust) first, then damage, then deaths. The dead finish their tier. <b>Exhaust cancels the target's remaining orders.</b> An order whose caster died earlier is <b>lost</b> (energy refunded next round, up to ${RULES.carryCap}); one with nothing to hit <b>fizzles</b>.

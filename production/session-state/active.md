@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-10-22*
+*Last updated: 2026-10-24*
 
 ## Current Task
+
+**PROGRAMMED ROUNDS — SCRIPTED OPENING — 2026-10-24.** Owner: the plain-move opening was not what was meant; wants v2's scripted opening (each ability a script of moves for several roles, one script per champion casts). Done in `prototypes/programmed-rounds/index.html`: `OPENINGS` table (30 scripts, three routes per champion), strict moves, must-play, fallback step, one casting script per champion, auto-aim, no-kill floor, hover preview, AI picks scripts by try-and-undo on the real state (`teamPosScore` + cast value); `applyEffects` factored out of the reveal; Field 7 now the main game's geometry (back-row start, nexus line, fronts six rows apart) and the default; `debugCheckOpenings()` validates scripts. Finding: fronts four rows apart → scripts collide on the river row (mirror keeps row 0 fixed), half the champions fall back; six rows apart → full opening, ≤1 fallback, lines end 1–2 hexes apart. Small board: 11/30 scripts blocked from the start, needs its own scripts. D-066. Headless: both boards run AI matches; human draft → scripted plays by button → program → round 2; no script errors. Artifact republished. v2 untouched. Next: owner plays Field 7; candidates: small-board scripts, swamps, armed programs.
 
 **PROGRAMMED ROUNDS — OPENING ADDED — 2026-10-22.** Owner played the prototype: programming while the armies are far apart feels random; keep the opening, start secret rounds when the units are close; map maybe not smaller. Done in `prototypes/programmed-rounds/index.html`: visible alternating opening (one champion per play, N steps, everyone once) before round 1; board switch small (37) / Field 7 (59, mirrored); per-hex threat count (enemy champions in reach next round) on by default; opening AI uses it. Finding: on the 37-hex board speed 2 + range 3 reaches nearly everything from round 1 — no approach existed. D-065. Headless check: both boards complete AI matches; human draft → opening clicks → program → round 2. Artifact republished. v2 untouched. Next: owner plays both boards and says which feels like "meeting in the middle"; candidates after that: shorter reach / larger map, the scripted opening instructions from v2, armed programs.
 
