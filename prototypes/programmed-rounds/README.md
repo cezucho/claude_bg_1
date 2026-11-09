@@ -1,62 +1,89 @@
-# Prototype: programmed rounds
+# Prototype: programmed rounds — hinted cards
 
-**Hypothesis.** A round where both teams secretly program orders (a move and up to two
-abilities per champion, under an energy budget), then reveal and resolve them simultaneously by
-initiative tier (4 → 1), is quicker than v2's alternating ladder and produces the momentum
-swings the owner wants (bursts, picks that pay), while keeping the game deterministic and
-readable. Design source: `design/v3-programmed-rounds.md` (the specialists' synthesis).
+**Hypothesis (current, 2026-11-09).** Draft → scripted opening → a few deadly rounds in which
+each champion plays one ability per round as a **face-down card**. Teams put cards down one at a
+time; every card has a public **open effect** that happens the moment it goes down (step, swap,
+heal those around, guard, chip, shove, hit the nexus) and a secret **main action** that fires by
+initiative once every card is down. The open effect is a hint about which card it was, and the
+opponent answers it with their own cards. This should be easy to learn (one card per champion,
+no budget), hard to master (reading and baiting hints, order of placement), quick (a match is
+the opening plus about five rounds), and swingy (a round takes about a third of all HP on the
+board and kills about two champions).
+
+Earlier hypothesis (2026-10-21 to 10-24): secret orders under an energy budget — a move and up
+to two abilities per champion, resolved simultaneously by tier. Replaced on the owner's
+direction; the history is in git and `design/v3-programmed-rounds.md`.
 
 **What it is.** One self-contained HTML file, no server, no libraries: `index.html`. Open it in
-a browser (or the published artifact). It has a 10-champion draft (two per role, give/want pairs),
-a 37-hex board with a centre tower, one home tower each, two hills and the nexuses at the corners,
-8 rounds, energy `min(10, 5 + ⌈r/2⌉)`, commitment by tier (tier 4 fixed forward, tier 3 a facing,
-tier 2 a hex, tier 1 follows a champion), Focus, lost/fizzled orders, exhaust as the net, "caught
-alone", a greedy AI that commits before reading the player, a "watch AI vs AI" mode, and a strip
-of the harness-style counters (burst-kill share, lost and fizzled orders, lead changes, decisions).
+a browser (or the published artifact). 10-champion draft (two per role, give/want pairs), the
+main game's Field 7 board (default) or a 37-hex board, the scripted opening from v2, then up to
+6 card rounds.
 
-**Added 2026-10-22 (owner's feedback: programming while the armies are far apart feels
-random).** An **opening** before any secret order, and a **board switch** — the 37-hex board or
-the main game's Field 7 — plus a **threat count** on every hex (on by default): how many enemy
-champions could reach that hex next round (their move plus their longest hostile range); 3+
-turns the hex dark red.
+## Rules in short
 
-**Changed 2026-10-24 (owner: the opening should be the main game's, not a plain move).** The
-opening is now the **scripted opening of v2**: each ability owns a script of three instructions
-in the team's frame ("mid ↗" moves whoever plays mid one hex forward-right; "cast" fires the
-ability that owns the script, aimed by itself). Teams alternate; a play is one champion that
-hasn't played and one of its three openings; every champion plays exactly one; A first. Moves
-are strict (a blocked move voids the script); you must play a script if any fits, otherwise
-each remaining champion steps one hex. Exactly one script per champion casts; opening casts
-can't kill and may fizzle. Hovering a script previews its moves on the board. Field 7 now uses
-the **main game's geometry** (start on the back row, nexus as a line of three hexes on the
-start line, fronts six rows apart) and is the default board. The AI picks the script that most
-improves its position (forward, few enemies in reach, hills, an ally beside, near the centre)
-plus what its cast does; it tries each candidate on the real state and undoes it.
+- **Opening** (unchanged): teams alternate scripted plays; each champion plays one of its three
+  scripts; one script per champion casts (now at half damage, still can't kill). **B opens.**
+- **Each round:** every alive champion plays exactly one of its three abilities as a card.
+  Placing goes in a **snake** — first, then pairs (B A A B B A A B B A in round 1; the first
+  team alternates each round). Put a card down → its open effect happens now (you pick the hex
+  for a step/swap/shove) → you aim it in secret (target, hex or facing).
+- **Hints:** two of each champion's three cards share the same open effect, so seeing it
+  narrows the card to one or two. The enemy panel says "could be X or Y" and highlights them.
+- **Resolution:** initiative 4 → 1; within an initiative both teams at once: control, shields
+  and heals → damage → deaths. Dead before your initiative = card lost. Exhaust cancels the
+  target's card if it hasn't fired. Area cards hit whoever is there when they fire, so a later
+  open-effect step dodges them; tracking cards can't be dodged but fire last.
+- **Lethality:** HP 12–18, main actions 3–7 damage, ×2 when the target has the status your
+  champion wants, ×1.5 on a champion with no ally beside it. Open effects can't kill.
+- **Score:** nexus 30; a death costs 5; centre tower 1 per round; beside the enemy nexus 3.
+  The dead miss one round and return a row in front of their start. 6 rounds max.
 
-**Not in it.** Quests, spells, cooldowns, walls and pushes, swamps, the alternating ceiling
-toggle, armed programs. Hotseat (secret programs on one screen need a pass-device step). The
-scripts are written for Field 7's back row; on the small board (start row −2) eleven of the
-thirty are blocked from the first play, so the small board now plays mostly fallback steps — it
-needs its own scripts if it is to be compared seriously.
+## How to run
 
-**How to run.** Open `index.html`, or the published artifact link in the session. "New: play A
-vs AI" or "New: watch AI vs AI"; "Board" switches the map (starts a new match). Rules are
-under the Rules button.
+Open `index.html`; "New: play A vs AI" or "New: watch AI vs AI". Rules are under the Rules
+button. Headless checks (Chrome, no server) through the URL hash:
 
-**Status.** In progress — first playable 2026-10-21, opening and board switch 2026-10-22,
-scripted opening and real Field 7 geometry 2026-10-24. Numbers from the AI-vs-AI strip are
-indicative only (the AI is greedy and one ply).
+- `index.html#sim=400,field7,22` — 400 AI matches, random drafts from seed 22; prints counters
+  and per-champion win rates. Flags appended after the seed: `noreadA` / `noreadB` (that AI
+  ignores open effects), `openA` (A opens), `tokenA` (A places first in round 1), `snakeopen`,
+  `altplace` (strict alternation when placing), `revB` (B's cards first within an initiative).
+- `index.html#log=7` — one match's full log, seed 7.
+- `index.html#uitest=99` — plays team A through the real buttons to the end; `#uitest=2` stops
+  mid-placement in round 2 (for a screenshot).
+- `index.html#x=0,symtest` — 30 mid-round positions mirrored with the teams swapped; the AI must
+  make the mirrored choice with the same score (30/30 SAME).
 
-**Findings so far.**
-- On the 37-hex board, speed 2 plus range 3 means almost every hex is within reach of almost
-  every enemy champion from the first round. The threat overlay shows 4–5 on nearly every hex.
-  There is no "approach" on that board, which is why advancing felt like walking into random
-  fire: nothing was out of range to begin with.
-- With the fronts only four rows apart (the first Field 7 layout), scripted openings collide
-  at once: the mirror keeps the river row fixed, so a champion standing on it blocks its
-  counterpart's script to the same hex, and a team's own earlier plays block the rest. Half the
-  champions fell to the fallback step. Six rows apart (the real Field 7), a full opening plays
-  out with at most one fallback and the lines end one to two hexes apart, hills and centre
-  contested — the "meet in the middle" the owner described.
-- The first player's casting scripts fire into empty ground (nobody is in range yet); the
-  second player's land. v2 has the same asymmetry and pays it back with the round-1 token.
+## Status
+
+In progress. First playable 2026-10-21; opening 10-22; scripted opening 10-24; **hinted cards
+2026-11-09**. AI-vs-AI numbers are indicative: the AI is greedy, one card at a time.
+
+## Findings (2026-11-09, Field 7, 400–500 AI matches per run)
+
+- **Lethality hits the brief.** About 33% of all HP on the board is lost each round, about two
+  of nine or ten champions die per round, a third of kills are bursts (from 60%+ HP in one
+  round). Matches last 4.9–5.3 rounds after the opening; about 90% end with a nexus destroyed.
+- **Hints matter, modestly, for the AI.** An AI that ignores open effects loses about 7 points
+  of win rate (measured mid-session, before the order fix: A 63% → 53% when A is blind, 67%
+  when B is). The AI only uses hints to judge danger;
+  a human reading them should get more.
+- **Exhaust is huge when a round is one card per champion.** With Quake exhausting an area at
+  initiative 4, Bulwark's team won 95%. Exhaust is now only on Bash (one hex, initiative 3) and
+  Gust (a hex, initiative 2).
+- **Turn order outweighs any single card.** Who opens first and who places last swings a match
+  by 10–15 points, and the direction flips with small content changes (two bottom-lane damage
+  tweaks moved the sides from 50/50 to 38/62). Strict alternation when placing gives the last
+  placer about +10; the snake reduces that to about ±2. A snake *opening* breaks the scripts
+  (written for alternation): Viper and Gunner fell to 25–33%. Current setup (B opens,
+  alternating opening, snake placing): A 53–54%.
+- **Champion spread** 36–64% after one tuning pass: Ranger about 62% and Gunner about 38% (the
+  same lane), everyone else 43–57%. The small board is unbalanced (Anchor 79%, Bulwark 21%); its
+  scripts were never written for it.
+- **Dead cards.** About 0.6 cards per round are lost (caster died first or exhausted) and 1.6
+  fizzle (nothing left in range), so roughly a fifth of cards do nothing. That is the price of
+  dodging and burst; whether it feels bad needs a human.
+
+## Not in it
+
+Quests, spells, cooldowns, walls, swamps, hotseat, towers you can hit (siege hits the nexus).
+The AI doesn't bluff: it doesn't pick a card *because* its open effect is ambiguous.
