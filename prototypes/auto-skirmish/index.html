@@ -162,6 +162,7 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
     <button id="b-board">Board</button>
     <button id="b-aims">Show targets</button>
     <button id="b-speed">Speed</button>
+    <button id="b-pulse">Pulse</button>
     <button id="b-rules">Rules</button>
   </div>
 </header>
@@ -284,17 +285,22 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   towerHp: 15,        // side towers' HP; 0 = indestructible (the first version's rule)
   gate: true,         // the nexus takes siege damage only once one of its side towers has fallen
   regen: 3,           // HP a champion regains at the start of a pulse if nothing hit it in the previous pulse (0 = off)
-  respawnStep: 3 };   // the death timer grows by one round every N rounds: rounds 1-3 one round, 4-6 two, 7-9 three (99 = always one)
+  respawnStep: 3,
+  onePulse: false };  // true = both teams move, then one pulse per round (false = a pulse after every move)   // the death timer grows by one round every N rounds: rounds 1-3 one round, 4-6 two, 7-9 three (99 = always one)
+// "Pulse once per round" halves the fighting, so it plays longer matches (measured, see README).
+const ONE_PULSE = { onePulse: true, rounds: 16, levelRounds: [3, 5, 8, 11], respawnStep: 4, siege: 3 };
+const EVERY_MOVE = Object.fromEntries(Object.keys(ONE_PULSE).map(k => [k, RULES[k]]));
 const AIP = { push: 4 };   // AI aggression: how much it values standing near the enemy nexus (0 = cautious)
 const deathDelay = r => 1 + Math.floor((r - 1) / RULES.respawnStep);
 
 // ═════════════ state ═════════════
 let G = null, HEADLESS = false;
-const UI = { board: 'field7', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
+const UI = { board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
 const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
-const delay = () => UI.speed === 'fast' ? 130 : 480;
+// pulse rhythm: plain hits blur past, chances and kills get a full beat
+const delay = special => (special ? 700 : 220) * (UI.speed === 'fast' ? 0.4 : 1);
 function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 const roll = pct => pct > 0 && rng() * 100 < pct;
 
@@ -456,12 +462,13 @@ function doMove(c, to) {
   if (c && to) { logLine(team, `${team} moves ${nm(c)} to ${to[0]},${to[1]}`); c.pos = to; }
   else logLine(team, `${team} holds`);
   UI.sel = null; UI.hover = null;
-  const events = runPulse(team);
+  if (RULES.onePulse && G.turnNo === 0) { G.turnNo = 1; G.turnTeam = other(G.turnTeam); beginTurn(); return; }
+  const events = runPulse(RULES.onePulse ? G.token : team);   // with one pulse, ties go to the team that moved first
   if (HEADLESS) afterPulse();
   else { G.phase = 'pulse'; animate(events, afterPulse); }
 }
 function afterPulse() {
-  G.display = null; G.actor = null; G.ev = null;
+  G.display = null; G.actors = null; G.ev = null;
   if (checkWin()) return;
   G.turnNo++;
   if (G.turnNo === 1) { G.turnTeam = other(G.turnTeam); beginTurn(); return; }
@@ -509,13 +516,13 @@ function runPulse(mover) {
     for (const T of G.towers) { const side = T.side, tw = T.pos; if (!side || !T.up) continue;
       const foes = alive(other(side)).filter(c => dist(c.pos, tw) === 1).sort((a, b) => a.hp - b.hp);
       if (foes.length) { const v = foes[0]; v.hp -= RULES.tower; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + RULES.tower, cls: 'bad' }); notes.push(`a ${side} tower hits ${nm(v)} −${RULES.tower}`); if (v.hp <= 0) kill(v, null, notes); } }
-    if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); events.push({ actor: null, pops, lines: [], snap: snap() }); } }
+    if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); events.push({ actor: null, init: 99, special: true, pops, lines: [], snap: snap() }); } }
   const L0 = links();
   const order = alive().sort((a, b) => (eff(b, L0).init - eff(a, L0).init) || ((b.team === mover) - (a.team === mover)) || (ROLES.indexOf(a.role) - ROLES.indexOf(b.role)));
   for (const c of order) {
     if (c.dead) continue;
     const L = links(), pops = [], lines = [], notes = [];
-    if (c.frozen) { c.frozen = false; logLine(c.team, `${nm(c)} [${eff(c, L).init}] is frozen and skips its action`); events.push({ actor: c.id, pops: [{ hex: c.pos, text: 'frozen', cls: 'info' }], lines, snap: snap() }); continue; }
+    if (c.frozen) { c.frozen = false; logLine(c.team, `${nm(c)} [${eff(c, L).init}] is frozen and skips its action`); events.push({ actor: c.id, init: eff(c, L).init, special: true, pops: [{ hex: c.pos, text: 'frozen', cls: 'info' }], lines, snap: snap() }); continue; }
     // support chances roll on every action
     if (roll(pct(c, 'mend', L))) { const w = alive(c.team).filter(a => dist(a.pos, c.pos) <= 2 && a.hp < a.maxHp).sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp))[0];
       if (w) { const g = Math.min(c.mendAmt, w.maxHp - w.hp); w.hp += g; pops.push({ hex: w.pos, text: '+' + g, cls: 'good' }); notes.push(`<em>Mend</em> ${nm(w)} +${g} (${pct(c, 'mend', L)}%)`); STATS.procs++; } }
@@ -527,7 +534,7 @@ function runPulse(mover) {
     else { const T = towerInRange(c, L); if (T) hitTower(c, T, L, { pops, lines, notes }); }
     const head = `${nm(c)} [${eff(c, L).init}]`;
     logLine(c.team, `${head}${notes.length ? ': ' + notes.join(' · ') : ' has nobody in range'}`);
-    events.push({ actor: c.id, pops, lines, snap: snap() });
+    if (pops.length || lines.length) events.push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, snap: snap() });   // an idle champion gets no beat
     if (G.nexus.A <= 0 || G.nexus.B <= 0) break;
   }
   return events;
@@ -666,13 +673,21 @@ function aiTurn() {
 }
 
 // ═════════════ animation ═════════════
+// Champions with the same initiative are shown together as one beat (they still resolve in order).
+function toBeats(events) {
+  const out = [];
+  for (const e of events) { const last = out[out.length - 1];
+    if (last && e.actor != null && last.actors.length && last.init === e.init) { last.pops.push(...e.pops); last.lines.push(...e.lines); last.snap = e.snap; last.actors.push(e.actor); last.special = last.special || e.special; }
+    else out.push({ ...e, pops: [...e.pops], lines: [...e.lines], actors: e.actor != null ? [e.actor] : [] }); }
+  return out;
+}
 function animate(events, done) {
-  let i = 0; UI.anim = { events, done };
+  const beats = toBeats(events); let i = 0; UI.anim = { events, done };
   const step = () => {
     if (!UI.anim || UI.anim.events !== events) return;
-    if (i >= events.length) { UI.anim = null; done(); return; }
-    const e = events[i++]; G.display = e.snap; G.actor = e.actor; G.ev = e; render();
-    UI.timer = setTimeout(step, delay());
+    if (i >= beats.length) { UI.anim = null; done(); return; }
+    const e = beats[i++]; G.display = e.snap; G.actors = e.actors; G.ev = e; render();
+    UI.timer = setTimeout(step, delay(e.special));
   };
   step();
 }
@@ -696,6 +711,7 @@ function render() {
   document.getElementById('b-board').textContent = `Board: ${BOARDS[UI.board].name} (${BOARDS[UI.board].size})`;
   document.getElementById('b-aims').classList.toggle('on', UI.aims);
   document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
+  document.getElementById('b-pulse').textContent = RULES.onePulse ? 'Pulse: once per round' : 'Pulse: after every move';
   renderRail('A'); renderRail('B'); renderBoard(); renderPrompt(); renderLog(); renderStrip(); renderOverlay();
 }
 function procRows(c, L) {
@@ -800,7 +816,7 @@ function renderBoard() {
     const [cx, cy] = px(...c.pos), e = eff(c0, Lnow), eb = before ? eff(c0, before) : null;
     const mine = G.phase === 'move' && G.humans.includes(c0.team) && G.turnTeam === c0.team;
     const iniCls = eb && e.init > eb.init ? 'up' : eb && e.init < eb.init ? 'down' : e.init > c0.init ? 'up' : '';
-    const g = sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${G.actor === c0.id ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
+    const g = sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${(G.actors || []).includes(c0.id) ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
       <circle class="body" cx="${cx}" cy="${cy}" r="${HEX * .6}"></circle>
       <text class="g" x="${cx}" y="${cy - 1}">${esc(c0.def.name[0])}</text>
       <rect x="${cx - HEX * .55}" y="${cy + HEX * .5}" width="${HEX * 1.1}" height="4" rx="1" fill="#0b0f16"></rect>
@@ -829,10 +845,11 @@ function renderPrompt() {
   if (G.phase === 'move') {
     if (!G.humans.includes(G.turnTeam)) { p.textContent = `Team ${G.turnTeam} is choosing its move…`; return; }
     const sel = UI.sel != null ? G.champs[UI.sel] : null;
-    p.innerHTML = sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to preview synergies and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. Then everyone acts once, fastest first.`;
+    const after = RULES.onePulse ? (G.turnNo === 0 ? 'Then the other team moves, and everyone acts once, fastest first.' : 'Then everyone acts once, fastest first.') : 'Then everyone acts once, fastest first.';
+    p.innerHTML = sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to preview synergies and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. ${after}`;
     btn('Hold', () => doMove(null, null)); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
     return; }
-  if (G.phase === 'pulse') { const a = G.actor != null ? G.champs[G.actor] : null; p.innerHTML = a ? `Pulse: <b>${esc(nm(a))}</b> acts.` : 'Pulse: start of pulse.'; btn('Skip', skipAnim); return; }
+  if (G.phase === 'pulse') { const as = (G.actors || []).map(i => G.champs[i]); p.innerHTML = as.length ? `Pulse, initiative ${G.ev.init}: <b>${as.map(a => esc(nm(a))).join(', ')}</b> ${as.length > 1 ? 'act' : 'acts'}.` : 'Pulse: start of pulse.'; btn('Skip', skipAnim); return; }
   if (G.phase === 'levelup') { p.textContent = 'Level up: choose one option for each of your champions.'; return; }
   if (G.phase === 'over') { p.textContent = G.winner === 'draw' ? 'A draw.' : `Team ${G.winner} wins in round ${G.round}.`; btn('Play again', () => newMatch('play'), 'primary'); btn('Watch AI vs AI', () => newMatch('watch')); }
 }
@@ -844,12 +861,12 @@ function renderOverlay() {
     const box = h(`<div class="box help"><div class="row"><h2>How a skirmish works</h2><button id="close-rules" style="margin-left:auto">Close</button></div>
       <h3>Draft</h3><p>Snake draft, one champion per role. Each champion has a tag. Some give an aura to every ally beside them, some get a bond when they stand beside a certain tag.</p>
       <h3>Opening</h3><p>Every champion has two movement cards. Teams alternate, and each champion plays exactly one card. A card moves one or more of your roles one hex at a time, in your team's direction: ↗ forward right, ↖ forward left. A blocked step is skipped.</p>
-      <h3>A turn</h3><p>The team on turn moves one champion up to ${RULES.spd} hexes, or holds. Then the pulse: every champion acts once, highest initiative first. Ties go to the team that just moved. A champion attacks by its own rule (nearest, lowest HP, highest HP, back line, highest attack, most crowded) if anyone is in range. A hill gives +1 range. Each round both teams take one turn; the first mover alternates.</p>
+      <h3>A turn</h3><p>The team on turn moves one champion up to ${RULES.spd} hexes, or holds. Then the pulse: every champion acts once, highest initiative first. Ties go to the team that just moved. With the "Pulse: once per round" switch, both teams move first and a single pulse follows, ties going to the team that moved first. A champion attacks by its own rule (nearest, lowest HP, highest HP, back line, highest attack, most crowded) if anyone is in range. A hill gives +1 range. Each round both teams take one turn; the first mover alternates.</p>
       <h3>Chances</h3><p>Each action rolls the champion's chances: poison, frost, crit, double strike, splash, cleave, chain lightning, fireball, knockback, lifesteal, mend, shield. Defenders roll dodge and thorns. The numbers on the cards are the real odds, and they grow as champions level.</p>
       <h3>Synergy</h3><p>Standing beside the right ally raises initiative, attack, armour or every chance. Hover a destination before you move to see which links you gain (green) and lose (red), and who would attack whom.</p>
       <h3>Growth</h3><p>At the end of rounds ${RULES.levelRounds.join(', ')} every champion levels up and you pick one of two options. Each champion's growth path is fixed and shown on its card, so you can plan it. A kill gives the killer +1 attack (bounty), up to ${RULES.bountyCap}.</p>
       <h3>Towers</h3><p>Each side has two towers with ${RULES.towerHp} HP. A tower hits an adjacent enemy for ${RULES.tower} at the start of each pulse. A champion with no enemy champion in range attacks an enemy tower in range instead. A fallen tower stays fallen and its hex becomes walkable.</p>
-      <h3>After a fight</h3><p>The dead come back later as the game goes on: at the end of the next round in rounds 1 to 3, two rounds later in rounds 4 to 6, three rounds later from round 7. A champion that was not hit in the previous pulse regains ${RULES.regen} HP at the start of the next one, so the winners of a fight recover while they push.</p>
+      <h3>After a fight</h3><p>The dead come back later as the game goes on: one round later in rounds 1 to ${RULES.respawnStep}, two rounds later in rounds ${RULES.respawnStep + 1} to ${2 * RULES.respawnStep}, and so on. A champion that was not hit in the previous pulse regains ${RULES.regen} HP at the start of the next one, so the winners of a fight recover while they push.</p>
       <h3>Winning</h3><p>Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}, but only once one of that nexus's towers has fallen. Poison ticks at the start of each pulse. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
     box.querySelector('#close-rules').addEventListener('click', () => { UI.rules = false; render(); });
     ov.appendChild(box); return; }
@@ -911,6 +928,7 @@ document.getElementById('b-watch').addEventListener('click', () => newMatch('wat
 document.getElementById('b-board').addEventListener('click', () => { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); });
 document.getElementById('b-aims').addEventListener('click', () => { UI.aims = !UI.aims; render(); });
 document.getElementById('b-speed').addEventListener('click', () => { UI.speed = UI.speed === 'normal' ? 'fast' : 'normal'; render(); });
+document.getElementById('b-pulse').addEventListener('click', () => { Object.assign(RULES, RULES.onePulse ? EVERY_MOVE : ONE_PULSE); newMatch(G.mode); });
 document.getElementById('b-rules').addEventListener('click', () => { UI.rules = true; render(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.rules) { UI.rules = false; render(); } else if (UI.sel != null) { UI.sel = null; UI.hover = null; render(); } } });
 newMatch('play');

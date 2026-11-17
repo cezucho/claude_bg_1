@@ -41,10 +41,18 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   two in rounds 4–6, three from round 7. A champion not hit in the previous pulse regains 3 HP
   at the start of the next. All three are switches in `RULES` (`towerHp`, `gate`,
   `respawnStep`, `regen`).
-- **Boards.** Field 7 (59 hexes, the main game's layout, default) and a small 37-hex board,
-  which now also has two side towers per team.
+- **Boards.** The small 37-hex board (default since 2026-11-17, the owner's preference: the
+  champions stay in reach, so more happens) and Field 7 (59 hexes, the main game's layout).
+  Both have two side towers per team.
 - Watch mode, speed toggle, "show targets" toggle, rules sheet. `simulate(n, board, seed)` in
   the browser console runs headless AI-vs-AI matches and returns counts.
+
+- **Pulse pace (added 2026-11-17, D-070).** A champion with nobody in range gets no beat.
+  Plain hits play fast (0.22 s); a beat with a chance firing or a kill gets a full 0.7 s.
+  Champions with the same initiative show together as one beat (they still resolve in order).
+  The "Pulse" button switches to **once per round**: both teams move, then one pulse, ties to
+  the team that moved first. That mode plays longer matches to make up for half the fighting:
+  up to 16 rounds, level-ups at rounds 3, 5, 8 and 11, siege 3, death timer step 4.
 
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
@@ -85,3 +93,21 @@ won fights into a tower the next round. Tower HP 12–20, regeneration 2–4 and
 of 3–5 all gave similar results; the chosen values (15, 3, 3) held best on the small board. The
 side imbalance with a pushing AI (A 44–45%) is gone. Risk to watch: a won fight now decides the
 match 82–84% of the time, so comebacks are rare; tower HP 20 lowers that to about 80%.
+
+**Finding: pulse length (owner, 2026-11-17).** The owner worried that one move followed by ten
+champions acting takes too long. Measured over AI-vs-AI matches on the small board:
+
+| Version | Beats per pulse | Seconds per pulse | Watching per match | Rounds | Ended by nexus | A wins | Won fight wins the match |
+|---|---|---|---|---|---|---|---|
+| Before (one beat per champion, 0.48 s) | 8.2 | 3.9 | about 60 s | 8.1 | 85% | 49% | 84% |
+| Pulse after every move, new rhythm | 5.3 | 3.0 | 47 s | 8.1 | 85% | 49% | 84% |
+| Once per round, ten rounds | 6.1 | 3.5 | 35 s | 9.9 | 18% | 50% | 83% |
+| Once per round, preset (16 rounds max) | 6.0 | 3.4 | 43 s | 12.7 | 90% | 54% | 76% |
+
+About 1.6 beats per pulse were champions doing nothing, and only 3.7 had a chance or a kill.
+The total watching was never long; the issue was the ratio, four seconds of watching for every
+click. The new rhythm cuts a pulse by a quarter without touching the rules. Once per round
+gives two decisions per pulse, but with the same ten rounds most matches ran out the clock,
+so it needs the longer preset; the total watching then is about the same as before. With the
+preset a won fight decides the match less often (76%), so comebacks are more likely. A at 54%
+over 600 matches may be noise and needs a bigger run.
