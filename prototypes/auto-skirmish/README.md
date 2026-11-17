@@ -33,9 +33,16 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   one of two options from the champion's fixed path (shown on its card). A kill gives the
   killer +1 attack, up to 3.
 - **Score.** Nexus 30; a death costs 4; each champion beside the enemy nexus at round end
-  deals 2; side towers hit an adjacent enemy for 3 each pulse; the dead return at the end of
-  the next round; after round 10 the higher nexus wins.
-- **Boards.** Field 7 (59 hexes, the main game's layout, default) and a small 37-hex board.
+  deals 2, but only once one of that nexus's side towers has fallen; after round 10 the higher
+  nexus wins.
+- **Holding a won fight (added 2026-11-17, D-069).** Side towers have 15 HP; a champion with no
+  enemy champion in range attacks an enemy tower in range; a fallen tower stays fallen and its
+  hex becomes walkable. The death timer grows: the dead return one round later in rounds 1–3,
+  two in rounds 4–6, three from round 7. A champion not hit in the previous pulse regains 3 HP
+  at the start of the next. All three are switches in `RULES` (`towerHp`, `gate`,
+  `respawnStep`, `regen`).
+- **Boards.** Field 7 (59 hexes, the main game's layout, default) and a small 37-hex board,
+  which now also has two side towers per team.
 - Watch mode, speed toggle, "show targets" toggle, rules sheet. `simulate(n, board, seed)` in
   the browser console runs headless AI-vs-AI matches and returns counts.
 
@@ -58,4 +65,23 @@ Both boards are roughly fair between the sides. On the small board matches are a
 shorter and almost always end by destroying a nexus; on Field 7 four matches in ten go the full
 ten rounds. Which pace feels right is the owner's call after playing.
 
-**Findings.** None from play yet.
+**Finding: the reset after a won fight (owner, 2026-11-17).** The owner wins a team fight,
+pushes, and the respawned enemies, back at full HP on their own nexus line, beat the wounded
+winners; the advantage keeps resetting. Measured with a new AI setting that pushes toward the
+enemy nexus like a human does (the first AI barely pushed after winning, so it never showed
+the problem). A "won fight" is a round won by two or more kills. 1000 AI-vs-AI matches per
+board, seed 11:
+
+| Board | Rules | Kills in the 2 rounds after a won fight, winners vs losers | Losers win one of the next 2 rounds' fights | Winners take a tower next round | Team that wins a fight wins the match | A wins | Rounds |
+|---|---|---|---|---|---|---|---|
+| Field 7 | before | 1.18 vs 1.03 | 9% | – | 78% | 44% | 8.5 |
+| Field 7 | after | 1.22 vs 0.84 | 6% | 32% | 82% | 48% | 8.7 |
+| Small | before | 1.16 vs 1.34 | 17% | – | 74% | 45% | 8.0 |
+| Small | after | 1.37 vs 0.86 | 7% | 33% | 84% | 49% | 8.1 |
+
+Before, on the small board, the team that lost a fight out-killed the winners in the next two
+rounds: the owner's swing. After, the winners keep the upper hand and convert a third of their
+won fights into a tower the next round. Tower HP 12–20, regeneration 2–4 and a death-timer step
+of 3–5 all gave similar results; the chosen values (15, 3, 3) held best on the small board. The
+side imbalance with a pushing AI (A 44–45%) is gone. Risk to watch: a won fight now decides the
+match 82–84% of the time, so comebacks are rare; tower HP 20 lowers that to about 80%.
