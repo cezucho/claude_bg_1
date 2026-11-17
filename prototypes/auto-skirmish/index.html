@@ -1,0 +1,870 @@
+<title>Augury Skirmish</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: a tactics table — team A rail | hex board with the pulse log | team B rail; stacks to one column on phones. One dark arena look, chosen on purpose. */
+:root {
+  --bg: #121722; --panel: #19202e; --panel2: #202a3b; --line: #2c3850; --hex: #1d2636; --hex-edge: #34425e;
+  --fg: #e7ecf6; --dim: #8e9ab4; --a: #5ab4ff; --a-deep: #1d3d5c; --b: #ff7a59; --b-deep: #5a2a22;
+  --gold: #e7b75a; --good: #7bd88f; --bad: #ff6b6b; --frost: #9fd8ff; --fire: #ff9b54; --poison: #8fdc6e; --arcane: #c49bff;
+  --display: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+[hidden] { display: none !important; }
+body { font-family: var(--body); font-size: 14px; line-height: 1.4; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:hover:not([disabled]) { border-color: var(--dim); }
+button:focus-visible, .tok:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button[disabled] { opacity: .45; cursor: default; }
+button.primary { background: var(--gold); color: #1b1407; border-color: var(--gold); font-weight: 600; }
+button.on { border-color: var(--gold); color: var(--gold); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: .12em; text-transform: uppercase; }
+.brand small { color: var(--dim); font-weight: 500; letter-spacing: .08em; font-size: 12px; margin-left: 6px; }
+.meter { display: flex; flex-direction: column; gap: 1px; }
+.meter span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.meter b { font-family: var(--display); font-size: 20px; font-weight: 700; }
+.meter b.A { color: var(--a); } .meter b.B { color: var(--b); }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+
+.table { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 300px); gap: 14px; align-items: start; }
+@media (max-width: 1100px) { .table { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .centre { grid-column: 1 / -1; order: -1; } }
+@media (max-width: 680px) { .table { grid-template-columns: minmax(0, 1fr); } }
+.rail { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rail h2 { font-family: var(--display); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; margin: 0; display: flex; justify-content: space-between; }
+.rail h2.A { color: var(--a); } .rail h2.B { color: var(--b); }
+.centre { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; cursor: default; }
+.card.A { box-shadow: inset 3px 0 0 var(--a); } .card.B { box-shadow: inset 3px 0 0 var(--b); }
+.card.sel { border-color: var(--gold); }
+.card.dead { opacity: .5; }
+.card.can { cursor: pointer; }
+.card .hd { display: flex; align-items: baseline; gap: 8px; }
+.card .hd b { font-family: var(--display); font-size: 15px; }
+.card .hd .role { color: var(--dim); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.card .hd .lv { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--gold); }
+.hp { position: relative; height: 12px; background: #0e131c; border-radius: 3px; overflow: hidden; }
+.hp i { position: absolute; inset: 0 auto 0 0; background: var(--good); }
+.hp .sh { position: absolute; top: 0; bottom: 0; background: var(--frost); opacity: .7; }
+.hp em { position: absolute; right: 4px; top: -1px; font-size: 10px; font-style: normal; font-family: var(--mono); color: var(--fg); font-weight: 600; text-shadow: 0 0 3px #000, 0 0 2px #000; }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--dim); }
+.stats b { color: var(--fg); font-family: var(--mono); font-weight: 500; }
+.stats b.up { color: var(--gold); }
+.chip { display: inline-block; font-size: 10.5px; padding: 1px 6px; border-radius: 9px; border: 1px solid var(--line); color: var(--dim); letter-spacing: .02em; }
+.chip.rule { color: var(--fg); border-color: var(--dim); }
+.chip.syn { color: var(--gold); border-color: #6b5426; }
+.chip.st { color: var(--frost); border-color: #36506a; }
+.chip.ps { color: var(--poison); border-color: #3b5a2c; }
+.procs { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr) 34px; gap: 2px 6px; align-items: center; font-size: 11.5px; }
+.procs .bar { height: 6px; background: #0e131c; border-radius: 3px; overflow: hidden; }
+.procs .bar i { display: block; height: 100%; }
+.procs .pct { font-family: var(--mono); text-align: right; font-size: 11px; }
+.procs .pct.up { color: var(--gold); }
+.next { font-size: 11px; color: var(--dim); }
+.next b { color: var(--fg); font-weight: 600; }
+details.tree summary { font-size: 11px; color: var(--dim); cursor: pointer; }
+details.tree ol { margin: 4px 0 0; padding-left: 18px; font-size: 11px; color: var(--dim); }
+details.tree li .pick { color: var(--gold); }
+details.tree li .not { text-decoration: line-through; opacity: .6; }
+.cards2 { display: flex; gap: 6px; }
+.cards2 button { flex: 1 1 0; text-align: left; font-size: 12px; padding: 5px 7px; min-width: 0; }
+.cards2 button small { display: block; color: var(--dim); font-family: var(--mono); font-size: 12px; }
+.cards2 button.used { border-color: var(--gold); }
+
+.boardwrap { background: radial-gradient(ellipse at center, #1a2232 0%, var(--bg) 75%); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-action: manipulation; }
+.hexp { fill: var(--hex); stroke: var(--hex-edge); stroke-width: 1; }
+.hexp.hill { fill: #2a2a22; }
+.hexp.tower { fill: #2b3346; stroke: #56647f; }
+.hexp.nexA { fill: var(--a-deep); } .hexp.nexB { fill: var(--b-deep); }
+.hexp.reach { fill: #22402e; stroke: var(--good); cursor: pointer; }
+.hexp.reach:hover, .hexp.hover { fill: #2e5a3c; }
+.lbl { font-size: 9px; fill: var(--dim); text-anchor: middle; dominant-baseline: middle; pointer-events: none; font-family: var(--body); }
+.lbl.big { font-size: 13px; fill: #c4cde0; }
+.lbl.nx { font-size: 8px; fill: #ffffffb0; letter-spacing: .1em; }
+.link { stroke: var(--gold); stroke-width: 3; stroke-linecap: round; opacity: .75; pointer-events: none; }
+.link.new { stroke: var(--good); opacity: 1; stroke-width: 4; }
+.link.lost { stroke: var(--bad); stroke-dasharray: 5 4; opacity: 1; }
+.aim { stroke-width: 1.5; fill: none; opacity: .55; pointer-events: none; }
+.aim.A { stroke: var(--a); } .aim.B { stroke: var(--b); }
+.aim.hot { opacity: 1; stroke-width: 2.5; }
+.strike { stroke: #fff; stroke-width: 3; opacity: .9; pointer-events: none; }
+.tok circle.body { stroke-width: 3; }
+.tok.A circle.body { fill: #173049; stroke: var(--a); } .tok.B circle.body { fill: #45211b; stroke: var(--b); }
+.tok.mine { cursor: pointer; }
+.tok.sel circle.body { stroke: var(--gold); stroke-width: 4; }
+.tok.actor circle.body { stroke: #fff; stroke-width: 4; }
+.tok text.g { font-family: var(--display); font-weight: 700; font-size: 17px; text-anchor: middle; dominant-baseline: central; fill: var(--fg); pointer-events: none; }
+.tok .ini { font-family: var(--mono); font-size: 10px; text-anchor: middle; dominant-baseline: central; fill: #0d1119; font-weight: 600; pointer-events: none; }
+.tok .inibg { fill: var(--dim); } .tok .inibg.up { fill: var(--gold); } .tok .inibg.down { fill: var(--bad); }
+.tok .st { font-size: 11px; text-anchor: middle; pointer-events: none; }
+.pop { font-family: var(--display); font-weight: 700; font-size: 14px; text-anchor: middle; paint-order: stroke; stroke: #0b0f16; stroke-width: 3px; pointer-events: none; }
+.pop.bad { fill: var(--bad); } .pop.good { fill: var(--good); } .pop.info { fill: var(--frost); } .pop.gold { fill: var(--gold); }
+
+.prompt { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.prompt p { margin: 0; flex: 1 1 260px; min-width: 0; }
+.prompt .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--dim); }
+.legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; border-radius: 2px; }
+.log { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; height: 220px; overflow-y: auto; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+.log div { min-width: 0; overflow-wrap: anywhere; }
+.log .round { color: var(--gold); font-family: var(--display); letter-spacing: .06em; margin-top: 4px; }
+.log .A { color: #b9dcff; } .log .B { color: #ffc2b2; }
+.log .sys { color: var(--dim); }
+.log .kill { color: var(--bad); font-weight: 600; }
+.log em { font-style: normal; color: var(--gold); }
+
+.overlay { position: fixed; inset: 0; background: #070a10d9; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; z-index: 20; padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; width: min(1180px, 100%); display: flex; flex-direction: column; gap: 12px; }
+.box h2 { font-family: var(--display); margin: 0; font-size: 20px; letter-spacing: .04em; text-wrap: balance; }
+.box p { margin: 0; color: var(--dim); max-width: 75ch; }
+.box .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dcols { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 900px) { .dcols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .dcols { grid-template-columns: minmax(0, 1fr); } }
+.dcols h3 { font-family: var(--display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin: 0 0 6px; }
+.dcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dcard { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.dcard.pick { cursor: pointer; } .dcard.pick:hover { border-color: var(--gold); }
+.dcard.taken { opacity: .35; }
+.dcard.A { border-color: var(--a); } .dcard.B { border-color: var(--b); }
+.dcard b.n { font-family: var(--display); font-size: 15px; }
+.lvl { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: stretch; }
+@media (max-width: 560px) { .lvl { grid-template-columns: minmax(0, 1fr); } }
+.lvl .who { display: flex; flex-direction: column; justify-content: center; }
+.lvl .who b { font-family: var(--display); font-size: 15px; }
+.lvl button { text-align: left; }
+.lvl button.chosen { border-color: var(--gold); background: #2c2614; }
+.help { font-size: 13.5px; color: var(--fg); }
+.help h3 { font-family: var(--display); font-size: 14px; letter-spacing: .08em; margin: 8px 0 2px; color: var(--gold); }
+.help p { color: var(--fg); }
+.stat-strip { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--dim); }
+.stat-strip b { color: var(--fg); font-family: var(--mono); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="top">
+  <div class="brand">Augury<small>skirmish</small></div>
+  <div class="meter"><span>Round</span><b id="m-round" class="num">–</b></div>
+  <div class="meter"><span>Nexus A</span><b id="m-nexA" class="A num">30</b></div>
+  <div class="meter"><span>Nexus B</span><b id="m-nexB" class="B num">30</b></div>
+  <div class="meter"><span>Now</span><b id="m-phase">Draft</b></div>
+  <div class="tools">
+    <button id="b-play">New: play A vs AI</button>
+    <button id="b-watch">Watch AI vs AI</button>
+    <button id="b-board">Board</button>
+    <button id="b-aims">Show targets</button>
+    <button id="b-speed">Speed</button>
+    <button id="b-rules">Rules</button>
+  </div>
+</header>
+
+<main class="table">
+  <section class="rail" id="rail-A"></section>
+  <section class="centre">
+    <div class="boardwrap"><svg id="board" role="img" aria-label="Hex board"></svg></div>
+    <div class="prompt"><p id="prompt">Loading…</p><div class="btns" id="btns"></div></div>
+    <div class="legend"><span><i style="background:var(--gold)"></i>synergy between neighbours</span><span><i style="background:var(--good)"></i>synergy gained by this move</span><span><i style="background:var(--bad)"></i>synergy lost</span><span>badge on a token = its initiative this pulse</span></div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="stat-strip" id="strip"></div>
+  </section>
+  <section class="rail" id="rail-B"></section>
+</main>
+<div id="overlay" class="overlay" hidden></div>
+
+<script>
+// ═════════════ geometry ═════════════
+const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+const K = h => h[0] + ',' + h[1];
+const dist = (a, b) => (Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[0]+a[1]-b[0]-b[1])) / 2;
+const add = (a, b) => [a[0]+b[0], a[1]+b[1]];
+const same = (a, b) => !!a && !!b && a[0] === b[0] && a[1] === b[1];
+const mirror = ([q, r]) => [q + r, -r];            // team B is team A's mirror across the river row
+const frame = (team, v) => team === 'A' ? v : mirror(v);
+const other = t => t === 'A' ? 'B' : 'A';
+const hexagon = n => { const o = []; for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) if (Math.abs(q + r) <= n) o.push([q, r]); return o; };
+const HEX = 30, SQ3 = Math.sqrt(3);
+const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r];
+const BOARDS = {
+  field7: { name: 'Field 7', size: 59,
+    hexes: [[-2,-3],[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3],[4,-3],[5,-3],[-3,-2],[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2],[4,-2],[5,-2],[-3,-1],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[3,-1],[4,-1],[-4,0],[-3,0],[-2,0],[-1,0],[0,0],[1,0],[2,0],[3,0],[4,0],[-4,1],[-3,1],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,1],[-5,2],[-4,2],[-3,2],[-2,2],[-1,2],[0,2],[1,2],[2,2],[3,2],[-5,3],[-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],[2,3]],
+    towers: [[0,0],[-2,-1],[3,-1],[2,1],[-3,1]], hills: [[-1,-1],[2,-1],[-4,0],[4,0],[-2,1],[1,1]],
+    nexusA: [[0,-3],[1,-3],[2,-3]], startA: [[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3]] },
+  small: { name: 'Small', size: 37, hexes: hexagon(3), towers: [[0,0]], hills: [[-3,0],[3,0]],
+    nexusA: [[0,-3],[1,-3],[2,-3]], startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]] },
+};
+let BOARD, HEXES, HEXSET, TOWERS, HILLS, SOLID, NEXUS, START;
+function setBoard(name) {
+  BOARD = BOARDS[name] || BOARDS.field7;
+  HEXES = BOARD.hexes; HEXSET = new Set(HEXES.map(K));
+  TOWERS = BOARD.towers; HILLS = BOARD.hills; SOLID = new Set(TOWERS.map(K));
+  NEXUS = { A: BOARD.nexusA, B: BOARD.nexusA.map(mirror) };
+  START = { A: BOARD.startA, B: BOARD.startA.map(mirror) };
+}
+const onBoard = h => HEXSET.has(K(h));
+const onHill = h => HILLS.some(x => same(x, h));
+const towerSide = h => h[1] < 0 ? 'A' : h[1] > 0 ? 'B' : null;     // the centre tower is neutral
+const nexusDist = (team, h) => Math.min(...NEXUS[team].map(n => dist(n, h)));
+const isNexus = (team, h) => NEXUS[team].some(n => same(n, h));
+
+// ═════════════ content ═════════════
+const PROCS = {
+  poison:    { name: 'Poison',    color: 'var(--poison)', text: 'poisons the target: 2 damage per stack at the start of each of the next 3 pulses' },
+  frost:     { name: 'Frost',     color: 'var(--frost)',  text: 'freezes the target: it skips its next action' },
+  crit:      { name: 'Crit',      color: 'var(--bad)',    text: 'double damage' },
+  double:    { name: 'Double strike', color: 'var(--fire)', text: 'attacks a second time' },
+  splash:    { name: 'Splash',    color: 'var(--fire)',   text: 'half damage to every enemy beside the target' },
+  cleave:    { name: 'Cleave',    color: 'var(--fire)',   text: 'also hits every other enemy beside the attacker' },
+  chain:     { name: 'Chain lightning', color: 'var(--arcane)', text: 'jumps to another enemy within 2 of the target for half damage' },
+  fireball:  { name: 'Fireball',  color: 'var(--fire)',   text: 'also hurls a fireball at a random enemy within 3: 4 damage, 2 to every enemy beside it' },
+  push:      { name: 'Knockback', color: 'var(--gold)',   text: 'pushes the target one hex away, if the hex is free' },
+  lifesteal: { name: 'Lifesteal', color: 'var(--good)',   text: 'heals itself for the damage dealt' },
+  mend:      { name: 'Mend',      color: 'var(--good)',   text: 'every action: heals the most wounded ally within 2 (or itself)' },
+  shield:    { name: 'Shield',    color: 'var(--frost)',  text: 'every action: shields itself or the weakest ally beside it for 4' },
+  dodge:     { name: 'Dodge',     color: 'var(--frost)',  text: 'when attacked: takes no damage' },
+  thorns:    { name: 'Thorns',    color: 'var(--gold)',   text: 'when hit by a neighbour: deals 3 back' },
+};
+const RULE_TEXT = { nearest: 'nearest enemy', weakest: 'lowest HP', strongest: 'highest HP', backline: 'back line (closest to its own nexus)', carry: 'highest attack', cluster: 'most crowded enemy' };
+const AURA_TEXT = { init: n => `+${n} initiative to allies beside it`, atk: n => `+${n} attack to allies beside it`, armor: n => `allies beside it take ${n} less per hit`, proc: n => `+${n}% to every chance of allies beside it` };
+// tree options: { t: label, proc: key, add } | { t, stat: 'atk'|'hp'|'range'|'dive'|'mend', add } | { t, aura: add }
+const P = (t, proc, add) => ({ t, proc, add }), S = (t, stat, add) => ({ t, stat, add }), AU = (t, add) => ({ t, aura: add });
+const ROSTER = [
+  { id: 'anchor', name: 'Anchor', role: 'Top', tag: 'Guardian', hp: 34, atk: 3, range: 1, init: 2, target: 'nearest',
+    procs: { shield: 20, push: 15 }, aura: { kind: 'armor', amt: 1 },
+    tree: [[P('Knockback +30%', 'push', 30), P('Shield +30%', 'shield', 30)], [S('+8 max HP', 'hp', 8), P('Thorns 35%', 'thorns', 35)], [P('Cleave 30%', 'cleave', 30), AU('Aura: 1 more armour', 1)], [S('+2 attack', 'atk', 2), P('Shield +30%', 'shield', 30)]],
+    cards: [['top fr', 'top fr', 'jungle fl'], ['top fl', 'top fr', 'mid fl']] },
+  { id: 'bulwark', name: 'Bulwark', role: 'Top', tag: 'Frost', hp: 32, atk: 3, range: 1, init: 3, target: 'carry',
+    procs: { frost: 15, cleave: 15 }, bond: { tag: 'Frost', kind: 'atk', amt: 1 },
+    tree: [[P('Frost +25%', 'frost', 25), P('Cleave +25%', 'cleave', 25)], [S('+8 max HP', 'hp', 8), P('Dodge 25%', 'dodge', 25)], [P('Frost +25%', 'frost', 25), S('+1 attack', 'atk', 1)], [P('Cleave +30%', 'cleave', 30), P('Thorns 40%', 'thorns', 40)]],
+    cards: [['top fr', 'top r', 'mid fr'], ['top fl', 'top fl', 'jungle fr']] },
+  { id: 'ember', name: 'Ember', role: 'Jungle', tag: 'Flame', hp: 24, atk: 4, range: 1, init: 5, target: 'weakest',
+    procs: { poison: 20, double: 10 }, bond: { tag: 'Guardian', kind: 'atk', amt: 1 },
+    tree: [[P('Poison +30%', 'poison', 30), P('Double strike +20%', 'double', 20)], [P('Lifesteal 30%', 'lifesteal', 30), S('+1 attack', 'atk', 1)], [P('Poison +25%', 'poison', 25), P('Splash 30%', 'splash', 30)], [P('Double strike +30%', 'double', 30), S('+6 max HP', 'hp', 6)]],
+    cards: [['jungle fr', 'jungle fr', 'top fr'], ['jungle fl', 'jungle fr', 'bottom fr']] },
+  { id: 'viper', name: 'Viper', role: 'Jungle', tag: 'Shadow', hp: 22, atk: 5, range: 1, dive: 2, init: 6, target: 'backline',
+    procs: { crit: 15, poison: 10 },
+    tree: [[P('Crit +25%', 'crit', 25), P('Poison +30%', 'poison', 30)], [P('Dodge 25%', 'dodge', 25), S('+1 attack', 'atk', 1)], [P('Crit +25%', 'crit', 25), P('Double strike 25%', 'double', 25)], [P('Lifesteal 40%', 'lifesteal', 40), S('Leap +1 hex', 'dive', 1)]],
+    cards: [['jungle fr', 'jungle fl', 'mid fr'], ['jungle fr', 'jungle r', 'support fl']] },
+  { id: 'lens', name: 'Lens', role: 'Mid', tag: 'Arcane', hp: 20, atk: 4, range: 3, init: 4, target: 'strongest',
+    procs: { fireball: 15, chain: 10 }, aura: { kind: 'proc', amt: 10 },
+    tree: [[P('Fireball +25%', 'fireball', 25), P('Chain lightning +30%', 'chain', 30)], [S('+1 range', 'range', 1), S('+6 max HP', 'hp', 6)], [P('Fireball +25%', 'fireball', 25), AU('Aura: +10% more', 10)], [P('Chain lightning +30%', 'chain', 30), P('Crit 30%', 'crit', 30)]],
+    cards: [['mid fr', 'mid fr', 'bottom fl'], ['mid fl', 'mid fr', 'support fl']] },
+  { id: 'rime', name: 'Rime', role: 'Mid', tag: 'Frost', hp: 20, atk: 3, range: 3, init: 3, target: 'nearest',
+    procs: { frost: 25, splash: 15 }, bond: { tag: 'Frost', kind: 'atk', amt: 1 },
+    tree: [[P('Frost +25%', 'frost', 25), P('Splash +25%', 'splash', 25)], [S('+1 range', 'range', 1), P('Shield 30%', 'shield', 30)], [P('Frost +20%', 'frost', 20), P('Chain lightning 30%', 'chain', 30)], [P('Splash +30%', 'splash', 30), S('+2 attack', 'atk', 2)]],
+    cards: [['mid fr', 'mid r', 'top fr'], ['mid fr', 'mid fl', 'jungle fl']] },
+  { id: 'ranger', name: 'Ranger', role: 'Bottom', tag: 'Hunter', hp: 20, atk: 4, range: 3, init: 4, target: 'weakest',
+    procs: { double: 15, crit: 10 }, bond: { tag: 'Light', kind: 'init', amt: 2 },
+    tree: [[P('Double strike +25%', 'double', 25), P('Crit +25%', 'crit', 25)], [S('+1 range', 'range', 1), P('Dodge 25%', 'dodge', 25)], [P('Double strike +25%', 'double', 25), P('Poison 30%', 'poison', 30)], [P('Crit +30%', 'crit', 30), S('+2 attack', 'atk', 2)]],
+    cards: [['bottom fr', 'bottom fr', 'support fl'], ['bottom fl', 'bottom fr', 'mid fr']] },
+  { id: 'gunner', name: 'Gunner', role: 'Bottom', tag: 'Hunter', hp: 22, atk: 5, range: 2, init: 2, target: 'cluster',
+    procs: { splash: 20, push: 15 }, bond: { tag: 'Guardian', kind: 'atk', amt: 1 },
+    tree: [[P('Splash +30%', 'splash', 30), P('Knockback +30%', 'push', 30)], [S('+6 max HP', 'hp', 6), S('+1 range', 'range', 1)], [P('Splash +20%', 'splash', 20), P('Crit 30%', 'crit', 30)], [P('Double strike 30%', 'double', 30), S('+2 attack', 'atk', 2)]],
+    cards: [['bottom fr', 'bottom fr', 'jungle fr'], ['bottom fl', 'bottom fl', 'support fr']] },
+  { id: 'oriel', name: 'Oriel', role: 'Support', tag: 'Light', hp: 24, atk: 2, range: 2, init: 7, target: 'nearest',
+    procs: { mend: 35, shield: 20 }, aura: { kind: 'init', amt: 2 },
+    tree: [[P('Mend +30%', 'mend', 30), P('Shield +30%', 'shield', 30)], [AU('Aura: +1 more initiative', 1), S('+6 max HP', 'hp', 6)], [P('Mend +25%', 'mend', 25), S('Mend heals +3', 'mend', 3)], [P('Shield +30%', 'shield', 30), P('Dodge 30%', 'dodge', 30)]],
+    cards: [['support fl', 'support fl', 'bottom fr'], ['support fr', 'support fl', 'mid fr']] },
+  { id: 'seer', name: 'Seer', role: 'Support', tag: 'Arcane', hp: 22, atk: 2, range: 3, init: 6, target: 'carry',
+    procs: { frost: 15, poison: 15 }, aura: { kind: 'atk', amt: 1 },
+    tree: [[P('Frost +25%', 'frost', 25), P('Poison +25%', 'poison', 25)], [AU('Aura: +1 more attack', 1), S('+6 max HP', 'hp', 6)], [P('Chain lightning 30%', 'chain', 30), P('Fireball 25%', 'fireball', 25)], [P('Frost +25%', 'frost', 25), P('Mend 40%', 'mend', 40)]],
+    cards: [['support fl', 'support fl', 'jungle fr'], ['support fr', 'support r', 'bottom fr']] },
+];
+const ROLES = ['Top', 'Jungle', 'Mid', 'Bottom', 'Support'];
+const ODIR = { fr: [0, 1], fl: [-1, 1], r: [1, 0], l: [-1, 0] };
+const OARROW = { A: { fr: '↗', fl: '↖', r: '→', l: '←' }, B: { fr: '↘', fl: '↙', r: '→', l: '←' } };
+const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, poison: 2, poisonTurns: 3, mend: 5, shieldAmt: 4, thorns: 3, fireball: 4, levelRounds: [2, 4, 6, 8], bountyCap: 3 };
+
+// ═════════════ state ═════════════
+let G = null, HEADLESS = false;
+const UI = { board: 'field7', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
+let STATS = { matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0 };
+const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
+const delay = () => UI.speed === 'fast' ? 130 : 480;
+function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+const roll = pct => pct > 0 && rng() * 100 < pct;
+
+function newMatch(mode, seed) {
+  clearTimeout(UI.timer); UI.anim = null;
+  setBoard(UI.board);
+  G = { mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
+        picks: { A: Array(5).fill(null), B: Array(5).fill(null) }, order: ['A','B','B','A','A','B','B','A','A','B'], di: 0, taken: new Set(),
+        champs: [], nexus: { A: RULES.nexus, B: RULES.nexus }, round: 0, token: 'B', turnTeam: null, turnNo: 0,
+        log: [], winner: null, display: null, opened: new Set(), openTurn: 'A', levelQueue: null };
+  G.startSeed = G.seed;
+  UI.sel = null; UI.hover = null;
+  render();
+  draftAi();
+}
+
+// ═════════════ draft ═════════════
+function draftPick(def) {
+  const team = G.order[G.di], ri = ROLES.indexOf(def.role);
+  if (G.phase !== 'draft' || G.picks[team][ri] || G.taken.has(def.id)) return;
+  G.picks[team][ri] = def; G.taken.add(def.id); G.di++;
+  if (G.di >= 10) startOpening(); else { render(); draftAi(); }
+}
+function draftAi() {
+  if (G.phase !== 'draft' || G.humans.includes(G.order[G.di])) return;
+  later(() => { const team = G.order[G.di]; const opts = ROSTER.filter(d => !G.taken.has(d.id) && !G.picks[team][ROLES.indexOf(d.role)]);
+    const mine = G.picks[team].filter(Boolean);
+    let best = null, bv = -1e9;
+    for (const d of opts) { let v = rng() * 3;   // a little variety
+      for (const m of mine) { if (d.bond && d.bond.tag === m.tag) v += 3; if (m.bond && m.bond.tag === d.tag) v += 3; if (d.aura || m.aura) v += 0.5; }
+      if (v > bv) { bv = v; best = d; } }
+    draftPick(best); }, 260);
+}
+
+// ═════════════ champions ═════════════
+function makeChamp(def, team, i) {
+  return { id: G.champs.length, team, def, role: def.role, pos: START[team][i], home: START[team][i], maxHp: def.hp, hp: def.hp, atk: def.atk, range: def.range,
+           init: def.init, dive: def.dive || 0, procs: { ...def.procs }, auraAmt: def.aura ? def.aura.amt : 0, mendAmt: RULES.mend,
+           shield: 0, poison: 0, poisonTurns: 0, frozen: false, dead: false, respawnAt: 0, level: 0, picks: [], kills: 0, bounty: 0 };
+}
+const alive = t => G.champs.filter(c => !c.dead && (!t || c.team === t));
+const champAt = h => G.champs.find(c => !c.dead && same(c.pos, h));
+const nm = c => c.def.name;
+// Synergy links: an aura goes from a champion to every ally beside it; a bond is received from a neighbour with the right tag.
+function links() {
+  const L = [];
+  for (const g of alive()) for (const r of alive(g.team)) {
+    if (g === r || dist(g.pos, r.pos) !== 1) continue;
+    if (g.def.aura) L.push({ from: g, to: r, kind: g.def.aura.kind, amt: g.auraAmt });
+    if (r.def.bond && r.def.bond.tag === g.def.tag) L.push({ from: g, to: r, kind: r.def.bond.kind, amt: r.def.bond.amt, bond: true });
+  }
+  return L;
+}
+function eff(c, L) {
+  const b = { init: 0, atk: 0, armor: 0, proc: 0 };
+  for (const l of L) if (l.to === c) b[l.kind] += l.amt;
+  return { init: c.init + b.init, atk: c.atk + b.atk + c.bounty, range: c.range + (onHill(c.pos) ? 1 : 0), armor: b.armor, proc: b.proc, b };
+}
+const pct = (c, k, L) => (c.procs[k] || 0) > 0 ? Math.min(100, c.procs[k] + eff(c, L).proc) : 0;
+
+// Targeting is public and deterministic: who a champion attacks depends only on positions and HP.
+function pickTarget(c, L, reach) {
+  const r = reach ?? eff(c, L).range;
+  const pool = alive(other(c.team)).filter(x => dist(c.pos, x.pos) <= r);
+  if (!pool.length) return null;
+  const d = x => dist(c.pos, x.pos);
+  const crowd = x => alive(x.team).filter(y => y !== x && dist(y.pos, x.pos) === 1).length;
+  const key = { nearest: x => [d(x), x.hp], weakest: x => [x.hp, d(x)], strongest: x => [-x.hp, d(x)], backline: x => [nexusDist(x.team, x.pos), d(x)],
+                carry: x => [-eff(x, L).atk, d(x)], cluster: x => [-crowd(x), x.hp] }[c.def.target];
+  pool.sort((a, b) => { const ka = key(a), kb = key(b); for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i]; return a.id - b.id; });
+  return pool[0];
+}
+// A diver with nothing in range looks further and leaps beside its target.
+function diveSpot(c, t) {
+  const spots = DIRS.map(dd => add(t.pos, dd)).filter(h => onBoard(h) && !SOLID.has(K(h)) && !champAt(h));
+  spots.sort((a, b) => dist(a, c.pos) - dist(b, c.pos));
+  return spots[0] || null;
+}
+function aimOf(c, L) {   // { target, leap } as the champion would act now
+  let t = pickTarget(c, L);
+  if (t) return { target: t };
+  if (c.dive) { t = pickTarget(c, L, eff(c, L).range + c.dive); if (t) { const s = diveSpot(c, t); if (s) return { target: t, leap: s }; } }
+  return { target: null };
+}
+
+// ═════════════ opening ═════════════
+function startOpening() {
+  G.phase = 'opening'; G.champs = [];
+  for (const t of ['A','B']) G.picks[t].forEach((d, i) => G.champs.push(makeChamp(d, t, i)));
+  G.opened = new Set(); G.openTurn = 'A';
+  logLine('round', 'Opening');
+  logLine('sys', 'Teams alternate. Each champion plays one of its two movement cards; every card moves one or more roles one hex at a time. A blocked step is skipped.');
+  render(); openingAi();
+}
+const cardText = (c, i) => c.def.cards[i].map(s => { const [role, dir] = s.split(' '); return `${role} ${OARROW[c.team][dir]}`; }).join(' · ');
+function cardMoves(c, i) {   // the steps a card would make on the board as it stands (a blocked step is skipped)
+  const pos = new Map(alive().map(x => [x.id, x.pos])), out = [];
+  for (const s of c.def.cards[i]) {
+    const [role, dir] = s.split(' ');
+    const m = G.champs.find(x => x.team === c.team && x.role.toLowerCase() === role);
+    if (!m || m.dead) continue;
+    const from = pos.get(m.id), to = add(from, frame(c.team, ODIR[dir]));
+    const blocked = !onBoard(to) || SOLID.has(K(to)) || [...pos.entries()].some(([id, p]) => id !== m.id && same(p, to));
+    out.push({ c: m, from, to, blocked });
+    if (!blocked) pos.set(m.id, to);
+  }
+  return out;
+}
+function playCard(c, i, quiet) {
+  const mv = cardMoves(c, i);
+  for (const m of mv) if (!m.blocked) m.c.pos = m.to;
+  if (!quiet) { logLine(c.team, `${nm(c)} plays its card ${i + 1}: ${cardText(c, i)}${mv.some(m => m.blocked) ? ' (a step was blocked)' : ''}`); }
+}
+function openingPlay(c, i) {
+  if (G.phase !== 'opening' || c.team !== G.openTurn || G.opened.has(c.id)) return;
+  playCard(c, i); G.opened.add(c.id); UI.sel = null; UI.hover = null;
+  const left = t => G.champs.some(x => x.team === t && !G.opened.has(x.id));
+  if (left(other(c.team))) G.openTurn = other(c.team);
+  else if (!left(c.team)) { startEndgame(); return; }
+  render(); openingAi();
+}
+function openingAi() {
+  if (G.phase !== 'opening' || G.humans.includes(G.openTurn)) return;
+  later(() => { const t = G.openTurn; let best = null, bv = -1e9;
+    for (const c of alive(t)) if (!G.opened.has(c.id)) for (let i = 0; i < 2; i++) {
+      const keep = G.champs.map(x => x.pos); playCard(c, i, true);
+      const v = evaluate(t) + rng() * 0.8; G.champs.forEach((x, j) => x.pos = keep[j]);
+      if (v > bv) { bv = v; best = [c, i]; } }
+    openingPlay(...best); }, 420);
+}
+
+// ═════════════ endgame turns ═════════════
+function startEndgame() {
+  G.phase = 'move'; G.round = 1; G.turnNo = 0; G.turnTeam = G.token;
+  logLine('round', `Round 1`);
+  logLine('sys', `Each turn a team moves one champion up to ${RULES.spd} hexes (or holds), then everyone acts once, fastest first.`);
+  beginTurn();
+}
+function beginTurn() {
+  G.phase = 'move'; UI.sel = null; UI.hover = null;
+  render();
+  if (!G.humans.includes(G.turnTeam)) later(aiTurn, G.humans.length ? 650 : 200);
+}
+function moveTargets(c) {
+  const out = [], seen = new Set([K(c.pos)]); let fr = [c.pos];
+  for (let s = 0; s < RULES.spd; s++) { const nx = [];
+    for (const at of fr) for (const d of DIRS) { const to = add(at, d), k = K(to);
+      if (seen.has(k) || !onBoard(to) || SOLID.has(k)) continue; seen.add(k);
+      const occ = champAt(to); if (occ && occ.team !== c.team) continue;
+      nx.push(to); if (!occ) out.push(to); }
+    fr = nx; }
+  return out;
+}
+function doMove(c, to) {
+  if (G.phase !== 'move') return;
+  if (c && (!to || c.dead || c.team !== G.turnTeam || !moveTargets(c).some(x => same(x, to)))) return;   // only legal moves
+  const team = G.turnTeam;
+  if (c && to) { logLine(team, `${team} moves ${nm(c)} to ${to[0]},${to[1]}`); c.pos = to; }
+  else logLine(team, `${team} holds`);
+  UI.sel = null; UI.hover = null;
+  const events = runPulse(team);
+  if (HEADLESS) afterPulse();
+  else { G.phase = 'pulse'; animate(events, afterPulse); }
+}
+function afterPulse() {
+  G.display = null; G.actor = null; G.ev = null;
+  if (checkWin()) return;
+  G.turnNo++;
+  if (G.turnNo === 1) { G.turnTeam = other(G.turnTeam); beginTurn(); return; }
+  endRound();
+}
+function endRound() {
+  // siege: a champion beside the enemy nexus damages it
+  for (const t of ['A','B']) { const foe = other(t); const n = alive(t).filter(c => nexusDist(foe, c.pos) <= 1).length;
+    if (n) { G.nexus[foe] -= n * RULES.siege; logLine(t, `${n} at the gates of nexus ${foe}: −${n * RULES.siege}`); } }
+  for (const c of G.champs) if (c.dead && c.respawnAt <= G.round) {
+    c.dead = false; c.hp = c.maxHp; c.shield = 0; c.poison = 0; c.frozen = false; c.pos = freeNear(c.home);
+    logLine(c.team, `${nm(c)} returns to base`); }
+  if (checkWin()) return;
+  if (RULES.levelRounds.includes(G.round)) { startLevelUp(); return; }
+  nextRound();
+}
+function nextRound() {
+  G.levelQueue = null;
+  if (G.round >= RULES.rounds) { finishOnScore(); return; }
+  G.round++; G.token = other(G.token); G.turnTeam = G.token; G.turnNo = 0;
+  logLine('round', `Round ${G.round}`);
+  beginTurn();
+}
+function freeNear(h) { if (!champAt(h)) return h; const seen = new Set([K(h)]); let fr = [h];
+  while (fr.length) { const nx = []; for (const a of fr) for (const d of DIRS) { const b = add(a, d); if (seen.has(K(b)) || !onBoard(b) || SOLID.has(K(b))) continue; seen.add(K(b)); if (!champAt(b)) return b; nx.push(b); } fr = nx; }
+  return h; }
+
+// ═════════════ the pulse: everyone acts once, by initiative ═════════════
+function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, dead: c.dead, frozen: c.frozen, poison: c.poison })), nexus: { ...G.nexus } }; }
+function runPulse(mover) {
+  const events = [];
+  // start of pulse: poison and towers
+  { const pops = [], notes = [];
+    for (const c of alive()) if (c.poison > 0) { c.hp -= c.poison * RULES.poison; pops.push({ hex: c.pos, text: '−' + c.poison * RULES.poison, cls: 'bad' }); notes.push(`${nm(c)} −${c.poison * RULES.poison} poison`);
+      if (--c.poisonTurns <= 0) c.poison = 0; if (c.hp <= 0) kill(c, null, notes); }
+    for (const tw of TOWERS) { const side = towerSide(tw); if (!side) continue;
+      const foes = alive(other(side)).filter(c => dist(c.pos, tw) === 1).sort((a, b) => a.hp - b.hp);
+      if (foes.length) { const v = foes[0]; v.hp -= RULES.tower; pops.push({ hex: v.pos, text: '−' + RULES.tower, cls: 'bad' }); notes.push(`a ${side} tower hits ${nm(v)} −${RULES.tower}`); if (v.hp <= 0) kill(v, null, notes); } }
+    if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); events.push({ actor: null, pops, lines: [], snap: snap() }); } }
+  const L0 = links();
+  const order = alive().sort((a, b) => (eff(b, L0).init - eff(a, L0).init) || ((b.team === mover) - (a.team === mover)) || (ROLES.indexOf(a.role) - ROLES.indexOf(b.role)));
+  for (const c of order) {
+    if (c.dead) continue;
+    const L = links(), pops = [], lines = [], notes = [];
+    if (c.frozen) { c.frozen = false; logLine(c.team, `${nm(c)} [${eff(c, L).init}] is frozen and skips its action`); events.push({ actor: c.id, pops: [{ hex: c.pos, text: 'frozen', cls: 'info' }], lines, snap: snap() }); continue; }
+    // support chances roll on every action
+    if (roll(pct(c, 'mend', L))) { const w = alive(c.team).filter(a => dist(a.pos, c.pos) <= 2 && a.hp < a.maxHp).sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp))[0];
+      if (w) { const g = Math.min(c.mendAmt, w.maxHp - w.hp); w.hp += g; pops.push({ hex: w.pos, text: '+' + g, cls: 'good' }); notes.push(`<em>Mend</em> ${nm(w)} +${g} (${pct(c, 'mend', L)}%)`); STATS.procs++; } }
+    if (roll(pct(c, 'shield', L))) { const w = [c, ...alive(c.team).filter(a => a !== c && dist(a.pos, c.pos) === 1)].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+      w.shield += RULES.shieldAmt; pops.push({ hex: w.pos, text: 'shield', cls: 'info' }); notes.push(`<em>Shield</em> ${nm(w)} +${RULES.shieldAmt} (${pct(c, 'shield', L)}%)`); STATS.procs++; }
+    const aim = aimOf(c, L);
+    if (aim.leap) { lines.push({ from: c.pos, to: aim.leap, cls: 'leap' }); c.pos = aim.leap; notes.push(`leaps beside ${nm(aim.target)}`); }
+    if (aim.target) attack(c, aim.target, links(), { pops, lines, notes }, true);
+    const head = `${nm(c)} [${eff(c, L).init}]`;
+    logLine(c.team, `${head}${notes.length ? ': ' + notes.join(' · ') : ' has nobody in range'}`);
+    events.push({ actor: c.id, pops, lines, snap: snap() });
+    if (G.nexus.A <= 0 || G.nexus.B <= 0) break;
+  }
+  return events;
+}
+function hit(src, t, raw, ctx, dodgeable) {
+  if (t.dead) return 0;
+  const L = links();
+  if (dodgeable && roll(pct(t, 'dodge', L))) { ctx.pops.push({ hex: t.pos, text: 'dodge', cls: 'info' }); ctx.notes.push(`${nm(t)} <em>dodges</em>`); STATS.procs++; return -1; }
+  const d = Math.max(1, raw - eff(t, L).armor), ab = Math.min(t.shield, d);
+  t.shield -= ab; t.hp -= d - ab;
+  ctx.pops.push({ hex: t.pos, text: '−' + d, cls: 'bad' });
+  if (t.hp <= 0) kill(t, src, ctx.notes);
+  return d;
+}
+function attack(c, t, L, ctx, mayDouble) {
+  const e = eff(c, L); let raw = e.atk; const tags = [];
+  if (roll(pct(c, 'crit', L))) { raw *= 2; tags.push(`<em>Crit</em> (${pct(c, 'crit', L)}%)`); STATS.procs++; }
+  ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' });
+  const d = hit(c, t, raw, ctx, true);
+  ctx.notes.push(`→ ${nm(t)} ${d > 0 ? '−' + d : ''}${tags.length ? ' ' + tags.join(' ') : ''}`);
+  if (d < 0) return;
+  const P = k => pct(c, k, L);
+  if (dist(c.pos, t.pos) === 1 && !t.dead && roll(pct(t, 'thorns', L))) { ctx.notes.push(`${nm(t)}'s <em>Thorns</em>`); STATS.procs++; hit(t, c, RULES.thorns, ctx, false); }
+  if (!c.dead && roll(P('lifesteal'))) { const g = Math.min(d, c.maxHp - c.hp); c.hp += g; ctx.pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); ctx.notes.push(`<em>Lifesteal</em> +${g} (${P('lifesteal')}%)`); STATS.procs++; }
+  if (!t.dead && roll(P('poison'))) { t.poison++; t.poisonTurns = RULES.poisonTurns; ctx.notes.push(`<em>Poison</em> ×${t.poison} (${P('poison')}%)`); STATS.procs++; }
+  if (!t.dead && roll(P('frost'))) { t.frozen = true; ctx.pops.push({ hex: t.pos, text: 'frost', cls: 'info' }); ctx.notes.push(`<em>Frost</em> (${P('frost')}%)`); STATS.procs++; }
+  if (!t.dead && roll(P('push'))) { const away = DIRS.map(dd => add(t.pos, dd)).filter(h => onBoard(h) && !SOLID.has(K(h)) && !champAt(h)).sort((a, b) => dist(b, c.pos) - dist(a, c.pos))[0];
+    if (away && dist(away, c.pos) > dist(t.pos, c.pos)) { ctx.lines.push({ from: t.pos, to: away, cls: 'leap' }); t.pos = away; ctx.notes.push(`<em>Knockback</em> (${P('push')}%)`); STATS.procs++; } }
+  if (roll(P('splash'))) { const hs = alive(t.team).filter(x => x !== t && dist(x.pos, t.pos) === 1); ctx.notes.push(`<em>Splash</em> on ${hs.length} (${P('splash')}%)`); STATS.procs++; for (const x of hs) hit(c, x, Math.ceil(raw / 2), ctx, false); }
+  if (!c.dead && roll(P('cleave'))) { const hs = alive(t.team).filter(x => x !== t && dist(x.pos, c.pos) === 1); ctx.notes.push(`<em>Cleave</em> on ${hs.length} (${P('cleave')}%)`); STATS.procs++; for (const x of hs) hit(c, x, raw, ctx, true); }
+  if (roll(P('chain'))) { const j = alive(t.team).filter(x => x !== t && dist(x.pos, t.pos) <= 2).sort((a, b) => dist(a.pos, t.pos) - dist(b.pos, t.pos) || a.hp - b.hp)[0];
+    if (j) { ctx.lines.push({ from: t.pos, to: j.pos, cls: 'chain' }); ctx.notes.push(`<em>Chain</em> → ${nm(j)} (${P('chain')}%)`); STATS.procs++; hit(c, j, Math.ceil(raw / 2), ctx, false); } }
+  if (!c.dead && roll(P('fireball'))) { const fs = alive(other(c.team)).filter(x => dist(x.pos, c.pos) <= 3);
+    if (fs.length) { const f = fs[Math.floor(rng() * fs.length)]; ctx.lines.push({ from: c.pos, to: f.pos, cls: 'fire' }); ctx.notes.push(`<em>Fireball</em> → ${nm(f)} (${P('fireball')}%)`); STATS.procs++;
+      const around = alive(f.team).filter(x => x !== f && dist(x.pos, f.pos) === 1); hit(c, f, RULES.fireball, ctx, false); for (const x of around) hit(c, x, 2, ctx, false); } }
+  if (mayDouble && !c.dead && roll(P('double'))) { const L2 = links(); const t2 = pickTarget(c, L2); if (t2) { ctx.notes.push(`<em>Double strike</em> (${P('double')}%)`); STATS.procs++; attack(c, t2, L2, ctx, false); } }
+}
+function kill(t, src, notes) {
+  if (t.dead) return;
+  t.dead = true; t.hp = 0; t.shield = 0; t.poison = 0; t.frozen = false; t.respawnAt = G.round + 1;
+  G.nexus[t.team] -= RULES.killTax; STATS.deaths++;
+  if (src && src.team !== t.team) { src.kills++; src.bounty = Math.min(RULES.bountyCap, src.bounty + 1); STATS.kills[src.team]++; }
+  notes.push(`<span class="kill">${nm(t)} is KILLED</span> (nexus ${t.team} −${RULES.killTax}${src && src.team !== t.team && src.bounty ? `, ${nm(src)} bounty ★${src.bounty}` : ''})`);
+}
+function checkWin() {
+  if (G.winner) return true;
+  if (G.nexus.A > 0 && G.nexus.B > 0) return false;
+  G.winner = G.nexus.A > G.nexus.B ? 'A' : G.nexus.B > G.nexus.A ? 'B' : 'draw';
+  logLine('round', G.winner === 'draw' ? 'Both nexuses fall: a draw' : `Nexus ${other(G.winner)} falls. Team ${G.winner} wins.`);
+  finish(); return true;
+}
+function finishOnScore() {
+  const a = G.nexus.A, b = G.nexus.B;
+  G.winner = a > b ? 'A' : b > a ? 'B' : (STATS_k('A') > STATS_k('B') ? 'A' : STATS_k('B') > STATS_k('A') ? 'B' : 'draw');
+  logLine('round', `After round ${RULES.rounds}: ${G.winner === 'draw' ? 'a draw' : 'team ' + G.winner + ' wins'} (nexus A ${Math.max(0, a)}, B ${Math.max(0, b)})`);
+  finish();
+}
+const STATS_k = t => G.champs.filter(c => c.team === t).reduce((s, c) => s + c.kills, 0);
+function finish() {
+  G.phase = 'over'; STATS.matches++; STATS.rounds += G.round; if (G.winner === 'A') STATS.winsA++; if (G.winner === 'draw') STATS.draws++;
+  render();
+  if (G.mode === 'watch' && !HEADLESS) UI.timer = setTimeout(() => newMatch('watch'), 2500);
+}
+
+// ═════════════ level-ups on a schedule ═════════════
+function startLevelUp() {
+  const lv = RULES.levelRounds.indexOf(G.round);
+  logLine('round', `Level ${lv + 1}: every champion grows`);
+  for (const t of ['A','B']) if (!G.humans.includes(t)) for (const c of G.champs.filter(x => x.team === t)) applyPick(c, aiLevelPick(c, lv));
+  if (!G.humans.length) { nextRound(); return; }
+  G.phase = 'levelup'; G.levelQueue = { lv, picks: {} }; render();
+}
+function applyPick(c, k) {
+  const o = c.def.tree[c.level][k]; c.picks.push(k); c.level++;
+  if (o.proc) c.procs[o.proc] = Math.min(100, (c.procs[o.proc] || 0) + o.add);
+  if (o.stat === 'atk') c.atk += o.add; if (o.stat === 'range') c.range += o.add; if (o.stat === 'dive') c.dive += o.add; if (o.stat === 'mend') c.mendAmt += o.add;
+  if (o.stat === 'hp') { c.maxHp += o.add; if (!c.dead) c.hp += o.add; }
+  if (o.aura) c.auraAmt += o.aura;
+  logLine(c.team, `${nm(c)} reaches level ${c.level}: ${o.t}`);
+}
+function aiLevelPick(c, lv) { return rng() < 0.5 ? 0 : 1; }
+function humanLevelPick(c, k) { if (!G.levelQueue) return; G.levelQueue.picks[c.id] = k; render(); }
+function confirmLevels() {
+  const q = G.levelQueue, mine = G.champs.filter(c => G.humans.includes(c.team));
+  if (!mine.every(c => q.picks[c.id] != null)) return;
+  for (const c of mine) applyPick(c, q.picks[c.id]);
+  G.phase = 'move'; nextRound();
+}
+
+// ═════════════ AI: one move, judged on the expected outcome of the next pulse ═════════════
+function expDamage(c, t, L) {
+  const e = eff(c, L), raw = Math.max(1, e.atk - eff(t, L).armor), p = k => pct(c, k, L) / 100;
+  let v = raw * (1 + p('crit')) * (1 + p('double')) * (1 - pct(t, 'dodge', L) / 100);
+  v += p('poison') * RULES.poison * RULES.poisonTurns + p('frost') * 3 + p('splash') * raw * 0.8 + p('chain') * raw * 0.5 + p('fireball') * 5 + p('cleave') * raw * 0.6;
+  return v;
+}
+function evaluate(team) {
+  const L = links(); let v = 0;
+  for (const c of alive()) {
+    const s = c.team === team ? 1 : -1, a = aimOf(c, L);
+    if (a.target) { const d = expDamage(c, a.target, L); v += s * (d + (d >= a.target.hp ? 6 : 0)); }
+    else v -= s * 0.6 * Math.max(0, Math.min(...alive(other(c.team)).map(x => dist(x.pos, c.pos)), 6) - eff(c, L).range);
+    v += s * (eff(c, L).init - c.init) * 0.4;
+    if (nexusDist(other(c.team), c.pos) <= 1) v += s * 3;
+    v += s * (pct(c, 'mend', L) / 100) * 3 + s * (pct(c, 'shield', L) / 100) * 2;
+  }
+  for (const l of L) v += (l.from.team === team ? 1 : -1) * (l.kind === 'armor' ? 1.2 : 0.8);
+  return v;
+}
+function aiTurn() {
+  if (G.phase !== 'move') return;
+  const team = G.turnTeam; let best = null, bv = evaluate(team) + rng() * 0.3;
+  for (const c of alive(team)) { const from = c.pos;
+    for (const to of moveTargets(c)) { c.pos = to; const v = evaluate(team) + rng() * 0.3; c.pos = from; if (v > bv) { bv = v; best = [c, to]; } } }
+  if (best) doMove(best[0], best[1]); else doMove(null, null);
+}
+
+// ═════════════ animation ═════════════
+function animate(events, done) {
+  let i = 0; UI.anim = { events, done };
+  const step = () => {
+    if (!UI.anim || UI.anim.events !== events) return;
+    if (i >= events.length) { UI.anim = null; done(); return; }
+    const e = events[i++]; G.display = e.snap; G.actor = e.actor; G.ev = e; render();
+    UI.timer = setTimeout(step, delay());
+  };
+  step();
+}
+function skipAnim() { if (!UI.anim) return; clearTimeout(UI.timer); const d = UI.anim.done; UI.anim = null; d(); }
+
+// ═════════════ logging and helpers ═════════════
+function logLine(cls, html) { if (!HEADLESS) G.log.push({ cls, html }); }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function h(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function sv(html) { const w = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); w.innerHTML = html.trim(); return w.firstElementChild; }
+const view = c => G.display ? { ...c, ...G.display.champs[c.id] } : c;
+
+// ═════════════ rendering ═════════════
+function render() {
+  if (HEADLESS || !G) return;
+  const nx = G.display ? G.display.nexus : G.nexus;
+  document.getElementById('m-round').textContent = G.round ? `${G.round}/${RULES.rounds}` : G.phase === 'opening' ? 'open' : '–';
+  document.getElementById('m-nexA').textContent = Math.max(0, nx.A);
+  document.getElementById('m-nexB').textContent = Math.max(0, nx.B);
+  document.getElementById('m-phase').textContent = { draft: 'Draft', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: 'Level up', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
+  document.getElementById('b-board').textContent = `Board: ${BOARDS[UI.board].name} (${BOARDS[UI.board].size})`;
+  document.getElementById('b-aims').classList.toggle('on', UI.aims);
+  document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
+  renderRail('A'); renderRail('B'); renderBoard(); renderPrompt(); renderLog(); renderStrip(); renderOverlay();
+}
+function procRows(c, L) {
+  return Object.keys(PROCS).filter(k => (c.procs[k] || 0) > 0).map(k => { const p = pct(c, k, L), up = p > c.procs[k];
+    return `<span title="${esc(PROCS[k].text)}">${PROCS[k].name}</span><span class="bar"><i style="width:${p}%;background:${PROCS[k].color}"></i></span><span class="pct ${up ? 'up' : ''}">${p}%</span>`; }).join('');
+}
+function synText(c) {
+  const a = c.def.aura ? `<span class="chip syn" title="aura">${esc(AURA_TEXT[c.def.aura.kind](c.auraAmt))}</span>` : '';
+  const b = c.def.bond ? `<span class="chip syn" title="bond">beside a ${c.def.bond.tag}: +${c.def.bond.amt} ${c.def.bond.kind === 'atk' ? 'attack' : 'initiative'}</span>` : '';
+  return a + b;
+}
+function renderRail(team) {
+  const el = document.getElementById('rail-' + team); el.innerHTML = '';
+  const human = G.humans.includes(team);
+  el.appendChild(h(`<h2 class="${team}"><span>Team ${team}</span><span>${human ? 'you' : 'AI'}</span></h2>`));
+  if (G.phase === 'draft') { el.appendChild(h(`<div class="card ${team}"><div class="stats">${G.picks[team].map((d, i) => `${ROLES[i]}: <b>${d ? esc(d.name) : '—'}</b>`).join(' ')}</div></div>`)); return; }
+  const L = links();
+  for (const c0 of G.champs.filter(c => c.team === team)) {
+    const c = view(c0), e = eff(c0, L);
+    const canSel = human && ((G.phase === 'move' && G.turnTeam === team && !c0.dead) || (G.phase === 'opening' && G.openTurn === team && !G.opened.has(c0.id)));
+    const st = [c.frozen ? '<span class="chip st">frozen</span>' : '', c.poison ? `<span class="chip ps">poison ×${c.poison}</span>` : '', c.shield ? `<span class="chip st">shield ${c.shield}</span>` : '', c0.bounty ? `<span class="chip syn">bounty ★${c0.bounty}</span>` : ''].join('');
+    const lv = c0.level < 4 ? c0.def.tree[c0.level] : null;
+    const nextRound = RULES.levelRounds[c0.level];
+    const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
+      <div class="hd"><b>${esc(c0.def.name)}</b><span class="role">${c0.role} · ${c0.def.tag}</span><span class="lv">Lv ${c0.level}${c.dead ? ' · back next round' : ''}</span></div>
+      <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div>
+      <div class="stats">ATK <b class="${e.atk > c0.atk ? 'up' : ''}">${e.atk}</b> RNG <b class="${e.range > c0.range ? 'up' : ''}">${e.range}</b> INIT <b class="${e.init > c0.init ? 'up' : ''}">${e.init}</b>${e.armor ? ` ARM <b class="up">${e.armor}</b>` : ''}${c0.dive ? ` LEAP <b>${c0.dive}</b>` : ''}</div>
+      <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[c0.def.target]}</span>${synText(c0)}${st}</div>
+      <div class="procs">${procRows(c0, L)}</div>
+      ${G.phase === 'opening' ? `<div class="cards2">${c0.def.cards.map((_, i) => `<button data-card="${i}" ${canSel ? '' : 'disabled'}>Card ${i + 1}<small>${esc(cardText(c0, i))}</small></button>`).join('')}</div>` : ''}
+      ${lv ? `<div class="next">Next level (end of round ${nextRound}): <b>${esc(lv[0].t)}</b> or <b>${esc(lv[1].t)}</b></div>` : '<div class="next">Fully grown</div>'}
+      <details class="tree"><summary>Growth path</summary><ol>${c0.def.tree.map((opts, i) => `<li>${opts.map((o, k) => `<span class="${c0.picks[i] === k ? 'pick' : c0.picks[i] != null ? 'not' : ''}">${esc(o.t)}</span>`).join(' or ')}</li>`).join('')}</ol></details>
+    </div>`);
+    if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button,summary,details')) return; select(c0); });
+    card.querySelectorAll('button[data-card]').forEach(b => { const i = +b.dataset.card;
+      b.addEventListener('click', () => openingPlay(c0, i));
+      b.addEventListener('mouseenter', () => { UI.hover = { card: [c0.id, i] }; renderBoard(); });
+      b.addEventListener('mouseleave', () => { UI.hover = null; renderBoard(); }); });
+    el.appendChild(card);
+  }
+}
+function select(c) {
+  if (!G.humans.includes(c.team) || c.dead) return;
+  if (G.phase === 'move' && G.turnTeam === c.team) { UI.sel = UI.sel === c.id ? null : c.id; UI.hover = null; render(); }
+}
+function hexPts(cx, cy) { const p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); p.push(`${(cx + HEX * .95 * Math.cos(a)).toFixed(1)},${(cy + HEX * .95 * Math.sin(a)).toFixed(1)}`); } return p.join(' '); }
+function renderBoard() {
+  const svg = document.getElementById('board'); svg.innerHTML = '';
+  const pts = HEXES.map(x => px(...x)), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = HEX * 1.2;
+  svg.setAttribute('viewBox', `${Math.min(...xs) - pad} ${Math.min(...ys) - pad} ${Math.max(...xs) - Math.min(...xs) + 2 * pad} ${Math.max(...ys) - Math.min(...ys) + 2 * pad}`);
+  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker></defs>`));
+  const sel = UI.sel != null ? G.champs[UI.sel] : null;
+  const reach = G.phase === 'move' && sel ? moveTargets(sel) : [];
+  const reachSet = new Set(reach.map(K));
+  // preview: a hovered destination or a hovered opening card changes positions temporarily
+  let before = null, after = null, prevPos = null, prevAll = null, previewSteps = [];
+  const hv = UI.hover;
+  if (G.phase === 'move' && sel && hv && hv.hex && reachSet.has(K(hv.hex))) { before = links(); prevPos = sel.pos; sel.pos = hv.hex; after = links(); }
+  if (G.phase === 'opening' && hv && hv.card) { const c = G.champs[hv.card[0]]; previewSteps = cardMoves(c, hv.card[1]); before = links(); prevAll = G.champs.map(x => x.pos); for (const m of previewSteps) if (!m.blocked) m.c.pos = m.to; after = links(); }
+  const L = after || links();
+  for (const x of HEXES) {
+    const k = K(x), [cx, cy] = px(...x), cls = ['hexp'];
+    if (onHill(x)) cls.push('hill'); if (SOLID.has(k)) cls.push('tower'); if (isNexus('A', x)) cls.push('nexA'); if (isNexus('B', x)) cls.push('nexB');
+    if (reachSet.has(k)) cls.push('reach'); if (hv && hv.hex && same(hv.hex, x) && reachSet.has(k)) cls.push('hover');
+    const p = sv(`<polygon class="${cls.join(' ')}" points="${hexPts(cx, cy)}"></polygon>`);
+    if (reachSet.has(k)) { p.addEventListener('click', () => doMove(sel, x)); p.addEventListener('mouseenter', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) return; UI.hover = { hex: x }; renderBoard(); }); p.addEventListener('mouseleave', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) { UI.hover = null; renderBoard(); } }); }
+    svg.appendChild(p);
+    if (SOLID.has(k)) svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy}">♜</text>`));
+    else if (isNexus('A', x) || isNexus('B', x)) svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .62}">NEXUS</text>`));
+    if (onHill(x)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * .6}" style="fill:var(--gold)">▲ hill</text>`));
+  }
+  // synergy links
+  const drawn = new Set();
+  const linkKey = l => [Math.min(l.from.id, l.to.id), Math.max(l.from.id, l.to.id)].join('-');
+  const beforeKeys = before ? new Set(before.map(linkKey)) : null, afterKeys = new Set(L.map(linkKey));
+  const drawLink = (a, b, cls) => { const [x1, y1] = px(...a), [x2, y2] = px(...b); svg.appendChild(sv(`<line class="link ${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`)); };
+  if (!G.display) for (const l of L) { const k = linkKey(l); if (drawn.has(k)) continue; drawn.add(k); drawLink(l.from.pos, l.to.pos, beforeKeys && !beforeKeys.has(k) ? 'new' : ''); }
+  if (before) { for (const l of before) { const k = linkKey(l); if (afterKeys.has(k) || drawn.has('x' + k)) continue; drawn.add('x' + k);
+      // a lost link is drawn where the two champions stood before the move
+      const fromPos = prevAll ? prevAll[l.from.id] : (l.from === sel ? prevPos : l.from.pos), toPos = prevAll ? prevAll[l.to.id] : (l.to === sel ? prevPos : l.to.pos);
+      drawLink(fromPos, toPos, 'lost'); } }
+  // targets (who would attack whom right now)
+  const showAims = UI.aims || !!after;
+  if (showAims && !G.display && G.phase !== 'draft') for (const c of alive()) { const a = aimOf(c, L); if (!a.target) continue;
+    const hot = sel && after && (c === sel || a.target === sel);
+    if (!UI.aims && !hot) continue;
+    const from = a.leap || c.pos, [x1, y1] = px(...from), [x2, y2] = px(...a.target.pos);
+    const mx = (x1 + x2) / 2 + (y2 - y1) * .12, my = (y1 + y2) / 2 - (x2 - x1) * .12;
+    svg.appendChild(sv(`<path class="aim ${c.team} ${hot ? 'hot' : ''}" d="M${x1} ${y1} Q${mx} ${my} ${x2 - (x2 - x1) * .18} ${y2 - (y2 - y1) * .18}" marker-end="url(#ar)"></path>`)); }
+  // opening preview arrows
+  for (const m of previewSteps) { const [x1, y1] = px(...m.from), [x2, y2] = px(...m.to); svg.appendChild(sv(`<line class="${m.blocked ? 'link lost' : 'strike'}" x1="${x1}" y1="${y1}" x2="${x1 + (x2 - x1) * .7}" y2="${y1 + (y2 - y1) * .7}" ${m.blocked ? '' : 'marker-end="url(#ar)" style="stroke:var(--gold);stroke-width:2"'}></line>`)); }
+  // event lines (strikes) during the pulse
+  if (G.display && G.ev) for (const ln of G.ev.lines) { const [x1, y1] = px(...ln.from), [x2, y2] = px(...ln.to);
+    const col = ln.cls === 'fire' ? 'var(--fire)' : ln.cls === 'chain' ? 'var(--arcane)' : ln.cls === 'leap' ? 'var(--gold)' : '#fff';
+    svg.appendChild(sv(`<line class="strike" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * .25}" y2="${y2 - (y2 - y1) * .25}" style="stroke:${col}" marker-end="url(#ar)"></line>`)); }
+  // tokens
+  const Lnow = after || links();
+  for (const c0 of G.champs) { const c = view(c0); if (c.dead) continue;
+    const [cx, cy] = px(...c.pos), e = eff(c0, Lnow), eb = before ? eff(c0, before) : null;
+    const mine = G.phase === 'move' && G.humans.includes(c0.team) && G.turnTeam === c0.team;
+    const iniCls = eb && e.init > eb.init ? 'up' : eb && e.init < eb.init ? 'down' : e.init > c0.init ? 'up' : '';
+    const g = sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${G.actor === c0.id ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
+      <circle class="body" cx="${cx}" cy="${cy}" r="${HEX * .6}"></circle>
+      <text class="g" x="${cx}" y="${cy - 1}">${esc(c0.def.name[0])}</text>
+      <rect x="${cx - HEX * .55}" y="${cy + HEX * .5}" width="${HEX * 1.1}" height="4" rx="1" fill="#0b0f16"></rect>
+      <rect x="${cx - HEX * .55}" y="${cy + HEX * .5}" width="${HEX * 1.1 * Math.max(0, c.hp) / c0.maxHp}" height="4" rx="1" fill="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>
+      <circle class="inibg ${iniCls}" cx="${cx + HEX * .5}" cy="${cy - HEX * .45}" r="7.5"></circle>
+      <text class="ini" x="${cx + HEX * .5}" y="${cy - HEX * .45}">${e.init}</text>
+      ${c.frozen ? `<text class="st" x="${cx - HEX * .52}" y="${cy - HEX * .38}" style="fill:var(--frost)">❄</text>` : ''}
+      ${c.poison ? `<text class="st" x="${cx - HEX * .52}" y="${cy + HEX * .2}" style="fill:var(--poison)">☠</text>` : ''}
+      ${c0.level ? `<text class="st" x="${cx}" y="${cy + HEX * .95}" style="fill:var(--gold);font-size:9px">${'•'.repeat(c0.level)}</text>` : ''}
+    </g>`);
+    if (mine) { g.addEventListener('click', () => select(c0)); g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') select(c0); }); }
+    else if (sel && reachSet.has(K(c.pos))) g.addEventListener('click', () => doMove(sel, c.pos));
+    svg.appendChild(g); }
+  // pops during the pulse
+  if (G.display && G.ev) { const stack = {}; for (const p of G.ev.pops) { const k = K(p.hex), n = stack[k] = (stack[k] || 0) + 1, [cx, cy] = px(...p.hex);
+    svg.appendChild(sv(`<text class="pop ${p.cls}" x="${cx}" y="${cy - HEX * .8 - (n - 1) * 13}">${esc(p.text)}</text>`)); } }
+  // undo the preview
+  if (prevAll) G.champs.forEach((x, i) => x.pos = prevAll[i]);
+  if (prevPos) sel.pos = prevPos;
+}
+function renderPrompt() {
+  const p = document.getElementById('prompt'), b = document.getElementById('btns'); b.innerHTML = '';
+  const btn = (label, fn, cls = '') => { const e = h(`<button class="${cls}">${label}</button>`); e.addEventListener('click', fn); b.appendChild(e); };
+  if (G.phase === 'draft') { p.textContent = `Draft: team ${G.order[G.di]} picks.`; return; }
+  if (G.phase === 'opening') { p.innerHTML = G.humans.includes(G.openTurn) ? 'Opening, your play: pick a card on a champion that has not played yet. Hover a card to see its steps and the synergies it makes (green) or breaks (red).' : `Opening: team ${G.openTurn} is playing a card…`; return; }
+  if (G.phase === 'move') {
+    if (!G.humans.includes(G.turnTeam)) { p.textContent = `Team ${G.turnTeam} is choosing its move…`; return; }
+    const sel = UI.sel != null ? G.champs[UI.sel] : null;
+    p.innerHTML = sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to preview synergies and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. Then everyone acts once, fastest first.`;
+    btn('Hold', () => doMove(null, null)); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
+    return; }
+  if (G.phase === 'pulse') { const a = G.actor != null ? G.champs[G.actor] : null; p.innerHTML = a ? `Pulse: <b>${esc(nm(a))}</b> acts.` : 'Pulse: start of pulse.'; btn('Skip', skipAnim); return; }
+  if (G.phase === 'levelup') { p.textContent = 'Level up: choose one option for each of your champions.'; return; }
+  if (G.phase === 'over') { p.textContent = G.winner === 'draw' ? 'A draw.' : `Team ${G.winner} wins in round ${G.round}.`; btn('Play again', () => newMatch('play'), 'primary'); btn('Watch AI vs AI', () => newMatch('watch')); }
+}
+function renderLog() { const el = document.getElementById('log'); el.innerHTML = G.log.slice(-120).map(l => `<div class="${l.cls}">${l.html}</div>`).join(''); el.scrollTop = el.scrollHeight; }
+function renderStrip() { const s = STATS; document.getElementById('strip').innerHTML = `<span>matches <b>${s.matches}</b></span><span>A wins <b>${s.matches ? Math.round(100 * s.winsA / s.matches) : 0}%</b></span><span>avg rounds <b>${s.matches ? (s.rounds / s.matches).toFixed(1) : '–'}</b></span><span>deaths <b>${s.deaths}</b></span><span>chances that fired <b>${s.procs}</b></span><span>seed <b>${G ? G.startSeed : ''}</b></span>`; }
+function renderOverlay() {
+  const ov = document.getElementById('overlay');
+  if (UI.rules) { ov.hidden = false; ov.innerHTML = '';
+    const box = h(`<div class="box help"><div class="row"><h2>How a skirmish works</h2><button id="close-rules" style="margin-left:auto">Close</button></div>
+      <h3>Draft</h3><p>Snake draft, one champion per role. Each champion has a tag. Some give an aura to every ally beside them, some get a bond when they stand beside a certain tag.</p>
+      <h3>Opening</h3><p>Every champion has two movement cards. Teams alternate, and each champion plays exactly one card. A card moves one or more of your roles one hex at a time, in your team's direction: ↗ forward right, ↖ forward left. A blocked step is skipped.</p>
+      <h3>A turn</h3><p>The team on turn moves one champion up to ${RULES.spd} hexes, or holds. Then the pulse: every champion acts once, highest initiative first. Ties go to the team that just moved. A champion attacks by its own rule (nearest, lowest HP, highest HP, back line, highest attack, most crowded) if anyone is in range. A hill gives +1 range. Each round both teams take one turn; the first mover alternates.</p>
+      <h3>Chances</h3><p>Each action rolls the champion's chances: poison, frost, crit, double strike, splash, cleave, chain lightning, fireball, knockback, lifesteal, mend, shield. Defenders roll dodge and thorns. The numbers on the cards are the real odds, and they grow as champions level.</p>
+      <h3>Synergy</h3><p>Standing beside the right ally raises initiative, attack, armour or every chance. Hover a destination before you move to see which links you gain (green) and lose (red), and who would attack whom.</p>
+      <h3>Growth</h3><p>At the end of rounds ${RULES.levelRounds.join(', ')} every champion levels up and you pick one of two options. Each champion's growth path is fixed and shown on its card, so you can plan it. A kill gives the killer +1 attack (bounty), up to ${RULES.bountyCap}.</p>
+      <h3>Winning</h3><p>Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}. Towers on your side hit an adjacent enemy for ${RULES.tower} at the start of each pulse. Poison ticks then too. The dead return at the end of the next round. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
+    box.querySelector('#close-rules').addEventListener('click', () => { UI.rules = false; render(); });
+    ov.appendChild(box); return; }
+  if (G.phase === 'levelup' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
+    const q = G.levelQueue, mine = G.champs.filter(c => G.humans.includes(c.team));
+    const box = h(`<div class="box"><h2>Level ${q.lv + 1}: choose how each champion grows</h2><p>One option per champion. The whole path is on each champion's card, so you can plan ahead.</p></div>`);
+    for (const c of mine) { const opts = c.def.tree[c.level];
+      const row = h(`<div class="lvl"><div class="who"><b>${esc(nm(c))}</b><span class="next">${c.role} · Lv ${c.level} → ${c.level + 1}</span></div>${opts.map((o, k) => `<button data-k="${k}" class="${q.picks[c.id] === k ? 'chosen' : ''}">${esc(o.t)}</button>`).join('')}</div>`);
+      row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => humanLevelPick(c, +b.dataset.k)));
+      box.appendChild(row); }
+    const done = mine.every(c => q.picks[c.id] != null);
+    const go = h(`<div class="row"><button class="primary" ${done ? '' : 'disabled'}>Continue to round ${G.round + 1}</button></div>`);
+    go.querySelector('button').addEventListener('click', confirmLevels); box.appendChild(go);
+    ov.appendChild(box); return; }
+  if (G.phase !== 'draft') { ov.hidden = true; ov.innerHTML = ''; return; }
+  ov.hidden = false; ov.innerHTML = '';
+  const team = G.order[G.di], human = G.humans.includes(team);
+  const box = h(`<div class="box"><div class="row"><h2>Draft: ${human ? 'your pick' : 'the AI picks'} (team ${team})</h2><div class="row" style="margin-left:auto">
+      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="rules">Rules</button></div></div>
+    <p>Snake order A B B A A B B A A B, one champion per role. Look at tags: an aura helps every ally beside its owner, a bond needs a neighbour with the named tag.</p><div class="dcols"></div></div>`);
+  const cols = box.querySelector('.dcols');
+  for (const role of ROLES) { const col = h(`<div class="dcol"><h3>${role}</h3></div>`);
+    for (const d of ROSTER.filter(x => x.role === role)) { const takenBy = ['A','B'].find(t => G.picks[t].includes(d));
+      const can = human && !takenBy && !G.picks[team][ROLES.indexOf(role)];
+      const fake = { def: d, procs: d.procs, auraAmt: d.aura ? d.aura.amt : 0, pos: [99, 99], team: 'A', init: d.init, atk: d.atk, range: d.range, bounty: 0 };
+      const card = h(`<div class="dcard ${can ? 'pick' : ''} ${takenBy ? 'taken ' + takenBy : ''}">
+        <div><b class="n">${esc(d.name)}</b> <span class="chip">${d.tag}</span>${takenBy ? ` <span class="chip">team ${takenBy}</span>` : ''}</div>
+        <div class="stats">HP <b>${d.hp}</b> ATK <b>${d.atk}</b> RNG <b>${d.range}</b> INIT <b>${d.init}</b>${d.dive ? ` LEAP <b>${d.dive}</b>` : ''}</div>
+        <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[d.target]}</span>${synText(fake)}</div>
+        <div class="procs">${Object.keys(d.procs).map(k => `<span>${PROCS[k].name}</span><span class="bar"><i style="width:${d.procs[k]}%;background:${PROCS[k].color}"></i></span><span class="pct">${d.procs[k]}%</span>`).join('')}</div>
+        <div class="next">Grows into: ${d.tree.map(o => esc(o[0].t) + ' / ' + esc(o[1].t)).join(' · ')}</div></div>`);
+      if (can) card.addEventListener('click', () => draftPick(d));
+      col.appendChild(card); }
+    cols.appendChild(col); }
+  box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m;
+    if (m === 'rules') { UI.rules = true; render(); } else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
+  ov.appendChild(box);
+}
+
+// ═════════════ headless runs (for measuring) ═════════════
+function simulate(n, board, seed = 1) {
+  const keepB = UI.board, keepS = { ...STATS };
+  STATS = { matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0 };
+  HEADLESS = true; UI.board = board || keepB;
+  const ends = { nexus: 0, time: 0 };
+  for (let i = 0; i < n; i++) { newMatch('watch', seed + i * 7919); if (G.round >= RULES.rounds && G.nexus.A > 0 && G.nexus.B > 0) ends.time++; else ends.nexus++; }
+  const out = { ...STATS, avgRounds: +(STATS.rounds / n).toFixed(2), deathsPerMatch: +(STATS.deaths / n).toFixed(2), procsPerMatch: +(STATS.procs / n).toFixed(1), winA: +(STATS.winsA / n).toFixed(3), ends };
+  HEADLESS = false; UI.board = keepB; STATS = keepS; newMatch('play');
+  return out;
+}
+
+// ═════════════ wiring ═════════════
+document.getElementById('b-play').addEventListener('click', () => newMatch('play'));
+document.getElementById('b-watch').addEventListener('click', () => newMatch('watch'));
+document.getElementById('b-board').addEventListener('click', () => { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); });
+document.getElementById('b-aims').addEventListener('click', () => { UI.aims = !UI.aims; render(); });
+document.getElementById('b-speed').addEventListener('click', () => { UI.speed = UI.speed === 'normal' ? 'fast' : 'normal'; render(); });
+document.getElementById('b-rules').addEventListener('click', () => { UI.rules = true; render(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.rules) { UI.rules = false; render(); } else if (UI.sel != null) { UI.sel = null; UI.hover = null; render(); } } });
+newMatch('play');
+</script>
