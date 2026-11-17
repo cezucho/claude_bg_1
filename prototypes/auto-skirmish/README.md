@@ -54,6 +54,19 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   the team that moved first. That mode plays longer matches to make up for half the fighting:
   up to 16 rounds, level-ups at rounds 3, 5, 8 and 11, siege 3, death timer step 4.
 
+- **Gold, items, control, opening level-ups, specials (added 2026-11-17, D-071).** Each round
+  every living champion earns 1 gold for its team; a kill pays 4, plus 2 per bounty star on the
+  victim (shutdown); a tower pays 4. After every round the shop offers 3 of 15 items (stats or
+  chances, a Phoenix Feather that survives one death, a Sage Sash against freeze and knock-up);
+  up to 3 per champion; unspent gold carries over. Six control statuses join frost: taunt,
+  root, blind, silence, airborne, berserk; a champion that just skipped a turn is steadfast
+  (cannot be frozen or knocked up again until it acts). A team levels up one champion of its
+  choice after its 2nd, 3rd and 5th opening card; past the end of a path a champion takes
+  "veteran" levels (+1 attack or +6 HP). Every champion has a charged special: after 2 or 3
+  attacks its next action is the special (Anchor Slam, Quake, Wildfire, Execute, Lance,
+  Blizzard, Volley, Cannon Blast, Sanctuary, Mind Twist). Switches in `RULES`: `gold`, `cc`,
+  `openLevels`, `specials`.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.
@@ -111,3 +124,25 @@ gives two decisions per pulse, but with the same ten rounds most matches ran out
 so it needs the longer preset; the total watching then is about the same as before. With the
 preset a won fight decides the match less often (76%), so comebacks are more likely. A at 54%
 over 600 matches may be noise and needs a bigger run.
+
+**Measurement: gold, control, opening level-ups, specials (2026-11-17).** 600 AI-vs-AI matches
+per row, small board, pulse after every move:
+
+| Rules | Rounds | Ended by nexus | A wins | Won fight wins the match | Gold leader after round 5 wins | Items per match | Specials per match | Skipped turns per match | Seconds per pulse |
+|---|---|---|---|---|---|---|---|---|---|
+| All four off | 8.0 | 89% | 50% | 84% | – | – | – | 2.9 | 2.8 |
+| Gold only | 7.7 | 90% | 47% | 88% | 84% | 9.4 | – | 2.8 | 2.9 |
+| Control only | 7.9 | 86% | 50% | 85% | – | – | – | 3.8 | 3.0 |
+| Opening level-ups only | 7.8 | 88% | 49% | 85% | – | – | – | 3.0 | 3.0 |
+| Specials only | 7.8 | 86% | 51% | 86% | – | – | 15.7 | 5.1 | 3.0 |
+| All on | 7.7 | 88% | 49% | 83% | 81% | 9.3 | 15.2 | 5.3 | 3.1 |
+
+- Gold behaves like League's: the team ahead in gold after round 5 wins about four times in
+  five. Changing income and kill gold (1–3 and 2–4) moved that by at most two points, because a
+  gold lead mostly records the fights already won. Gold alone made fights a little more
+  decisive (84% to 88%); with everything on it is back to 83%.
+- Control statuses did not shorten pulses. Most of them change an attack rather than cancel
+  it, and only frost and airborne skip a turn: about 5 skipped turns per match with
+  everything on, one every three pulses. Skipped turns are now quick beats; a pulse with
+  everything on is 3.1 s against 2.8 s, because more beats now carry a chance or a special.
+- Sides stay even (49–51%) in every configuration.

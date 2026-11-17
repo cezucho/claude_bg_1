@@ -145,6 +145,15 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
 .help { font-size: 13.5px; color: var(--fg); }
 .help h3 { font-family: var(--display); font-size: 14px; letter-spacing: .08em; margin: 8px 0 2px; color: var(--gold); }
 .help p { color: var(--fg); }
+.shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .shop { grid-template-columns: minmax(0, 1fr); } }
+.shop .item { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.shop .item.sel { border-color: var(--gold); }
+.shop .item b { font-family: var(--display); font-size: 15px; }
+.shop .item .cost { color: var(--gold); font-family: var(--mono); }
+.special { font-size: 11.5px; color: var(--fg); }
+.special b { color: var(--gold); }
+.pips { letter-spacing: 2px; color: var(--gold); font-family: var(--mono); }
 .stat-strip { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--dim); }
 .stat-strip b { color: var(--fg); font-family: var(--mono); font-weight: 500; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
@@ -155,6 +164,8 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
   <div class="meter"><span>Round</span><b id="m-round" class="num">–</b></div>
   <div class="meter"><span>Nexus A</span><b id="m-nexA" class="A num">30</b></div>
   <div class="meter"><span>Nexus B</span><b id="m-nexB" class="B num">30</b></div>
+  <div class="meter"><span>Gold A</span><b id="m-goldA" class="num" style="color:var(--gold)">0</b></div>
+  <div class="meter"><span>Gold B</span><b id="m-goldB" class="num" style="color:var(--gold)">0</b></div>
   <div class="meter"><span>Now</span><b id="m-phase">Draft</b></div>
   <div class="tools">
     <button id="b-play">New: play A vs AI</button>
@@ -231,51 +242,90 @@ const PROCS = {
   shield:    { name: 'Shield',    color: 'var(--frost)',  text: 'every action: shields itself or the weakest ally beside it for 4' },
   dodge:     { name: 'Dodge',     color: 'var(--frost)',  text: 'when attacked: takes no damage' },
   thorns:    { name: 'Thorns',    color: 'var(--gold)',   text: 'when hit by a neighbour: deals 3 back' },
+  taunt:     { name: 'Taunt',     color: 'var(--gold)',   text: 'the target must attack this champion on its next action, if it can reach it' },
+  root:      { name: 'Root',      color: 'var(--poison)', text: 'the target cannot be moved by its team until the round ends' },
+  blind:     { name: 'Blind',     color: 'var(--dim)',    text: 'the target\'s next attack misses' },
+  silence:   { name: 'Silence',   color: 'var(--arcane)', text: 'the target\'s next action rolls no chances and cannot be its special' },
+  airborne:  { name: 'Airborne',  color: 'var(--frost)',  text: 'the target is knocked up: it skips its next action and melee attacks cannot reach it meanwhile' },
+  berserk:   { name: 'Berserk',   color: 'var(--bad)',    text: 'the target\'s next attack hits the nearest champion of either team for +50%' },
 };
+const CC_KEYS = ['taunt', 'root', 'blind', 'silence', 'airborne', 'berserk'];
+// statuses shown on tokens and cards
+const STATUS = { frozen: ['❄', 'frozen', 'var(--frost)'], air: ['⤒', 'airborne', 'var(--frost)'], rooted: ['⚓', 'rooted', 'var(--poison)'], blind: ['◐', 'blinded', 'var(--dim)'],
+  silenced: ['∅', 'silenced', 'var(--arcane)'], berserk: ['✷', 'berserk', 'var(--bad)'], taunted: ['!', 'taunted', 'var(--gold)'], steadfast: ['◆', 'steadfast: cannot be frozen or knocked up', 'var(--fg)'] };
+const VETERAN = [{ t: '+1 attack', stat: 'atk', add: 1 }, { t: '+6 max HP', stat: 'hp', add: 6 }];   // levels past the end of a growth path
+const levelOptions = c => c.def.tree[c.level] || VETERAN;
+const ITEMS = [
+  { id: 'blade', name: 'Iron Blade', cost: 9, t: '+2 attack', stat: 'atk', add: 2, kind: 'carry' },
+  { id: 'belt', name: 'Ogre Belt', cost: 8, t: '+10 max HP', stat: 'hp', add: 10, kind: 'tank' },
+  { id: 'mail', name: 'Chainmail', cost: 10, t: 'takes 1 less damage per hit', stat: 'armor', add: 1, kind: 'tank' },
+  { id: 'boots', name: 'Swift Boots', cost: 7, t: '+2 initiative', stat: 'init', add: 2, kind: 'any' },
+  { id: 'edge', name: 'Keen Edge', cost: 11, t: 'Crit +25%', proc: 'crit', add: 25, kind: 'carry' },
+  { id: 'fang', name: 'Venom Fang', cost: 9, t: 'Poison +30%', proc: 'poison', add: 30, kind: 'carry' },
+  { id: 'heart', name: 'Rime Heart', cost: 12, t: 'Frost +20%', proc: 'frost', add: 20, kind: 'tank' },
+  { id: 'chalice', name: 'Blood Chalice', cost: 10, t: 'Lifesteal +35%', proc: 'lifesteal', add: 35, kind: 'carry' },
+  { id: 'twin', name: 'Twin Daggers', cost: 12, t: 'Double strike +25%', proc: 'double', add: 25, kind: 'carry' },
+  { id: 'plate', name: 'Bramble Plate', cost: 9, t: 'Thorns +45%', proc: 'thorns', add: 45, kind: 'tank' },
+  { id: 'bow', name: 'Long Bow', cost: 13, t: '+1 range', stat: 'range', add: 1, kind: 'carry' },
+  { id: 'charm', name: 'Mender\'s Charm', cost: 9, t: 'Mend +35%', proc: 'mend', add: 35, kind: 'support' },
+  { id: 'feather', name: 'Phoenix Feather', cost: 14, t: 'the first time it would die, it stays at 8 HP instead', revive: true, kind: 'carry' },
+  { id: 'sash', name: 'Sage Sash', cost: 10, t: 'can never be frozen or knocked up', immune: true, kind: 'any', cc: true },
+  { id: 'hammer', name: 'Storm Hammer', cost: 12, t: 'Airborne +20%', proc: 'airborne', add: 20, kind: 'tank', cc: true },
+];
 const RULE_TEXT = { nearest: 'nearest enemy', weakest: 'lowest HP', strongest: 'highest HP', backline: 'back line (closest to its own nexus)', carry: 'highest attack', cluster: 'most crowded enemy' };
 const AURA_TEXT = { init: n => `+${n} initiative to allies beside it`, atk: n => `+${n} attack to allies beside it`, armor: n => `allies beside it take ${n} less per hit`, proc: n => `+${n}% to every chance of allies beside it` };
 // tree options: { t: label, proc: key, add } | { t, stat: 'atk'|'hp'|'range'|'dive'|'mend', add } | { t, aura: add }
 const P = (t, proc, add) => ({ t, proc, add }), S = (t, stat, add) => ({ t, stat, add }), AU = (t, add) => ({ t, aura: add });
 const ROSTER = [
   { id: 'anchor', name: 'Anchor', role: 'Top', tag: 'Guardian', hp: 34, atk: 3, range: 1, init: 2, target: 'nearest',
-    procs: { shield: 20, push: 15 }, aura: { kind: 'armor', amt: 1 },
-    tree: [[P('Knockback +30%', 'push', 30), P('Shield +30%', 'shield', 30)], [S('+8 max HP', 'hp', 8), P('Thorns 35%', 'thorns', 35)], [P('Cleave 30%', 'cleave', 30), AU('Aura: 1 more armour', 1)], [S('+2 attack', 'atk', 2), P('Shield +30%', 'shield', 30)]],
+    procs: { shield: 20, push: 15, taunt: 25 }, aura: { kind: 'armor', amt: 1 },
+    special: { name: 'Anchor Slam', n: 3, fx: 'slam', text: 'hits every enemy beside it and roots them' },
+    tree: [[P('Knockback +30%', 'push', 30), P('Shield +30%', 'shield', 30)], [S('+8 max HP', 'hp', 8), P('Taunt +30%', 'taunt', 30)], [P('Cleave 30%', 'cleave', 30), AU('Aura: 1 more armour', 1)], [S('+2 attack', 'atk', 2), P('Shield +30%', 'shield', 30)]],
     cards: [['top fr', 'top fr', 'jungle fl'], ['top fl', 'top fr', 'mid fl']] },
   { id: 'bulwark', name: 'Bulwark', role: 'Top', tag: 'Frost', hp: 32, atk: 3, range: 1, init: 3, target: 'carry',
-    procs: { frost: 15, cleave: 15 }, bond: { tag: 'Frost', kind: 'atk', amt: 1 },
-    tree: [[P('Frost +25%', 'frost', 25), P('Cleave +25%', 'cleave', 25)], [S('+8 max HP', 'hp', 8), P('Dodge 25%', 'dodge', 25)], [P('Frost +25%', 'frost', 25), S('+1 attack', 'atk', 1)], [P('Cleave +30%', 'cleave', 30), P('Thorns 40%', 'thorns', 40)]],
+    procs: { frost: 15, cleave: 15, root: 15 }, bond: { tag: 'Frost', kind: 'atk', amt: 1 },
+    special: { name: 'Quake', n: 3, fx: 'quake', text: 'deals its attack to every enemy within 2' },
+    tree: [[P('Frost +25%', 'frost', 25), P('Cleave +25%', 'cleave', 25)], [S('+8 max HP', 'hp', 8), P('Root +25%', 'root', 25)], [P('Frost +25%', 'frost', 25), S('+1 attack', 'atk', 1)], [P('Cleave +30%', 'cleave', 30), P('Thorns 40%', 'thorns', 40)]],
     cards: [['top fr', 'top r', 'mid fr'], ['top fl', 'top fl', 'jungle fr']] },
   { id: 'ember', name: 'Ember', role: 'Jungle', tag: 'Flame', hp: 24, atk: 4, range: 1, init: 5, target: 'weakest',
     procs: { poison: 20, double: 10 }, bond: { tag: 'Guardian', kind: 'atk', amt: 1 },
+    special: { name: 'Wildfire', n: 2, fx: 'wildfire', text: 'hits its target and poisons it and every enemy beside it twice' },
     tree: [[P('Poison +30%', 'poison', 30), P('Double strike +20%', 'double', 20)], [P('Lifesteal 30%', 'lifesteal', 30), S('+1 attack', 'atk', 1)], [P('Poison +25%', 'poison', 25), P('Splash 30%', 'splash', 30)], [P('Double strike +30%', 'double', 30), S('+6 max HP', 'hp', 6)]],
     cards: [['jungle fr', 'jungle fr', 'top fr'], ['jungle fl', 'jungle fr', 'bottom fr']] },
   { id: 'viper', name: 'Viper', role: 'Jungle', tag: 'Shadow', hp: 22, atk: 5, range: 1, dive: 2, init: 6, target: 'backline',
-    procs: { crit: 15, poison: 10 },
-    tree: [[P('Crit +25%', 'crit', 25), P('Poison +30%', 'poison', 30)], [P('Dodge 25%', 'dodge', 25), S('+1 attack', 'atk', 1)], [P('Crit +25%', 'crit', 25), P('Double strike 25%', 'double', 25)], [P('Lifesteal 40%', 'lifesteal', 40), S('Leap +1 hex', 'dive', 1)]],
+    procs: { crit: 15, poison: 10, blind: 15 },
+    special: { name: 'Execute', n: 3, fx: 'execute', text: 'leaps to the weakest enemy within 3 and hits it for double' },
+    tree: [[P('Crit +25%', 'crit', 25), P('Blind +25%', 'blind', 25)], [P('Dodge 25%', 'dodge', 25), S('+1 attack', 'atk', 1)], [P('Crit +25%', 'crit', 25), P('Double strike 25%', 'double', 25)], [P('Lifesteal 40%', 'lifesteal', 40), S('Leap +1 hex', 'dive', 1)]],
     cards: [['jungle fr', 'jungle fl', 'mid fr'], ['jungle fr', 'jungle r', 'support fl']] },
   { id: 'lens', name: 'Lens', role: 'Mid', tag: 'Arcane', hp: 20, atk: 4, range: 3, init: 4, target: 'strongest',
-    procs: { fireball: 15, chain: 10 }, aura: { kind: 'proc', amt: 10 },
-    tree: [[P('Fireball +25%', 'fireball', 25), P('Chain lightning +30%', 'chain', 30)], [S('+1 range', 'range', 1), S('+6 max HP', 'hp', 6)], [P('Fireball +25%', 'fireball', 25), AU('Aura: +10% more', 10)], [P('Chain lightning +30%', 'chain', 30), P('Crit 30%', 'crit', 30)]],
+    procs: { fireball: 15, chain: 10, silence: 15 }, aura: { kind: 'proc', amt: 10 },
+    special: { name: 'Lance', n: 2, fx: 'lance', text: 'a beam through its target: hits every enemy on that straight line, up to 4 hexes' },
+    tree: [[P('Fireball +25%', 'fireball', 25), P('Chain lightning +30%', 'chain', 30)], [S('+1 range', 'range', 1), S('+6 max HP', 'hp', 6)], [P('Fireball +25%', 'fireball', 25), AU('Aura: +10% more', 10)], [P('Chain lightning +30%', 'chain', 30), P('Silence +25%', 'silence', 25)]],
     cards: [['mid fr', 'mid fr', 'bottom fl'], ['mid fl', 'mid fr', 'support fl']] },
   { id: 'rime', name: 'Rime', role: 'Mid', tag: 'Frost', hp: 20, atk: 3, range: 3, init: 3, target: 'nearest',
     procs: { frost: 25, splash: 15 }, bond: { tag: 'Frost', kind: 'atk', amt: 1 },
+    special: { name: 'Blizzard', n: 3, fx: 'blizzard', text: '2 damage to its target and every enemy beside it, freezing them' },
     tree: [[P('Frost +25%', 'frost', 25), P('Splash +25%', 'splash', 25)], [S('+1 range', 'range', 1), P('Shield 30%', 'shield', 30)], [P('Frost +20%', 'frost', 20), P('Chain lightning 30%', 'chain', 30)], [P('Splash +30%', 'splash', 30), S('+2 attack', 'atk', 2)]],
     cards: [['mid fr', 'mid r', 'top fr'], ['mid fr', 'mid fl', 'jungle fl']] },
   { id: 'ranger', name: 'Ranger', role: 'Bottom', tag: 'Hunter', hp: 20, atk: 4, range: 3, init: 4, target: 'weakest',
-    procs: { double: 15, crit: 10 }, bond: { tag: 'Light', kind: 'init', amt: 2 },
-    tree: [[P('Double strike +25%', 'double', 25), P('Crit +25%', 'crit', 25)], [S('+1 range', 'range', 1), P('Dodge 25%', 'dodge', 25)], [P('Double strike +25%', 'double', 25), P('Poison 30%', 'poison', 30)], [P('Crit +30%', 'crit', 30), S('+2 attack', 'atk', 2)]],
+    procs: { double: 15, crit: 10, root: 15 }, bond: { tag: 'Light', kind: 'init', amt: 2 },
+    special: { name: 'Volley', n: 2, fx: 'volley', text: 'hits up to three different enemies in range' },
+    tree: [[P('Double strike +25%', 'double', 25), P('Crit +25%', 'crit', 25)], [S('+1 range', 'range', 1), P('Root +25%', 'root', 25)], [P('Double strike +25%', 'double', 25), P('Poison 30%', 'poison', 30)], [P('Crit +30%', 'crit', 30), S('+2 attack', 'atk', 2)]],
     cards: [['bottom fr', 'bottom fr', 'support fl'], ['bottom fl', 'bottom fr', 'mid fr']] },
   { id: 'gunner', name: 'Gunner', role: 'Bottom', tag: 'Hunter', hp: 22, atk: 5, range: 2, init: 2, target: 'cluster',
-    procs: { splash: 20, push: 15 }, bond: { tag: 'Guardian', kind: 'atk', amt: 1 },
-    tree: [[P('Splash +30%', 'splash', 30), P('Knockback +30%', 'push', 30)], [S('+6 max HP', 'hp', 6), S('+1 range', 'range', 1)], [P('Splash +20%', 'splash', 20), P('Crit 30%', 'crit', 30)], [P('Double strike 30%', 'double', 30), S('+2 attack', 'atk', 2)]],
+    procs: { splash: 20, push: 15, airborne: 15 }, bond: { tag: 'Guardian', kind: 'atk', amt: 1 },
+    special: { name: 'Cannon Blast', n: 2, fx: 'cannon', text: 'hits its target and every enemy beside it, knocking them back' },
+    tree: [[P('Splash +30%', 'splash', 30), P('Airborne +25%', 'airborne', 25)], [S('+6 max HP', 'hp', 6), S('+1 range', 'range', 1)], [P('Splash +20%', 'splash', 20), P('Crit 30%', 'crit', 30)], [P('Double strike 30%', 'double', 30), S('+2 attack', 'atk', 2)]],
     cards: [['bottom fr', 'bottom fr', 'jungle fr'], ['bottom fl', 'bottom fl', 'support fr']] },
   { id: 'oriel', name: 'Oriel', role: 'Support', tag: 'Light', hp: 24, atk: 2, range: 2, init: 7, target: 'nearest',
     procs: { mend: 35, shield: 20 }, aura: { kind: 'init', amt: 2 },
+    special: { name: 'Sanctuary', n: 3, fx: 'sanctuary', text: 'heals every ally within 2 for 5 and clears their statuses' },
     tree: [[P('Mend +30%', 'mend', 30), P('Shield +30%', 'shield', 30)], [AU('Aura: +1 more initiative', 1), S('+6 max HP', 'hp', 6)], [P('Mend +25%', 'mend', 25), S('Mend heals +3', 'mend', 3)], [P('Shield +30%', 'shield', 30), P('Dodge 30%', 'dodge', 30)]],
     cards: [['support fl', 'support fl', 'bottom fr'], ['support fr', 'support fl', 'mid fr']] },
   { id: 'seer', name: 'Seer', role: 'Support', tag: 'Arcane', hp: 22, atk: 2, range: 3, init: 6, target: 'carry',
-    procs: { frost: 15, poison: 15 }, aura: { kind: 'atk', amt: 1 },
-    tree: [[P('Frost +25%', 'frost', 25), P('Poison +25%', 'poison', 25)], [AU('Aura: +1 more attack', 1), S('+6 max HP', 'hp', 6)], [P('Chain lightning 30%', 'chain', 30), P('Fireball 25%', 'fireball', 25)], [P('Frost +25%', 'frost', 25), P('Mend 40%', 'mend', 40)]],
+    procs: { berserk: 20, poison: 15 }, aura: { kind: 'atk', amt: 1 },
+    special: { name: 'Mind Twist', n: 3, fx: 'twist', text: 'the strongest enemy within 3 goes berserk and is silenced' },
+    tree: [[P('Berserk +25%', 'berserk', 25), P('Poison +25%', 'poison', 25)], [AU('Aura: +1 more attack', 1), S('+6 max HP', 'hp', 6)], [P('Chain lightning 30%', 'chain', 30), P('Fireball 25%', 'fireball', 25)], [P('Berserk +20%', 'berserk', 20), P('Mend 40%', 'mend', 40)]],
     cards: [['support fl', 'support fl', 'jungle fr'], ['support fr', 'support r', 'bottom fr']] },
 ];
 const ROLES = ['Top', 'Jungle', 'Mid', 'Bottom', 'Support'];
@@ -285,8 +335,12 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   towerHp: 15,        // side towers' HP; 0 = indestructible (the first version's rule)
   gate: true,         // the nexus takes siege damage only once one of its side towers has fallen
   regen: 3,           // HP a champion regains at the start of a pulse if nothing hit it in the previous pulse (0 = off)
-  respawnStep: 3,
-  onePulse: false };  // true = both teams move, then one pulse per round (false = a pulse after every move)   // the death timer grows by one round every N rounds: rounds 1-3 one round, 4-6 two, 7-9 three (99 = always one)
+  respawnStep: 3,     // the death timer grows by one round every N rounds: rounds 1-3 one round, 4-6 two, 7-9 three (99 = always one)
+  onePulse: false,    // true = both teams move, then one pulse per round (false = a pulse after every move)
+  gold: true, income: 1, killGold: 4, shutdownGold: 2, towerGold: 4, shopOffers: 3, itemSlots: 3,   // gold and the shop
+  cc: true,           // control statuses: taunt, root, blind, silence, airborne, berserk (frost is always on)
+  openLevels: [2, 3, 5],   // a team levels up one champion of its choice after playing its 2nd, 3rd and 5th opening card
+  specials: true };   // each champion's charged special: after N attacks its next action is the special
 // "Pulse once per round" halves the fighting, so it plays longer matches (measured, see README).
 const ONE_PULSE = { onePulse: true, rounds: 16, levelRounds: [3, 5, 8, 11], respawnStep: 4, siege: 3 };
 const EVERY_MOVE = Object.fromEntries(Object.keys(ONE_PULSE).map(k => [k, RULES[k]]));
@@ -296,7 +350,7 @@ const deathDelay = r => 1 + Math.floor((r - 1) / RULES.respawnStep);
 // ═════════════ state ═════════════
 let G = null, HEADLESS = false;
 const UI = { board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
-const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0 });
+const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, items: 0, specials: 0, skips: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
 // pulse rhythm: plain hits blur past, chances and kills get a full beat
@@ -311,7 +365,7 @@ function newMatch(mode, seed) {
         picks: { A: Array(5).fill(null), B: Array(5).fill(null) }, order: ['A','B','B','A','A','B','B','A','A','B'], di: 0, taken: new Set(),
         champs: [], nexus: { A: RULES.nexus, B: RULES.nexus }, round: 0, token: 'B', turnTeam: null, turnNo: 0,
         log: [], winner: null, display: null, opened: new Set(), openTurn: 'A', levelQueue: null,
-        towers: TOWERS.map(h => ({ pos: h, side: towerSide(h), hp: RULES.towerHp, up: true })), pulse: 0, rk: { A: 0, B: 0 }, fights: [], bigFight: null, falls: 0, byRound: [] };
+        towers: TOWERS.map(h => ({ pos: h, side: towerSide(h), hp: RULES.towerHp, up: true })), pulse: 0, gold: { A: 0, B: 0 }, earned: { A: 0, B: 0 }, offers: { A: [], B: [] }, shopSel: null, cardsPlayed: { A: 0, B: 0 }, rk: { A: 0, B: 0 }, fights: [], bigFight: null, falls: 0, byRound: [] };
   G.startSeed = G.seed;
   UI.sel = null; UI.hover = null;
   render();
@@ -340,8 +394,16 @@ function draftAi() {
 function makeChamp(def, team, i) {
   return { id: G.champs.length, team, def, role: def.role, pos: START[team][i], home: START[team][i], maxHp: def.hp, hp: def.hp, atk: def.atk, range: def.range,
            init: def.init, dive: def.dive || 0, procs: { ...def.procs }, auraAmt: def.aura ? def.aura.amt : 0, mendAmt: RULES.mend,
-           shield: 0, poison: 0, poisonTurns: 0, frozen: false, dead: false, respawnAt: 0, level: 0, picks: [], kills: 0, bounty: 0 };
+           shield: 0, poison: 0, poisonTurns: 0, frozen: false, dead: false, respawnAt: 0, level: 0, picks: [], kills: 0, bounty: 0,
+           armor: 0, items: [], revive: false, immune: false, charge: 0, air: false, rooted: false, blind: false, silenced: false, berserk: false, taunted: null, steadfast: false };
 }
+function makeChampFor(def, team, i) {   // drops control chances when that switch is off
+  const c = makeChamp(def, team, i);
+  if (!RULES.cc) for (const k of CC_KEYS) delete c.procs[k];
+  return c;
+}
+const clearStatus = c => { c.frozen = false; c.air = false; c.rooted = false; c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false; };
+const statusList = c => Object.keys(STATUS).filter(k => k === 'taunted' ? c.taunted != null : c[k]);
 const alive = t => G.champs.filter(c => !c.dead && (!t || c.team === t));
 const champAt = h => G.champs.find(c => !c.dead && same(c.pos, h));
 const nm = c => c.def.name;
@@ -358,14 +420,15 @@ function links() {
 function eff(c, L) {
   const b = { init: 0, atk: 0, armor: 0, proc: 0 };
   for (const l of L) if (l.to === c) b[l.kind] += l.amt;
-  return { init: c.init + b.init, atk: c.atk + b.atk + c.bounty, range: c.range + (onHill(c.pos) ? 1 : 0), armor: b.armor, proc: b.proc, b };
+  return { init: c.init + b.init, atk: c.atk + b.atk + c.bounty, range: c.range + (onHill(c.pos) ? 1 : 0), armor: b.armor + (c.armor || 0), proc: b.proc, b };
 }
-const pct = (c, k, L) => (c.procs[k] || 0) > 0 ? Math.min(100, c.procs[k] + eff(c, L).proc) : 0;
+const pct = (c, k, L) => (c.procs[k] || 0) > 0 && !c.silenced && (RULES.cc || !CC_KEYS.includes(k)) ? Math.min(100, c.procs[k] + eff(c, L).proc) : 0;
 
 // Targeting is public and deterministic: who a champion attacks depends only on positions and HP.
 function pickTarget(c, L, reach) {
   const r = reach ?? eff(c, L).range;
-  const pool = alive(other(c.team)).filter(x => dist(c.pos, x.pos) <= r);
+  let pool = alive(other(c.team)).filter(x => dist(c.pos, x.pos) <= r);
+  if (c.range <= 1) pool = pool.filter(x => !x.air);   // melee cannot reach a knocked-up champion
   if (!pool.length) return null;
   const d = x => dist(c.pos, x.pos);
   const crowd = x => alive(x.team).filter(y => y !== x && dist(y.pos, x.pos) === 1).length;
@@ -381,16 +444,19 @@ function diveSpot(c, t) {
   return spots[0] || null;
 }
 function aimOf(c, L) {   // { target, leap } as the champion would act now
+  const r = eff(c, L).range;
+  if (c.berserk) { const near = alive().filter(x => x !== c && dist(x.pos, c.pos) <= r && !(c.range <= 1 && x.air)).sort((a, b) => dist(a.pos, c.pos) - dist(b.pos, c.pos) || a.hp - b.hp)[0]; if (near) return { target: near }; }
+  if (c.taunted != null) { const tt = G.champs[c.taunted]; if (!tt.dead && dist(tt.pos, c.pos) <= r && !(c.range <= 1 && tt.air)) return { target: tt }; }
   let t = pickTarget(c, L);
   if (t) return { target: t };
-  if (c.dive) { t = pickTarget(c, L, eff(c, L).range + c.dive); if (t) { const s = diveSpot(c, t); if (s) return { target: t, leap: s }; } }
+  if (c.dive && !c.rooted) { t = pickTarget(c, L, eff(c, L).range + c.dive); if (t) { const s = diveSpot(c, t); if (s) return { target: t, leap: s }; } }
   return { target: null };
 }
 
 // ═════════════ opening ═════════════
 function startOpening() {
   G.phase = 'opening'; G.champs = [];
-  for (const t of ['A','B']) G.picks[t].forEach((d, i) => G.champs.push(makeChamp(d, t, i)));
+  for (const t of ['A','B']) G.picks[t].forEach((d, i) => G.champs.push(makeChampFor(d, t, i)));
   G.opened = new Set(); G.openTurn = 'A';
   logLine('round', 'Opening');
   logLine('sys', 'Teams alternate. Each champion plays one of its two movement cards; every card moves one or more roles one hex at a time. A blocked step is skipped.');
@@ -418,11 +484,25 @@ function playCard(c, i, quiet) {
 function openingPlay(c, i) {
   if (G.phase !== 'opening' || c.team !== G.openTurn || G.opened.has(c.id)) return;
   playCard(c, i); G.opened.add(c.id); UI.sel = null; UI.hover = null;
+  const n = ++G.cardsPlayed[c.team];
+  if (RULES.openLevels.includes(n)) { startOpeningLevel(c.team); return; }
+  advanceOpening(c.team);
+}
+function advanceOpening(team) {
   const left = t => G.champs.some(x => x.team === t && !G.opened.has(x.id));
-  if (left(other(c.team))) G.openTurn = other(c.team);
-  else if (!left(c.team)) { startEndgame(); return; }
+  G.phase = 'opening';
+  if (left(other(team))) G.openTurn = other(team);
+  else if (!left(team)) { startEndgame(); return; }
   render(); openingAi();
 }
+// A level-up earned in the opening: the team picks one champion and one of its two options.
+function startOpeningLevel(team) {
+  logLine('round', `Team ${team} earns a level-up (card ${G.cardsPlayed[team]})`);
+  if (!G.humans.includes(team)) { const mine = G.champs.filter(x => x.team === team); const low = Math.min(...mine.map(x => x.level));
+    const pool = mine.filter(x => x.level === low); const c = pool[Math.floor(rng() * pool.length)]; applyPick(c, aiLevelPick(c)); advanceOpening(team); return; }
+  G.phase = 'openlevel'; G.levelQueue = { team, opening: true }; render();
+}
+function humanOpeningLevel(c, k) { if (G.phase !== 'openlevel') return; applyPick(c, k); G.levelQueue = null; advanceOpening(c.team); }
 function openingAi() {
   if (G.phase !== 'opening' || G.humans.includes(G.openTurn)) return;
   later(() => { const t = G.openTurn; let best = null, bv = -1e9;
@@ -446,6 +526,7 @@ function beginTurn() {
   if (!G.humans.includes(G.turnTeam)) later(aiTurn, G.humans.length ? 650 : 200);
 }
 function moveTargets(c) {
+  if (c.rooted) return [];
   const out = [], seen = new Set([K(c.pos)]); let fr = [c.pos];
   for (let s = 0; s < RULES.spd; s++) { const nx = [];
     for (const at of fr) for (const d of DIRS) { const to = add(at, d), k = K(to);
@@ -484,12 +565,47 @@ function endRound() {
     if (n && RULES.gate && !nexusOpen(foe)) { logLine(t, `${n} at the gates of nexus ${foe}, but its towers stand: no damage`); continue; }
     if (n) { G.nexus[foe] -= n * RULES.siege; logLine(t, `${n} at the gates of nexus ${foe}: −${n * RULES.siege}`); } }
   for (const c of G.champs) if (c.dead && c.respawnAt <= G.round) {
-    c.dead = false; c.hp = c.maxHp; c.shield = 0; c.poison = 0; c.frozen = false; c.pos = freeNear(c.home);
+    c.dead = false; c.hp = c.maxHp; c.shield = 0; c.poison = 0; clearStatus(c); c.pos = freeNear(c.home);
     logLine(c.team, `${nm(c)} returns to base`); }
+  for (const c of G.champs) c.rooted = false;
   if (checkWin()) return;
+  if (RULES.gold) for (const t of ['A','B']) { const g = RULES.income * alive(t).length; G.gold[t] += g; G.earned[t] += g; }
+  if (G.round === 5) G.goldAt5 = { ...G.earned };
   if (RULES.levelRounds.includes(G.round)) { startLevelUp(); return; }
-  nextRound();
+  openShop();
 }
+// ═════════════ gold and the shop ═════════════
+function openShop() {
+  if (!RULES.gold) { nextRound(); return; }
+  const pool = ITEMS.filter(it => RULES.cc || !it.cc);
+  for (const t of ['A','B']) { const pick = [], left = [...pool];
+    for (let i = 0; i < RULES.shopOffers && left.length; i++) pick.push(left.splice(Math.floor(rng() * left.length), 1)[0]);
+    G.offers[t] = pick; }
+  for (const t of ['A','B']) if (!G.humans.includes(t)) aiShop(t);
+  if (!G.humans.length) { nextRound(); return; }
+  G.phase = 'shop'; G.shopSel = null; render();
+}
+const freeSlot = c => c.items.length < RULES.itemSlots;
+function applyItem(c, it) {
+  c.items.push(it.id); STATS.items++;
+  if (it.stat === 'atk') c.atk += it.add; if (it.stat === 'range') c.range += it.add; if (it.stat === 'init') c.init += it.add; if (it.stat === 'armor') c.armor += it.add;
+  if (it.stat === 'hp') { c.maxHp += it.add; if (!c.dead) c.hp += it.add; }
+  if (it.proc) c.procs[it.proc] = Math.min(100, (c.procs[it.proc] || 0) + it.add);
+  if (it.revive) c.revive = true; if (it.immune) c.immune = true;
+}
+function buy(team, it, c) {
+  if (G.gold[team] < it.cost || !freeSlot(c) || c.team !== team || !G.offers[team].includes(it)) return false;
+  G.gold[team] -= it.cost; G.offers[team] = G.offers[team].filter(x => x !== it); applyItem(c, it);
+  logLine(team, `${team} buys ${it.name} for ${nm(c)} (${it.t})`); return true;
+}
+function aiShop(team) {
+  const mine = G.champs.filter(c => c.team === team);
+  const holder = it => { const free = mine.filter(freeSlot); if (!free.length) return null;
+    const by = { carry: c => c.atk + c.range, tank: c => c.maxHp, support: c => (c.procs.mend || 0) + (c.role === 'Support' ? 50 : 0), any: c => c.atk + c.maxHp / 6 }[it.kind];
+    return free.sort((a, b) => by(b) - by(a))[0]; };
+  for (const it of [...G.offers[team]].sort((a, b) => b.cost - a.cost)) { const c = holder(it); if (c && G.gold[team] >= it.cost) buy(team, it, c); }
+}
+function closeShop() { if (G.phase !== 'shop') return; G.shopSel = null; nextRound(); }
 const nexusOpen = team => !RULES.gate || G.towers.some(t => t.side === team && !t.up);
 const sideTowers = team => G.towers.filter(t => t.side === team && t.up);
 function nextRound() {
@@ -504,7 +620,7 @@ function freeNear(h) { if (!champAt(h)) return h; const seen = new Set([K(h)]); 
   return h; }
 
 // ═════════════ the pulse: everyone acts once, by initiative ═════════════
-function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, dead: c.dead, frozen: c.frozen, poison: c.poison })), nexus: { ...G.nexus } }; }
+function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, dead: c.dead, frozen: c.frozen, poison: c.poison, air: c.air, rooted: c.rooted, blind: c.blind, silenced: c.silenced, berserk: c.berserk, taunted: c.taunted, steadfast: c.steadfast, charge: c.charge })), nexus: { ...G.nexus } }; }
 function runPulse(mover) {
   const events = [];
   G.pulse++;
@@ -522,16 +638,22 @@ function runPulse(mover) {
   for (const c of order) {
     if (c.dead) continue;
     const L = links(), pops = [], lines = [], notes = [];
-    if (c.frozen) { c.frozen = false; logLine(c.team, `${nm(c)} [${eff(c, L).init}] is frozen and skips its action`); events.push({ actor: c.id, init: eff(c, L).init, special: true, pops: [{ hex: c.pos, text: 'frozen', cls: 'info' }], lines, snap: snap() }); continue; }
+    if (c.frozen || c.air) { const why = c.frozen ? 'frozen' : 'airborne'; c.frozen = false; c.air = false; c.steadfast = true; STATS.skips++;
+      logLine(c.team, `${nm(c)} [${eff(c, L).init}] is ${why} and skips its action (steadfast until it acts again)`); events.push({ actor: c.id, init: eff(c, L).init, special: false, pops: [{ hex: c.pos, text: why, cls: 'info' }], lines, snap: snap() }); continue; }   // a skipped turn is a quick beat
     // support chances roll on every action
     if (roll(pct(c, 'mend', L))) { const w = alive(c.team).filter(a => dist(a.pos, c.pos) <= 2 && a.hp < a.maxHp).sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp))[0];
       if (w) { const g = Math.min(c.mendAmt, w.maxHp - w.hp); w.hp += g; pops.push({ hex: w.pos, text: '+' + g, cls: 'good' }); notes.push(`<em>Mend</em> ${nm(w)} +${g} (${pct(c, 'mend', L)}%)`); STATS.procs++; } }
     if (roll(pct(c, 'shield', L))) { const w = [c, ...alive(c.team).filter(a => a !== c && dist(a.pos, c.pos) === 1)].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
       w.shield += RULES.shieldAmt; pops.push({ hex: w.pos, text: 'shield', cls: 'info' }); notes.push(`<em>Shield</em> ${nm(w)} +${RULES.shieldAmt} (${pct(c, 'shield', L)}%)`); STATS.procs++; }
-    const aim = aimOf(c, L);
-    if (aim.leap) { lines.push({ from: c.pos, to: aim.leap, cls: 'leap' }); c.pos = aim.leap; notes.push(`leaps beside ${nm(aim.target)}`); }
-    if (aim.target) attack(c, aim.target, links(), { pops, lines, notes }, true);
-    else { const T = towerInRange(c, L); if (T) hitTower(c, T, L, { pops, lines, notes }); }
+    const ctx = { pops, lines, notes };
+    const sp = c.def.special, ready = RULES.specials && sp && c.charge >= sp.n && !c.silenced && !c.berserk;
+    if (!(ready && castSpecial(c, L, ctx))) {
+      const aim = aimOf(c, L);
+      if (aim.leap) { lines.push({ from: c.pos, to: aim.leap, cls: 'leap' }); c.pos = aim.leap; notes.push(`leaps beside ${nm(aim.target)}`); }
+      if (aim.target) { if (aim.target.team === c.team) notes.push('<em>berserk</em>'); attack(c, aim.target, links(), ctx, true); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
+      else { const T = towerInRange(c, L); if (T) { hitTower(c, T, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); } }
+    }
+    c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false;   // one-action statuses are used up
     const head = `${nm(c)} [${eff(c, L).init}]`;
     logLine(c.team, `${head}${notes.length ? ': ' + notes.join(' · ') : ' has nobody in range'}`);
     if (pops.length || lines.length) events.push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, snap: snap() });   // an idle champion gets no beat
@@ -551,6 +673,8 @@ function hit(src, t, raw, ctx, dodgeable) {
 }
 function attack(c, t, L, ctx, mayDouble) {
   const e = eff(c, L); let raw = e.atk; const tags = [];
+  if (c.blind) { ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' }); ctx.notes.push(`→ ${nm(t)}: misses (blinded)`); ctx.pops.push({ hex: t.pos, text: 'miss', cls: 'info' }); return; }
+  if (c.berserk) raw = Math.ceil(raw * 1.5);
   if (roll(pct(c, 'crit', L))) { raw *= 2; tags.push(`<em>Crit</em> (${pct(c, 'crit', L)}%)`); STATS.procs++; }
   ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' });
   const d = hit(c, t, raw, ctx, true);
@@ -560,7 +684,15 @@ function attack(c, t, L, ctx, mayDouble) {
   if (dist(c.pos, t.pos) === 1 && !t.dead && roll(pct(t, 'thorns', L))) { ctx.notes.push(`${nm(t)}'s <em>Thorns</em>`); STATS.procs++; hit(t, c, RULES.thorns, ctx, false); }
   if (!c.dead && roll(P('lifesteal'))) { const g = Math.min(d, c.maxHp - c.hp); c.hp += g; ctx.pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); ctx.notes.push(`<em>Lifesteal</em> +${g} (${P('lifesteal')}%)`); STATS.procs++; }
   if (!t.dead && roll(P('poison'))) { t.poison++; t.poisonTurns = RULES.poisonTurns; ctx.notes.push(`<em>Poison</em> ×${t.poison} (${P('poison')}%)`); STATS.procs++; }
-  if (!t.dead && roll(P('frost'))) { t.frozen = true; ctx.pops.push({ hex: t.pos, text: 'frost', cls: 'info' }); ctx.notes.push(`<em>Frost</em> (${P('frost')}%)`); STATS.procs++; }
+  if (RULES.cc && !t.dead) {
+    if (!t.immune && !t.steadfast && roll(P('airborne'))) { t.air = true; ctx.pops.push({ hex: t.pos, text: 'airborne', cls: 'info' }); ctx.notes.push(`<em>Airborne</em> (${P('airborne')}%)`); STATS.procs++; }
+    if (roll(P('taunt'))) { t.taunted = c.id; ctx.notes.push(`<em>Taunt</em> (${P('taunt')}%)`); STATS.procs++; }
+    if (roll(P('root'))) { t.rooted = true; ctx.notes.push(`<em>Root</em> (${P('root')}%)`); STATS.procs++; }
+    if (roll(P('blind'))) { t.blind = true; ctx.notes.push(`<em>Blind</em> (${P('blind')}%)`); STATS.procs++; }
+    if (roll(P('silence'))) { t.silenced = true; ctx.notes.push(`<em>Silence</em> (${P('silence')}%)`); STATS.procs++; }
+    if (roll(P('berserk'))) { t.berserk = true; ctx.notes.push(`<em>Berserk</em> (${P('berserk')}%)`); STATS.procs++; }
+  }
+  if (!t.dead && !t.immune && !t.steadfast && roll(P('frost'))) { t.frozen = true; ctx.pops.push({ hex: t.pos, text: 'frost', cls: 'info' }); ctx.notes.push(`<em>Frost</em> (${P('frost')}%)`); STATS.procs++; }
   if (!t.dead && roll(P('push'))) { const away = DIRS.map(dd => add(t.pos, dd)).filter(h => onBoard(h) && !SOLID.has(K(h)) && !champAt(h)).sort((a, b) => dist(b, c.pos) - dist(a, c.pos))[0];
     if (away && dist(away, c.pos) > dist(t.pos, c.pos)) { ctx.lines.push({ from: t.pos, to: away, cls: 'leap' }); t.pos = away; ctx.notes.push(`<em>Knockback</em> (${P('push')}%)`); STATS.procs++; } }
   if (roll(P('splash'))) { const hs = alive(t.team).filter(x => x !== t && dist(x.pos, t.pos) === 1); ctx.notes.push(`<em>Splash</em> on ${hs.length} (${P('splash')}%)`); STATS.procs++; for (const x of hs) hit(c, x, Math.ceil(raw / 2), ctx, false); }
@@ -572,6 +704,44 @@ function attack(c, t, L, ctx, mayDouble) {
       const around = alive(f.team).filter(x => x !== f && dist(x.pos, f.pos) === 1); hit(c, f, RULES.fireball, ctx, false); for (const x of around) hit(c, x, 2, ctx, false); } }
   if (mayDouble && !c.dead && roll(P('double'))) { const L2 = links(); const t2 = pickTarget(c, L2); if (t2) { ctx.notes.push(`<em>Double strike</em> (${P('double')}%)`); STATS.procs++; attack(c, t2, L2, ctx, false); } }
 }
+// ═════════════ charged specials ═════════════
+function hexLine(a, b, len) {   // the hexes on the straight line from a through b, up to len steps
+  const n = dist(a, b); if (!n) return [];
+  const out = [], az = -a[0] - a[1], bz = -b[0] - b[1];
+  for (let k = 1; k <= len; k++) { const t = k / n; let q = a[0] + (b[0] - a[0]) * t, r = a[1] + (b[1] - a[1]) * t, z = az + (bz - az) * t;
+    let rq = Math.round(q), rr = Math.round(r), rz = Math.round(z); const dq = Math.abs(rq - q), dr = Math.abs(rr - r), dz = Math.abs(rz - z);
+    if (dq > dr && dq > dz) rq = -rr - rz; else if (dr > dz) rr = -rq - rz;
+    if (!onBoard([rq, rr])) break; out.push([rq, rr]); }
+  return out;
+}
+function castSpecial(c, L, ctx) {
+  const sp = c.def.special, e = eff(c, L), foes = alive(other(c.team)), atk = e.atk;
+  const near = r => foes.filter(x => dist(x.pos, c.pos) <= r);
+  const say = what => { ctx.notes.unshift(`<em>${sp.name}</em>${what ? ': ' + what : ''}`); STATS.specials++; c.charge = 0; return true; };
+  const aim = aimOf(c, L).target;
+  switch (sp.fx) {
+    case 'slam': { const hs = near(1); if (!hs.length) return false; say(`${hs.length} hit`); for (const x of hs) { hit(c, x, atk, ctx, true); if (!x.dead && RULES.cc) x.rooted = true; } return true; }
+    case 'quake': { const hs = near(2); if (!hs.length) return false; say(`${hs.length} hit`); for (const x of hs) hit(c, x, atk, ctx, true); return true; }
+    case 'wildfire': { if (!aim || aim.team === c.team) return false; say(''); ctx.lines.push({ from: c.pos, to: aim.pos, cls: 'fire' }); hit(c, aim, atk, ctx, true);
+      for (const x of [aim, ...alive(aim.team).filter(y => y !== aim && dist(y.pos, aim.pos) === 1)]) if (!x.dead) { x.poison += 2; x.poisonTurns = RULES.poisonTurns; } return true; }
+    case 'execute': { const t = near(e.range + 2).sort((a, b) => a.hp - b.hp)[0]; if (!t) return false;
+      if (dist(t.pos, c.pos) > e.range) { const s = diveSpot(c, t); if (!s) return false; ctx.lines.push({ from: c.pos, to: s, cls: 'leap' }); c.pos = s; }
+      say(nm(t)); ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' }); hit(c, t, atk * 2, ctx, true); return true; }
+    case 'lance': { if (!aim || aim.team === c.team) return false; const line = hexLine(c.pos, aim.pos, 4); const hs = line.map(champAt).filter(x => x && x.team !== c.team);
+      say(`${hs.length} hit`); if (line.length) ctx.lines.push({ from: c.pos, to: line[line.length - 1], cls: 'chain' }); for (const x of hs) hit(c, x, atk, ctx, true); return true; }
+    case 'blizzard': { if (!aim || aim.team === c.team) return false; const hs = [aim, ...alive(aim.team).filter(y => y !== aim && dist(y.pos, aim.pos) === 1)];
+      say(`${hs.length} hit`); for (const x of hs) { hit(c, x, 2, ctx, false); if (!x.dead && !x.immune && !x.steadfast) x.frozen = true; } return true; }
+    case 'volley': { const hs = near(e.range).sort((a, b) => a.hp - b.hp).slice(0, 3); if (!hs.length) return false; say(`${hs.length} hit`);
+      for (const x of hs) { ctx.lines.push({ from: c.pos, to: x.pos, cls: 'strike' }); hit(c, x, atk, ctx, true); } return true; }
+    case 'cannon': { if (!aim || aim.team === c.team) return false; const hs = [aim, ...alive(aim.team).filter(y => y !== aim && dist(y.pos, aim.pos) === 1)]; say(`${hs.length} hit`);
+      ctx.lines.push({ from: c.pos, to: aim.pos, cls: 'fire' });
+      for (const x of hs) { hit(c, x, atk, ctx, true); if (x.dead) continue; const away = DIRS.map(d => add(x.pos, d)).filter(h => onBoard(h) && !SOLID.has(K(h)) && !champAt(h) && dist(h, c.pos) > dist(x.pos, c.pos))[0]; if (away) x.pos = away; } return true; }
+    case 'sanctuary': { const hs = alive(c.team).filter(x => dist(x.pos, c.pos) <= 2 && (x.hp < x.maxHp || statusList(x).length)); if (!hs.length) return false; say(`${hs.length} allies`);
+      for (const x of hs) { const g = Math.min(5, x.maxHp - x.hp); x.hp += g; clearStatus(x); x.poison = 0; ctx.pops.push({ hex: x.pos, text: '+' + g, cls: 'good' }); } return true; }
+    case 'twist': { const t = near(3).sort((a, b) => b.hp - a.hp)[0]; if (!t) return false; say(nm(t)); if (RULES.cc) { t.berserk = true; t.silenced = true; } ctx.lines.push({ from: c.pos, to: t.pos, cls: 'chain' }); ctx.pops.push({ hex: t.pos, text: 'berserk', cls: 'info' }); return true; }
+  }
+  return false;
+}
 function towerInRange(c, L) {
   if (!RULES.towerHp) return null;
   return sideTowers(other(c.team)).filter(T => dist(c.pos, T.pos) <= eff(c, L).range).sort((a, b) => a.hp - b.hp || dist(c.pos, a.pos) - dist(c.pos, b.pos))[0] || null;
@@ -579,10 +749,13 @@ function towerInRange(c, L) {
 function hitTower(c, T, L, ctx) {
   let d = eff(c, L).atk; if (roll(pct(c, 'crit', L))) { d *= 2; STATS.procs++; }
   T.hp -= d; ctx.lines.push({ from: c.pos, to: T.pos, cls: 'strike' }); ctx.pops.push({ hex: T.pos, text: '−' + d, cls: 'gold' }); ctx.notes.push(`→ ${T.side} tower −${d}`);
-  if (T.hp <= 0) { T.up = false; T.hp = 0; SOLID.delete(K(T.pos)); G.falls++; STATS.falls++; ctx.notes.push(`<span class="kill">the ${T.side} tower FALLS</span>${RULES.gate ? ` (nexus ${T.side} is open to siege)` : ''}`); }
+  if (T.hp <= 0) { T.up = false; T.hp = 0; SOLID.delete(K(T.pos)); G.falls++; STATS.falls++; if (RULES.gold) { G.gold[c.team] += RULES.towerGold; G.earned[c.team] += RULES.towerGold; } ctx.notes.push(`<span class="kill">the ${T.side} tower FALLS</span>${RULES.gate ? ` (nexus ${T.side} is open to siege)` : ''}`); }
 }
 function kill(t, src, notes) {
   if (t.dead) return;
+  if (t.revive) { t.revive = false; t.hp = 8; notes.push(`${nm(t)} is saved by the <em>Phoenix Feather</em> (8 HP)`); return; }
+  if (RULES.gold) { const g = RULES.killGold + t.bounty * RULES.shutdownGold; G.gold[other(t.team)] += g; G.earned[other(t.team)] += g; notes.push(`+${g} gold to ${other(t.team)}${t.bounty ? ' (shutdown)' : ''}`); }
+  clearStatus(t); t.charge = 0;
   t.dead = true; t.hp = 0; t.shield = 0; t.poison = 0; t.frozen = false; t.respawnAt = G.round + deathDelay(G.round); G.rk[other(t.team)]++;
   G.nexus[t.team] -= RULES.killTax; STATS.deaths++;
   if (src && src.team !== t.team) { src.kills++; src.bounty = Math.min(RULES.bountyCap, src.bounty + 1); STATS.kills[src.team]++; }
@@ -606,6 +779,7 @@ function finish() {
   G.phase = 'over'; STATS.matches++; STATS.rounds += G.round; if (G.winner === 'A') STATS.winsA++; if (G.winner === 'draw') STATS.draws++;
   for (const t of G.fights) { STATS.fw++; if (t === G.winner) STATS.fwWin++; }
   if (G.bigFight) { STATS.big++; if (G.bigFight.team === G.winner) STATS.bigWin++; }
+  if (G.goldAt5 && G.goldAt5.A !== G.goldAt5.B) { STATS.gl++; if ((G.goldAt5.A > G.goldAt5.B ? 'A' : 'B') === G.winner) STATS.glWin++; }
   // the swing right after a won fight: does the loser win the next round's fight, and how do the next round's kills split?
   for (let i = 0; i + 1 < G.byRound.length; i++) { const w = G.byRound[i].win; if (!w) continue; const nx = G.byRound[i + 1];
     STATS.after++; if (nx.win === other(w)) STATS.rev++; STATS.nkW += nx[w]; STATS.nkL += nx[other(w)];
@@ -619,25 +793,25 @@ function finish() {
 function startLevelUp() {
   const lv = RULES.levelRounds.indexOf(G.round);
   logLine('round', `Level ${lv + 1}: every champion grows`);
-  for (const t of ['A','B']) if (!G.humans.includes(t)) for (const c of G.champs.filter(x => x.team === t)) applyPick(c, aiLevelPick(c, lv));
-  if (!G.humans.length) { nextRound(); return; }
+  for (const t of ['A','B']) if (!G.humans.includes(t)) for (const c of G.champs.filter(x => x.team === t)) applyPick(c, aiLevelPick(c));
+  if (!G.humans.length) { openShop(); return; }
   G.phase = 'levelup'; G.levelQueue = { lv, picks: {} }; render();
 }
 function applyPick(c, k) {
-  const o = c.def.tree[c.level][k]; c.picks.push(k); c.level++;
-  if (o.proc) c.procs[o.proc] = Math.min(100, (c.procs[o.proc] || 0) + o.add);
+  const o = levelOptions(c)[k]; c.picks.push(k); c.level++;
+  if (o.proc && (RULES.cc || !CC_KEYS.includes(o.proc))) c.procs[o.proc] = Math.min(100, (c.procs[o.proc] || 0) + o.add);
   if (o.stat === 'atk') c.atk += o.add; if (o.stat === 'range') c.range += o.add; if (o.stat === 'dive') c.dive += o.add; if (o.stat === 'mend') c.mendAmt += o.add;
   if (o.stat === 'hp') { c.maxHp += o.add; if (!c.dead) c.hp += o.add; }
   if (o.aura) c.auraAmt += o.aura;
   logLine(c.team, `${nm(c)} reaches level ${c.level}: ${o.t}`);
 }
-function aiLevelPick(c, lv) { return rng() < 0.5 ? 0 : 1; }
+function aiLevelPick(c) { return rng() < 0.5 ? 0 : 1; }
 function humanLevelPick(c, k) { if (!G.levelQueue) return; G.levelQueue.picks[c.id] = k; render(); }
 function confirmLevels() {
   const q = G.levelQueue, mine = G.champs.filter(c => G.humans.includes(c.team));
   if (!mine.every(c => q.picks[c.id] != null)) return;
   for (const c of mine) applyPick(c, q.picks[c.id]);
-  G.phase = 'move'; nextRound();
+  G.levelQueue = null; openShop();
 }
 
 // ═════════════ AI: one move, judged on the expected outcome of the next pulse ═════════════
@@ -707,7 +881,9 @@ function render() {
   document.getElementById('m-round').textContent = G.round ? `${G.round}/${RULES.rounds}` : G.phase === 'opening' ? 'open' : '–';
   document.getElementById('m-nexA').textContent = Math.max(0, nx.A);
   document.getElementById('m-nexB').textContent = Math.max(0, nx.B);
-  document.getElementById('m-phase').textContent = { draft: 'Draft', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: 'Level up', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
+  document.getElementById('m-goldA').textContent = RULES.gold ? G.gold.A : '–';
+  document.getElementById('m-goldB').textContent = RULES.gold ? G.gold.B : '–';
+  document.getElementById('m-phase').textContent = { draft: 'Draft', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: 'Level up', openlevel: `Level up · ${G.levelQueue ? G.levelQueue.team : ''}`, shop: 'Shop', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
   document.getElementById('b-board').textContent = `Board: ${BOARDS[UI.board].name} (${BOARDS[UI.board].size})`;
   document.getElementById('b-aims').classList.toggle('on', UI.aims);
   document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
@@ -732,17 +908,21 @@ function renderRail(team) {
   for (const c0 of G.champs.filter(c => c.team === team)) {
     const c = view(c0), e = eff(c0, L);
     const canSel = human && ((G.phase === 'move' && G.turnTeam === team && !c0.dead) || (G.phase === 'opening' && G.openTurn === team && !G.opened.has(c0.id)));
-    const st = [c.frozen ? '<span class="chip st">frozen</span>' : '', c.poison ? `<span class="chip ps">poison ×${c.poison}</span>` : '', c.shield ? `<span class="chip st">shield ${c.shield}</span>` : '', c0.bounty ? `<span class="chip syn">bounty ★${c0.bounty}</span>` : ''].join('');
-    const lv = c0.level < 4 ? c0.def.tree[c0.level] : null;
-    const nextRound = RULES.levelRounds[c0.level];
+    const st = [...statusList(c).map(k => `<span class="chip st" style="color:${STATUS[k][2]}">${STATUS[k][0]} ${STATUS[k][1].split(':')[0]}</span>`), c.poison ? `<span class="chip ps">poison ×${c.poison}</span>` : '', c.shield ? `<span class="chip st">shield ${c.shield}</span>` : '', c0.bounty ? `<span class="chip syn">bounty ★${c0.bounty}</span>` : ''].join('');
+    const lv = levelOptions(c0);
+    const nextRound = RULES.levelRounds.find(r => r > G.round);
+    const sp = c0.def.special;
+    const spLine = RULES.specials && sp ? `<div class="special">★ <b>${esc(sp.name)}</b> after ${sp.n} attacks <span class="pips">${'●'.repeat(Math.min(sp.n, c.charge ?? c0.charge))}${'○'.repeat(Math.max(0, sp.n - (c.charge ?? c0.charge)))}</span>: ${esc(sp.text)}</div>` : '';
+    const itemLine = c0.items.length ? `<div class="stats">${c0.items.map(id => { const it = ITEMS.find(x => x.id === id); return `<span class="chip syn" title="${esc(it.t)}">${esc(it.name)}</span>`; }).join('')}</div>` : '';
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
       <div class="hd"><b>${esc(c0.def.name)}</b><span class="role">${c0.role} · ${c0.def.tag}</span><span class="lv">Lv ${c0.level}${c.dead ? ` · back end of round ${c0.respawnAt}` : ''}</span></div>
       <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div>
       <div class="stats">ATK <b class="${e.atk > c0.atk ? 'up' : ''}">${e.atk}</b> RNG <b class="${e.range > c0.range ? 'up' : ''}">${e.range}</b> INIT <b class="${e.init > c0.init ? 'up' : ''}">${e.init}</b>${e.armor ? ` ARM <b class="up">${e.armor}</b>` : ''}${c0.dive ? ` LEAP <b>${c0.dive}</b>` : ''}</div>
       <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[c0.def.target]}</span>${synText(c0)}${st}</div>
       <div class="procs">${procRows(c0, L)}</div>
+      ${spLine}${itemLine}
       ${G.phase === 'opening' ? `<div class="cards2">${c0.def.cards.map((_, i) => `<button data-card="${i}" ${canSel ? '' : 'disabled'}>Card ${i + 1}<small>${esc(cardText(c0, i))}</small></button>`).join('')}</div>` : ''}
-      ${lv ? `<div class="next">Next level (end of round ${nextRound}): <b>${esc(lv[0].t)}</b> or <b>${esc(lv[1].t)}</b></div>` : '<div class="next">Fully grown</div>'}
+      <div class="next">Next level${nextRound ? ` (end of round ${nextRound})` : ''}: <b>${esc(lv[0].t)}</b> or <b>${esc(lv[1].t)}</b></div>
       <details class="tree"><summary>Growth path</summary><ol>${c0.def.tree.map((opts, i) => `<li>${opts.map((o, k) => `<span class="${c0.picks[i] === k ? 'pick' : c0.picks[i] != null ? 'not' : ''}">${esc(o.t)}</span>`).join(' or ')}</li>`).join('')}</ol></details>
     </div>`);
     if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button,summary,details')) return; select(c0); });
@@ -823,8 +1003,9 @@ function renderBoard() {
       <rect x="${cx - HEX * .55}" y="${cy + HEX * .5}" width="${HEX * 1.1 * Math.max(0, c.hp) / c0.maxHp}" height="4" rx="1" fill="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>
       <circle class="inibg ${iniCls}" cx="${cx + HEX * .5}" cy="${cy - HEX * .45}" r="7.5"></circle>
       <text class="ini" x="${cx + HEX * .5}" y="${cy - HEX * .45}">${e.init}</text>
-      ${c.frozen ? `<text class="st" x="${cx - HEX * .52}" y="${cy - HEX * .38}" style="fill:var(--frost)">❄</text>` : ''}
-      ${c.poison ? `<text class="st" x="${cx - HEX * .52}" y="${cy + HEX * .2}" style="fill:var(--poison)">☠</text>` : ''}
+      ${statusList(c).map((k, j) => `<text class="st" x="${cx - HEX * .55}" y="${cy - HEX * .38 + j * 11}" style="fill:${STATUS[k][2]}">${STATUS[k][0]}</text>`).join('')}
+      ${RULES.specials && c0.def.special ? `<text class="st" x="${cx}" y="${cy - HEX * .72}" style="fill:var(--gold);font-size:8px;letter-spacing:1px">${'●'.repeat(Math.min(c0.def.special.n, c.charge))}${'○'.repeat(Math.max(0, c0.def.special.n - c.charge))}</text>` : ''}
+      ${c.poison ? `<text class="st" x="${cx + HEX * .55}" y="${cy + HEX * .2}" style="fill:var(--poison)">☠</text>` : ''}
       ${c0.level ? `<text class="st" x="${cx}" y="${cy + HEX * .95}" style="fill:var(--gold);font-size:9px">${'•'.repeat(c0.level)}</text>` : ''}
     </g>`);
     if (mine) { g.addEventListener('click', () => select(c0)); g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') select(c0); }); }
@@ -851,6 +1032,8 @@ function renderPrompt() {
     return; }
   if (G.phase === 'pulse') { const as = (G.actors || []).map(i => G.champs[i]); p.innerHTML = as.length ? `Pulse, initiative ${G.ev.init}: <b>${as.map(a => esc(nm(a))).join(', ')}</b> ${as.length > 1 ? 'act' : 'acts'}.` : 'Pulse: start of pulse.'; btn('Skip', skipAnim); return; }
   if (G.phase === 'levelup') { p.textContent = 'Level up: choose one option for each of your champions.'; return; }
+  if (G.phase === 'openlevel') { p.textContent = 'Opening level-up: pick one champion and how it grows.'; return; }
+  if (G.phase === 'shop') { p.textContent = `Shop: you have ${G.gold.A} gold.`; return; }
   if (G.phase === 'over') { p.textContent = G.winner === 'draw' ? 'A draw.' : `Team ${G.winner} wins in round ${G.round}.`; btn('Play again', () => newMatch('play'), 'primary'); btn('Watch AI vs AI', () => newMatch('watch')); }
 }
 function renderLog() { const el = document.getElementById('log'); el.innerHTML = G.log.slice(-120).map(l => `<div class="${l.cls}">${l.html}</div>`).join(''); el.scrollTop = el.scrollHeight; }
@@ -865,6 +1048,10 @@ function renderOverlay() {
       <h3>Chances</h3><p>Each action rolls the champion's chances: poison, frost, crit, double strike, splash, cleave, chain lightning, fireball, knockback, lifesteal, mend, shield. Defenders roll dodge and thorns. The numbers on the cards are the real odds, and they grow as champions level.</p>
       <h3>Synergy</h3><p>Standing beside the right ally raises initiative, attack, armour or every chance. Hover a destination before you move to see which links you gain (green) and lose (red), and who would attack whom.</p>
       <h3>Growth</h3><p>At the end of rounds ${RULES.levelRounds.join(', ')} every champion levels up and you pick one of two options. Each champion's growth path is fixed and shown on its card, so you can plan it. A kill gives the killer +1 attack (bounty), up to ${RULES.bountyCap}.</p>
+      <h3>Specials</h3><p>Every champion has a charged special shown as ★ on its card. Each attack adds a charge (the dots); after enough attacks, its next action is the special instead: an area slam, a line beam, a volley, a heal for the whole group, and so on.</p>
+      <h3>Control</h3><p>Some chances put statuses on the target: taunt (must attack the taunter), root (cannot be moved this round), blind (next attack misses), silence (next action rolls no chances), airborne (skips its next action and melee cannot reach it), berserk (next attack hits the nearest champion of either team, +50%). Frost also skips an action. A champion that just skipped an action is steadfast: it cannot be frozen or knocked up again until it has acted.</p>
+      <h3>Gold and items</h3><p>Each round every living champion earns ${RULES.income} gold for its team. A kill pays ${RULES.killGold}, plus ${RULES.shutdownGold} per bounty star on the victim; a tower pays ${RULES.towerGold}. After each round the shop offers three items. Each champion carries up to ${RULES.itemSlots}.</p>
+      <h3>Opening level-ups</h3><p>A team levels up one champion of its choice after playing its ${RULES.openLevels.join(', ')} opening card, so rosters start the fight already different.</p>
       <h3>Towers</h3><p>Each side has two towers with ${RULES.towerHp} HP. A tower hits an adjacent enemy for ${RULES.tower} at the start of each pulse. A champion with no enemy champion in range attacks an enemy tower in range instead. A fallen tower stays fallen and its hex becomes walkable.</p>
       <h3>After a fight</h3><p>The dead come back later as the game goes on: one round later in rounds 1 to ${RULES.respawnStep}, two rounds later in rounds ${RULES.respawnStep + 1} to ${2 * RULES.respawnStep}, and so on. A champion that was not hit in the previous pulse regains ${RULES.regen} HP at the start of the next one, so the winners of a fight recover while they push.</p>
       <h3>Winning</h3><p>Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}, but only once one of that nexus's towers has fallen. Poison ticks at the start of each pulse. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
@@ -873,13 +1060,33 @@ function renderOverlay() {
   if (G.phase === 'levelup' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
     const q = G.levelQueue, mine = G.champs.filter(c => G.humans.includes(c.team));
     const box = h(`<div class="box"><h2>Level ${q.lv + 1}: choose how each champion grows</h2><p>One option per champion. The whole path is on each champion's card, so you can plan ahead.</p></div>`);
-    for (const c of mine) { const opts = c.def.tree[c.level];
+    for (const c of mine) { const opts = levelOptions(c);
       const row = h(`<div class="lvl"><div class="who"><b>${esc(nm(c))}</b><span class="next">${c.role} · Lv ${c.level} → ${c.level + 1}</span></div>${opts.map((o, k) => `<button data-k="${k}" class="${q.picks[c.id] === k ? 'chosen' : ''}">${esc(o.t)}</button>`).join('')}</div>`);
       row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => humanLevelPick(c, +b.dataset.k)));
       box.appendChild(row); }
     const done = mine.every(c => q.picks[c.id] != null);
     const go = h(`<div class="row"><button class="primary" ${done ? '' : 'disabled'}>Continue to round ${G.round + 1}</button></div>`);
     go.querySelector('button').addEventListener('click', confirmLevels); box.appendChild(go);
+    ov.appendChild(box); return; }
+  if (G.phase === 'openlevel' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
+    const mine = G.champs.filter(c => c.team === G.levelQueue.team);
+    const box = h(`<div class="box"><h2>Opening level-up: one champion grows now</h2><p>You earned this by playing your ${['', 'first', 'second', 'third', 'fourth', 'fifth'][G.cardsPlayed[G.levelQueue.team]]} card. Pick one option on one champion. The others wait for the round level-ups.</p></div>`);
+    for (const c of mine) { const opts = levelOptions(c);
+      const row = h(`<div class="lvl"><div class="who"><b>${esc(nm(c))}</b><span class="next">${c.role} · Lv ${c.level} → ${c.level + 1}</span></div>${opts.map((o, k) => `<button data-k="${k}">${esc(o.t)}</button>`).join('')}</div>`);
+      row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => humanOpeningLevel(c, +b.dataset.k)));
+      box.appendChild(row); }
+    ov.appendChild(box); return; }
+  if (G.phase === 'shop') { ov.hidden = false; ov.innerHTML = '';
+    const team = G.humans[0], gold = G.gold[team], sel = G.shopSel ? ITEMS.find(x => x.id === G.shopSel) : null;
+    const box = h(`<div class="box"><div class="row"><h2>Shop: ${gold} gold</h2><button class="primary" id="shop-done" style="margin-left:auto">Continue to round ${G.round + 1}</button></div>
+      <p>Each round you get ${RULES.income} gold per living champion, ${RULES.killGold} per kill (more for ending a bounty streak) and ${RULES.towerGold} per tower. Pick an item, then the champion who carries it. Up to ${RULES.itemSlots} items each. Unspent gold carries over. Team B has ${G.gold.B} gold.</p>
+      <div class="shop">${G.offers[team].map(it => `<button class="item ${sel === it ? 'sel' : ''}" data-it="${it.id}" ${gold < it.cost ? 'disabled' : ''}><b>${esc(it.name)}</b><span>${esc(it.t)}</span><span class="cost">${it.cost} gold</span></button>`).join('') || '<p>Sold out for this round.</p>'}</div></div>`);
+    box.querySelectorAll('button[data-it]').forEach(b => b.addEventListener('click', () => { G.shopSel = b.dataset.it; render(); }));
+    box.querySelector('#shop-done').addEventListener('click', closeShop);
+    if (sel) { const row = h(`<div class="row"><span>Give ${esc(sel.name)} to:</span></div>`);
+      for (const c of G.champs.filter(x => x.team === team)) { const b = h(`<button ${freeSlot(c) ? '' : 'disabled'}>${esc(nm(c))} (${c.items.length}/${RULES.itemSlots})</button>`);
+        b.addEventListener('click', () => { if (buy(team, sel, c)) { G.shopSel = null; render(); } }); row.appendChild(b); }
+      box.appendChild(row); }
     ov.appendChild(box); return; }
   if (G.phase !== 'draft') { ov.hidden = true; ov.innerHTML = ''; return; }
   ov.hidden = false; ov.innerHTML = '';
@@ -917,7 +1124,7 @@ function simulate(n, board, seed = 1, rules = {}) {
   const S = STATS;
   const out = { rounds: +(S.rounds / n).toFixed(1), byNexus: Math.round(100 * ends.nexus / n) + '%', deaths: +(S.deaths / n).toFixed(1), winA: Math.round(100 * S.winsA / n) + '%',
     fightWinThenWin: S.fw ? Math.round(100 * S.fwWin / S.fw) + '%' : '-', bigFightThenWin: S.big ? Math.round(100 * S.bigWin / S.big) + '%' : '-', bigFightShare: Math.round(100 * S.big / n) + '%', towersFallen: +(S.falls / n).toFixed(1),
-    swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-' };
+    swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1) };
   HEADLESS = false; UI.board = keepB; STATS = keepS; Object.assign(RULES, keepR); AIP.push = keepP; delete RULES.aiPush; newMatch('play');
   return out;
 }

@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — GOLD, CONTROL, OPENING LEVELS, SPECIALS — 2026-11-17.** Owner asked for gold+items and more statuses, then opening level-ups (after cards 2/3/5) and charged secondary attacks; graphics parked (plan in `design/art/visual-pipeline-plan.md`). Built all four behind switches (D-071), measured alone and together: sides even, gold lead at round 5 → 81–84% win, control doesn't shorten pulses (3.1 s all on), ~15 specials per match. Human flow tested: opening level-up overlay, shop overlay, level-ups. Next: owner plays.
+
 **AUTO SKIRMISH — PACE — 2026-11-17.** Owner prefers the small board; worried a pulse after every move is long. Done (D-070): small board default; idle champions get no beat; fast/slow beat rhythm (0.22 s plain, 0.7 s chance/kill); same-initiative champions shown as one beat; "Pulse: once per round" switch with a longer preset (16 rounds, levels 3/5/8/11, siege 3, death step 4). Measured: pulse 3.9 s → 3.0 s; once-per-round preset 43 s of watching per match vs 47 s, 90% end by nexus, won fight → win 76%. Next: owner compares the two pulse modes.
 
 **AUTO SKIRMISH — HOLDING A WON FIGHT — 2026-11-17.** Owner: after a won team fight the respawned losers reset the advantage. Built (D-069): destructible side towers 15 HP gating nexus siege, death timer +1 round every 3 rounds, 3 HP regen when not hit last pulse, pushing AI (`AIP.push` 4); fight metrics in `simulate()` (swing-back, kills in the 2 rounds after a won fight, tower next round). Result on 1000 matches: swing-back 17%→7% (small), winners out-kill losers after a fight, 1/3 of won fights → tower next round, sides 48–49%. Watch: a won fight decides the match 82–84%. Next: owner plays.
