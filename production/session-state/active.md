@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — DESTROY THE NEXUS — 2026-11-17.** Owner: a nexus building you destroy should feel better on the small board. Built behind the "Nexus" switch (also on the draft screen) with preset nexus 30 / towers 10 / 14 rounds / death step 2 (D-072). Measured: first version stalled (25% destroyed); preset 84% destroyed, 10.8 rounds vs 7.7, sides 52%. Default still score rules. Not measured: destroy + once-per-round pulse together. Next: owner plays both.
+
 **AUTO SKIRMISH — GOLD, CONTROL, OPENING LEVELS, SPECIALS — 2026-11-17.** Owner asked for gold+items and more statuses, then opening level-ups (after cards 2/3/5) and charged secondary attacks; graphics parked (plan in `design/art/visual-pipeline-plan.md`). Built all four behind switches (D-071), measured alone and together: sides even, gold lead at round 5 → 81–84% win, control doesn't shorten pulses (3.1 s all on), ~15 specials per match. Human flow tested: opening level-up overlay, shop overlay, level-ups. Next: owner plays.
 
 **AUTO SKIRMISH — PACE — 2026-11-17.** Owner prefers the small board; worried a pulse after every move is long. Done (D-070): small board default; idle champions get no beat; fast/slow beat rhythm (0.22 s plain, 0.7 s chance/kill); same-initiative champions shown as one beat; "Pulse: once per round" switch with a longer preset (16 rounds, levels 3/5/8/11, siege 3, death step 4). Measured: pulse 3.9 s → 3.0 s; once-per-round preset 43 s of watching per match vs 47 s, 90% end by nexus, won fight → win 76%. Next: owner compares the two pulse modes.

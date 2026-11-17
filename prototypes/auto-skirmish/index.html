@@ -174,6 +174,7 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
     <button id="b-aims">Show targets</button>
     <button id="b-speed">Speed</button>
     <button id="b-pulse">Pulse</button>
+    <button id="b-nexus">Nexus</button>
     <button id="b-rules">Rules</button>
   </div>
 </header>
@@ -217,8 +218,12 @@ function setBoard(name) {
   BOARD = BOARDS[name] || BOARDS.field7;
   HEXES = BOARD.hexes; HEXSET = new Set(HEXES.map(K));
   TOWERS = BOARD.towers; HILLS = BOARD.hills; SOLID = new Set(TOWERS.map(K));
-  NEXUS = { A: BOARD.nexusA, B: BOARD.nexusA.map(mirror) };
-  START = { A: BOARD.startA, B: BOARD.startA.map(mirror) };
+  const core = [1, -3];   // the back-centre hex on both boards
+  const nexA = structure() ? [core] : BOARD.nexusA;
+  const startA = structure() ? BOARD.startA.map(h => same(h, core) ? [1, -2] : h) : BOARD.startA;
+  NEXUS = { A: nexA, B: nexA.map(mirror) };
+  START = { A: startA, B: startA.map(mirror) };
+  if (structure()) for (const t of ['A', 'B']) SOLID.add(K(NEXUS[t][0]));
 }
 const onBoard = h => HEXSET.has(K(h));
 const onHill = h => HILLS.some(x => same(x, h));
@@ -340,17 +345,25 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   gold: true, income: 1, killGold: 4, shutdownGold: 2, towerGold: 4, shopOffers: 3, itemSlots: 3,   // gold and the shop
   cc: true,           // control statuses: taunt, root, blind, silence, airborne, berserk (frost is always on)
   openLevels: [2, 3, 5],   // a team levels up one champion of its choice after playing its 2nd, 3rd and 5th opening card
-  specials: true };   // each champion's charged special: after N attacks its next action is the special
+  specials: true,     // each champion's charged special: after N attacks its next action is the special
+  nexusMode: 'score', // 'score' = deaths and siege at round end drain the nexus; 'structure' = a nexus building champions attack and destroy
+  nexusHp: 40,        // the building's HP in 'structure' mode
+  nexusShoots: true,
+  siegeAdjacent: true };// in 'structure' mode a champion standing beside an open enemy nexus attacks the nexus, not champions// in 'structure' mode the nexus hits an adjacent attacker at the start of each pulse, like a tower
 // "Pulse once per round" halves the fighting, so it plays longer matches (measured, see README).
 const ONE_PULSE = { onePulse: true, rounds: 16, levelRounds: [3, 5, 8, 11], respawnStep: 4, siege: 3 };
 const EVERY_MOVE = Object.fromEntries(Object.keys(ONE_PULSE).map(k => [k, RULES[k]]));
+// "Nexus: destroy it" needs weaker towers, more rounds and faster-growing death timers, or matches run out the clock (measured, see README).
+const DESTROY = { nexusMode: 'structure', nexusHp: 30, towerHp: 10, rounds: 14, respawnStep: 2 };
+const SCORE = Object.fromEntries(Object.keys(DESTROY).map(k => [k, RULES[k]]));
 const AIP = { push: 4 };   // AI aggression: how much it values standing near the enemy nexus (0 = cautious)
+const structure = () => RULES.nexusMode === 'structure';
 const deathDelay = r => 1 + Math.floor((r - 1) / RULES.respawnStep);
 
 // ═════════════ state ═════════════
 let G = null, HEADLESS = false;
 const UI = { board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
-const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, items: 0, specials: 0, skips: 0 });
+const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, items: 0, specials: 0, skips: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
 // pulse rhythm: plain hits blur past, chances and kills get a full beat
@@ -363,7 +376,7 @@ function newMatch(mode, seed) {
   setBoard(UI.board);
   G = { mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
         picks: { A: Array(5).fill(null), B: Array(5).fill(null) }, order: ['A','B','B','A','A','B','B','A','A','B'], di: 0, taken: new Set(),
-        champs: [], nexus: { A: RULES.nexus, B: RULES.nexus }, round: 0, token: 'B', turnTeam: null, turnNo: 0,
+        champs: [], nexus: structure() ? { A: RULES.nexusHp, B: RULES.nexusHp } : { A: RULES.nexus, B: RULES.nexus }, round: 0, token: 'B', turnTeam: null, turnNo: 0,
         log: [], winner: null, display: null, opened: new Set(), openTurn: 'A', levelQueue: null,
         towers: TOWERS.map(h => ({ pos: h, side: towerSide(h), hp: RULES.towerHp, up: true })), pulse: 0, gold: { A: 0, B: 0 }, earned: { A: 0, B: 0 }, offers: { A: [], B: [] }, shopSel: null, cardsPlayed: { A: 0, B: 0 }, rk: { A: 0, B: 0 }, fights: [], bigFight: null, falls: 0, byRound: [] };
   G.startSeed = G.seed;
@@ -561,7 +574,7 @@ function endRound() {
   G.byRound.push({ ...G.rk, win: G.rk.A - G.rk.B >= 2 ? 'A' : G.rk.B - G.rk.A >= 2 ? 'B' : null, tw: { A: sideTowers('A').length, B: sideTowers('B').length } });
   for (const t of ['A','B']) { if (G.rk[t] - G.rk[other(t)] >= 2) G.fights.push(t); if (!G.bigFight && G.rk[t] >= 3 && G.rk[other(t)] <= 1) G.bigFight = { team: t, round: G.round }; }
   G.rk = { A: 0, B: 0 };
-  for (const t of ['A','B']) { const foe = other(t); const n = alive(t).filter(c => nexusDist(foe, c.pos) <= 1).length;
+  if (!structure()) for (const t of ['A','B']) { const foe = other(t); const n = alive(t).filter(c => nexusDist(foe, c.pos) <= 1).length;
     if (n && RULES.gate && !nexusOpen(foe)) { logLine(t, `${n} at the gates of nexus ${foe}, but its towers stand: no damage`); continue; }
     if (n) { G.nexus[foe] -= n * RULES.siege; logLine(t, `${n} at the gates of nexus ${foe}: −${n * RULES.siege}`); } }
   for (const c of G.champs) if (c.dead && c.respawnAt <= G.round) {
@@ -632,6 +645,9 @@ function runPulse(mover) {
     for (const T of G.towers) { const side = T.side, tw = T.pos; if (!side || !T.up) continue;
       const foes = alive(other(side)).filter(c => dist(c.pos, tw) === 1).sort((a, b) => a.hp - b.hp);
       if (foes.length) { const v = foes[0]; v.hp -= RULES.tower; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + RULES.tower, cls: 'bad' }); notes.push(`a ${side} tower hits ${nm(v)} −${RULES.tower}`); if (v.hp <= 0) kill(v, null, notes); } }
+    if (structure() && RULES.nexusShoots) for (const side of ['A', 'B']) { const n = NEXUS[side][0];
+      const foes = alive(other(side)).filter(c => dist(c.pos, n) === 1).sort((a, b) => a.hp - b.hp);
+      if (foes.length) { const v = foes[0]; v.hp -= RULES.tower; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + RULES.tower, cls: 'bad' }); notes.push(`nexus ${side} hits ${nm(v)} −${RULES.tower}`); if (v.hp <= 0) kill(v, null, notes); } }
     if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); events.push({ actor: null, init: 99, special: true, pops, lines: [], snap: snap() }); } }
   const L0 = links();
   const order = alive().sort((a, b) => (eff(b, L0).init - eff(a, L0).init) || ((b.team === mover) - (a.team === mover)) || (ROLES.indexOf(a.role) - ROLES.indexOf(b.role)));
@@ -647,10 +663,13 @@ function runPulse(mover) {
       w.shield += RULES.shieldAmt; pops.push({ hex: w.pos, text: 'shield', cls: 'info' }); notes.push(`<em>Shield</em> ${nm(w)} +${RULES.shieldAmt} (${pct(c, 'shield', L)}%)`); STATS.procs++; }
     const ctx = { pops, lines, notes };
     const sp = c.def.special, ready = RULES.specials && sp && c.charge >= sp.n && !c.silenced && !c.berserk;
-    if (!(ready && castSpecial(c, L, ctx))) {
+    const sieging = structure() && RULES.siegeAdjacent && nexusOpen(other(c.team)) && dist(c.pos, NEXUS[other(c.team)][0]) === 1 && !c.berserk;
+    if (sieging) { hitNexus(c, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
+    else if (!(ready && castSpecial(c, L, ctx))) {
       const aim = aimOf(c, L);
       if (aim.leap) { lines.push({ from: c.pos, to: aim.leap, cls: 'leap' }); c.pos = aim.leap; notes.push(`leaps beside ${nm(aim.target)}`); }
       if (aim.target) { if (aim.target.team === c.team) notes.push('<em>berserk</em>'); attack(c, aim.target, links(), ctx, true); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
+      else if (nexusInRange(c, L)) { hitNexus(c, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
       else { const T = towerInRange(c, L); if (T) { hitTower(c, T, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); } }
     }
     c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false;   // one-action statuses are used up
@@ -742,6 +761,15 @@ function castSpecial(c, L, ctx) {
   }
   return false;
 }
+function nexusInRange(c, L) {
+  const foe = other(c.team);
+  return structure() && nexusOpen(foe) && dist(c.pos, NEXUS[foe][0]) <= eff(c, L).range;
+}
+function hitNexus(c, L, ctx) {
+  const foe = other(c.team); let d = eff(c, L).atk; if (roll(pct(c, 'crit', L))) { d *= 2; STATS.procs++; }
+  G.nexus[foe] -= d; STATS.nexusHits += d;
+  ctx.lines.push({ from: c.pos, to: NEXUS[foe][0], cls: 'strike' }); ctx.pops.push({ hex: NEXUS[foe][0], text: '−' + d, cls: 'gold' }); ctx.notes.push(`→ <em>nexus ${foe}</em> −${d}`);
+}
 function towerInRange(c, L) {
   if (!RULES.towerHp) return null;
   return sideTowers(other(c.team)).filter(T => dist(c.pos, T.pos) <= eff(c, L).range).sort((a, b) => a.hp - b.hp || dist(c.pos, a.pos) - dist(c.pos, b.pos))[0] || null;
@@ -757,9 +785,10 @@ function kill(t, src, notes) {
   if (RULES.gold) { const g = RULES.killGold + t.bounty * RULES.shutdownGold; G.gold[other(t.team)] += g; G.earned[other(t.team)] += g; notes.push(`+${g} gold to ${other(t.team)}${t.bounty ? ' (shutdown)' : ''}`); }
   clearStatus(t); t.charge = 0;
   t.dead = true; t.hp = 0; t.shield = 0; t.poison = 0; t.frozen = false; t.respawnAt = G.round + deathDelay(G.round); G.rk[other(t.team)]++;
-  G.nexus[t.team] -= RULES.killTax; STATS.deaths++;
+  if (!structure()) G.nexus[t.team] -= RULES.killTax; STATS.deaths++;
   if (src && src.team !== t.team) { src.kills++; src.bounty = Math.min(RULES.bountyCap, src.bounty + 1); STATS.kills[src.team]++; }
-  notes.push(`<span class="kill">${nm(t)} is KILLED</span> (nexus ${t.team} −${RULES.killTax}${src && src.team !== t.team && src.bounty ? `, ${nm(src)} bounty ★${src.bounty}` : ''})`);
+  const why = [structure() ? '' : `nexus ${t.team} −${RULES.killTax}`, src && src.team !== t.team && src.bounty ? `${nm(src)} bounty ★${src.bounty}` : ''].filter(Boolean).join(', ');
+  notes.push(`<span class="kill">${nm(t)} is KILLED</span>${why ? ` (${why})` : ''}`);
 }
 function checkWin() {
   if (G.winner) return true;
@@ -770,7 +799,10 @@ function checkWin() {
 }
 function finishOnScore() {
   const a = G.nexus.A, b = G.nexus.B;
-  G.winner = a > b ? 'A' : b > a ? 'B' : (STATS_k('A') > STATS_k('B') ? 'A' : STATS_k('B') > STATS_k('A') ? 'B' : 'draw');
+  const tb = t => structure() ? [G.nexus[t], sideTowers(t).length, G.earned[t]] : [G.nexus[t], STATS_k(t)];
+  const ta = tb('A'), tbB = tb('B'); let w = 'draw';
+  for (let i = 0; i < ta.length; i++) if (ta[i] !== tbB[i]) { w = ta[i] > tbB[i] ? 'A' : 'B'; break; }
+  G.winner = w;
   logLine('round', `After round ${RULES.rounds}: ${G.winner === 'draw' ? 'a draw' : 'team ' + G.winner + ' wins'} (nexus A ${Math.max(0, a)}, B ${Math.max(0, b)})`);
   finish();
 }
@@ -825,14 +857,16 @@ function evaluate(team) {
   const L = links(); let v = 0;
   for (const c of alive()) {
     const s = c.team === team ? 1 : -1, a = aimOf(c, L);
-    if (a.target) { const d = expDamage(c, a.target, L); v += s * (d + (d >= a.target.hp ? 6 : 0)); }
+    if (structure() && RULES.siegeAdjacent && nexusOpen(other(c.team)) && dist(c.pos, NEXUS[other(c.team)][0]) === 1) v += s * eff(c, L).atk * 2.5;
+    else if (a.target) { const d = expDamage(c, a.target, L); v += s * (d + (d >= a.target.hp ? 6 : 0)); }
+    else if (nexusInRange(c, L)) v += s * eff(c, L).atk * 2;
     else { const T = towerInRange(c, L);
       if (T) v += s * eff(c, L).atk * (RULES.gate && !nexusOpen(T.side) ? 1.2 : 0.8);
-      else { const goals = [...alive(other(c.team)).map(x => x.pos), ...(RULES.towerHp ? sideTowers(other(c.team)).map(t => t.pos) : [])];
+      else { const goals = [...alive(other(c.team)).map(x => x.pos), ...(RULES.towerHp ? sideTowers(other(c.team)).map(t => t.pos) : []), ...(structure() && nexusOpen(other(c.team)) ? [NEXUS[other(c.team)][0]] : [])];
         v -= s * 0.6 * Math.max(0, Math.min(...goals.map(g => dist(g, c.pos)), 6) - eff(c, L).range); } }
     v += s * (eff(c, L).init - c.init) * 0.4;
     if (AIP.push && c.team === team) v += AIP.push * (6 - Math.min(6, nexusDist(other(c.team), c.pos))) / 6;
-    if (nexusDist(other(c.team), c.pos) <= 1 && nexusOpen(other(c.team))) v += s * 3;
+    if (!structure() && nexusDist(other(c.team), c.pos) <= 1 && nexusOpen(other(c.team))) v += s * 3;
     v += s * (pct(c, 'mend', L) / 100) * 3 + s * (pct(c, 'shield', L) / 100) * 2;
   }
   for (const l of L) v += (l.from.team === team ? 1 : -1) * (l.kind === 'armor' ? 1.2 : 0.8);
@@ -887,6 +921,7 @@ function render() {
   document.getElementById('b-board').textContent = `Board: ${BOARDS[UI.board].name} (${BOARDS[UI.board].size})`;
   document.getElementById('b-aims').classList.toggle('on', UI.aims);
   document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
+  document.getElementById('b-nexus').textContent = structure() ? 'Nexus: destroy it' : 'Nexus: score';
   document.getElementById('b-pulse').textContent = RULES.onePulse ? 'Pulse: once per round' : 'Pulse: after every move';
   renderRail('A'); renderRail('B'); renderBoard(); renderPrompt(); renderLog(); renderStrip(); renderOverlay();
 }
@@ -963,6 +998,11 @@ function renderBoard() {
     if (T && !T.up) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy}">rubble</text>`));
     else if (SOLID.has(k)) { svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - (T && T.side && RULES.towerHp ? 4 : 0)}">♜</text>`));
       if (T && T.side && RULES.towerHp) { svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX}" height="4" rx="1" fill="#0b0f16"></rect>`)); svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX * T.hp / RULES.towerHp}" height="4" rx="1" fill="${T.side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); } }
+    else if ((isNexus('A', x) || isNexus('B', x)) && structure()) { const side = isNexus('A', x) ? 'A' : 'B', hp = Math.max(0, (G.display ? G.display.nexus : G.nexus)[side]);
+      svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - 5}" style="fill:${side === 'A' ? 'var(--a)' : 'var(--b)'}">◆</text>`));
+      svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .2}">NEXUS${nexusOpen(side) ? '' : ' 🔒'}</text>`));
+      svg.appendChild(sv(`<rect x="${cx - HEX * .6}" y="${cy + HEX * .42}" width="${HEX * 1.2}" height="5" rx="1" fill="#0b0f16"></rect>`));
+      svg.appendChild(sv(`<rect x="${cx - HEX * .6}" y="${cy + HEX * .42}" width="${HEX * 1.2 * hp / RULES.nexusHp}" height="5" rx="1" fill="${side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); }
     else if (isNexus('A', x) || isNexus('B', x)) svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .62}">NEXUS</text>`));
     if (onHill(x)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * .6}" style="fill:var(--gold)">▲ hill</text>`));
   }
@@ -1054,7 +1094,7 @@ function renderOverlay() {
       <h3>Opening level-ups</h3><p>A team levels up one champion of its choice after playing its ${RULES.openLevels.join(', ')} opening card, so rosters start the fight already different.</p>
       <h3>Towers</h3><p>Each side has two towers with ${RULES.towerHp} HP. A tower hits an adjacent enemy for ${RULES.tower} at the start of each pulse. A champion with no enemy champion in range attacks an enemy tower in range instead. A fallen tower stays fallen and its hex becomes walkable.</p>
       <h3>After a fight</h3><p>The dead come back later as the game goes on: one round later in rounds 1 to ${RULES.respawnStep}, two rounds later in rounds ${RULES.respawnStep + 1} to ${2 * RULES.respawnStep}, and so on. A champion that was not hit in the previous pulse regains ${RULES.regen} HP at the start of the next one, so the winners of a fight recover while they push.</p>
-      <h3>Winning</h3><p>Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}, but only once one of that nexus's towers has fallen. Poison ticks at the start of each pulse. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
+      <h3>Winning</h3><p>${structure() ? `<b>Nexus: destroy it.</b> Each nexus is one building with ${RULES.nexusHp} HP at the back of its side. It is locked until one of its side towers has fallen; then a champion with no enemy champion in range attacks it. ${RULES.nexusShoots ? `It hits an adjacent enemy for ${RULES.tower} at the start of each pulse. ` : ''}Deaths do not damage it. Destroy it to win; at the round limit the higher nexus HP wins, then more towers standing, then more gold earned.</p><p>The rules below apply with the other switch, <b>Nexus: score</b>:</p><p>` : ''}Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}, but only once one of that nexus's towers has fallen. Poison ticks at the start of each pulse. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
     box.querySelector('#close-rules').addEventListener('click', () => { UI.rules = false; render(); });
     ov.appendChild(box); return; }
   if (G.phase === 'levelup' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
@@ -1092,7 +1132,7 @@ function renderOverlay() {
   ov.hidden = false; ov.innerHTML = '';
   const team = G.order[G.di], human = G.humans.includes(team);
   const box = h(`<div class="box"><div class="row"><h2>Draft: ${human ? 'your pick' : 'the AI picks'} (team ${team})</h2><div class="row" style="margin-left:auto">
-      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="rules">Rules</button></div></div>
+      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="nexus">${structure() ? 'Nexus: destroy it' : 'Nexus: score'} ⇄</button><button data-m="pulse">${RULES.onePulse ? 'Pulse: once per round' : 'Pulse: after every move'} ⇄</button><button data-m="rules">Rules</button></div></div>
     <p>Snake order A B B A A B B A A B, one champion per role. Look at tags: an aura helps every ally beside its owner, a bond needs a neighbour with the named tag.</p><div class="dcols"></div></div>`);
   const cols = box.querySelector('.dcols');
   for (const role of ROLES) { const col = h(`<div class="dcol"><h3>${role}</h3></div>`);
@@ -1109,7 +1149,7 @@ function renderOverlay() {
       col.appendChild(card); }
     cols.appendChild(col); }
   box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m;
-    if (m === 'rules') { UI.rules = true; render(); } else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
+    if (m === 'rules') { UI.rules = true; render(); } else if (m === 'nexus') document.getElementById('b-nexus').click(); else if (m === 'pulse') document.getElementById('b-pulse').click(); else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
   ov.appendChild(box);
 }
 
@@ -1121,7 +1161,7 @@ function simulate(n, board, seed = 1, rules = {}) {
   HEADLESS = true; UI.board = board || keepB;
   const ends = { nexus: 0, time: 0 };
   for (let i = 0; i < n; i++) { newMatch('watch', seed + i * 7919); if (G.round >= RULES.rounds && G.nexus.A > 0 && G.nexus.B > 0) ends.time++; else ends.nexus++; }
-  const S = STATS;
+  const S = STATS; window.STATS_last = { ...STATS };
   const out = { rounds: +(S.rounds / n).toFixed(1), byNexus: Math.round(100 * ends.nexus / n) + '%', deaths: +(S.deaths / n).toFixed(1), winA: Math.round(100 * S.winsA / n) + '%',
     fightWinThenWin: S.fw ? Math.round(100 * S.fwWin / S.fw) + '%' : '-', bigFightThenWin: S.big ? Math.round(100 * S.bigWin / S.big) + '%' : '-', bigFightShare: Math.round(100 * S.big / n) + '%', towersFallen: +(S.falls / n).toFixed(1),
     swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1) };
@@ -1135,6 +1175,7 @@ document.getElementById('b-watch').addEventListener('click', () => newMatch('wat
 document.getElementById('b-board').addEventListener('click', () => { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); });
 document.getElementById('b-aims').addEventListener('click', () => { UI.aims = !UI.aims; render(); });
 document.getElementById('b-speed').addEventListener('click', () => { UI.speed = UI.speed === 'normal' ? 'fast' : 'normal'; render(); });
+document.getElementById('b-nexus').addEventListener('click', () => { Object.assign(RULES, structure() ? SCORE : DESTROY); newMatch(G.mode); });
 document.getElementById('b-pulse').addEventListener('click', () => { Object.assign(RULES, RULES.onePulse ? EVERY_MOVE : ONE_PULSE); newMatch(G.mode); });
 document.getElementById('b-rules').addEventListener('click', () => { UI.rules = true; render(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.rules) { UI.rules = false; render(); } else if (UI.sel != null) { UI.sel = null; UI.hover = null; render(); } } });

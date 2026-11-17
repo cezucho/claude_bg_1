@@ -67,6 +67,15 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   Blizzard, Volley, Cannon Blast, Sanctuary, Mind Twist). Switches in `RULES`: `gold`, `cc`,
   `openLevels`, `specials`.
 
+- **Nexus: destroy it (switch, added 2026-11-17, D-072).** The nexus becomes one building at the
+  back centre of each side (Mid starts one hex in front of it on Field 7). It is locked until one
+  of its side towers has fallen; then a champion standing beside it attacks it, and a champion
+  with no enemy champion in range attacks it from range. It hits an adjacent attacker for 3 at
+  the start of each pulse. Deaths and round-end siege no longer damage it. At the round limit:
+  more nexus HP, then more towers standing, then more gold earned. The switch also sets nexus
+  30 HP, towers 10 HP, 14 rounds, and a death timer that grows every 2 rounds. The switches are
+  on the draft screen as well as the toolbar.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.
@@ -146,3 +155,29 @@ per row, small board, pulse after every move:
   everything on, one every three pulses. Skipped turns are now quick beats; a pulse with
   everything on is 3.1 s against 2.8 s, because more beats now carry a chance or a special.
 - Sides stay even (49–51%) in every configuration.
+
+**Measurement: destroying the nexus (2026-11-17).** Small board, pulse after every move, all
+other features on; 600 matches per row (1000 for the last four):
+
+| Rules | Ended by a destroyed nexus | Rounds | A wins | Won fight wins the match |
+|---|---|---|---|---|
+| Score (current default) | 88% | 7.7 | 49% | 83% |
+| Destroy, nexus 40, towers 15, 10 rounds | 25% | 9.9 | 53% | 84% |
+| Same, plus "beside the nexus attacks it" | 27% | 9.8 | 54% | 83% |
+| Same, nexus does not shoot | 37% | 9.7 | 52% | 84% |
+| Same, 14 rounds | 67% | 12.4 | 54% | 86% |
+| Towers 10, nexus 30, 14 rounds | 74% | 11.5 | 52% | 84% |
+| Towers 10, nexus 25, 14 rounds | 78% | 11.1 | 51% | 84% |
+| Towers 10, nexus 30, 16 rounds | 85% | 11.8 | 52% | 84% |
+| **Towers 10, nexus 30, 14 rounds, death timer step 2 (chosen)** | **84%** | **10.8** | **52%** | **85%** |
+
+- First try stalled: a push spends its pulses fighting the defenders who respawn beside their
+  nexus, and champions always preferred champions as targets. "A champion beside an open nexus
+  attacks it" makes standing at the gates a deliberate siege move, but on its own it barely
+  helped.
+- The real bottleneck was time: a side tower must fall before the nexus opens, and with 15-HP
+  towers and 10 rounds there was rarely time left. Weaker towers, a longer limit and death
+  timers that grow faster (a won late fight leaves the defenders down long enough) fixed it.
+- Matches are about three rounds longer than with the score rules (10.8 against 7.7).
+- Not measured: destroy mode together with "Pulse: once per round". Each switch applies its own
+  round limit, so combining them uses whichever was switched last.
