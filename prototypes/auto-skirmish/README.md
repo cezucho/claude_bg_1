@@ -111,6 +111,18 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   briefs in `assets/data/art/skirmish_sprites.json`; raw images and prompts are in
   `production/art_review/skirmish/`.
 
+- **Board turn, effects, middle towers (added 2026-11-18, D-076).** In the art view the board is
+  turned so team A's nexus is bottom left and B's top right (champions advance on the diagonal),
+  and hexes are 1.4x larger relative to the sprites. Every action has a simple code-drawn effect:
+  a blade slash for melee, a bolt in flight for ranged, an orange orb for fire, violet lightning
+  for chains and beams, rising crosses for heals, a bubble for shields, an ice burst for frost, a
+  rune circle (plus a shockwave for area specials) for specials. Statuses show on the champion:
+  poison glow and bubbles, an ice block, a shield bubble, a vine ring for root, a cloud for blind,
+  a red glow for berserk, lifted when airborne; the icons are larger. Each team now has **one
+  tower on the middle line of its half** instead of two side towers (one of each team stood next
+  to the Dragon), and the neutral centre tower is gone. Measured (300 matches): sides 50%,
+  Dragon taken 0.84 times per match (was 0.62), comebacks 20% (was 14%).
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.

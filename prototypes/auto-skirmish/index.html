@@ -129,6 +129,35 @@ svg#board.art { max-height: 70vh; }
 .foot { fill: #00000055; pointer-events: none; }
 .pt { width: 34px; height: 34px; object-fit: cover; object-position: 50% 0; border-radius: 50%; background: #2a3448; border: 1px solid var(--line); flex: none; align-self: center; }
 .card .hd:has(.pt) { align-items: center; }
+.art .pop { font-size: 17px; }
+/* Effects (D-076): one look per kind of action, all code-drawn */
+.fx { pointer-events: none; }
+.fx * { transform-box: fill-box; transform-origin: center; }
+.slash { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 60; stroke-dashoffset: 60; filter: drop-shadow(0 0 3px #fff8); animation: slash .26s ease-out forwards; }
+@keyframes slash { 60% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+.proj { animation: fly .2s ease-in both; }
+@keyframes fly { from { transform: translate(var(--fx), var(--fy)); } 90% { opacity: 1; } to { transform: translate(0, 0); opacity: 0; } }
+.burst { animation: burst .32s ease-out .14s both; }
+@keyframes burst { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+.bolt { fill: none; stroke-width: 3; stroke-linejoin: round; filter: drop-shadow(0 0 4px currentColor); animation: flicker .3s steps(3) both; }
+@keyframes flicker { 0% { opacity: 1; } 50% { opacity: .35; } 100% { opacity: 0; } }
+.ring { fill: none; stroke-width: 4; animation: ring .55s ease-out both; }
+@keyframes ring { from { transform: scale(.15); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+.rune { animation: rune .6s ease-out both; }
+@keyframes rune { 0% { opacity: 0; transform: scale(.6); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.15); } }
+.rise { animation: rise .6s ease-out both; }
+@keyframes rise { from { transform: translateY(6px); opacity: 1; } to { transform: translateY(-22px); opacity: 0; } }
+.bubble-in { animation: bubblein .4s ease-out both; }
+@keyframes bubblein { from { transform: scale(.4); opacity: 0; } 60% { opacity: 1; } to { transform: scale(1); opacity: .8; } }
+/* Statuses shown on the champion */
+.stv { pointer-events: none; }
+.pbub { fill: #8fdc6e; animation: pbub 1.3s ease-in infinite; }
+@keyframes pbub { from { transform: translateY(0); opacity: .9; } to { transform: translateY(-26px); opacity: 0; } }
+.ice { fill: #cdeeff55; stroke: #e9f8ff; stroke-width: 1.5; }
+.shieldb { fill: #9fd8ff22; stroke: #9fd8ffcc; stroke-width: 1.5; }
+.roots { fill: none; stroke: #5f8f3a; stroke-width: 3; stroke-dasharray: 3 4; }
+.blindc { fill: #2b2f3acc; }
+.art .tok .st { font-size: 15px; }
 .pop { font-family: var(--display); font-weight: 700; font-size: 14px; text-anchor: middle; paint-order: stroke; stroke: #0b0f16; stroke-width: 3px; pointer-events: none; }
 .pop.bad { fill: var(--bad); } .pop.good { fill: var(--good); } .pop.info { fill: var(--frost); } .pop.gold { fill: var(--gold); }
 
@@ -229,14 +258,19 @@ const frame = (team, v) => team === 'A' ? v : mirror(v);
 const other = t => t === 'A' ? 'B' : 'A';
 const hexagon = n => { const o = []; for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) if (Math.abs(q + r) <= n) o.push([q, r]); return o; };
 const HEX = 30, SQ3 = Math.sqrt(3);
-const isoK = () => UI.art ? .62 : 1;   // art view: the board is squashed into an isometric look
-const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r * isoK()];
+// Art view (D-076): the board is turned 30 degrees, so team A's nexus sits bottom left and B's top right and
+// champions advance on the diagonal; then squashed into an isometric look. Hexes are drawn 1.4x larger than
+// the sprites' unit, which leaves room around the champions.
+const isoK = () => UI.art ? .6 : 1;
+const ROT = Math.PI / 6, HS = () => UI.art ? 1.4 : 1;
+const proj = (x, y) => UI.art ? [x * Math.cos(ROT) - y * Math.sin(ROT), (x * Math.sin(ROT) + y * Math.cos(ROT)) * isoK()] : [x, y];
+const px = (q, r) => proj(HEX * HS() * SQ3 * (q + r / 2), -HEX * HS() * 1.5 * r);
 const BOARDS = {
   field7: { name: 'Field 7', size: 59,
     hexes: [[-2,-3],[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3],[4,-3],[5,-3],[-3,-2],[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2],[4,-2],[5,-2],[-3,-1],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[3,-1],[4,-1],[-4,0],[-3,0],[-2,0],[-1,0],[0,0],[1,0],[2,0],[3,0],[4,0],[-4,1],[-3,1],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,1],[-5,2],[-4,2],[-3,2],[-2,2],[-1,2],[0,2],[1,2],[2,2],[3,2],[-5,3],[-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],[2,3]],
-    towers: [[0,0],[-2,-1],[3,-1],[2,1],[-3,1]], hills: [[-1,-1],[2,-1],[-4,0],[4,0],[-2,1],[1,1]],
+    towers: [[0,-1],[-1,1]], hills: [[-1,-1],[2,-1],[-4,0],[4,0],[-2,1],[1,1]],
     nexusA: [[0,-3],[1,-3],[2,-3]], startA: [[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3]] },
-  small: { name: 'Small', size: 37, hexes: hexagon(3), towers: [[0,0],[-2,-1],[2,-1],[-3,1],[1,1]], hills: [[-3,0],[3,0]],
+  small: { name: 'Small', size: 37, hexes: hexagon(3), towers: [[0,-1],[-1,1]], hills: [[-3,0],[3,0]],
     nexusA: [[0,-3],[1,-3],[2,-3]], startA: [[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2]] },
 };
 let BOARD, HEXES, HEXSET, TOWERS, HILLS, SOLID, NEXUS, START;
@@ -725,10 +759,10 @@ function runPulse(mover) {
     if (roll(pct(c, 'shield', L))) { const w = [c, ...alive(c.team).filter(a => a !== c && dist(a.pos, c.pos) === 1)].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
       w.shield += RULES.shieldAmt; pops.push({ hex: w.pos, text: 'shield', cls: 'info' }); notes.push(`<em>Shield</em> ${nm(w)} +${RULES.shieldAmt} (${pct(c, 'shield', L)}%)`); STATS.procs++; }
     const ctx = { pops, lines, notes };
-    const sp = c.def.special, ready = RULES.specials && sp && c.charge >= sp.n && !c.silenced && !c.berserk;
+    const sp = c.def.special, ready = RULES.specials && sp && c.charge >= sp.n && !c.silenced && !c.berserk; let cast = null;
     const sieging = structure() && RULES.siegeAdjacent && nexusOpen(other(c.team)) && dist(c.pos, NEXUS[other(c.team)][0]) === 1 && !c.berserk;
     if (sieging) { hitNexus(c, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
-    else if (!(ready && castSpecial(c, L, ctx))) {
+    else if (!(ready && castSpecial(c, L, ctx) && (cast = sp.fx))) {
       const aim = aimOf(c, L);
       if (aim.leap) { lines.push({ from: c.pos, to: aim.leap, cls: 'leap' }); c.pos = aim.leap; notes.push(`leaps beside ${nm(aim.target)}`); }
       if (aim.target) { if (aim.target.team === c.team) notes.push('<em>berserk</em>'); attack(c, aim.target, links(), ctx, true); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
@@ -739,7 +773,7 @@ function runPulse(mover) {
     c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false;   // one-action statuses are used up
     const head = `${nm(c)} [${eff(c, L).init}]`;
     logLine(c.team, `${head}${notes.length ? ': ' + notes.join(' · ') : ' has nobody in range'}`);
-    if (pops.length || lines.length) events.push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, snap: snap() });   // an idle champion gets no beat
+    if (pops.length || lines.length) events.push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, fx: cast ? [{ id: c.id, fx: cast }] : [], snap: snap() });   // an idle champion gets no beat
     if (G.nexus.A <= 0 || G.nexus.B <= 0) break;
   }
   return events;
@@ -1020,8 +1054,8 @@ function aiTurn() {
 function toBeats(events) {
   const out = [];
   for (const e of events) { const last = out[out.length - 1];
-    if (last && e.actor != null && last.actors.length && last.init === e.init) { last.pops.push(...e.pops); last.lines.push(...e.lines); last.snap = e.snap; last.actors.push(e.actor); last.special = last.special || e.special; }
-    else out.push({ ...e, pops: [...e.pops], lines: [...e.lines], actors: e.actor != null ? [e.actor] : [] }); }
+    if (last && e.actor != null && last.actors.length && last.init === e.init) { last.pops.push(...e.pops); last.lines.push(...e.lines); last.fx.push(...(e.fx || [])); last.snap = e.snap; last.actors.push(e.actor); last.special = last.special || e.special; }
+    else out.push({ ...e, pops: [...e.pops], lines: [...e.lines], fx: [...(e.fx || [])], actors: e.actor != null ? [e.actor] : [] }); }
   return out;
 }
 function animate(events, done) {
@@ -1109,7 +1143,7 @@ function select(c) {
   if (!G.humans.includes(c.team) || c.dead) return;
   if (G.phase === 'move' && G.turnTeam === c.team) { UI.sel = UI.sel === c.id ? null : c.id; UI.hover = null; render(); }
 }
-function hexPts(cx, cy) { const p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); p.push(`${(cx + HEX * .95 * Math.cos(a)).toFixed(1)},${(cy + HEX * .95 * Math.sin(a) * isoK()).toFixed(1)}`); } return p.join(' '); }
+function hexPts(cx, cy) { const p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30), [ox, oy] = proj(HEX * HS() * .97 * Math.cos(a), HEX * HS() * .97 * Math.sin(a)); p.push(`${(cx + ox).toFixed(1)},${(cy + oy).toFixed(1)}`); } return p.join(' '); }
 function renderBoard() {
   const svg = document.getElementById('board'); svg.innerHTML = '';
   const pts = [...HEXES, ...((G && G.towers) || []).filter(t => t.kind === 'base').map(t => t.pos)].map(x => px(...x)), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = HEX * 1.2;
@@ -1122,7 +1156,7 @@ function renderBoard() {
   const hitHexes = new Set(G.display && G.ev ? G.ev.pops.filter(p => p.cls === 'bad' || p.cls === 'gold').map(p => K(p.hex)) : []);
   const sprite = (name, cx, foot, hgt, cls = '') => `<image class="spr ${cls}" href="art/${name}.png" x="${cx - hgt / 2}" y="${foot - hgt}" width="${hgt}" height="${hgt}" preserveAspectRatio="xMidYMax meet"></image>`;
   const footRing = (cx, cy, col) => `<ellipse class="foot" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .5}" ry="${HEX * .2}" ${col ? `style="fill:${col}"` : ''}></ellipse>`;
-  if (ART) for (const x of [...HEXES].sort((a, b) => px(...a)[1] - px(...b)[1])) { const [cx, cy] = px(...x); svg.appendChild(sv(`<polygon class="hexside" points="${hexPts(cx, cy + 7)}"></polygon>`)); }
+  if (ART) for (const x of [...HEXES].sort((a, b) => px(...a)[1] - px(...b)[1])) { const [cx, cy] = px(...x); svg.appendChild(sv(`<polygon class="hexside" points="${hexPts(cx, cy + 9)}"></polygon>`)); }
   const sel = UI.sel != null ? G.champs[UI.sel] : null;
   const reach = G.phase === 'move' && sel ? moveTargets(sel) : [];
   const reachSet = new Set(reach.map(K));
@@ -1175,8 +1209,8 @@ function renderBoard() {
     svg.appendChild(sv(`<path class="aim ${c.team} ${hot ? 'hot' : ''}" d="M${x1} ${y1} Q${mx} ${my} ${x2 - (x2 - x1) * .18} ${y2 - (y2 - y1) * .18}" marker-end="url(#ar)"></path>`)); }
   // opening preview arrows
   for (const m of previewSteps) { const [x1, y1] = px(...m.from), [x2, y2] = px(...m.to); svg.appendChild(sv(`<line class="${m.blocked ? 'link lost' : 'strike'}" x1="${x1}" y1="${y1}" x2="${x1 + (x2 - x1) * .7}" y2="${y1 + (y2 - y1) * .7}" ${m.blocked ? '' : 'marker-end="url(#ar)" style="stroke:var(--gold);stroke-width:2"'}></line>`)); }
-  // event lines (strikes) during the pulse
-  if (G.display && G.ev) for (const ln of G.ev.lines) { const [x1, y1] = px(...ln.from), [x2, y2] = px(...ln.to);
+  // event lines (strikes) during the pulse; the art view draws effects instead, after the sprites
+  if (G.display && G.ev && !ART) for (const ln of G.ev.lines) { const [x1, y1] = px(...ln.from), [x2, y2] = px(...ln.to);
     const col = ln.cls === 'fire' ? 'var(--fire)' : ln.cls === 'chain' ? 'var(--arcane)' : ln.cls === 'leap' ? 'var(--gold)' : '#fff';
     svg.appendChild(sv(`<line class="strike" x1="${x1}" y1="${y1}" x2="${x2 - (x2 - x1) * .25}" y2="${y2 - (y2 - y1) * .25}" style="stroke:${col}" marker-end="url(#ar)"></line>`)); }
   // stance preview: where your champions will step at the start of the pulse
@@ -1221,6 +1255,7 @@ function renderBoard() {
     else if (sel && reachSet.has(K(c.pos))) g.addEventListener('click', () => doMove(sel, c.pos));
     put(cy, g); }
   depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
+  if (ART && G.display && G.ev) svg.appendChild(sv(`<g>${effects(G.ev)}</g>`));
   // pops during the pulse
   if (G.display && G.ev) { const stack = {}; for (const p of G.ev.pops) { const k = K(p.hex), n = stack[k] = (stack[k] || 0) + 1, [cx, cy] = px(...p.hex);
     svg.appendChild(sv(`<text class="pop ${p.cls}" x="${cx}" y="${cy - HEX * (ART ? 1.6 : .8) - (n - 1) * 13}">${esc(p.text)}</text>`)); } }
@@ -1228,21 +1263,70 @@ function renderBoard() {
   if (prevAll) G.champs.forEach((x, i) => x.pos = prevAll[i]);
   if (prevPos) sel.pos = prevPos;
 }
+
+// ═════════════ effects (art view, D-076) ═════════════
+// One look per kind of action: melee = a blade slash on the target; ranged = a bolt flying to it; fire = an
+// orange orb that bursts; chain/beam = a violet lightning line; heal = green crosses rising; shield = a bubble;
+// frost = an icy burst; a special = a rune circle under the caster, plus a shockwave for area specials.
+const FXCOL = { slam: '#e7b75a', quake: '#d09a5a', wildfire: '#ff9b54', execute: '#ff6b6b', lance: '#c49bff', blizzard: '#9fd8ff', volley: '#f3f6fb', cannon: '#ff9b54', sanctuary: '#ffe08a', twist: '#c49bff' };
+const FXAREA = { slam: 1, quake: 2, sanctuary: 2, blizzard: 1.2, cannon: 1.2, wildfire: 1.2 };
+const BODY = () => HEX * .75;   // height of a champion's chest above its hex centre
+function effects(ev) {
+  let out = '';
+  const at = h => { const [x, y] = px(...h); return [x, y - BODY()]; };
+  ev.lines.forEach((ln, i) => {
+    const [x1, y1] = at(ln.from), [x2, y2] = at(ln.to), dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+    if (ln.cls === 'leap') { out += `<path class="fx bolt" style="color:var(--gold);stroke:var(--gold);stroke-dasharray:4 4" d="M${x1} ${y1 + BODY()} Q${(x1 + x2) / 2} ${Math.min(y1, y2) - HEX} ${x2} ${y2 + BODY()}"></path>`; return; }
+    if (ln.cls === 'chain') { let d = `M${x1} ${y1}`; const n = 6; for (let k = 1; k < n; k++) { const t = k / n, j = (k % 2 ? 1 : -1) * 6; d += ` L${x1 + dx * t - uy * j} ${y1 + dy * t + ux * j}`; } d += ` L${x2} ${y2}`;
+      out += `<path class="fx bolt" style="color:#c49bff;stroke:#e2ccff" d="${d}"></path><circle class="fx burst" cx="${x2}" cy="${y2}" r="9" fill="#c49bff88"></circle>`; return; }
+    const melee = dist(ln.from, ln.to) <= 1 && ln.cls !== 'fire';
+    if (melee) { const s = x2 >= x1 ? 1 : -1;
+      out += `<path class="fx slash" d="M${x2 - 13 * s} ${y2 - 14} Q${x2 + 6 * s} ${y2 - 8} ${x2 + 11 * s} ${y2 + 12}"></path><circle class="fx burst" cx="${x2}" cy="${y2}" r="6" fill="#ffffffaa"></circle>`; return; }
+    const fire = ln.cls === 'fire', col = fire ? '#ff9b54' : '#fff3c4';
+    const head = fire ? `<circle cx="${x2}" cy="${y2}" r="6" fill="#ffcf7a" stroke="#ff6a2a" stroke-width="2"></circle>`
+      : `<line x1="${x2 - ux * 14}" y1="${y2 - uy * 14}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3" stroke-linecap="round"></line><circle cx="${x2}" cy="${y2}" r="2.5" fill="#fff"></circle>`;
+    out += `<g class="fx proj" style="--fx:${(-dx).toFixed(1)}px;--fy:${(-dy).toFixed(1)}px;filter:drop-shadow(0 0 3px ${col})">${head}</g>`;
+    out += `<circle class="fx burst" cx="${x2}" cy="${y2}" r="${fire ? 14 : 7}" fill="${fire ? '#ff9b5499' : '#ffffffaa'}"></circle>`;
+  });
+  for (const p of ev.pops) { const [x, y] = at(p.hex);
+    if (p.cls === 'good' && p.text[0] === '+') out += [-8, 0, 8].map((o, j) => `<text class="fx rise" x="${x + o}" y="${y + 6 - j * 3}" style="animation-delay:${j * .08}s;fill:#7bd88f;font:700 13px var(--display);text-anchor:middle;paint-order:stroke;stroke:#0b2a12;stroke-width:2px">+</text>`).join('')
+      + `<ellipse class="fx ring" cx="${x}" cy="${y + BODY() + HEX * .1}" rx="${HEX * .7}" ry="${HEX * .7 * isoK()}" style="stroke:#7bd88f"></ellipse>`;
+    else if (p.text === 'shield') out += `<ellipse class="fx bubble-in" cx="${x}" cy="${y - 4}" rx="${HEX * .62}" ry="${HEX * .85}" fill="#9fd8ff33" stroke="#9fd8ff" stroke-width="2"></ellipse>`;
+    else if (p.text === 'frost') out += [0, 60, 120].map(a => `<line class="fx burst" x1="${x - 12 * Math.cos(a * Math.PI / 180)}" y1="${y - 12 * Math.sin(a * Math.PI / 180)}" x2="${x + 12 * Math.cos(a * Math.PI / 180)}" y2="${y + 12 * Math.sin(a * Math.PI / 180)}" stroke="#dff5ff" stroke-width="3" stroke-linecap="round"></line>`).join('');
+  }
+  for (const f of ev.fx || []) { const c = G.champs[f.id], v = G.display ? G.display.champs[f.id] : c, [x, y] = px(...v.pos), col = FXCOL[f.fx] || '#fff';
+    out += `<ellipse class="fx rune" cx="${x}" cy="${y + HEX * .15}" rx="${HEX * .85}" ry="${HEX * .85 * isoK()}" fill="${col}33" stroke="${col}" stroke-width="2.5" stroke-dasharray="6 3"></ellipse>`;
+    const area = FXAREA[f.fx]; if (area) { const R = HEX * HS() * 1.75 * area + HEX * .5;
+      out += `<ellipse class="fx ring" cx="${x}" cy="${y + HEX * .15}" rx="${R}" ry="${R * isoK()}" style="stroke:${col}"></ellipse>`; }
+  }
+  return out;
+}
+// Statuses drawn on the champion itself (the icons stay too, larger).
+function statusFx(c, cx, cy, foot, H) {
+  let back = '', front = '', filters = [];
+  if (c.poison) { filters.push('drop-shadow(0 0 4px #8fdc6e)'); front += [0, 1, 2].map(k => `<circle class="stv pbub" cx="${cx - 9 + k * 9}" cy="${foot - H * .35}" r="${2.5 + (k % 2)}" style="animation-delay:${-k * .4}s"></circle>`).join(''); }
+  if (c.berserk) filters.push('drop-shadow(0 0 5px #ff4b4b) saturate(1.4)');
+  if (c.frozen) { filters.push('saturate(.4) brightness(1.2)'); front += `<rect class="stv ice" x="${cx - H * .3}" y="${foot - H * .85}" width="${H * .6}" height="${H * .85}" rx="7"></rect>`; }
+  if (c.shield) front += `<ellipse class="stv shieldb" cx="${cx}" cy="${foot - H * .42}" rx="${H * .36}" ry="${H * .5}"></ellipse>`;
+  if (c.rooted) back += `<ellipse class="stv roots" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .62}" ry="${HEX * .28}"></ellipse>`;
+  if (c.blind) front += `<ellipse class="stv blindc" cx="${cx - 6}" cy="${foot - H * .7}" rx="11" ry="6"></ellipse><ellipse class="stv blindc" cx="${cx + 7}" cy="${foot - H * .72}" rx="10" ry="6"></ellipse>`;
+  return { back, front, filter: filters.join(' '), lift: c.air ? -14 : 0 };
+}
 function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a champion in the art view: sprite, foot ring, plate below
   const foot = cy + HEX * .28, H = HEX * 1.85, ln = isActor && G.ev ? G.ev.lines.find(l => same(l.from, c.pos)) : null;
   let dx = 0, dy = -6; if (ln) { const [x2, y2] = px(...ln.to); dx = (x2 - cx) * .35; dy = (y2 - cy) * .35; }
   const phase = ((performance.now() / 1000 + c0.id * .37) % 1.4).toFixed(2);
-  const sts = statusList(c), sk = 'paint-order:stroke;stroke:#0b0f16;stroke-width:2px';
+  const sts = statusList(c), sk = 'paint-order:stroke;stroke:#0b0f16;stroke-width:2px', sf = statusFx(c, cx, cy, foot, H);
   return `<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''} ${hitHexes.has(K(c.pos)) ? 'hit' : ''}" ${mine ? 'tabindex="0"' : ''}>
-    <ellipse class="body" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .55}" ry="${HEX * .24}"></ellipse>
-    <g class="sprw" style="--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:-${phase}s"><image class="spr" href="art/${c0.def.id}.png" x="${cx - H / 2}" y="${foot - H}" width="${H}" height="${H}" preserveAspectRatio="xMidYMax meet"></image></g>
+    <ellipse class="body" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .55}" ry="${HEX * .24}"></ellipse>${sf.back}
+    <g transform="translate(0 ${sf.lift})"><g class="sprw" style="--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:-${phase}s"><image class="spr" href="art/${c0.def.id}.png" x="${cx - H / 2}" y="${foot - H}" width="${H}" height="${H}" preserveAspectRatio="xMidYMax meet" ${sf.filter ? `style="filter:${sf.filter}"` : ''}></image></g>${sf.front}</g>
     <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0}" height="4" rx="1" fill="#0b0f16"></rect>
     <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0 * Math.max(0, c.hp) / c0.maxHp}" height="4" rx="1" fill="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>
     <circle class="inibg ${iniCls}" cx="${cx - HEX * .62}" cy="${cy + HEX * .48}" r="7"></circle>
     <text class="ini" x="${cx - HEX * .62}" y="${cy + HEX * .48}">${e.init}</text>
-    ${sts.map((k, j) => `<text class="st" x="${cx + HEX * .62}" y="${cy - HEX * 1.1 + j * 11}" style="fill:${STATUS[k][2]};${sk}">${STATUS[k][0]}</text>`).join('')}
+    ${sts.map((k, j) => `<text class="st" x="${cx + HEX * .72}" y="${cy - HEX * 1.2 + j * 15}" style="fill:${STATUS[k][2]};${sk}">${STATUS[k][0]}</text>`).join('')}
     ${RULES.specials && c0.def.special ? `<text class="st" x="${cx}" y="${cy + HEX * .78}" style="fill:var(--gold);font-size:8px;letter-spacing:1px;${sk}">${'●'.repeat(Math.min(c0.def.special.n, c.charge))}${'○'.repeat(Math.max(0, c0.def.special.n - c.charge))}</text>` : ''}
-    ${c.poison ? `<text class="st" x="${cx - HEX * .62}" y="${cy - HEX * .6}" style="fill:var(--poison);${sk}">☠</text>` : ''}
+    ${c.poison ? `<text class="st" x="${cx - HEX * .72}" y="${cy - HEX * .9}" style="fill:var(--poison);${sk}">☠${c.poison > 1 ? c.poison : ''}</text>` : ''}
     ${c0.level ? `<text class="st" x="${cx + HEX * .66}" y="${cy + HEX * .55}" style="fill:var(--gold);font-size:9px;${sk}">${'•'.repeat(c0.level)}</text>` : ''}
   </g>`;
 }
@@ -1285,9 +1369,9 @@ function renderOverlay() {
       <h3>Control</h3><p>Some chances put statuses on the target: taunt (must attack the taunter), root (cannot be moved this round), blind (next attack misses), silence (next action rolls no chances), airborne (skips its next action and melee cannot reach it), berserk (next attack hits the nearest champion of either team, +50%). Frost also skips an action. A champion that just skipped an action is steadfast: it cannot be frozen or knocked up again until it has acted.</p>
       <h3>Gold and items</h3><p>Each round every living champion earns ${RULES.income} gold for its team. A kill pays ${RULES.killGold}, plus ${RULES.shutdownGold} per bounty star on the victim; a tower pays ${RULES.towerGold}. After each round the shop offers three items. Each champion carries up to ${RULES.itemSlots}.</p>
       <h3>Opening level-ups</h3><p>A team levels up one champion of its choice after playing its ${RULES.openLevels.join(', ')} opening card, so rosters start the fight already different.</p>
-      <h3>Towers</h3><p>Each side has two towers with ${RULES.towerHp} HP. A tower hits an adjacent enemy for ${RULES.tower} at the start of each pulse. A champion with no enemy champion in range attacks an enemy tower in range instead. A fallen tower stays fallen and its hex becomes walkable.</p>
+      <h3>Towers</h3><p>Each side has one tower on the middle line of its half, with ${RULES.towerHp} HP, and two base towers behind its nexus. A tower hits an adjacent enemy for ${RULES.tower} at the start of each pulse. A champion with no enemy champion in range attacks an enemy tower in range instead. A fallen tower stays fallen and its hex becomes walkable.</p>
       <h3>After a fight</h3><p>The dead come back later as the game goes on: one round later in rounds 1 to ${RULES.respawnStep}, two rounds later in rounds ${RULES.respawnStep + 1} to ${2 * RULES.respawnStep}, and so on. A champion that was not hit in the previous pulse regains ${RULES.regen} HP at the start of the next one, so the winners of a fight recover while they push.</p>
-      <h3>Winning</h3><p>${structure() ? `<b>Nexus: destroy it.</b> Each nexus is one building with ${RULES.nexusHp} HP at the back of its side. It is locked until one of its side towers has fallen; then a champion with no enemy champion in range attacks it. ${RULES.nexusShoots ? `It hits an adjacent enemy for ${RULES.tower} at the start of each pulse. ` : ''}Deaths do not damage it. Destroy it to win; at the round limit the higher nexus HP wins, then more towers standing, then more gold earned.</p><p>The rules below apply with the other switch, <b>Nexus: score</b>:</p><p>` : ''}Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}, but only once one of that nexus's towers has fallen. Poison ticks at the start of each pulse. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
+      <h3>Winning</h3><p>${structure() ? `<b>Nexus: destroy it.</b> Each nexus is one building with ${RULES.nexusHp} HP at the back of its side. It is locked until its middle tower and then one of its base towers have fallen; then a champion with no enemy champion in range attacks it. ${RULES.nexusShoots ? `It hits an adjacent enemy for ${RULES.tower} at the start of each pulse. ` : ''}Deaths do not damage it. Destroy it to win; at the round limit the higher nexus HP wins, then more towers standing, then more gold earned.</p><p>The rules below apply with the other switch, <b>Nexus: score</b>:</p><p>` : ''}Nexus ${RULES.nexus}. A death costs its team's nexus ${RULES.killTax}. At the end of each round, each champion beside the enemy nexus deals ${RULES.siege}, but only once one of that nexus's towers has fallen. Poison ticks at the start of each pulse. After round ${RULES.rounds} the higher nexus wins.</p></div>`);
     box.querySelector('#close-rules').addEventListener('click', () => { UI.rules = false; render(); });
     ov.appendChild(box); return; }
   if (G.phase === 'levelup' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
