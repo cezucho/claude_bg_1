@@ -76,6 +76,18 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   30 HP, towers 10 HP, 14 rounds, and a death timer that grows every 2 rounds. The switches are
   on the draft screen as well as the toolbar.
 
+- **Comeback rules (added 2026-11-18, D-073), part of "Nexus: destroy it", now the default.**
+  *Stances:* each turn a team also sets Push, Hold or Fall back for free; at the start of each
+  pulse every champion steps one hex by it (Push: champions not yet fighting step toward the
+  nearest enemy or open structure; Fall back: champions outside their own half step home). The
+  board previews your team's steps as dashed arrows. *Base towers:* two towers just past the
+  back edge behind each nexus (nobody can stand there), 8 HP, hitting for 5 at range 2; they
+  can be attacked once a side tower has fallen, and the nexus opens only once one of them has.
+  *Home regeneration:* no regeneration in the enemy half. *Home zone:* within 2 hexes of its own
+  nexus a champion takes 1 less per hit. *Respawning together:* when a team's first dead
+  champion is due back, all its dead return together. The preset also sets nexus 25, towers 10,
+  16 rounds, death timer step 2. Each part is a switch in `RULES`.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.
@@ -181,3 +193,37 @@ other features on; 600 matches per row (1000 for the last four):
 - Matches are about three rounds longer than with the score rules (10.8 against 7.7).
 - Not measured: destroy mode together with "Pulse: once per round". Each switch applies its own
   round limit, so combining them uses whichever was switched last.
+
+**Measurement: comebacks (2026-11-18).** The owner: a won fight decides the match 85% of the
+time, there are no comebacks, and with one move per turn a team can neither push nor fall back
+together. "Comeback" = the team that lost a won fight (a round lost by two or more kills) still
+wins the match. Small board, destroy mode, AI-vs-AI, 600–1000 matches per row:
+
+| Rules | Comeback | Tower taken within 2 rounds of a won fight | Ended by a destroyed nexus | Rounds | A wins |
+|---|---|---|---|---|---|
+| Destroy, none of the new rules | 16% | 54% | 85% | 10.9 | 53% |
+| + stances | 13% | 61% | 98% | 9.0 | 54% |
+| + base towers | 15% | 63% | 49% | 13.0 | 49% |
+| + home regeneration | 16% | 52% | 85% | 11.0 | 53% |
+| + home zone | 14% | 49% | 76% | 11.4 | 51% |
+| All four | 16% | 69% | 76% | 11.9 | 52% |
+| All four + respawning together, death step 2 | 22% | 59% | 57% | 12.8 | 51% |
+| Same, no base towers | 17% | 49% | 88% | 10.9 | 53% |
+| Same, stronger home (towers hit 8, home armour 2), step 3 | 22% | 54% | 22% | 13.6 | 54% |
+| **All five, base towers 8 HP, nexus 25, 16 rounds (default)** | **22%** | **58%** | **79%** | **13.1** | **49%** |
+
+- None of the four changes alone moved comebacks. Stances made pushes faster and matches
+  shorter. The lever was **respawning together**: defenders who return one at a time lose to the
+  push one at a time, which was the owner's diagnosis. It only works with base towers (17%
+  without them): the regrouped defenders need something to defend under.
+- Comebacks rose from 16% to 22%, short of the 25–35% aimed for. A won fight still converts into
+  a tower within two rounds 58% of the time, so fights still pay. The cost is length: 13.1
+  rounds against 10.8.
+- Punishing greed, tested with a "greedy" AI on one side that pushes whenever it is not
+  outnumbered, whatever its HP: it wins 51% against the careful AI under the default rules, and
+  53–54% under the old ones. Reckless pushes are now even rather than profitable, but not yet
+  punished. The careful AI rarely overextends, so AI-vs-AI understates comebacks: a human who
+  pushes too long will meet a regrouped team under two towers.
+- In score mode the same rules gave 21% comebacks but a 55% side imbalance, so they belong to
+  destroy mode only. Score mode is unchanged.
+- Stances move about 0.7 champions per pulse; a pulse is 3.2 s.

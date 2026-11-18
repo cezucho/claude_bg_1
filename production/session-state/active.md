@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — COMEBACKS — 2026-11-18.** Owner: no comebacks; no towers near the nexus; one move per turn can't push or retreat as a group. Built (D-073): team stances, base towers outside the board, home-only regen, home zone, respawning together; all in the destroy preset, now default. Measured: comebacks 16% → 22% (only respawn-together + base towers moved it), tower within 2 rounds of a won fight 58%, 79% by destruction, 13.1 rounds, sides 49%, greedy AI break-even. Next: owner plays; candidates to reach 25–35%: shorter early death timers, AI that overextends, stronger base towers with a longer limit.
+
 **AUTO SKIRMISH — DESTROY THE NEXUS — 2026-11-17.** Owner: a nexus building you destroy should feel better on the small board. Built behind the "Nexus" switch (also on the draft screen) with preset nexus 30 / towers 10 / 14 rounds / death step 2 (D-072). Measured: first version stalled (25% destroyed); preset 84% destroyed, 10.8 rounds vs 7.7, sides 52%. Default still score rules. Not measured: destroy + once-per-round pulse together. Next: owner plays both.
 
 **AUTO SKIRMISH — GOLD, CONTROL, OPENING LEVELS, SPECIALS — 2026-11-17.** Owner asked for gold+items and more statuses, then opening level-ups (after cards 2/3/5) and charged secondary attacks; graphics parked (plan in `design/art/visual-pipeline-plan.md`). Built all four behind switches (D-071), measured alone and together: sides even, gold lead at round 5 → 81–84% win, control doesn't shorten pulses (3.1 s all on), ~15 specials per match. Human flow tested: opening level-up overlay, shop overlay, level-ups. Next: owner plays.
