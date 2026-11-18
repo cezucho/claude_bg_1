@@ -133,6 +133,15 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   short form (`T↗ T↗ J↖`: role letter and direction). Hover previews the steps on the board; click
   plays. Nothing needs scrolling at 1366×768.
 
+- **Casters (added 2026-11-18, D-079).** Two casters comment on what matters while ordinary hits
+  pass: Kip calls the play, Marlow adds why it matters on the big moments. Headlines (kills,
+  double kills, shutdowns, towers and what they open, the nexus, Dragon, Baron, steals) always
+  show and hold the board for about a second; smaller mentions (a special just charged and who it
+  is aimed at, a champion low on HP and who acts next with them in sight) at most two per pulse.
+  The feed sits in the board's empty top-left corner and fades; a one-line recap of each pulse
+  sits bottom right. On the board, a pulsing red ring marks a champion at 30% HP or less and a
+  golden glow a charged special. "Replay last pulse" on your turn shows the last pulse again.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.

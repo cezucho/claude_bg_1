@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — CASTERS — 2026-11-18.** Owner: pulses too quick to follow; asked to rate a two-caster live commentary idea, then "go ahead" with Claude's changes (tiers, cap, predictions, recap, corner feed, headline pause, on-board warnings, replay). Done (D-079). Game logic untouched (headless numbers identical). Artifact republished. Next: owner watches; tune line wording and density.
+
 **AUTO SKIRMISH — OPENING HAND — 2026-11-18.** Owner: opening cards in the panels still force scrolling. Done (D-078): one strip under the board with the playing team's unplayed cards in short form; board shrinks a little meanwhile; statuses share the chances row; Baron-in-round-0 chip bug fixed. Worst case 756/768 px over a whole match. Artifact republished.
 
 **AUTO SKIRMISH — COMPACT PANELS — 2026-11-18.** Owner: no scrolling to see the teams; growth path on hover; chances as icon + number. Done (D-077): compact cards with emoji icon rows, hover card with all details; fits 1366×768. Artifact republished. Next: owner plays.

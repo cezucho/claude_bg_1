@@ -106,7 +106,25 @@ details.tree li .not { text-decoration: line-through; opacity: .6; }
 .cards2 button small { display: block; color: var(--dim); font-family: var(--mono); font-size: 12px; }
 .cards2 button.used { border-color: var(--gold); }
 
-.boardwrap { background: radial-gradient(ellipse at center, #1a2232 0%, var(--bg) 75%); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.boardwrap { background: radial-gradient(ellipse at center, #1a2232 0%, var(--bg) 75%); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; position: relative; }
+/* Casters (D-079): a short feed in the board's empty top-left corner, a pulse recap bottom right */
+.feed { position: absolute; left: 10px; top: 10px; width: min(300px, 44%); display: flex; flex-direction: column; gap: 5px; pointer-events: none; z-index: 2; }
+.feed .ln { background: #0b0f16e6; border: 1px solid var(--line); border-left: 3px solid var(--dim); border-radius: 7px; padding: 5px 8px; font-size: 12.5px; line-height: 1.35; animation: lnin .25s ease-out both; transition: opacity .6s, transform .6s; }
+.feed .ln.t3 { border-left-color: var(--gold); font-size: 13.5px; }
+.feed .ln.out { opacity: 0; transform: translateX(-12px); }
+.feed .who { font-family: var(--display); font-weight: 700; font-size: 10px; letter-spacing: .14em; margin-right: 6px; }
+.feed .who.kip { color: var(--gold); } .feed .who.mar { color: var(--arcane); }
+.feed .an { display: block; color: var(--dim); margin-top: 2px; font-style: italic; }
+.feed b.A, .recap b.A { color: var(--a); } .feed b.B, .recap b.B { color: var(--b); }
+@keyframes lnin { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+.recap { position: absolute; right: 10px; bottom: 10px; max-width: min(320px, 46%); background: #0b0f16d9; border: 1px solid var(--line); border-radius: 7px; padding: 5px 9px; font-size: 12px; color: var(--dim); pointer-events: none; z-index: 2; }
+.recap:empty { display: none; }
+.recap .lbl2 { font-family: var(--display); font-size: 10px; letter-spacing: .14em; color: var(--fg); margin-right: 6px; }
+/* On-board warnings: a champion low on HP, a special ready to fire */
+.lowring { fill: none; stroke: #ff4b4b; stroke-width: 3; animation: lowpulse .9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes lowpulse { 0%, 100% { opacity: .35; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.06); } }
+.ready .spr { animation: readyglow 1.1s ease-in-out infinite; }
+@keyframes readyglow { 0%, 100% { filter: drop-shadow(0 0 2px #ffd36a); } 50% { filter: drop-shadow(0 0 9px #ffd36a) brightness(1.12); } }
 svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-action: manipulation; }
 .hexp { fill: var(--hex); stroke: var(--hex-edge); stroke-width: 1; }
 .hexp.hill { fill: #2a2a22; }
@@ -279,7 +297,7 @@ svg#board.art { max-height: 70vh; }
 <main class="table">
   <section class="rail" id="rail-A"></section>
   <section class="centre">
-    <div class="boardwrap"><svg id="board" role="img" aria-label="Hex board"></svg></div>
+    <div class="boardwrap"><svg id="board" role="img" aria-label="Hex board"></svg><div class="feed" id="feed" aria-live="polite"></div><div class="recap" id="recap"></div></div>
     <div class="hand" id="hand" hidden></div>
     <div class="prompt"><p id="prompt">Loading…</p><div class="btns" id="btns"></div></div>
     <div class="legend"><span><i style="background:var(--gold)"></i>synergy between neighbours</span><span><i style="background:var(--good)"></i>synergy gained by this move</span><span><i style="background:var(--bad)"></i>synergy lost</span><span>badge on a token = its initiative this pulse</span></div>
@@ -493,6 +511,7 @@ function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.im
 const roll = pct => pct > 0 && rng() * 100 < pct;
 
 function newMatch(mode, seed) {
+  if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); }
   clearTimeout(UI.timer); UI.anim = null;
   setBoard(UI.board);
   G = { mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
@@ -709,7 +728,7 @@ function endRound() {
     if (n) { G.nexus[foe] -= n * RULES.siege; logLine(t, `${n} at the gates of nexus ${foe}: −${n * RULES.siege}`); } }
   const due = t => G.champs.some(c => c.team === t && c.dead && c.respawnAt <= G.round);
   for (const m of (G.monsters || [])) if (!m.alive && m.respawnAt <= G.round && !champAt(m.pos)) {
-    m.alive = true; m.hp = m.max; m.dmg = { A: 0, B: 0 }; SOLID.add(K(m.pos)); logLine('round', `The ${m.name} appears at the ${m.pos[0] < 0 ? 'left' : 'right'} end of the river`); }
+    m.alive = true; m.hp = m.max; m.dmg = { A: 0, B: 0 }; SOLID.add(K(m.pos)); talk.appears(m); logLine('round', `The ${m.name} appears at the ${m.pos[0] < 0 ? 'left' : 'right'} end of the river`); }
   for (const c of G.champs) if (c.dead && (c.respawnAt <= G.round || (RULES.respawnWave && due(c.team)) || (RULES.respawnWindow && due(c.team) && c.respawnAt <= G.round + RULES.respawnWindow))) {
     c.dead = false; c.hp = c.maxHp; c.shield = 0; c.poison = 0; clearStatus(c); c.pos = freeNear(c.home);
     logLine(c.team, `${nm(c)} returns to base`); }
@@ -773,7 +792,8 @@ function freeNear(h) { if (!champAt(h)) return h; const seen = new Set([K(h)]); 
 function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, dead: c.dead, frozen: c.frozen, poison: c.poison, air: c.air, rooted: c.rooted, blind: c.blind, silenced: c.silenced, berserk: c.berserk, taunted: c.taunted, steadfast: c.steadfast, charge: c.charge })), nexus: { ...G.nexus } }; }
 function runPulse(mover) {
   const events = [];
-  G.pulse++;
+  G.pulse++; G.cue = []; G.inPulse = true; G.pd = { A: 0, B: 0 }; G.pk = { A: [], B: [] };
+  const push = ev => { ev.cue = G.cue.splice(0); events.push(ev); };
   // start of pulse: regeneration, poison, towers
   { const pops = [], notes = [];
     if (RULES.regen) for (const c of alive()) if (c.hp < c.maxHp && (c.hurt ?? -9) < G.pulse - 1 && !(RULES.homeRegen && inEnemyHalf(c) && !baronOn(c.team))) { const g = Math.min(RULES.regen, c.maxHp - c.hp); c.hp += g; pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); }
@@ -789,15 +809,15 @@ function runPulse(mover) {
     if (structure() && RULES.nexusShoots) for (const side of ['A', 'B']) { const n = NEXUS[side][0];
       const foes = alive(other(side)).filter(c => dist(c.pos, n) === 1).sort((a, b) => a.hp - b.hp);
       if (foes.length) { const v = foes[0]; v.hp -= RULES.tower; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + RULES.tower, cls: 'bad' }); notes.push(`nexus ${side} hits ${nm(v)} −${RULES.tower}`); if (v.hp <= 0) kill(v, null, notes); } }
-    if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); events.push({ actor: null, init: 99, special: true, pops, lines: [], snap: snap() }); } }
-  if (RULES.stance) { const ev = stanceStep(); if (ev) events.push(ev); }
+    if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); push({ actor: null, init: 99, special: true, pops, lines: [], snap: snap() }); } }
+  if (RULES.stance) { const ev = stanceStep(); if (ev) push(ev); }
   const L0 = links();
   const order = alive().sort((a, b) => (eff(b, L0).init - eff(a, L0).init) || ((b.team === mover) - (a.team === mover)) || (ROLES.indexOf(a.role) - ROLES.indexOf(b.role)));
   for (const c of order) {
     if (c.dead) continue;
-    const L = links(), pops = [], lines = [], notes = [];
+    const L = links(), pops = [], lines = [], notes = [], ch0 = c.charge;
     if (c.frozen || c.air) { const why = c.frozen ? 'frozen' : 'airborne'; c.frozen = false; c.air = false; c.steadfast = true; STATS.skips++;
-      logLine(c.team, `${nm(c)} [${eff(c, L).init}] is ${why} and skips its action (steadfast until it acts again)`); events.push({ actor: c.id, init: eff(c, L).init, special: false, pops: [{ hex: c.pos, text: why, cls: 'info' }], lines, snap: snap() }); continue; }   // a skipped turn is a quick beat
+      logLine(c.team, `${nm(c)} [${eff(c, L).init}] is ${why} and skips its action (steadfast until it acts again)`); push({ actor: c.id, init: eff(c, L).init, special: false, pops: [{ hex: c.pos, text: why, cls: 'info' }], lines, snap: snap() }); continue; }   // a skipped turn is a quick beat
     // support chances roll on every action
     if (roll(pct(c, 'mend', L))) { const w = alive(c.team).filter(a => dist(a.pos, c.pos) <= 2 && a.hp < a.maxHp).sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp))[0];
       if (w) { const g = Math.min(c.mendAmt, w.maxHp - w.hp); w.hp += g; pops.push({ hex: w.pos, text: '+' + g, cls: 'good' }); notes.push(`<em>Mend</em> ${nm(w)} +${g} (${pct(c, 'mend', L)}%)`); STATS.procs++; } }
@@ -816,11 +836,14 @@ function runPulse(mover) {
         else { const M = monsterInRange(c, L); if (M) { hitMonster(c, M, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); } } }
     }
     c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false;   // one-action statuses are used up
+    talkAfterAction(c, ch0, order);
     const head = `${nm(c)} [${eff(c, L).init}]`;
     logLine(c.team, `${head}${notes.length ? ': ' + notes.join(' · ') : ' has nobody in range'}`);
-    if (pops.length || lines.length) events.push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, fx: cast ? [{ id: c.id, fx: cast }] : [], snap: snap() });   // an idle champion gets no beat
+    if (pops.length || lines.length) push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, fx: cast ? [{ id: c.id, fx: cast }] : [], snap: snap() });   // an idle champion gets no beat
     if (G.nexus.A <= 0 || G.nexus.B <= 0) break;
   }
+  if (G.cue.length && events.length) events[events.length - 1].cue.push(...G.cue.splice(0));
+  G.inPulse = false; G.recap = { pulse: G.pulse, pd: { ...G.pd }, pk: { A: [...G.pk.A], B: [...G.pk.B] } };
   return events;
 }
 function hit(src, t, raw, ctx, dodgeable) {
@@ -828,7 +851,7 @@ function hit(src, t, raw, ctx, dodgeable) {
   const L = links();
   if (dodgeable && roll(pct(t, 'dodge', L))) { ctx.pops.push({ hex: t.pos, text: 'dodge', cls: 'info' }); ctx.notes.push(`${nm(t)} <em>dodges</em>`); STATS.procs++; return -1; }
   const d = Math.max(1, raw - eff(t, L).armor), ab = Math.min(t.shield, d);
-  t.shield -= ab; t.hp -= d - ab; t.hurt = G.pulse;
+  t.shield -= ab; t.hp -= d - ab; t.hurt = G.pulse; if (src && src.team !== t.team && G.pd) G.pd[src.team] += d;
   ctx.pops.push({ hex: t.pos, text: '−' + d, cls: 'bad' });
   if (t.hp <= 0) kill(t, src, ctx.notes);
   return d;
@@ -965,6 +988,7 @@ function hitMonster(c, m, L, ctx) {
   if (steal) STATS.steals++;
   const gold = m.kind === 'dragon' ? RULES.dragonGold : RULES.baronGold;
   if (RULES.gold) { G.gold[t] += gold; G.earned[t] += gold; }
+  talk.monster(m, c, steal);
   ctx.notes.push(`<span class="kill">${t} slays the ${m.name}${steal ? ' (STOLEN)' : ''}</span>: ${m.kind === 'dragon' ? `+${RULES.dragonProc}% to every chance for the team (×${G.dragon[t]})` : `towers and nexus take double damage from ${t}, and ${t} regenerates anywhere, until the end of round ${G.baronUntil[t]}`}${RULES.gold ? `, +${gold} gold` : ''}`);
 }
 function nexusInRange(c, L) {
@@ -973,7 +997,7 @@ function nexusInRange(c, L) {
 }
 function hitNexus(c, L, ctx) {
   const foe = other(c.team); let d = eff(c, L).atk; if (roll(pct(c, 'crit', L))) { d *= 2; STATS.procs++; } if (baronOn(c.team)) d *= 2;
-  G.nexus[foe] -= d; STATS.nexusHits += d;
+  const nxWas = G.nexus[foe]; G.nexus[foe] -= d; STATS.nexusHits += d; talk.nexus(foe, c, nxWas);
   ctx.lines.push({ from: c.pos, to: NEXUS[foe][0], cls: 'strike' }); ctx.pops.push({ hex: NEXUS[foe][0], text: '−' + d, cls: 'gold' }); ctx.notes.push(`→ <em>nexus ${foe}</em> −${d}`);
 }
 function towerInRange(c, L) {
@@ -983,11 +1007,12 @@ function towerInRange(c, L) {
 function hitTower(c, T, L, ctx) {
   let d = eff(c, L).atk; if (roll(pct(c, 'crit', L))) { d *= 2; STATS.procs++; } if (baronOn(c.team)) d *= 2;
   T.hp -= d; ctx.lines.push({ from: c.pos, to: T.pos, cls: 'strike' }); ctx.pops.push({ hex: T.pos, text: '−' + d, cls: 'gold' }); ctx.notes.push(`→ ${T.side} ${T.kind} tower −${d}`);
-  if (T.hp <= 0) { T.up = false; T.hp = 0; SOLID.delete(K(T.pos)); G.falls++; STATS.falls++; if (RULES.gold) { G.gold[c.team] += RULES.towerGold; G.earned[c.team] += RULES.towerGold; } ctx.notes.push(`<span class="kill">the ${T.side} ${T.kind} tower FALLS</span>${nexusOpen(T.side) && RULES.gate ? ` (nexus ${T.side} is open)` : T.kind === 'side' && RULES.baseTowers ? ` (the ${T.side} base towers can now be attacked)` : ''}`); }
+  if (T.hp <= 0) { T.up = false; T.hp = 0; SOLID.delete(K(T.pos)); talk.tower(T, c); G.falls++; STATS.falls++; if (RULES.gold) { G.gold[c.team] += RULES.towerGold; G.earned[c.team] += RULES.towerGold; } ctx.notes.push(`<span class="kill">the ${T.side} ${T.kind} tower FALLS</span>${nexusOpen(T.side) && RULES.gate ? ` (nexus ${T.side} is open)` : T.kind === 'side' && RULES.baseTowers ? ` (the ${T.side} base towers can now be attacked)` : ''}`); }
 }
 function kill(t, src, notes, neutral) {
   if (t.dead) return;
-  if (t.revive) { t.revive = false; t.hp = 8; notes.push(`${nm(t)} is saved by the <em>Phoenix Feather</em> (8 HP)`); return; }
+  if (t.revive) { t.revive = false; t.hp = 8; notes.push(`${nm(t)} is saved by the <em>Phoenix Feather</em> (8 HP)`); talk.revive(t); return; }
+  const bountyWas = t.bounty;
   if (RULES.gold && !neutral) { const g = RULES.killGold + t.bounty * RULES.shutdownGold; G.gold[other(t.team)] += g; G.earned[other(t.team)] += g; notes.push(`+${g} gold to ${other(t.team)}${t.bounty ? ' (shutdown)' : ''}`); }
   clearStatus(t); t.charge = 0;
   t.dead = true; t.hp = 0; t.shield = 0; t.poison = 0; t.frozen = false; t.respawnAt = G.round + deathDelay(G.round); if (!neutral) G.rk[other(t.team)]++; if (inEnemyHalf(t)) G.rkDeep[t.team]++;
@@ -995,6 +1020,7 @@ function kill(t, src, notes, neutral) {
   if (src && src.team !== t.team) { src.kills++; src.bounty = Math.min(RULES.bountyCap, src.bounty + 1); STATS.kills[src.team]++; }
   const why = [structure() ? '' : `nexus ${t.team} −${RULES.killTax}`, src && src.team !== t.team && src.bounty ? `${nm(src)} bounty ★${src.bounty}` : ''].filter(Boolean).join(', ');
   notes.push(`<span class="kill">${nm(t)} is KILLED</span>${why ? ` (${why})` : ''}`);
+  talk.kill(t, src, neutral, bountyWas);
 }
 function checkWin() {
   if (G.winner) return true;
@@ -1103,17 +1129,114 @@ function toBeats(events) {
     else out.push({ ...e, pops: [...e.pops], lines: [...e.lines], fx: [...(e.fx || [])], actors: e.actor != null ? [e.actor] : [] }); }
   return out;
 }
-function animate(events, done) {
-  const beats = toBeats(events); let i = 0, t0 = performance.now(); UI.anim = { events, done };
+function animate(events, done, replay) {
+  const beats = toBeats(events); let i = 0, t0 = performance.now(); UI.anim = { events, done }; UI.fed = 0;
+  if (!replay) UI.lastPulse = { events, recap: G.recap };
   const step = () => {
     if (!UI.anim || UI.anim.events !== events) return;
-    if (i >= beats.length) { UI.anim = null; UI.pulses.push({ s: (performance.now() - t0) / 1000, beats: beats.length }); done(); return; }
+    if (i >= beats.length) { UI.anim = null; if (!replay) UI.pulses.push({ s: (performance.now() - t0) / 1000, beats: beats.length }); showRecap(UI.lastPulse && UI.lastPulse.recap); done(); return; }
     const e = beats[i++]; G.display = e.snap; G.actors = e.actors; G.ev = e; render();
-    UI.timer = setTimeout(step, delay(e.special));
+    const head = feed(e.cue || []);
+    UI.timer = setTimeout(step, head ? Math.max(delay(e.special), UI.speed === 'fast' ? 650 : 1150) : delay(e.special));   // a headline holds the board a moment
   };
   step();
 }
-function skipAnim() { if (!UI.anim) return; clearTimeout(UI.timer); const d = UI.anim.done; UI.anim = null; d(); }
+function skipAnim() { if (!UI.anim) return; clearTimeout(UI.timer); const d = UI.anim.done; UI.anim = null; showRecap(UI.lastPulse && UI.lastPulse.recap); d(); }
+function replayPulse() {   // on your own turn: watch the last pulse again, then come back to the board as it is
+  if (!UI.lastPulse || UI.anim || G.phase !== 'move') return;
+  const phase = G.phase; G.phase = 'pulse'; UI.replaying = true;
+  animate(UI.lastPulse.events, () => { UI.replaying = false; G.phase = phase; G.display = null; G.actors = null; G.ev = null; render(); }, true);
+}
+
+
+// ═════════════ casters (D-079) ═════════════
+// Two voices comment on what matters; ordinary hits are left to the numbers on the board. KIP calls the play,
+// MARLOW (the analyst) adds why it matters, only on headlines. Lines are picked with Math.random, never the
+// game's seeded generator, so a match replays identically whatever the casters say.
+// Tiers: 3 = headline (always shown, holds the board a moment), 2 = worth a mention (at most 2 per pulse).
+const TEAMN = { A: 'Blue', B: 'Red' };
+const cn = c => `<b class="${c.team}">${esc(nm(c))}</b>`, tnm = t => `<b class="${t}">${TEAMN[t]}</b>`;
+const lastPick = {};
+const pick = (key, arr) => { let i = Math.floor(Math.random() * arr.length); if (arr.length > 1 && i === lastPick[key]) i = (i + 1) % arr.length; lastPick[key] = i; return arr[i]; };
+function cue(tier, text, an) {
+  if (HEADLESS || !G) return;
+  const item = { tier, text, an };
+  if (G.inPulse) G.cue.push(item); else feed([item]);
+}
+const talk = {
+  kill(t, src, neutral, bounty) {
+    const by = src && src.team !== t.team ? src : null, team = other(t.team);
+    if (!neutral && G.pk) G.pk[team].push(nm(t));
+    const n = G.pk ? G.pk[team].length : 1;
+    let text = by ? pick('kill', [`${cn(by)} takes down ${cn(t)}!`, `${cn(t)} goes down to ${cn(by)}!`, `And ${cn(by)} finishes ${cn(t)}!`, `${cn(by)} gets the kill on ${cn(t)}.`])
+      : neutral ? pick('killn', [`The monster flattens ${cn(t)}!`, `${cn(t)} picked a fight with the wrong monster.`])
+      : pick('killx', [`${cn(t)} falls!`, `${cn(t)} can't hold on, down they go.`, `That's the end of ${cn(t)} for now.`]);
+    let an = null;
+    if (n === 2) an = pick('double', [`Two down in one pulse for ${tnm(team)}!`, `That's a double for ${tnm(team)}, this fight is tilting fast.`]);
+    else if (n >= 3) an = pick('triple', [`${n} kills in a single pulse. ${tnm(team)} are running away with this.`, `Three of them gone! ${tnm(team)} can walk to the towers now.`]);
+    else if (bounty >= 2) an = `A shutdown: ${cn(t)} had ${bounty} bounty stars, that's big gold for ${tnm(team)}.`;
+    else if (by && by.bounty >= 2) an = `${cn(by)} is on a streak, ${by.bounty} bounty stars now. Somebody stop them.`;
+    cue(3, text, an);
+  },
+  revive(t) { cue(3, `${cn(t)} should be dead, but the Phoenix Feather says no!`, `Back on 8 HP. That one item just bought a whole extra fight.`); },
+  tower(T, c) {
+    const open = nexusOpen(T.side) && RULES.gate, left = sideTowers(T.side).length;
+    cue(3, pick('tower', [`The ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'} falls!`, `${cn(c)} brings down the ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'}!`, `Down goes the ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'}!`]),
+      open ? `And that opens the ${tnm(T.side)} nexus. This is where games end.` : T.kind === 'side' && RULES.baseTowers ? `The base towers are exposed now. ${tnm(T.side)} have to defend at home.` : left ? `${left} ${tnm(T.side)} tower${left > 1 ? 's' : ''} left standing.` : null);
+  },
+  nexus(foe, c, was) {
+    const max = RULES.nexusHp, now = G.nexus[foe];
+    if (was === max) cue(3, `${cn(c)} is hitting the ${tnm(foe)} nexus!`, `First blood on the building. ${tnm(foe)} need an answer right now.`);
+    else if (now <= 0) cue(3, `The ${tnm(foe)} nexus explodes! ${tnm(other(foe))} win it!`, `What a finish.`);
+    else if (was > max * .34 && now <= max * .34) cue(3, `The ${tnm(foe)} nexus is down to ${now}!`, `One more good pulse and this is over.`);
+  },
+  monster(m, c, steal) {
+    const t = c.team;
+    if (steal) cue(3, `STOLEN! ${cn(c)} snipes the ${m.name} from under ${tnm(other(t))}'s noses!`, `${tnm(other(t))} did the work and ${tnm(t)} take the reward. Brutal.`);
+    else if (m.kind === 'dragon') cue(3, pick('drag', [`${tnm(t)} take the Dragon!`, `${cn(c)} lands the last hit on the Dragon!`]), G.dragon[t] >= 2 ? `That's Dragon number ${G.dragon[t]}: +${G.dragon[t] * RULES.dragonProc}% on every chance for ${tnm(t)}.` : `Every chance on the team goes up ${RULES.dragonProc}%.`);
+    else cue(3, `${tnm(t)} slay the Baron!`, `Double damage to buildings for ${RULES.baronRounds} rounds. Watch the towers melt.`);
+  },
+  appears(m) { if (m.kind === 'baron') cue(3, `The Baron has woken up at the river!`, `${RULES.baronHp} HP and a huge reward. Whoever is ahead should be looking at it.`); },
+};
+// After each champion acts: did its special just charge, and did anyone drop low (and who is about to hit them)?
+function talkAfterAction(c, ch0, order) {
+  if (HEADLESS) return;
+  const sp = c.def.special;
+  if (RULES.specials && sp && !c.dead && ch0 < sp.n && c.charge >= sp.n) { const t = aimOf(c, links()).target;
+    const aimed = ['wildfire', 'lance', 'blizzard', 'cannon'].includes(sp.fx) && t && t.team !== c.team;
+    cue(2, `${cn(c)}'s <em>${esc(sp.name)}</em> is charged${aimed ? `, and it's lined up on ${cn(t)}` : `: ${esc(sp.text)}`}.`); }
+  const L = links(), i = order.indexOf(c);
+  for (const v of alive()) {
+    if (v.hp > v.maxHp * .6) v.lowWarned = false;
+    if (v.lowWarned || v.hp > v.maxHp * .3) continue;
+    v.lowWarned = true;
+    const next = order.slice(i + 1).find(x => !x.dead && x.team !== v.team && !x.frozen && !x.air && aimOf(x, L).target === v);
+    cue(2, next ? `${cn(v)} on ${v.hp} HP, and ${cn(next)} acts next with them in sight!` : pick('low', [`${cn(v)} is down to ${v.hp} HP.`, `${cn(v)} is hanging on with ${v.hp} HP.`]));
+  }
+}
+// Show cue lines: headlines always, mentions up to two per pulse. Returns true when a headline was shown.
+function feed(items) {
+  const el = document.getElementById('feed'); if (!el || !items.length) return false;
+  let head = false;
+  for (const it of items) {
+    if (it.tier < 3) { if ((UI.fed || 0) >= 2) continue; UI.fed = (UI.fed || 0) + 1; } else head = true;
+    const ln = h(`<div class="ln t${it.tier}"><span class="who kip">KIP</span>${it.text}${it.an ? `<span class="an"><span class="who mar">MARLOW</span>${it.an}</span>` : ''}</div>`);
+    el.appendChild(ln);
+    while (el.children.length > 4) el.firstElementChild.remove();
+    const ttl = (it.tier >= 3 ? 7000 : 4500) * (UI.speed === 'fast' ? .7 : 1);
+    setTimeout(() => ln.classList.add('out'), ttl); setTimeout(() => ln.remove(), ttl + 650);
+    if (!UI.replaying) logLine('sys', `🎙 ${it.text}${it.an ? ' ' + it.an : ''}`);
+  }
+  return head;
+}
+// One line after each pulse: who won the exchange, and who fell. Stays until the next pulse.
+function showRecap(r) {
+  const el = document.getElementById('recap'); if (!el) return;
+  if (!r) { el.innerHTML = ''; return; }
+  const d = r.pd, diff = d.A - d.B, ks = ['A', 'B'].filter(t => r.pk[t].length).map(t => `${tnm(t)} took down ${r.pk[t].map(esc).join(', ')}`).join(' · ');
+  const verdict = Math.abs(diff) >= 4 ? `trade to ${tnm(diff > 0 ? 'A' : 'B')}` : 'even trade';
+  el.innerHTML = `<span class="lbl2">PULSE ${r.pulse}</span>${verdict}: ${tnm('A')} ${d.A} dmg, ${tnm('B')} ${d.B}${ks ? ` · ${ks}` : ''}`;
+}
 
 // ═════════════ logging and helpers ═════════════
 function logLine(cls, html) { if (!HEADLESS) G.log.push({ cls, html }); }
@@ -1412,7 +1535,9 @@ function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a ch
   let dx = 0, dy = -6; if (ln) { const [x2, y2] = px(...ln.to); dx = (x2 - cx) * .35; dy = (y2 - cy) * .35; }
   const phase = ((performance.now() / 1000 + c0.id * .37) % 1.4).toFixed(2);
   const sts = statusList(c), sk = 'paint-order:stroke;stroke:#0b0f16;stroke-width:2px', sf = statusFx(c, cx, cy, foot, H);
-  return `<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''} ${hitHexes.has(K(c.pos)) ? 'hit' : ''}" ${mine ? 'tabindex="0"' : ''}>
+  const low = c.hp > 0 && c.hp <= c0.maxHp * .3, ready = RULES.specials && c0.def.special && c.charge >= c0.def.special.n && !sf.filter;
+  return `<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''} ${hitHexes.has(K(c.pos)) ? 'hit' : ''} ${ready ? 'ready' : ''}" ${mine ? 'tabindex="0"' : ''}>
+    ${low ? `<ellipse class="lowring" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .72}" ry="${HEX * .34}"></ellipse>` : ''}
     <ellipse class="body" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .55}" ry="${HEX * .24}"></ellipse>${sf.back}
     <g transform="translate(0 ${sf.lift})"><g class="sprw" style="--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:-${phase}s"><image class="spr" href="art/${c0.def.id}.png" x="${cx - H / 2}" y="${foot - H}" width="${H}" height="${H}" preserveAspectRatio="xMidYMax meet" ${sf.filter ? `style="filter:${sf.filter}"` : ''}></image></g>${sf.front}</g>
     <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0}" height="4" rx="1" fill="#0b0f16"></rect>
@@ -1435,7 +1560,7 @@ function renderPrompt() {
     const sel = UI.sel != null ? G.champs[UI.sel] : null;
     const after = RULES.onePulse ? (G.turnNo === 0 ? 'Then the other team moves, and everyone acts once, fastest first.' : 'Then everyone acts once, fastest first.') : 'Then everyone acts once, fastest first.';
     p.innerHTML = sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to preview synergies and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. ${after}`;
-    btn('Hold', () => doMove(null, null)); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
+    btn('Hold', () => doMove(null, null)); if (UI.lastPulse) btn('↺ Replay last pulse', replayPulse); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
     if (RULES.stance) { const t = G.turnTeam; for (const k of Object.keys(STANCES)) btn(`Stance: ${STANCES[k]}`, () => setStance(t, k), G.stance[t] === k ? 'on' : ''); }
     return; }
   if (G.phase === 'pulse') { const as = (G.actors || []).map(i => G.champs[i]); p.innerHTML = as.length ? `Pulse, initiative ${G.ev.init}: <b>${as.map(a => esc(nm(a))).join(', ')}</b> ${as.length > 1 ? 'act' : 'acts'}.` : 'Pulse: start of pulse.'; btn('Skip', skipAnim); return; }
