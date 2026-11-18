@@ -88,6 +88,17 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   champion is due back, all its dead return together. The preset also sets nexus 25, towers 10,
   16 rounds, death timer step 2. Each part is a switch in `RULES`.
 
+- **Respawn window and monsters (added 2026-11-18, D-074), now in the default.** *Window:* a dead
+  champion also returns with a teammate who is due back now, if its own timer would end within
+  one more round (replaces "respawning together", still a switch). *Dragon* (left end of the
+  river, 16 HP, hits an adjacent champion for 3 each pulse, back 3 rounds after it dies):
+  +10% to every chance for the whole team, stacking to 3, plus 3 gold. *Baron* (right end, from
+  round 7, 30 HP, hits for 5, back after 4 rounds): for 2 rounds the team deals double damage
+  to towers and the nexus and regenerates anywhere, plus 6 gold. A champion with nothing else
+  in range attacks a monster in range; the team landing the killing blow takes the reward,
+  even when the other team did most of the damage (a steal). Switches: `respawnWindow`,
+  `monsters` and the monster numbers in `RULES`.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.
@@ -227,3 +238,32 @@ wins the match. Small board, destroy mode, AI-vs-AI, 600–1000 matches per row:
 - In score mode the same rules gave 21% comebacks but a 55% side imbalance, so they belong to
   destroy mode only. Score mode is unchanged.
 - Stances move about 0.7 champions per pulse; a pulse is 3.2 s.
+
+**Measurement: respawn window and monsters (2026-11-18).** Small board, destroy mode with the
+comeback rules, AI-vs-AI, 800 matches per row (rows marked * after making the AI value monsters
+more when it is not outnumbered):
+
+| Rules | Comeback | Tower within 2 rounds of a won fight | Ended by destruction | Rounds | A wins | Dragons / Barons per match | Baron taker wins | Baron taken while behind | Steals |
+|---|---|---|---|---|---|---|---|---|---|
+| Respawning together (previous default) | 23% | 58% | 79% | 13.1 | 50% | – | – | – | – |
+| No grouping | 16% | 69% | 89% | 11.9 | 53% | – | – | – | – |
+| Window of 1 round | 15% | 70% | 89% | 11.9 | 53% | – | – | – | – |
+| Window 1 + monsters * (default) | 15% | 66% | 89% | 12.2 | 54% | 0.58 / 0.44 | 89% | 51 times, 67% won | 14% |
+| Window 2 + monsters * | 15% | 64% | 88% | 12.4 | 52% | 0.60 / 0.45 | 89% | 61 times, 69% won | 13% |
+| Window 3 + monsters * | 18% | 60% | 86% | 12.7 | 53% | 0.62 / 0.56 | 80% | 95 times, 53% won | 16% |
+| Respawning together + monsters * | 21% | 56% | 78% | 13.2 | 52% | 0.66 / 0.63 | 72% | 117 times, 44% won | 20% |
+
+- How respawns worked: champions killed in the same round always shared a timer and returned
+  together. Under "respawning together", every dead champion returned with the first one due,
+  so a champion killed one round earlier could skip most of its timer.
+- The one-round window behaves like no grouping. The comeback gain of "respawning together" came
+  precisely from its long shortcuts, the part that felt awkward. The comeback rate depends on
+  how early defenders return; there is no free lunch.
+- Baron works as a comeback tool: a team that takes it while behind (lower nexus HP plus
+  towers) wins 67% of those matches. But it is rare in AI play (about one match in sixteen),
+  because the AI only fights monsters when it is not outnumbered and nothing else is in range.
+  Baron is also decisive in the leader's hands (taker wins 89%); weaker or shorter Baron is the
+  knob if it closes games too fast.
+- Monsters are fought about once per match in AI play, far below what a human going for them
+  would do. Steals happen 13–20% of the time.
+- A wins 52–54% in the default rows: worth a bigger run before trusting.

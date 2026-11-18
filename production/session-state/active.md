@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — RESPAWN WINDOW + MONSTERS — 2026-11-18.** Owner asked how respawns grouped (explained: same-round deaths always together; "together" rule pulled in earlier deaths) and wanted a float-like window plus Dragon/Baron. Built (D-074), default = window 1 + monsters. Measured: window = no grouping for comebacks (15%); together rule 21–23%; Baron taken while behind wins 67% but rare (~6% of AI matches), Baron taker 89%, steals 14%, monsters ~1 per match. Next: owner plays; knobs: window size vs comebacks, Baron strength, AI appetite for monsters.
+
 **AUTO SKIRMISH — COMEBACKS — 2026-11-18.** Owner: no comebacks; no towers near the nexus; one move per turn can't push or retreat as a group. Built (D-073): team stances, base towers outside the board, home-only regen, home zone, respawning together; all in the destroy preset, now default. Measured: comebacks 16% → 22% (only respawn-together + base towers moved it), tower within 2 rounds of a won fight 58%, 79% by destruction, 13.1 rounds, sides 49%, greedy AI break-even. Next: owner plays; candidates to reach 25–35%: shorter early death timers, AI that overextends, stronger base towers with a longer limit.
 
 **AUTO SKIRMISH — DESTROY THE NEXUS — 2026-11-17.** Owner: a nexus building you destroy should feel better on the small board. Built behind the "Nexus" switch (also on the draft screen) with preset nexus 30 / towers 10 / 14 rounds / death step 2 (D-072). Measured: first version stalled (25% destroyed); preset 84% destroyed, 10.8 rounds vs 7.7, sides 52%. Default still score rules. Not measured: destroy + once-per-round pulse together. Next: owner plays both.
