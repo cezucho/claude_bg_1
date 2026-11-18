@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — OPENING HAND — 2026-11-18.** Owner: opening cards in the panels still force scrolling. Done (D-078): one strip under the board with the playing team's unplayed cards in short form; board shrinks a little meanwhile; statuses share the chances row; Baron-in-round-0 chip bug fixed. Worst case 756/768 px over a whole match. Artifact republished.
+
 **AUTO SKIRMISH — COMPACT PANELS — 2026-11-18.** Owner: no scrolling to see the teams; growth path on hover; chances as icon + number. Done (D-077): compact cards with emoji icon rows, hover card with all details; fits 1366×768. Artifact republished. Next: owner plays.
 
 **AUTO SKIRMISH — BOARD TURN, EFFECTS, MIDDLE TOWERS — 2026-11-18.** Owner: rotate the board (nexus bottom-left / top-right, diagonal movement), bigger hexes not champions, bigger status icons, simple graphics for attacks/spells/statuses, towers next to the Dragon make no sense. Done (D-076): 30° turn + squash, hexes 1.4x, code-drawn effects per action kind, statuses drawn on sprites, one tower per team on the middle line, centre tower removed. Measured 300 matches: sides 50%, Dragon 0.84/match (was 0.62), comebacks 20% (was 14%). Artifact republished. Next: owner plays.

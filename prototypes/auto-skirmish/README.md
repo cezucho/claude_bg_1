@@ -128,6 +128,11 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   (statuses and items only when present). The details, including the growth path, are in a hover
   card. All ten champions fit the screen at 1366×768 without scrolling.
 
+- **Opening hand (added 2026-11-18, D-078).** During the opening, the cards are in one strip under
+  the board: the playing team's champions that have not played yet, each with its two cards in
+  short form (`T↗ T↗ J↖`: role letter and direction). Hover previews the steps on the board; click
+  plays. Nothing needs scrolling at 1366×768.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.

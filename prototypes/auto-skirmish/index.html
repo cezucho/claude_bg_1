@@ -65,7 +65,7 @@ header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px
 .ic b { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: var(--fg); }
 .ic.up b { color: var(--gold); }
 .ic.sp { color: var(--gold); } .ic.sp .pips { font-size: 10px; letter-spacing: 1px; }
-.ic.st { background: #0e131c; border: 1px solid var(--line); border-radius: 9px; padding: 0 5px; }
+.ic.st { background: #0e131c; border: 1px solid var(--line); border-radius: 9px; padding: 0 5px; font-size: 12px; }
 .buffs { display: flex; flex-wrap: wrap; gap: 4px; }
 .tip { position: fixed; z-index: 30; width: min(340px, calc(100vw - 16px)); background: #111722f2; border: 1px solid var(--dim); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; box-shadow: 0 8px 28px #000a; pointer-events: none; display: flex; flex-direction: column; gap: 6px; }
 .tip .tiphd { display: flex; gap: 10px; align-items: center; }
@@ -140,6 +140,20 @@ svg#board.art { max-height: 70vh; }
 .art .hexp.reach { stroke: var(--good); stroke-width: 2; }
 .hexside { fill: #6b4a2b; stroke: #3b2716; stroke-width: 1; pointer-events: none; }
 .hexhit { fill: transparent; stroke: none; cursor: pointer; }
+.centre:has(.hand:not([hidden])) svg#board { max-height: max(300px, calc(100vh - 300px)); }
+.hand { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px 8px; display: flex; flex-direction: column; gap: 5px; }
+.hand.A { box-shadow: inset 3px 0 0 var(--a); } .hand.B { box-shadow: inset 3px 0 0 var(--b); }
+.handhd { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 12px; color: var(--dim); }
+.handhd b { font-family: var(--display); color: var(--fg); font-size: 13px; }
+.handhd .legend2 { margin-left: auto; font-size: 11px; }
+.handrow { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.hgroup { display: flex; flex-direction: column; gap: 3px; }
+.hgroup .who { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+.hgroup .who img { width: 22px; height: 22px; object-fit: cover; object-position: 50% 0; border-radius: 50%; background: #2a3448; }
+.hgroup .two { display: flex; gap: 4px; }
+.ocard { padding: 3px 7px; font-family: var(--mono); font-size: 12.5px; display: flex; gap: 6px; border-radius: 5px; }
+.ocard:not([disabled]):hover { border-color: var(--gold); background: #2c2614; }
+.ocard[disabled] { opacity: .8; cursor: default; }
 .tint { pointer-events: none; stroke: none; fill: none; }
 .tint.hill { fill: #e0b75a55; } .tint.tower { fill: #9aa0ab70; } .tint.nexA { fill: #5ab4ff50; } .tint.nexB { fill: #ff7a5950; }
 .tint.reach { fill: #7bd88f45; } .tint.hover { fill: #7bd88f90; }
@@ -266,6 +280,7 @@ svg#board.art { max-height: 70vh; }
   <section class="rail" id="rail-A"></section>
   <section class="centre">
     <div class="boardwrap"><svg id="board" role="img" aria-label="Hex board"></svg></div>
+    <div class="hand" id="hand" hidden></div>
     <div class="prompt"><p id="prompt">Loading…</p><div class="btns" id="btns"></div></div>
     <div class="legend"><span><i style="background:var(--gold)"></i>synergy between neighbours</span><span><i style="background:var(--good)"></i>synergy gained by this move</span><span><i style="background:var(--bad)"></i>synergy lost</span><span>badge on a token = its initiative this pulse</span></div>
     <div class="log" id="log" aria-live="polite"></div>
@@ -463,7 +478,7 @@ const AIP = { push: 4, greedy: null };   // greedy: a team letter whose AI pushe
 const structure = () => RULES.nexusMode === 'structure';
 const BASE_TOWERS_A = [[1, -4], [2, -4]];
 const pitHexes = () => BOARD.hills.filter(h => h[1] === 0);   // the two river-end hills: both teams are equally far from each
-const baronOn = t => G.baronUntil[t] >= G.round;   // just past the back edge, behind the nexus: nobody can stand there
+const baronOn = t => G.baronUntil[t] > 0 && G.baronUntil[t] >= G.round;   // just past the back edge, behind the nexus: nobody can stand there
 const deathDelay = r => 1 + Math.floor((r - 1) / RULES.respawnStep);
 
 // ═════════════ state ═════════════
@@ -1123,7 +1138,7 @@ function render() {
   document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
   document.getElementById('b-nexus').textContent = structure() ? 'Nexus: destroy it' : 'Nexus: score';
   document.getElementById('b-pulse').textContent = RULES.onePulse ? 'Pulse: once per round' : 'Pulse: after every move';
-  renderRail('A'); renderRail('B'); renderBoard(); renderPrompt(); renderLog(); renderStrip(); renderOverlay();
+  renderRail('A'); renderRail('B'); renderHand(); renderBoard(); renderPrompt(); renderLog(); renderStrip(); renderOverlay();
 }
 function procRows(c, L) {
   return Object.keys(PROCS).filter(k => (c.procs[k] || 0) > 0).map(k => { const p = pct(c, k, L), up = p > c.procs[k];
@@ -1155,15 +1170,13 @@ function renderRail(team) {
       return `<span class="ic ${v > c0.procs[k] ? 'up' : ''}" title="${esc(PROCS[k].name)}: ${esc(PROCS[k].text)}">${PICON[k]}<b>${v}</b></span>`; }).join('');
     const sts = [...statusList(c).map(k => `<span class="ic st" title="${esc(STATUS[k][1])}">${SICON[k]}</span>`),
       c.poison ? `<span class="ic st" title="poisoned ×${c.poison}">☠️<b>${c.poison}</b></span>` : '', c.shield ? `<span class="ic st" title="shield ${c.shield}">🛡️<b>+${c.shield}</b></span>` : '',
-      e.home ? `<span class="ic st" title="home: takes 1 less per hit">🏠</span>` : '', c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more gold">⭐<b>${c0.bounty}</b></span>` : '',
+c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more gold">⭐<b>${c0.bounty}</b></span>` : '',
       c0.items.length ? `<span class="ic st" title="${esc(c0.items.map(id => ITEMS.find(x => x.id === id).name).join(', '))}">🎒<b>${c0.items.length}</b></span>` : ''].join('');
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
       <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="role">${c0.role}</span><span class="lv">${c.dead ? `† back R${c0.respawnAt}` : `Lv ${c0.level}`}</span></div>
         <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div></div></div>
-      <div class="icons">${stat('🗡️', e.atk, e.atk > c0.atk, 'attack')}${stat('🎯', e.range, e.range > c0.range, 'range')}${stat('⏩', e.init, e.init > c0.init, 'initiative')}${e.armor ? stat('🧱', e.armor, true, 'armour: less damage per hit') : ''}${c0.dive ? stat('🦘', c0.dive, false, 'leap') : ''}${RULES.specials && sp ? `<span class="ic sp" title="${esc(sp.name)}: ${esc(sp.text)}">★<span class="pips">${'●'.repeat(Math.min(sp.n, charge))}${'○'.repeat(Math.max(0, sp.n - charge))}</span></span>` : ''}</div>
-      <div class="icons">${chances}</div>
-      ${sts ? `<div class="icons">${sts}</div>` : ''}
-      ${G.phase === 'opening' ? `<div class="cards2">${c0.def.cards.map((_, i) => `<button data-card="${i}" ${canSel ? '' : 'disabled'}>Card ${i + 1}<small>${esc(cardText(c0, i))}</small></button>`).join('')}</div>` : ''}
+      <div class="icons">${stat('🗡️', e.atk, e.atk > c0.atk, 'attack')}${stat('🎯', e.range, e.range > c0.range, 'range')}${stat('⏩', e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(e.home ? '🏠' : '🧱', e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat('🦘', c0.dive, false, 'leap') : ''}${RULES.specials && sp ? `<span class="ic sp" title="${esc(sp.name)}: ${esc(sp.text)}">★<span class="pips">${'●'.repeat(Math.min(sp.n, charge))}${'○'.repeat(Math.max(0, sp.n - charge))}</span></span>` : ''}</div>
+      <div class="icons">${chances}${sts}</div>
     </div>`);
     if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button')) return; select(c0); });
     card.addEventListener('mouseenter', () => { UI.tipFor = c0.id; showTip(card, c0, team); });
@@ -1196,6 +1209,25 @@ function showTip(card, c0, team) {
   tip.style.left = x + 'px'; tip.style.top = y + 'px';
 }
 function hideTip() { const tip = document.getElementById('tip'); if (tip) tip.hidden = true; }
+// Opening cards (D-078): one strip under the board with the cards of the team playing now, grouped by
+// champion; a champion's group leaves once it has played. Steps are short: role letter + arrow.
+const ROLE_LETTER = { top: 'T', jungle: 'J', mid: 'M', bottom: 'B', support: 'S' };
+const shortCard = (c, i) => c.def.cards[i].map(st => { const [role, dir] = st.split(' '); return `<span>${ROLE_LETTER[role]}${OARROW[c.team][dir]}</span>`; }).join('');
+function renderHand() {
+  const el = document.getElementById('hand');
+  if (G.phase !== 'opening') { el.hidden = true; el.innerHTML = ''; return; }
+  const t = G.openTurn, mine = G.humans.includes(t), left = G.champs.filter(c => c.team === t && !G.opened.has(c.id));
+  el.hidden = false; el.className = `hand ${t}`;
+  el.innerHTML = `<div class="handhd"><b>Team ${t}</b><span>${mine ? 'your opening cards: hover to preview, click to play' : 'opening cards'}</span><span class="legend2">T top · J jungle · M mid · B bottom · S support</span></div><div class="handrow"></div>`;
+  const row = el.querySelector('.handrow');
+  for (const c of left) { const g = h(`<div class="hgroup"><div class="who">${UI.art ? `<img src="art/${c.def.id}.png" alt="">` : ''}<b>${esc(nm(c))}</b></div><div class="two"></div></div>`);
+    c.def.cards.forEach((_, i) => { const b = h(`<button class="ocard" ${mine ? '' : 'disabled'} title="${esc(nm(c))}, card ${i + 1}: ${esc(cardText(c, i))}">${shortCard(c, i)}</button>`);
+      b.addEventListener('click', () => { hideTip(); openingPlay(c, i); });
+      b.addEventListener('mouseenter', () => { UI.hover = { card: [c.id, i] }; renderBoard(); });
+      b.addEventListener('mouseleave', () => { UI.hover = null; renderBoard(); });
+      g.querySelector('.two').appendChild(b); });
+    row.appendChild(g); }
+}
 function select(c) {
   if (!G.humans.includes(c.team) || c.dead) return;
   if (G.phase === 'move' && G.turnTeam === c.team) { UI.sel = UI.sel === c.id ? null : c.id; UI.hover = null; render(); }
