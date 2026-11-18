@@ -99,11 +99,23 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   even when the other team did most of the damage (a steal). Switches: `respawnWindow`,
   `monsters` and the monster numbers in `RULES`.
 
+- **Art view (added 2026-11-18, D-075), on by default.** The owner made the auto skirmish the main
+  line of the game and asked to see the look before going further: chibi figures on an isometric
+  board, one image per thing, no effects. The board is squashed into an isometric look; each hex
+  has one grass texture and a dirt edge; champions, Dragon, Baron, towers and nexuses are cut-out
+  sprites in `art/`, drawn back to front, with a team-coloured ring at the feet; portraits on the
+  cards. Motion comes from code only: idle breathing, a short lunge toward the target when a
+  champion acts, a white flash and shake when hit. The **Art** button switches back to the old
+  tokens. The stat strip shows the last pulse's length and beats, the average pulse and a match
+  clock (from the end of the draft). Images come from `tools/asset_gen/gen_sprites.py` with the
+  briefs in `assets/data/art/skirmish_sprites.json`; raw images and prompts are in
+  `production/art_review/skirmish/`.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.
 
-**How to run.** Open `index.html`, or the published artifact link from the session.
+**How to run.** Open `index.html` (keep the `art/` folder next to it), or the published artifact link from the session.
 
 **Status.** In progress, first playable 2026-11-17.
 

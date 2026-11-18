@@ -1,0 +1,3 @@
+# Raw generations stay local (15 MB); the anchor is the style reference for new characters.
+*.png
+!anchor.png

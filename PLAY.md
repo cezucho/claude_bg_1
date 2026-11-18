@@ -1,3 +1,10 @@
+# Main line: the auto skirmish
+
+Since 2026-11-18 (D-075) the game's main line is the **auto skirmish**: open
+`prototypes/auto-skirmish/index.html` in a browser (no server, no install; keep the `art/` folder
+beside it). Draft, a short opening, then one move per turn and an automatic pulse; chibi sprites
+on an isometric board. Everything below describes the earlier v2 clients, kept as reference.
+
 # Playing AUGURY — v2 (three abilities + summoner spells, Field 7)
 
 Two clients over the same simulation: a **browser client** laid out like a match

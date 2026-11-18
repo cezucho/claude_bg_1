@@ -105,6 +105,30 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
 .tok .ini { font-family: var(--mono); font-size: 10px; text-anchor: middle; dominant-baseline: central; fill: #0d1119; font-weight: 600; pointer-events: none; }
 .tok .inibg { fill: var(--dim); } .tok .inibg.up { fill: var(--gold); } .tok .inibg.down { fill: var(--bad); }
 .tok .st { font-size: 11px; text-anchor: middle; pointer-events: none; }
+/* Art view (D-075): sprites, isometric squash, code-driven motion */
+svg#board.art { max-height: 70vh; }
+.boardwrap:has(svg.art) { background: radial-gradient(ellipse at center, #2b3a2a 0%, #141b14 80%); }
+.art .hexp { fill: url(#grass); stroke: #2f4a22; stroke-width: .8; }
+.art .hexp.reach { stroke: var(--good); stroke-width: 2; }
+.hexside { fill: #6b4a2b; stroke: #3b2716; stroke-width: 1; pointer-events: none; }
+.tint { pointer-events: none; stroke: none; fill: none; }
+.tint.hill { fill: #e0b75a55; } .tint.tower { fill: #9aa0ab70; } .tint.nexA { fill: #5ab4ff50; } .tint.nexB { fill: #ff7a5950; }
+.tint.reach { fill: #7bd88f45; } .tint.hover { fill: #7bd88f90; }
+.art .lbl { fill: #f3f6fb; paint-order: stroke; stroke: #0b0f16; stroke-width: 2px; }
+.spr { pointer-events: none; } .tok.mine .spr { pointer-events: auto; cursor: pointer; }
+.sprw { transform-box: fill-box; transform-origin: 50% 100%; animation: bob 1.4s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, .965); } }
+.tok.actor .sprw { animation: lunge .2s ease-out 1 both; }
+@keyframes lunge { 0% { transform: translate(0, 0); } 45% { transform: translate(var(--dx), var(--dy)) scale(1.1, .92); } 100% { transform: translate(0, 0); } }
+.hit .spr, .spr.hit { animation: hitflash .3s ease-out 1; }
+@keyframes hitflash { 0% { filter: brightness(2.6) saturate(0); transform: translateX(-3px); } 30% { transform: translateX(3px); } 60% { filter: brightness(1.4); transform: translateX(-2px); } 100% { filter: none; transform: none; } }
+.tok ellipse.body { stroke-width: 2.5; }
+.tok.A ellipse.body { fill: #5ab4ff40; stroke: var(--a); } .tok.B ellipse.body { fill: #ff7a5940; stroke: var(--b); }
+.tok.sel ellipse.body { stroke: var(--gold); stroke-width: 3.5; fill: #e7b75a40; }
+.tok.actor ellipse.body { stroke: #fff; stroke-width: 3.5; }
+.foot { fill: #00000055; pointer-events: none; }
+.pt { width: 34px; height: 34px; object-fit: cover; object-position: 50% 0; border-radius: 50%; background: #2a3448; border: 1px solid var(--line); flex: none; align-self: center; }
+.card .hd:has(.pt) { align-items: center; }
 .pop { font-family: var(--display); font-weight: 700; font-size: 14px; text-anchor: middle; paint-order: stroke; stroke: #0b0f16; stroke-width: 3px; pointer-events: none; }
 .pop.bad { fill: var(--bad); } .pop.good { fill: var(--good); } .pop.info { fill: var(--frost); } .pop.gold { fill: var(--gold); }
 
@@ -171,6 +195,7 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
     <button id="b-play">New: play A vs AI</button>
     <button id="b-watch">Watch AI vs AI</button>
     <button id="b-board">Board</button>
+    <button id="b-art">Art</button>
     <button id="b-aims">Show targets</button>
     <button id="b-speed">Speed</button>
     <button id="b-pulse">Pulse</button>
@@ -204,7 +229,8 @@ const frame = (team, v) => team === 'A' ? v : mirror(v);
 const other = t => t === 'A' ? 'B' : 'A';
 const hexagon = n => { const o = []; for (let q = -n; q <= n; q++) for (let r = -n; r <= n; r++) if (Math.abs(q + r) <= n) o.push([q, r]); return o; };
 const HEX = 30, SQ3 = Math.sqrt(3);
-const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r];
+const isoK = () => UI.art ? .62 : 1;   // art view: the board is squashed into an isometric look
+const px = (q, r) => [HEX * SQ3 * (q + r / 2), -HEX * 1.5 * r * isoK()];
 const BOARDS = {
   field7: { name: 'Field 7', size: 59,
     hexes: [[-2,-3],[-1,-3],[0,-3],[1,-3],[2,-3],[3,-3],[4,-3],[5,-3],[-3,-2],[-2,-2],[-1,-2],[0,-2],[1,-2],[2,-2],[3,-2],[4,-2],[5,-2],[-3,-1],[-2,-1],[-1,-1],[0,-1],[1,-1],[2,-1],[3,-1],[4,-1],[-4,0],[-3,0],[-2,0],[-1,0],[0,0],[1,0],[2,0],[3,0],[4,0],[-4,1],[-3,1],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,1],[-5,2],[-4,2],[-3,2],[-2,2],[-1,2],[0,2],[1,2],[2,2],[3,2],[-5,3],[-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],[2,3]],
@@ -378,7 +404,7 @@ const deathDelay = r => 1 + Math.floor((r - 1) / RULES.respawnStep);
 
 // ═════════════ state ═════════════
 let G = null, HEADLESS = false;
-const UI = { board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
+const UI = { art: true, pulses: [], board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
 const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
@@ -492,6 +518,7 @@ function aimOf(c, L) {   // { target, leap } as the champion would act now
 
 // ═════════════ opening ═════════════
 function startOpening() {
+  G.t0 = performance.now(); UI.pulses = [];
   G.phase = 'opening'; G.champs = [];
   for (const t of ['A','B']) G.picks[t].forEach((d, i) => G.champs.push(makeChampFor(d, t, i)));
   G.opened = new Set(); G.openTurn = 'A';
@@ -998,10 +1025,10 @@ function toBeats(events) {
   return out;
 }
 function animate(events, done) {
-  const beats = toBeats(events); let i = 0; UI.anim = { events, done };
+  const beats = toBeats(events); let i = 0, t0 = performance.now(); UI.anim = { events, done };
   const step = () => {
     if (!UI.anim || UI.anim.events !== events) return;
-    if (i >= beats.length) { UI.anim = null; done(); return; }
+    if (i >= beats.length) { UI.anim = null; UI.pulses.push({ s: (performance.now() - t0) / 1000, beats: beats.length }); done(); return; }
     const e = beats[i++]; G.display = e.snap; G.actors = e.actors; G.ev = e; render();
     UI.timer = setTimeout(step, delay(e.special));
   };
@@ -1028,6 +1055,7 @@ function render() {
   document.getElementById('m-phase').textContent = { draft: 'Draft', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: 'Level up', openlevel: `Level up · ${G.levelQueue ? G.levelQueue.team : ''}`, shop: 'Shop', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
   document.getElementById('b-board').textContent = `Board: ${BOARDS[UI.board].name} (${BOARDS[UI.board].size})`;
   document.getElementById('b-aims').classList.toggle('on', UI.aims);
+  document.getElementById('b-art').textContent = UI.art ? 'Art: sprites' : 'Art: tokens';
   document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
   document.getElementById('b-nexus').textContent = structure() ? 'Nexus: destroy it' : 'Nexus: score';
   document.getElementById('b-pulse').textContent = RULES.onePulse ? 'Pulse: once per round' : 'Pulse: after every move';
@@ -1059,7 +1087,7 @@ function renderRail(team) {
     const spLine = RULES.specials && sp ? `<div class="special">★ <b>${esc(sp.name)}</b> after ${sp.n} attacks <span class="pips">${'●'.repeat(Math.min(sp.n, c.charge ?? c0.charge))}${'○'.repeat(Math.max(0, sp.n - (c.charge ?? c0.charge)))}</span>: ${esc(sp.text)}</div>` : '';
     const itemLine = c0.items.length ? `<div class="stats">${c0.items.map(id => { const it = ITEMS.find(x => x.id === id); return `<span class="chip syn" title="${esc(it.t)}">${esc(it.name)}</span>`; }).join('')}</div>` : '';
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
-      <div class="hd"><b>${esc(c0.def.name)}</b><span class="role">${c0.role} · ${c0.def.tag}</span><span class="lv">Lv ${c0.level}${c.dead ? ` · back end of round ${c0.respawnAt}` : ''}</span></div>
+      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<b>${esc(c0.def.name)}</b><span class="role">${c0.role} · ${c0.def.tag}</span><span class="lv">Lv ${c0.level}${c.dead ? ` · back end of round ${c0.respawnAt}` : ''}</span></div>
       <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div>
       <div class="stats">ATK <b class="${e.atk > c0.atk ? 'up' : ''}">${e.atk}</b> RNG <b class="${e.range > c0.range ? 'up' : ''}">${e.range}</b> INIT <b class="${e.init > c0.init ? 'up' : ''}">${e.init}</b>${e.armor ? ` ARM <b class="up">${e.armor}</b>` : ''}${c0.dive ? ` LEAP <b>${c0.dive}</b>` : ''}</div>
       <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[c0.def.target]}</span>${synText(c0)}${st}</div>
@@ -1081,12 +1109,20 @@ function select(c) {
   if (!G.humans.includes(c.team) || c.dead) return;
   if (G.phase === 'move' && G.turnTeam === c.team) { UI.sel = UI.sel === c.id ? null : c.id; UI.hover = null; render(); }
 }
-function hexPts(cx, cy) { const p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); p.push(`${(cx + HEX * .95 * Math.cos(a)).toFixed(1)},${(cy + HEX * .95 * Math.sin(a)).toFixed(1)}`); } return p.join(' '); }
+function hexPts(cx, cy) { const p = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); p.push(`${(cx + HEX * .95 * Math.cos(a)).toFixed(1)},${(cy + HEX * .95 * Math.sin(a) * isoK()).toFixed(1)}`); } return p.join(' '); }
 function renderBoard() {
   const svg = document.getElementById('board'); svg.innerHTML = '';
   const pts = [...HEXES, ...((G && G.towers) || []).filter(t => t.kind === 'base').map(t => t.pos)].map(x => px(...x)), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = HEX * 1.2;
-  svg.setAttribute('viewBox', `${Math.min(...xs) - pad} ${Math.min(...ys) - pad} ${Math.max(...xs) - Math.min(...xs) + 2 * pad} ${Math.max(...ys) - Math.min(...ys) + 2 * pad}`);
-  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker></defs>`));
+  const padTop = pad + (UI.art ? HEX * 1.3 : 0);   // sprites stand above their hex
+  svg.setAttribute('viewBox', `${Math.min(...xs) - pad} ${Math.min(...ys) - padTop} ${Math.max(...xs) - Math.min(...xs) + 2 * pad} ${Math.max(...ys) - Math.min(...ys) + pad + padTop}`);
+  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker>${UI.art ? '<pattern id="grass" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/grass.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern>' : ''}</defs>`));
+  svg.classList.toggle('art', UI.art);
+  const ART = UI.art, depth = [];   // in the art view, sprites are collected and drawn back to front
+  const put = (y, el) => ART ? depth.push({ y, el }) : svg.appendChild(el);
+  const hitHexes = new Set(G.display && G.ev ? G.ev.pops.filter(p => p.cls === 'bad' || p.cls === 'gold').map(p => K(p.hex)) : []);
+  const sprite = (name, cx, foot, hgt, cls = '') => `<image class="spr ${cls}" href="art/${name}.png" x="${cx - hgt / 2}" y="${foot - hgt}" width="${hgt}" height="${hgt}" preserveAspectRatio="xMidYMax meet"></image>`;
+  const footRing = (cx, cy, col) => `<ellipse class="foot" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .5}" ry="${HEX * .2}" ${col ? `style="fill:${col}"` : ''}></ellipse>`;
+  if (ART) for (const x of [...HEXES].sort((a, b) => px(...a)[1] - px(...b)[1])) { const [cx, cy] = px(...x); svg.appendChild(sv(`<polygon class="hexside" points="${hexPts(cx, cy + 7)}"></polygon>`)); }
   const sel = UI.sel != null ? G.champs[UI.sel] : null;
   const reach = G.phase === 'move' && sel ? moveTargets(sel) : [];
   const reachSet = new Set(reach.map(K));
@@ -1103,17 +1139,21 @@ function renderBoard() {
     const p = sv(`<polygon class="${cls.join(' ')}" points="${hexPts(cx, cy)}"></polygon>`);
     if (reachSet.has(k)) { p.addEventListener('click', () => doMove(sel, x)); p.addEventListener('mouseenter', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) return; UI.hover = { hex: x }; renderBoard(); }); p.addEventListener('mouseleave', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) { UI.hover = null; renderBoard(); } }); }
     svg.appendChild(p);
+    if (ART && cls.length > 1) svg.appendChild(sv(`<polygon class="tint ${cls.slice(1).join(' ')}" points="${hexPts(cx, cy)}"></polygon>`));
     const T = G.towers && G.towers.find(t => same(t.pos, x));
     if (T && !T.up) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy}">rubble</text>`));
-    else if (SOLID.has(k)) { svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - (T && T.side && RULES.towerHp ? 4 : 0)}">♜</text>`));
+    else if (SOLID.has(k) && ART && T) { const col = T && T.side ? (T.side === 'A' ? '#5ab4ff80' : '#ff7a5980') : '#c49bff60';
+      put(cy, sv(`<g>${footRing(cx, cy, col)}${sprite('tower', cx, cy + HEX * .28, HEX * 1.5, hitHexes.has(k) ? 'hit' : '')}${T && T.side && RULES.towerHp ? `<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX}" height="4" rx="1" fill="#0b0f16"></rect><rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX * T.hp / T.max}" height="4" rx="1" fill="${T.side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>` : ''}</g>`)); }
+    else if (SOLID.has(k) && !ART) { svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - (T && T.side && RULES.towerHp ? 4 : 0)}">♜</text>`));
       if (T && T.side && RULES.towerHp) { svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX}" height="4" rx="1" fill="#0b0f16"></rect>`)); svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX * T.hp / T.max}" height="4" rx="1" fill="${T.side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); } }
     else if ((isNexus('A', x) || isNexus('B', x)) && structure()) { const side = isNexus('A', x) ? 'A' : 'B', hp = Math.max(0, (G.display ? G.display.nexus : G.nexus)[side]);
-      svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - 5}" style="fill:${side === 'A' ? 'var(--a)' : 'var(--b)'}">◆</text>`));
-      svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .2}">NEXUS${nexusOpen(side) ? '' : ' 🔒'}</text>`));
+      if (ART) put(cy, sv(`<g>${footRing(cx, cy, side === 'A' ? '#5ab4ff90' : '#ff7a5990')}${sprite('nexus', cx, cy + HEX * .3, HEX * 1.7, hitHexes.has(k) ? 'hit' : '')}<text class="lbl nx" x="${cx}" y="${cy + HEX * .3 - 2}">${nexusOpen(side) ? '' : '🔒'}</text></g>`));
+      else { svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - 5}" style="fill:${side === 'A' ? 'var(--a)' : 'var(--b)'}">◆</text>`));
+      svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .2}">NEXUS${nexusOpen(side) ? '' : ' 🔒'}</text>`)); }
       svg.appendChild(sv(`<rect x="${cx - HEX * .6}" y="${cy + HEX * .42}" width="${HEX * 1.2}" height="5" rx="1" fill="#0b0f16"></rect>`));
       svg.appendChild(sv(`<rect x="${cx - HEX * .6}" y="${cy + HEX * .42}" width="${HEX * 1.2 * hp / RULES.nexusHp}" height="5" rx="1" fill="${side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); }
     else if (isNexus('A', x) || isNexus('B', x)) svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .62}">NEXUS</text>`));
-    if (onHill(x)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * .6}" style="fill:var(--gold)">▲ hill</text>`));
+    if (onHill(x)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * (ART ? .3 : .6)}" style="fill:var(--gold)">▲ hill</text>`));
   }
   // synergy links
   const drawn = new Set();
@@ -1145,12 +1185,15 @@ function renderBoard() {
     svg.appendChild(sv(`<line class="link" x1="${x1}" y1="${y1}" x2="${x1 + (x2 - x1) * .62}" y2="${y1 + (y2 - y1) * .62}" style="stroke-dasharray:3 3;stroke-width:2" marker-end="url(#ar)"></line>`)); }
   // base towers sit outside the board
   for (const T of (G.towers || []).filter(t => t.kind === 'base')) { const [cx, cy] = px(...T.pos);
+    if (ART) svg.appendChild(sv(`<polygon class="hexside" points="${hexPts(cx, cy + 7)}" style="opacity:${T.up ? 1 : .4}"></polygon>`));
     svg.appendChild(sv(`<polygon class="hexp tower" points="${hexPts(cx, cy)}" style="opacity:${T.up ? .9 : .35};stroke-dasharray:4 3"></polygon>`));
-    if (T.up) { svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - 4}">♜</text>`)); svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX}" height="4" rx="1" fill="#0b0f16"></rect>`)); svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX * T.hp / T.max}" height="4" rx="1" fill="${T.side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); }
+    if (T.up && ART) put(cy, sv(`<g>${footRing(cx, cy, T.side === 'A' ? '#5ab4ff80' : '#ff7a5980')}${sprite('tower', cx, cy + HEX * .28, HEX * 1.4, hitHexes.has(K(T.pos)) ? 'hit' : '')}<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX}" height="4" rx="1" fill="#0b0f16"></rect><rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX * T.hp / T.max}" height="4" rx="1" fill="${T.side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect></g>`));
+    else if (T.up) { svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - 4}">♜</text>`)); svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX}" height="4" rx="1" fill="#0b0f16"></rect>`)); svg.appendChild(sv(`<rect x="${cx - HEX * .5}" y="${cy + HEX * .3}" width="${HEX * T.hp / T.max}" height="4" rx="1" fill="${T.side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); }
     else svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy}">rubble</text>`)); }
   // neutral monsters
   for (const m of (G.monsters || [])) { const [cx, cy] = px(...m.pos);
-    if (m.alive) { svg.appendChild(sv(`<circle cx="${cx}" cy="${cy}" r="${HEX * .62}" fill="#2b1f3d" stroke="var(--arcane)" stroke-width="3"></circle>`));
+    if (m.alive && ART) put(cy, sv(`<g>${footRing(cx, cy, '#c49bff70')}<g class="sprw">${sprite(m.kind === 'dragon' ? 'dragon' : 'baron', cx, cy + HEX * .3, HEX * (m.kind === 'dragon' ? 1.7 : 2.2), hitHexes.has(K(m.pos)) ? 'hit' : '')}</g><rect x="${cx - HEX * .55}" y="${cy + HEX * .45}" width="${HEX * 1.1}" height="4" rx="1" fill="#0b0f16"></rect><rect x="${cx - HEX * .55}" y="${cy + HEX * .45}" width="${HEX * 1.1 * m.hp / m.max}" height="4" rx="1" fill="var(--arcane)"></rect></g>`));
+    else if (m.alive) { svg.appendChild(sv(`<circle cx="${cx}" cy="${cy}" r="${HEX * .62}" fill="#2b1f3d" stroke="var(--arcane)" stroke-width="3"></circle>`));
       svg.appendChild(sv(`<text class="lbl big" x="${cx}" y="${cy - 3}" style="fill:var(--arcane);font-family:var(--display);font-weight:700">${m.kind === 'dragon' ? '🐉' : '♛'}</text>`));
       svg.appendChild(sv(`<rect x="${cx - HEX * .55}" y="${cy + HEX * .45}" width="${HEX * 1.1}" height="4" rx="1" fill="#0b0f16"></rect>`));
       svg.appendChild(sv(`<rect x="${cx - HEX * .55}" y="${cy + HEX * .45}" width="${HEX * 1.1 * m.hp / m.max}" height="4" rx="1" fill="var(--arcane)"></rect>`)); }
@@ -1161,7 +1204,8 @@ function renderBoard() {
     const [cx, cy] = px(...c.pos), e = eff(c0, Lnow), eb = before ? eff(c0, before) : null;
     const mine = G.phase === 'move' && G.humans.includes(c0.team) && G.turnTeam === c0.team;
     const iniCls = eb && e.init > eb.init ? 'up' : eb && e.init < eb.init ? 'down' : e.init > c0.init ? 'up' : '';
-    const g = sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${(G.actors || []).includes(c0.id) ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
+    const isActor = (G.actors || []).includes(c0.id);
+    const g = ART ? sv(artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes)) : sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
       <circle class="body" cx="${cx}" cy="${cy}" r="${HEX * .6}"></circle>
       <text class="g" x="${cx}" y="${cy - 1}">${esc(c0.def.name[0])}</text>
       <rect x="${cx - HEX * .55}" y="${cy + HEX * .5}" width="${HEX * 1.1}" height="4" rx="1" fill="#0b0f16"></rect>
@@ -1175,13 +1219,32 @@ function renderBoard() {
     </g>`);
     if (mine) { g.addEventListener('click', () => select(c0)); g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') select(c0); }); }
     else if (sel && reachSet.has(K(c.pos))) g.addEventListener('click', () => doMove(sel, c.pos));
-    svg.appendChild(g); }
+    put(cy, g); }
+  depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
   // pops during the pulse
   if (G.display && G.ev) { const stack = {}; for (const p of G.ev.pops) { const k = K(p.hex), n = stack[k] = (stack[k] || 0) + 1, [cx, cy] = px(...p.hex);
-    svg.appendChild(sv(`<text class="pop ${p.cls}" x="${cx}" y="${cy - HEX * .8 - (n - 1) * 13}">${esc(p.text)}</text>`)); } }
+    svg.appendChild(sv(`<text class="pop ${p.cls}" x="${cx}" y="${cy - HEX * (ART ? 1.6 : .8) - (n - 1) * 13}">${esc(p.text)}</text>`)); } }
   // undo the preview
   if (prevAll) G.champs.forEach((x, i) => x.pos = prevAll[i]);
   if (prevPos) sel.pos = prevPos;
+}
+function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a champion in the art view: sprite, foot ring, plate below
+  const foot = cy + HEX * .28, H = HEX * 1.85, ln = isActor && G.ev ? G.ev.lines.find(l => same(l.from, c.pos)) : null;
+  let dx = 0, dy = -6; if (ln) { const [x2, y2] = px(...ln.to); dx = (x2 - cx) * .35; dy = (y2 - cy) * .35; }
+  const phase = ((performance.now() / 1000 + c0.id * .37) % 1.4).toFixed(2);
+  const sts = statusList(c), sk = 'paint-order:stroke;stroke:#0b0f16;stroke-width:2px';
+  return `<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''} ${hitHexes.has(K(c.pos)) ? 'hit' : ''}" ${mine ? 'tabindex="0"' : ''}>
+    <ellipse class="body" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .55}" ry="${HEX * .24}"></ellipse>
+    <g class="sprw" style="--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:-${phase}s"><image class="spr" href="art/${c0.def.id}.png" x="${cx - H / 2}" y="${foot - H}" width="${H}" height="${H}" preserveAspectRatio="xMidYMax meet"></image></g>
+    <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0}" height="4" rx="1" fill="#0b0f16"></rect>
+    <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0 * Math.max(0, c.hp) / c0.maxHp}" height="4" rx="1" fill="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>
+    <circle class="inibg ${iniCls}" cx="${cx - HEX * .62}" cy="${cy + HEX * .48}" r="7"></circle>
+    <text class="ini" x="${cx - HEX * .62}" y="${cy + HEX * .48}">${e.init}</text>
+    ${sts.map((k, j) => `<text class="st" x="${cx + HEX * .62}" y="${cy - HEX * 1.1 + j * 11}" style="fill:${STATUS[k][2]};${sk}">${STATUS[k][0]}</text>`).join('')}
+    ${RULES.specials && c0.def.special ? `<text class="st" x="${cx}" y="${cy + HEX * .78}" style="fill:var(--gold);font-size:8px;letter-spacing:1px;${sk}">${'●'.repeat(Math.min(c0.def.special.n, c.charge))}${'○'.repeat(Math.max(0, c0.def.special.n - c.charge))}</text>` : ''}
+    ${c.poison ? `<text class="st" x="${cx - HEX * .62}" y="${cy - HEX * .6}" style="fill:var(--poison);${sk}">☠</text>` : ''}
+    ${c0.level ? `<text class="st" x="${cx + HEX * .66}" y="${cy + HEX * .55}" style="fill:var(--gold);font-size:9px;${sk}">${'•'.repeat(c0.level)}</text>` : ''}
+  </g>`;
 }
 function renderPrompt() {
   const p = document.getElementById('prompt'), b = document.getElementById('btns'); b.innerHTML = '';
@@ -1203,7 +1266,10 @@ function renderPrompt() {
   if (G.phase === 'over') { p.textContent = G.winner === 'draw' ? 'A draw.' : `Team ${G.winner} wins in round ${G.round}.`; btn('Play again', () => newMatch('play'), 'primary'); btn('Watch AI vs AI', () => newMatch('watch')); }
 }
 function renderLog() { const el = document.getElementById('log'); el.innerHTML = G.log.slice(-120).map(l => `<div class="${l.cls}">${l.html}</div>`).join(''); el.scrollTop = el.scrollHeight; }
-function renderStrip() { const s = STATS; document.getElementById('strip').innerHTML = `<span>matches <b>${s.matches}</b></span><span>A wins <b>${s.matches ? Math.round(100 * s.winsA / s.matches) : 0}%</b></span><span>avg rounds <b>${s.matches ? (s.rounds / s.matches).toFixed(1) : '–'}</b></span><span>deaths <b>${s.deaths}</b></span><span>chances that fired <b>${s.procs}</b></span><span>seed <b>${G ? G.startSeed : ''}</b></span>`; }
+function renderStrip() { const s = STATS; document.getElementById('strip').innerHTML = `<span>matches <b>${s.matches}</b></span><span>A wins <b>${s.matches ? Math.round(100 * s.winsA / s.matches) : 0}%</b></span><span>avg rounds <b>${s.matches ? (s.rounds / s.matches).toFixed(1) : '–'}</b></span><span>deaths <b>${s.deaths}</b></span><span>chances that fired <b>${s.procs}</b></span><span>seed <b>${G ? G.startSeed : ''}</b></span>${pulseText()}`; }
+function pulseText() { const P = UI.pulses; if (!P.length) return ''; const last = P[P.length - 1], avg = P.reduce((s, p) => s + p.s, 0) / P.length;
+  return `<span>last pulse <b>${last.s.toFixed(1)} s · ${last.beats} beats</b></span><span>avg pulse <b>${avg.toFixed(1)} s</b></span><span>match clock <b>${G && G.t0 ? fmtClock((performance.now() - G.t0) / 1000) : '–'}</b></span>`; }
+const fmtClock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function renderOverlay() {
   const ov = document.getElementById('overlay');
   if (UI.rules) { ov.hidden = false; ov.innerHTML = '';
@@ -1267,7 +1333,7 @@ function renderOverlay() {
       const can = human && !takenBy && !G.picks[team][ROLES.indexOf(role)];
       const fake = { def: d, procs: d.procs, auraAmt: d.aura ? d.aura.amt : 0, pos: [99, 99], team: 'A', init: d.init, atk: d.atk, range: d.range, bounty: 0 };
       const card = h(`<div class="dcard ${can ? 'pick' : ''} ${takenBy ? 'taken ' + takenBy : ''}">
-        <div><b class="n">${esc(d.name)}</b> <span class="chip">${d.tag}</span>${takenBy ? ` <span class="chip">team ${takenBy}</span>` : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center">${UI.art ? `<img class="pt" src="art/${d.id}.png" alt="">` : ''}<b class="n">${esc(d.name)}</b> <span class="chip">${d.tag}</span>${takenBy ? ` <span class="chip">team ${takenBy}</span>` : ''}</div>
         <div class="stats">HP <b>${d.hp}</b> ATK <b>${d.atk}</b> RNG <b>${d.range}</b> INIT <b>${d.init}</b>${d.dive ? ` LEAP <b>${d.dive}</b>` : ''}</div>
         <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[d.target]}</span>${synText(fake)}</div>
         <div class="procs">${Object.keys(d.procs).map(k => `<span>${PROCS[k].name}</span><span class="bar"><i style="width:${d.procs[k]}%;background:${PROCS[k].color}"></i></span><span class="pct">${d.procs[k]}%</span>`).join('')}</div>
@@ -1301,6 +1367,7 @@ document.getElementById('b-play').addEventListener('click', () => newMatch('play
 document.getElementById('b-watch').addEventListener('click', () => newMatch('watch'));
 document.getElementById('b-board').addEventListener('click', () => { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); });
 document.getElementById('b-aims').addEventListener('click', () => { UI.aims = !UI.aims; render(); });
+document.getElementById('b-art').addEventListener('click', () => { UI.art = !UI.art; render(); });
 document.getElementById('b-speed').addEventListener('click', () => { UI.speed = UI.speed === 'normal' ? 'fast' : 'normal'; render(); });
 document.getElementById('b-nexus').addEventListener('click', () => { Object.assign(RULES, structure() ? SCORE : DESTROY); newMatch(G.mode); });
 document.getElementById('b-pulse').addEventListener('click', () => { Object.assign(RULES, RULES.onePulse ? EVERY_MOVE : ONE_PULSE); newMatch(G.mode); });
