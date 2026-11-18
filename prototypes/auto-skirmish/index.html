@@ -111,6 +111,7 @@ svg#board.art { max-height: 70vh; }
 .art .hexp { fill: url(#grass); stroke: #2f4a22; stroke-width: .8; }
 .art .hexp.reach { stroke: var(--good); stroke-width: 2; }
 .hexside { fill: #6b4a2b; stroke: #3b2716; stroke-width: 1; pointer-events: none; }
+.hexhit { fill: transparent; stroke: none; cursor: pointer; }
 .tint { pointer-events: none; stroke: none; fill: none; }
 .tint.hill { fill: #e0b75a55; } .tint.tower { fill: #9aa0ab70; } .tint.nexA { fill: #5ab4ff50; } .tint.nexB { fill: #ff7a5950; }
 .tint.reach { fill: #7bd88f45; } .tint.hover { fill: #7bd88f90; }
@@ -1255,6 +1256,12 @@ function renderBoard() {
     else if (sel && reachSet.has(K(c.pos))) g.addEventListener('click', () => doMove(sel, c.pos));
     put(cy, g); }
   depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
+  // the destinations stay clickable above the sprites (a sprite standing in front would otherwise cover them)
+  if (ART) for (const x of reach) { const hp = sv(`<polygon class="hexhit" points="${hexPts(...px(...x))}"></polygon>`);
+    hp.addEventListener('click', () => doMove(sel, x));
+    hp.addEventListener('mouseenter', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) return; UI.hover = { hex: x }; renderBoard(); });
+    hp.addEventListener('mouseleave', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) { UI.hover = null; renderBoard(); } });
+    svg.appendChild(hp); }
   if (ART && G.display && G.ev) svg.appendChild(sv(`<g>${effects(G.ev)}</g>`));
   // pops during the pulse
   if (G.display && G.ev) { const stack = {}; for (const p of G.ev.pops) { const k = K(p.hex), n = stack[k] = (stack[k] || 0) + 1, [cx, cy] = px(...p.hex);
