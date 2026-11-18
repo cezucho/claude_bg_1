@@ -123,6 +123,11 @@ Legends for roles and chaos. Owner's direction, 2026-11-17 (D-068).
   to the Dragon), and the neutral centre tower is gone. Measured (300 matches): sides 50%,
   Dragon taken 0.84 times per match (was 0.62), comebacks 20% (was 14%).
 
+- **Compact team panels (added 2026-11-18, D-077).** Each champion's card fits in about 110 px:
+  portrait, name, level, HP, a row of stat icons and a row of chance icons with their numbers
+  (statuses and items only when present). The details, including the growth path, are in a hover
+  card. All ten champions fit the screen at 1366×768 without scrolling.
+
 **Not in it.** Item shop, kill rewards other than bounty, objectives, more than 10
 champions, a smarter AI (it judges one move by expected damage of the next pulse; level-ups are
 coin flips), sound, real art.

@@ -4,6 +4,8 @@
 
 ## Current Task
 
+**AUTO SKIRMISH — COMPACT PANELS — 2026-11-18.** Owner: no scrolling to see the teams; growth path on hover; chances as icon + number. Done (D-077): compact cards with emoji icon rows, hover card with all details; fits 1366×768. Artifact republished. Next: owner plays.
+
 **AUTO SKIRMISH — BOARD TURN, EFFECTS, MIDDLE TOWERS — 2026-11-18.** Owner: rotate the board (nexus bottom-left / top-right, diagonal movement), bigger hexes not champions, bigger status icons, simple graphics for attacks/spells/statuses, towers next to the Dragon make no sense. Done (D-076): 30° turn + squash, hexes 1.4x, code-drawn effects per action kind, statuses drawn on sprites, one tower per team on the middle line, centre tower removed. Measured 300 matches: sides 50%, Dragon 0.84/match (was 0.62), comebacks 20% (was 14%). Artifact republished. Next: owner plays.
 
 **AUTO SKIRMISH = MAIN LINE + FIRST ART PASS — 2026-11-18.** Owner: pulled latest; make the auto skirmish the main version; copy the Nano Banana key from the golf game (done: `tools/asset_gen/.env.local`, git-ignored); a minimal Rogue-Legend-like look, one image per thing, no effects, to judge look, pulse length and flow. Built (D-075): `gen_sprites.py` + `skirmish_sprites.json`, 15 images (NB2 for characters with Anchor as style reference, NB2 Lite for tower/nexus/grass), all kept first try; art view on by default (isometric squash, grass tiles, sprites depth-sorted, breathing/lunge/hit flash in CSS), portraits on cards, pulse timer + match clock in the strip. Watch mode: pulses 3–4 s, no console errors. Next: owner plays and judges the look; then style tweaks, effects, maybe per-team tint.

@@ -50,6 +50,34 @@ header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px
 .card .hd b { font-family: var(--display); font-size: 15px; }
 .card .hd .role { color: var(--dim); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 .card .hd .lv { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--gold); }
+/* Compact cards (D-077): the five champions of a team fit the screen; details are in the hover card */
+.rail { gap: 6px; }
+.rail .card { padding: 6px 8px; gap: 4px; }
+.rail .card .hd { align-items: center; gap: 8px; }
+.rail .card .pt { width: 40px; height: 40px; }
+.card .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.card .row1 { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.card .row1 b { font-family: var(--display); font-size: 15px; }
+.card .row1 .role { color: var(--dim); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; }
+.card .row1 .lv { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--gold); white-space: nowrap; }
+.icons { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13.5px; line-height: 1.35; }
+.ic { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; cursor: help; }
+.ic b { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: var(--fg); }
+.ic.up b { color: var(--gold); }
+.ic.sp { color: var(--gold); } .ic.sp .pips { font-size: 10px; letter-spacing: 1px; }
+.ic.st { background: #0e131c; border: 1px solid var(--line); border-radius: 9px; padding: 0 5px; }
+.buffs { display: flex; flex-wrap: wrap; gap: 4px; }
+.tip { position: fixed; z-index: 30; width: min(340px, calc(100vw - 16px)); background: #111722f2; border: 1px solid var(--dim); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; box-shadow: 0 8px 28px #000a; pointer-events: none; display: flex; flex-direction: column; gap: 6px; }
+.tip .tiphd { display: flex; gap: 10px; align-items: center; }
+.tip .tiphd img { width: 54px; height: 54px; object-fit: contain; }
+.tip .tiphd div { display: flex; flex-direction: column; gap: 1px; }
+.tip .tiphd b { font-family: var(--display); font-size: 16px; }
+.tip .tiphd span { color: var(--dim); font-size: 11.5px; }
+.tip ul, .tip ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+.tip ul { list-style: none; padding-left: 0; }
+.tip p { margin: 0; }
+.tip .path { color: var(--dim); font-size: 11.5px; }
+.tip .path .pick { color: var(--gold); } .tip .path .not { text-decoration: line-through; opacity: .6; }
 .hp { position: relative; height: 12px; background: #0e131c; border-radius: 3px; overflow: hidden; }
 .hp i { position: absolute; inset: 0 auto 0 0; background: var(--good); }
 .hp .sh { position: absolute; top: 0; bottom: 0; background: var(--frost); opacity: .7; }
@@ -246,6 +274,7 @@ svg#board.art { max-height: 70vh; }
   <section class="rail" id="rail-B"></section>
 </main>
 <div id="overlay" class="overlay" hidden></div>
+<div id="tip" class="tip" hidden></div>
 
 <script>
 // ═════════════ geometry ═════════════
@@ -1105,41 +1134,68 @@ function synText(c) {
   const b = c.def.bond ? `<span class="chip syn" title="bond">beside a ${c.def.bond.tag}: +${c.def.bond.amt} ${c.def.bond.kind === 'atk' ? 'attack' : 'initiative'}</span>` : '';
   return a + b;
 }
+// Icons for chances, stats and statuses on the compact cards (D-077). Emoji: crisp at any size, no extra files.
+const PICON = { poison: '🧪', frost: '❄️', crit: '💥', double: '⚔️', splash: '💦', cleave: '🪓', chain: '⚡', fireball: '🔥', push: '💨', lifesteal: '🩸',
+  mend: '💚', shield: '🛡️', dodge: '🍃', thorns: '🌵', taunt: '📢', root: '🌿', blind: '🙈', silence: '🤐', airborne: '🌪️', berserk: '😡' };
+const SICON = { frozen: '🧊', air: '🌪️', rooted: '🌿', blind: '🙈', silenced: '🤐', berserk: '😡', taunted: '📢', steadfast: '💎' };
+// Compact team cards: everything needed during a fight in about 110 px; the rest is in the hover card.
 function renderRail(team) {
   const el = document.getElementById('rail-' + team); el.innerHTML = '';
   const human = G.humans.includes(team);
   el.appendChild(h(`<h2 class="${team}"><span>Team ${team}</span><span>${human ? 'you' : 'AI'}</span></h2>`));
-  if (G.dragon && (G.dragon[team] || baronOn(team))) el.appendChild(h(`<div class="stats">${G.dragon[team] ? `<span class="chip syn" style="color:var(--arcane)">Dragon ×${G.dragon[team]}: +${G.dragon[team] * RULES.dragonProc}% to every chance</span>` : ''}${baronOn(team) ? `<span class="chip syn" style="color:var(--arcane)">Baron until round ${G.baronUntil[team]}: double damage to buildings, regenerates anywhere</span>` : ''}</div>`));
+  if (G.dragon && (G.dragon[team] || baronOn(team))) el.appendChild(h(`<div class="buffs">${G.dragon[team] ? `<span class="chip syn" style="color:var(--arcane)" title="+${G.dragon[team] * RULES.dragonProc}% to every chance">🐉 Dragon ×${G.dragon[team]}</span>` : ''}${baronOn(team) ? `<span class="chip syn" style="color:var(--arcane)" title="double damage to buildings, regenerates anywhere">👑 Baron until R${G.baronUntil[team]}</span>` : ''}</div>`));
   if (G.phase === 'draft') { el.appendChild(h(`<div class="card ${team}"><div class="stats">${G.picks[team].map((d, i) => `${ROLES[i]}: <b>${d ? esc(d.name) : '—'}</b>`).join(' ')}</div></div>`)); return; }
   const L = links();
   for (const c0 of G.champs.filter(c => c.team === team)) {
     const c = view(c0), e = eff(c0, L);
     const canSel = human && ((G.phase === 'move' && G.turnTeam === team && !c0.dead) || (G.phase === 'opening' && G.openTurn === team && !G.opened.has(c0.id)));
-    const st = [e.home ? '<span class="chip st">home: 1 less per hit</span>' : '', ...statusList(c).map(k => `<span class="chip st" style="color:${STATUS[k][2]}">${STATUS[k][0]} ${STATUS[k][1].split(':')[0]}</span>`), c.poison ? `<span class="chip ps">poison ×${c.poison}</span>` : '', c.shield ? `<span class="chip st">shield ${c.shield}</span>` : '', c0.bounty ? `<span class="chip syn">bounty ★${c0.bounty}</span>` : ''].join('');
-    const lv = levelOptions(c0);
-    const nextRound = RULES.levelRounds.find(r => r > G.round);
-    const sp = c0.def.special;
-    const spLine = RULES.specials && sp ? `<div class="special">★ <b>${esc(sp.name)}</b> after ${sp.n} attacks <span class="pips">${'●'.repeat(Math.min(sp.n, c.charge ?? c0.charge))}${'○'.repeat(Math.max(0, sp.n - (c.charge ?? c0.charge)))}</span>: ${esc(sp.text)}</div>` : '';
-    const itemLine = c0.items.length ? `<div class="stats">${c0.items.map(id => { const it = ITEMS.find(x => x.id === id); return `<span class="chip syn" title="${esc(it.t)}">${esc(it.name)}</span>`; }).join('')}</div>` : '';
+    const sp = c0.def.special, charge = c.charge ?? c0.charge;
+    const stat = (ic, v, up, tip) => `<span class="ic ${up ? 'up' : ''}" title="${tip}">${ic}<b>${v}</b></span>`;
+    const chances = Object.keys(PROCS).filter(k => (c0.procs[k] || 0) > 0).map(k => { const v = pct(c0, k, L);
+      return `<span class="ic ${v > c0.procs[k] ? 'up' : ''}" title="${esc(PROCS[k].name)}: ${esc(PROCS[k].text)}">${PICON[k]}<b>${v}</b></span>`; }).join('');
+    const sts = [...statusList(c).map(k => `<span class="ic st" title="${esc(STATUS[k][1])}">${SICON[k]}</span>`),
+      c.poison ? `<span class="ic st" title="poisoned ×${c.poison}">☠️<b>${c.poison}</b></span>` : '', c.shield ? `<span class="ic st" title="shield ${c.shield}">🛡️<b>+${c.shield}</b></span>` : '',
+      e.home ? `<span class="ic st" title="home: takes 1 less per hit">🏠</span>` : '', c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more gold">⭐<b>${c0.bounty}</b></span>` : '',
+      c0.items.length ? `<span class="ic st" title="${esc(c0.items.map(id => ITEMS.find(x => x.id === id).name).join(', '))}">🎒<b>${c0.items.length}</b></span>` : ''].join('');
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
-      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<b>${esc(c0.def.name)}</b><span class="role">${c0.role} · ${c0.def.tag}</span><span class="lv">Lv ${c0.level}${c.dead ? ` · back end of round ${c0.respawnAt}` : ''}</span></div>
-      <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div>
-      <div class="stats">ATK <b class="${e.atk > c0.atk ? 'up' : ''}">${e.atk}</b> RNG <b class="${e.range > c0.range ? 'up' : ''}">${e.range}</b> INIT <b class="${e.init > c0.init ? 'up' : ''}">${e.init}</b>${e.armor ? ` ARM <b class="up">${e.armor}</b>` : ''}${c0.dive ? ` LEAP <b>${c0.dive}</b>` : ''}</div>
-      <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[c0.def.target]}</span>${synText(c0)}${st}</div>
-      <div class="procs">${procRows(c0, L)}</div>
-      ${spLine}${itemLine}
+      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="role">${c0.role}</span><span class="lv">${c.dead ? `† back R${c0.respawnAt}` : `Lv ${c0.level}`}</span></div>
+        <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div></div></div>
+      <div class="icons">${stat('🗡️', e.atk, e.atk > c0.atk, 'attack')}${stat('🎯', e.range, e.range > c0.range, 'range')}${stat('⏩', e.init, e.init > c0.init, 'initiative')}${e.armor ? stat('🧱', e.armor, true, 'armour: less damage per hit') : ''}${c0.dive ? stat('🦘', c0.dive, false, 'leap') : ''}${RULES.specials && sp ? `<span class="ic sp" title="${esc(sp.name)}: ${esc(sp.text)}">★<span class="pips">${'●'.repeat(Math.min(sp.n, charge))}${'○'.repeat(Math.max(0, sp.n - charge))}</span></span>` : ''}</div>
+      <div class="icons">${chances}</div>
+      ${sts ? `<div class="icons">${sts}</div>` : ''}
       ${G.phase === 'opening' ? `<div class="cards2">${c0.def.cards.map((_, i) => `<button data-card="${i}" ${canSel ? '' : 'disabled'}>Card ${i + 1}<small>${esc(cardText(c0, i))}</small></button>`).join('')}</div>` : ''}
-      <div class="next">Next level${nextRound ? ` (end of round ${nextRound})` : ''}: <b>${esc(lv[0].t)}</b> or <b>${esc(lv[1].t)}</b></div>
-      <details class="tree"><summary>Growth path</summary><ol>${c0.def.tree.map((opts, i) => `<li>${opts.map((o, k) => `<span class="${c0.picks[i] === k ? 'pick' : c0.picks[i] != null ? 'not' : ''}">${esc(o.t)}</span>`).join(' or ')}</li>`).join('')}</ol></details>
     </div>`);
-    if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button,summary,details')) return; select(c0); });
+    if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button')) return; select(c0); });
+    card.addEventListener('mouseenter', () => { UI.tipFor = c0.id; showTip(card, c0, team); });
+    card.addEventListener('mouseleave', () => { UI.tipFor = null; hideTip(); });
     card.querySelectorAll('button[data-card]').forEach(b => { const i = +b.dataset.card;
       b.addEventListener('click', () => openingPlay(c0, i));
       b.addEventListener('mouseenter', () => { UI.hover = { card: [c0.id, i] }; renderBoard(); });
       b.addEventListener('mouseleave', () => { UI.hover = null; renderBoard(); }); });
     el.appendChild(card);
+    if (UI.tipFor === c0.id) showTip(card, c0, team);   // the rail is rebuilt every beat: keep the hover card fresh
   }
 }
+// The hover card: targeting, synergy, special, items, every chance explained, next level and the growth path.
+function tipHtml(c0) {
+  const L = links(), e = eff(c0, L), sp = c0.def.special, lv = levelOptions(c0), nextRound = RULES.levelRounds.find(r => r > G.round);
+  const procs = Object.keys(PROCS).filter(k => (c0.procs[k] || 0) > 0).map(k => `<li>${PICON[k]} <b>${esc(PROCS[k].name)} ${pct(c0, k, L)}%</b>: ${esc(PROCS[k].text)}</li>`).join('');
+  const items = c0.items.map(id => { const it = ITEMS.find(x => x.id === id); return `<li>🎒 <b>${esc(it.name)}</b>: ${esc(it.t)}</li>`; }).join('');
+  return `<div class="tiphd">${UI.art ? `<img src="art/${c0.def.id}.png" alt="">` : ''}<div><b>${esc(c0.def.name)}</b><span>${c0.role} · ${c0.def.tag} · Lv ${c0.level}</span><span>HP ${Math.max(0, c0.hp)}/${c0.maxHp} · 🗡️ ${e.atk} · 🎯 ${e.range} · ⏩ ${e.init}${e.armor ? ` · 🧱 ${e.armor}` : ''}${c0.dive ? ` · 🦘 ${c0.dive}` : ''}</span></div></div>
+    <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[c0.def.target]}</span>${synText(c0)}</div>
+    ${RULES.specials && sp ? `<p class="special">★ <b>${esc(sp.name)}</b> after ${sp.n} attacks: ${esc(sp.text)}</p>` : ''}
+    <ul>${procs}${items}</ul>
+    <p class="next">Next level${nextRound ? ` (end of round ${nextRound})` : ''}: <b>${esc(lv[0].t)}</b> or <b>${esc(lv[1].t)}</b></p>
+    <ol class="path">${c0.def.tree.map((opts, i) => `<li>${opts.map((o, k) => `<span class="${c0.picks[i] === k ? 'pick' : c0.picks[i] != null ? 'not' : ''}">${esc(o.t)}</span>`).join(' or ')}</li>`).join('')}</ol>`;
+}
+function showTip(card, c0, team) {
+  const tip = document.getElementById('tip'); tip.innerHTML = tipHtml(c0); tip.hidden = false;
+  const r = card.getBoundingClientRect(), w = tip.offsetWidth, hgt = tip.offsetHeight;
+  let x = team === 'A' ? r.right + 8 : r.left - w - 8; if (x < 8 || x + w > innerWidth - 8) x = Math.max(8, Math.min(innerWidth - w - 8, r.left));
+  const y = Math.max(8, Math.min(innerHeight - hgt - 8, r.top));
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function hideTip() { const tip = document.getElementById('tip'); if (tip) tip.hidden = true; }
 function select(c) {
   if (!G.humans.includes(c.team) || c.dead) return;
   if (G.phase === 'move' && G.turnTeam === c.team) { UI.sel = UI.sel === c.id ? null : c.id; UI.hover = null; render(); }
