@@ -12,6 +12,7 @@ Usage (from the project folder):
     python tools/asset_gen/gen_sprites.py                  # every asset not yet made
     python tools/asset_gen/gen_sprites.py --only ember,rime --force
     python tools/asset_gen/gen_sprites.py --cut-only       # redo the cut-outs from the raw images
+    python tools/asset_gen/gen_sprites.py --spec pattern_sprites.json --out prototypes/pattern-skirmish/art
 Needs Pillow and numpy.
 """
 import argparse
@@ -132,8 +133,13 @@ def main():
     ap.add_argument("--only", help="comma-separated asset ids")
     ap.add_argument("--force", action="store_true", help="regenerate even if a raw image exists")
     ap.add_argument("--cut-only", action="store_true")
+    ap.add_argument("--spec", help="another brief file in assets/data/art/ (default skirmish_sprites.json)")
+    ap.add_argument("--out", help="output folder relative to the project (default prototypes/auto-skirmish/art)")
     a = ap.parse_args()
-    spec = json.load(open(SPEC, encoding="utf-8"))
+    global OUT
+    if a.out:
+        OUT = os.path.join(ROOT, a.out)
+    spec = json.load(open(os.path.join(os.path.dirname(SPEC), a.spec) if a.spec else SPEC, encoding="utf-8"))
     os.makedirs(RAW, exist_ok=True)
     os.makedirs(OUT, exist_ok=True)
     man_path = os.path.join(RAW, "manifest.json")

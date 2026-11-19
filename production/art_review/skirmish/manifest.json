@@ -118,5 +118,125 @@
   "model": "gemini-3.1-flash-lite-image",
   "styleReference": null,
   "made": "2026-11-18T12:20:01"
+ },
+ {
+  "id": "cinder",
+  "file": "cinder.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Cinder, a burly lava golem brawler: a cracked black rock body with glowing orange magma seams, huge molten fists, small ember eyes, a little flame on top of the head; black, orange and red. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:45:38"
+ },
+ {
+  "id": "gale",
+  "file": "gale.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Gale, a nimble wind monk warrior: flowing white and sky-blue robes that billow, a long staff with a spinning pinwheel on top, swirling wind ribbons around the arms, a calm confident smile, hair in a topknot. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:45:56"
+ },
+ {
+  "id": "thorn",
+  "file": "thorn.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Thorn, a hulking tree-stump guardian: a body of dark bark covered in thorny brambles and red berries, a heavy wooden club, glowing amber eyes peering from a hollow; dark brown, deep green and red. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:46:06"
+ },
+ {
+  "id": "fang",
+  "file": "fang.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Fang, a stocky wolf-beast hunter: grey-brown fur, big fangs and a toothy grin, a leather harness with stone amulets, large stone-tipped claws, a bushy tail; brown, grey and moss green. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:46:17"
+ },
+ {
+  "id": "wisp",
+  "file": "wisp.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Wisp, a small glowing light spirit rogue: a hooded cloak of pale gold, a round luminous face with big bright eyes, a tiny lantern on a hooked stick, sparkles trailing behind; pale yellow, white and gold. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:46:28"
+ },
+ {
+  "id": "shiver",
+  "file": "shiver.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Shiver, a frost lynx prowler standing upright: white and pale blue fur with icy tufts on the ears, long ice-crystal claws, a short blue scarf, narrow glowing blue eyes; white, ice blue and silver. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:46:38"
+ },
+ {
+  "id": "pyra",
+  "file": "pyra.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Pyra, a young fire sorceress: a tall pointed hat with a burning tip, red and orange robes, a ball of fire floating above one open hand, a staff with a glowing coal, a cheeky smile. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:46:49"
+ },
+ {
+  "id": "umbra",
+  "file": "umbra.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Umbra, a shadow warlock: a long dark purple hooded robe with a starry lining, a face hidden in shadow with two glowing violet eyes, a floating dark orb between the hands, wisps of purple smoke. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:47:01"
+ },
+ {
+  "id": "quartz",
+  "file": "quartz.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Quartz, a crystal mage: a body partly made of faceted rose and white crystal, a robe of sandy cloth, a large glowing crystal shard floating over one palm, a gentle face with a crystal crown; pink, white and sand. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:47:12"
+ },
+ {
+  "id": "flint",
+  "file": "flint.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Flint, a sharpshooter with a long flintlock rifle: a wide-brimmed hat with a feather, a long brown coat with brass buttons, small sparks of yellow lightning on the rifle barrel, goggles on the forehead, a smirk; brown, brass and electric yellow. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:47:24"
+ },
+ {
+  "id": "hail",
+  "file": "hail.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Hail, a frost archer: a fur-lined pale blue parka with the hood up, a bow made of clear ice with an icicle arrow, rosy cheeks, a few snowflakes around; pale blue, white and silver. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:47:35"
+ },
+ {
+  "id": "dusk",
+  "file": "dusk.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Dusk, a shadow crossbow hunter: a dark teal and black cloak with a raven-feather collar, a compact crossbow, a half mask, a small raven perched on the shoulder, glowing amber eyes. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:47:44"
+ },
+ {
+  "id": "brook",
+  "file": "brook.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Brook, a water healer: flowing hair made of water, a robe of teal and seafoam with shell ornaments, a bubble of water floating above a coral staff, a kind smile; teal, aqua and white. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:47:56"
+ },
+ {
+  "id": "ash",
+  "file": "ash.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Ash, a fire dancer priestess: a red and gold dancer outfit with flowing ribbons, two flaming fans, a phoenix feather headdress, a warm confident smile; red, gold and orange. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:48:09"
+ },
+ {
+  "id": "moss",
+  "file": "moss.png",
+  "prompt": "Cute cartoon mobile-game character sprite in a chibi style: oversized head about a third of the total height, short stubby body and limbs, big expressive eyes, thick dark brown outlines, flat cel shading with one shadow tone and one soft highlight, bright saturated colours, a bold readable silhouette with one clear main colour. Seen in three-quarter front view from slightly above, as if on an isometric game board, standing in a confident idle pose holding its weapon, full body with feet visible, centred, filling about 80% of the image height. One character only. No ground, no cast shadow, no text, no frame, no border, no scenery. Match the art style of the reference image exactly: the same outline thickness, the same shading, the same chibi proportions, the same camera angle and the same level of detail. Draw a completely different character, described here: Moss, a small plump forest druid turtle standing upright: a mossy shell with mushrooms and a little sapling growing on it, a wooden staff wrapped in vines, a sleepy friendly face; olive green, brown and cream. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-image",
+  "styleReference": "anchor.png",
+  "made": "2026-11-19T14:48:20"
  }
 ]
