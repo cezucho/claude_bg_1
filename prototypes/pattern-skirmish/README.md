@@ -10,7 +10,7 @@ clear choice: Baron, Dragon or tower. Owner's ideas, 2026-11-19, after a review 
 **How to run.** Open `index.html` (keep the `art/` folder next to it). No server, no libraries.
 `simulate(n, 'small', seed, rules)` in the browser console runs AI-vs-AI matches.
 
-**Status.** In progress. First playable 2026-11-19. Not yet played by the owner.
+**Status.** In progress. First playable 2026-11-19. Owner played it 2026-11-20; readability, paths, regroup cards and the coach added the same day.
 
 ## What changed from the auto skirmish
 
@@ -278,6 +278,101 @@ random drafter:
 - Other numbers did not move: 13 rounds, 86–89% end by a destroyed nexus, comebacks 16–18%.
 - Checked without a person: 30 scripted matches with bans, no script errors.
 
+## Readability, paths, regroup cards, coach (added 2026-11-20)
+
+Owner's notes after playing: draft should show every portrait at once (details on hover) with
+broadcast-style ban/pick slots; Q W R hidden behind sprites and towers; AI vs AI should stop at
+the end; AI moves are hard to follow; MARLOW should coach (a setting / difficulty); levelling every
+champion every few rounds is tiring (proposed: two paths per champion, then one champion grows at
+a time, with icons); the regroup phase shows nothing changing.
+
+Built:
+- **Draft.** One grid, a row per role, all 25 portraits; hover = full card (abilities, patterns,
+  chances, both paths, what it completes in your team). Slot bar: red ban slots and five pick
+  slots per team that fill with portraits; a BAN PHASE / PICK PHASE banner; the slot being filled
+  pulses. Fits 1366×768 without scrolling.
+- **Paths.** After the draft, one screen: each champion has two paths of four steps (Power: each
+  ability hits harder / Tempo: W and Q cooldown −1, +2 initiative, R cooldown −1; a champion that
+  hits and heals picks Striker or Warden; Oriel picks Healer or Tempo). The suggestion is
+  preselected, one click to start. Paths are built by `buildPaths` from each kit; the old
+  hand-written `tree` arrays are no longer used.
+- **Level-ups: one champion at a time.** A team grows ONE champion after opening cards 2, 3, 5,
+  at the end of every second round, and per Dragon: either the next path step or a heal
+  (❤️ +6 max HP, heals 8 now). The choice is a strip under the board (board stays visible), every
+  option with an icon. Every round was tried first and measured slower (see below).
+- **Regroup cards.** Before placing, the winners play one card, the losers one answer. Each card
+  states its exact effect and the effect shows on the board as numbers. Winners: Siege (nearest
+  building takes 2 per living champion, ×2 under Baron), Dragon / Baron (the monster takes the
+  same; if it dies the reward is theirs), Rest (25% of max HP, cleanse). Losers: Rush back (dead
+  return a round sooner), Fortify (+6 to the most damaged building), Rest.
+- **Readable board.** Q W R, HP, initiative and statuses are drawn on a top layer above every
+  sprite, with a dark backing. Every move slides; an AI move holds the board 0.9 s before the
+  pulse; the last move of each team (and every regroup move) stays as a ghost ring and a dashed
+  arrow in team colour; a tag top right says "Red moves Viper 2 hexes". Dead champions show a
+  portrait and "† back R5" where they will return.
+- **End of match.** No automatic restart; the board stays; Replay last pulse works there.
+- **Difficulty + coach.** Easy: the AI plans one step (`aiPlan` 1), MARLOW tips every turn
+  (which ability is one move from lighting and what it needs, without naming the hex; a kill on
+  offer; a champion in danger), recommends a regroup card and a level-up, and in the draft lights
+  champions that complete your picks (+fit badge) and names a ban. Normal: full planning AI and a
+  💡 Hint button. Hard: Normal's AI, no coach. Tips come from the planning AI's own choice for
+  your team, run inside `dry()`, so the match's dice are untouched.
+
+Measured (AI vs AI, small board):
+
+| | rounds | by nexus | comeback | regroups |
+|---|---|---|---|---|
+| before today | 12.8 | 86% | 16% | 3.2 |
+| level-up every round, Rest 40% (200) | 13.7 | 79% | 22% | 3.0 |
+| same, regroup cards off (200) | 14.7 | 66% | 21% | 3.4 |
+| same, Rest 25% (200) | 13.2 | 82% | 24% | 2.9 |
+| **final: every 2nd round, Rest 25% (3 × 200)** | **13.4–13.7** | **82–86%** | **18–27%** | **3.0** |
+
+- Final cards played: Rush back 1427, Siege 1372, Rest 699, Baron 48, Dragon 21, Fortify 6
+  (600 matches). Fortify and the monster cards are almost never worth it to the AI.
+- Heal chosen in 31% of level-ups. Paths (win rate when taken, AI picks Power/Tempo by coin flip):
+  Power 52%, Tempo 47%, Striker 51%, Warden 48%, Healer 44% (88 games). Tempo was clearly behind
+  before it got +2 initiative and Q cooldown in step 2.
+- Difficulty: Easy's AI as team A vs Normal's as B won 37% (A usually ~45–50%), 150 matches. A
+  deeper search (beam 8, 3 samples) won 46%: not stronger, so Hard is not a stronger AI yet.
+- AI turn time: Normal average 0.1 s, max 0.19 s (budget 1.5 s).
+- Scripted human matches through the interface on all three difficulties: no page errors. One
+  bug found and fixed: pressing Done while a regroup card's effect was still playing ran the
+  regroup twice and froze the match.
+
+### Regroup cards, second version: the card counts the formation (2026-11-20)
+
+Owner: the first cards (played before placing, flat effects) traded control of the geometry for an
+easy choice. Now each side **places first, then ends its regroup by playing a card that counts
+where the champions stand**, with the card's number updating live as you place (hover a card: the
+champions it counts get a gold ring, its target a dashed hex):
+- Siege: the enemy building with most of your champions in range takes 3 per champion in range,
+  +1 for each whose pattern is complete (×2 under Baron).
+- Dragon / Baron: the same on the monster; if it dies the reward is yours.
+- Rest: only champions beside an ally heal, 20% of max HP, 35% inside a complete pattern.
+- Losers: Rush back (unchanged) or Rest. Fortify (+3 per survivor near a damaged building) was
+  cut on the owner's call after it was played 2 times in 400 matches. After the cut (200 matches):
+  14.6 rounds, 70% by nexus, comeback 19%.
+- `RULES.rgGeo = false` keeps the flat values for comparison. The AI tries one formation per
+  objective (each Siege target, each monster, a huddle for Rest; losers: home or around a damaged
+  building) and keeps the best card value plus pressure on the objective plus shape.
+
+| 200 matches each | rounds | by nexus | comeback | winner's lit abilities after regroup |
+|---|---|---|---|---|
+| formation cards (2 seeds) | 14.6–14.7 | 69–72% | 19–24% | 9.0–9.1 |
+| flat cards, placed first | 13.6 | 80% | 22% | 9.2 |
+| no cards | 15.3 | 62% | 17% | 9.3 |
+| formation, Siege 4 or shape bonus 2 (2 seeds each) | 14.5–14.7 | 70–71% | 20–24% | 9.0 |
+
+- The price of geometry is pace: a free Siege every regroup ended ~10% more matches by nexus.
+  A bigger Siege does not buy it back; the AI often cannot get enough champions in range, or rests.
+- Cards played (formation, 400 matches): Rush back ~990, Siege ~770, Rest ~780, Baron ~120,
+  Dragon ~27, Fortify 2. Baron is now played 8× more than with flat cards; Fortify still never.
+- "Lit abilities after a regroup" does not separate the versions: the AI builds shapes either way.
+- A first attempt at the AI regroup valued clumping over objectives and slowed matches to 15.8
+  rounds / 54% by nexus even without cards; fixed by adding the old objective weights.
+- Scripted human matches on Easy and Normal after the change: no page errors.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete
@@ -292,3 +387,7 @@ random drafter:
 3. Patterns are mirrored for team B (its "left" is the mirror image of team A's). Fine for a
    human playing A; needs a decision before two humans play.
 4. Gold is out. If it returns, as what?
+5. Hard difficulty: a stronger AI needs a different idea (deeper look-ahead, better evaluation),
+   or an honest handicap (the AI drafts better, extra level). Which?
+6. ~~Fortify~~ cut 2026-11-20 (owner). The losers now choose Rush back or Rest.
+7. Formation cards cost ~10% of nexus finishes: owner accepts the slower pace for now (2026-11-20).

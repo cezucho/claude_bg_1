@@ -285,6 +285,91 @@ svg#board.art { max-height: 70vh; }
 .abl.on .k, .abl.on .cd { color: var(--gold); } .abl.wait .k { color: #b89a55; }
 .dcard .ablist { gap: 3px; } .dcard .abl { font-size: 11px; }
 svg.pat { flex: none; }
+/* Draft (broadcast style): slots on top, every portrait in one grid, details on hover */
+.box.draft { gap: 10px; }
+.slots { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; }
+@media (max-width: 760px) { .slots { grid-template-columns: minmax(0, 1fr); } }
+.side { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.side.B { align-items: flex-end; }
+.side .lab { font-family: var(--display); font-size: 11px; letter-spacing: .16em; }
+.side.A .lab { color: var(--a); } .side.B .lab { color: var(--b); }
+.srow { display: flex; gap: 5px; flex-wrap: wrap; }
+.side.B .srow { flex-direction: row-reverse; }
+.slot { width: 52px; height: 52px; border-radius: 8px; border: 2px solid var(--line); background: #0e131c; position: relative; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
+.slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.slot .sl { position: relative; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); background: #0b0f16cc; width: 100%; text-align: center; padding: 1px 0; }
+.slot.ban { border-color: #7a2b2b; background: #2a1214; width: 40px; height: 40px; }
+.slot.ban img { filter: grayscale(1) brightness(.75); }
+.slot.ban::after { content: ''; position: absolute; inset: 0; background: linear-gradient(45deg, transparent 46%, #ff4b4bcc 46%, #ff4b4bcc 54%, transparent 54%); }
+.slot.ban:not(:has(img))::after { display: none; }
+.side.A .slot.pick.filled { border-color: var(--a); } .side.B .slot.pick.filled { border-color: var(--b); }
+.slot.now { animation: slotpulse 1s ease-in-out infinite; }
+.side.A .slot.pick.now { border-color: var(--a); } .side.B .slot.pick.now { border-color: var(--b); }
+.slot.ban.now { border-color: #ff4b4b; }
+@keyframes slotpulse { 0%, 100% { box-shadow: 0 0 0 0 #ffffff00; } 50% { box-shadow: 0 0 12px 2px #ffffff66; } }
+.banner { text-align: center; padding: 8px 18px; border-radius: 10px; border: 2px solid; min-width: 190px; }
+.banner b { display: block; font-family: var(--display); font-size: 22px; letter-spacing: .14em; }
+.banner span { font-size: 12px; color: var(--fg); }
+.banner.ban { border-color: #ff4b4b; background: #3a1418; color: #ff8b8b; }
+.banner.pick.A { border-color: var(--a); background: #10263a; color: var(--a); } .banner.pick.B { border-color: var(--b); background: #3a1a14; color: var(--b); }
+.dgrid { display: flex; flex-direction: column; gap: 6px; }
+.rrow { display: grid; grid-template-columns: 64px repeat(5, minmax(0, 1fr)); gap: 6px; align-items: stretch; }
+@media (max-width: 560px) { .rrow { grid-template-columns: repeat(5, minmax(0, 1fr)); } .rrow .rlab { grid-column: 1 / -1; } }
+.rlab { font-family: var(--display); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); align-self: center; }
+.tile { position: relative; background: var(--panel2); border: 2px solid var(--line); border-radius: 9px; padding: 4px; display: flex; gap: 6px; align-items: center; min-width: 0; cursor: default; }
+.tile img { width: 54px; height: 54px; object-fit: cover; object-position: 50% 0; border-radius: 7px; background: #2a3448; flex: none; }
+.tile .tn { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.tile .tn b { font-family: var(--display); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .tn span { font-size: 12px; }
+.tile.can { cursor: pointer; } .tile.can:hover { border-color: var(--gold); background: #2c2614; }
+.tile.taken { opacity: .45; } .tile.taken.A { border-color: var(--a); } .tile.taken.B { border-color: var(--b); }
+.tile.banned { opacity: .4; } .tile.banned img { filter: grayscale(1); }
+.tile.banned::after { content: 'BANNED'; position: absolute; left: 4px; top: 22px; width: 54px; text-align: center; font: 700 9px var(--display); letter-spacing: .1em; color: #fff; background: #c43a3acc; }
+.tile.fit { border-color: var(--gold); box-shadow: 0 0 10px #e7b75a66; }
+.tile .fitb { position: absolute; right: 4px; top: 3px; font: 700 11px var(--mono); color: #1b1407; background: var(--gold); border-radius: 8px; padding: 0 5px; }
+.tile.threat { border-color: #ff6b6b; box-shadow: 0 0 10px #ff6b6b55; }
+.coachbox { background: #1d1830; border: 1px solid #4a3d73; border-left: 3px solid var(--arcane); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.coachbox .who { font-family: var(--display); font-weight: 700; font-size: 10px; letter-spacing: .14em; color: var(--arcane); margin-right: 6px; }
+/* Paths, level-ups and regroup cards (strip under the board) */
+.paths { display: flex; flex-direction: column; gap: 8px; }
+.prow { display: grid; grid-template-columns: minmax(0, 170px) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: stretch; }
+@media (max-width: 640px) { .prow { grid-template-columns: minmax(0, 1fr); } }
+.prow .who { display: flex; gap: 8px; align-items: center; } .prow .who img { width: 44px; height: 44px; object-fit: cover; object-position: 50% 0; border-radius: 50%; }
+.prow .who b { font-family: var(--display); font-size: 15px; display: block; }
+.pbtn { text-align: left; display: flex; flex-direction: column; gap: 3px; }
+.pbtn.chosen { border-color: var(--gold); background: #2c2614; }
+.pbtn .pn { font-family: var(--display); font-size: 14px; } .pbtn .pn small { color: var(--dim); font-family: var(--body); font-size: 11.5px; margin-left: 6px; }
+.pbtn ol { margin: 0; padding-left: 18px; font-size: 11.5px; color: var(--dim); }
+.pbtn .rec { color: var(--arcane); font-size: 11px; }
+.oi { display: inline-flex; align-items: flex-start; font-size: 17px; line-height: 1; flex: none; }
+.oi sup { font: 800 11px var(--mono); color: var(--good); margin-left: -2px; }
+.lvopt { display: flex; gap: 6px; align-items: center; text-align: left; padding: 4px 8px; font-size: 12px; min-width: 0; }
+.lvopt small { display: block; color: var(--dim); font-size: 11px; }
+.lvopt:hover { border-color: var(--gold); background: #2c2614; }
+.lvopt.rec { border-color: var(--arcane); }
+.hgroup.dead .who { opacity: .6; }
+.centre:has(.handrow.lv) svg#board, .centre:has(.rgcards) svg#board { max-height: max(280px, calc(100vh - 360px)); }
+.handrow.lv { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 760px) { .handrow.lv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.handrow.lv .hgroup { min-width: 0; } .handrow.lv .two { flex-direction: column; } .handrow.lv .who { flex-wrap: wrap; } .handrow.lv .who b { font-size: 12.5px; }
+.handrow.lv .pth { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.handrow.lv .lvopt { padding: 3px 6px; font-size: 11.5px; } .handrow.lv .oi { font-size: 15px; }
+.hgroup .pth { font-size: 10.5px; color: var(--dim); }
+.rgcards { display: flex; flex-wrap: wrap; gap: 8px; }
+.rgcard { display: flex; gap: 8px; align-items: flex-start; text-align: left; flex: 1 1 200px; padding: 8px 10px; min-width: 0; }
+.rgcard .ci { font-size: 24px; line-height: 1; }
+.rgcard b { font-family: var(--display); font-size: 14px; display: block; }
+.rgcard span { font-size: 12px; color: var(--dim); }
+.rgcard:hover:not([disabled]) { border-color: var(--gold); background: #2c2614; }
+.rgcard.rec { border-color: var(--arcane); }
+.feed .ln.coach { border-left-color: var(--arcane); background: #1a1530ee; font-size: 13px; }
+.movetag { position: absolute; right: 10px; top: 10px; background: #0b0f16d9; border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; font-size: 12px; pointer-events: none; z-index: 2; }
+.movetag:empty { display: none; }
+.movetag b.A { color: var(--a); } .movetag b.B { color: var(--b); }
+.slide { animation: slide .5s ease-out both; }
+@keyframes slide { from { transform: translate(var(--sx), var(--sy)); } to { transform: translate(0, 0); } }
+.lastmv { fill: none; stroke-width: 3.5; stroke-dasharray: 7 4; opacity: 1; pointer-events: none; filter: drop-shadow(0 0 2px #000); }
+.ghostmv { fill: #0b0f1640; stroke-width: 2.5; stroke-dasharray: 4 3; opacity: .95; pointer-events: none; }
 </style>
 
 <header class="top">
@@ -302,6 +387,7 @@ svg.pat { flex: none; }
     <button id="b-art">Art</button>
     <button id="b-aims">Show targets</button>
     <button id="b-speed">Speed</button>
+    <button id="b-diff">Difficulty</button>
     <button id="b-pulse" hidden>Pulse</button>
     <button id="b-nexus" hidden>Nexus</button>
     <button id="b-rules">Rules</button>
@@ -311,7 +397,7 @@ svg.pat { flex: none; }
 <main class="table">
   <section class="rail" id="rail-A"></section>
   <section class="centre">
-    <div class="boardwrap"><svg id="board" role="img" aria-label="Hex board"></svg><div class="feed" id="feed" aria-live="polite"></div><div class="recap" id="recap"></div></div>
+    <div class="boardwrap"><svg id="board" role="img" aria-label="Hex board"></svg><div class="feed" id="feed" aria-live="polite"></div><div class="movetag" id="movetag"></div><div class="recap" id="recap"></div></div>
     <div class="hand" id="hand" hidden></div>
     <div class="prompt"><p id="prompt">Loading…</p><div class="btns" id="btns"></div></div>
     <div class="legend"><span><b style="color:#ffe07a">Q W R</b> bright = fires next pulse</span><span><b style="color:#a8853a">dull</b> = pattern complete, cooling down</span><span><b style="color:#66708a">grey</b> = pattern not complete</span><span>letters on hexes = where the selected champion wants an ally (? = one of these)</span><span>dashed arrows = moves the lit abilities will force in the next pulse (in the caster's colour)</span><span>badge = initiative</span></div>
@@ -396,7 +482,7 @@ const CC_KEYS = ['taunt', 'root', 'blind', 'silence', 'airborne', 'berserk'];
 const STATUS = { frozen: ['❄', 'frozen', 'var(--frost)'], air: ['⤒', 'airborne', 'var(--frost)'], rooted: ['⚓', 'rooted', 'var(--poison)'], blind: ['◐', 'blinded', 'var(--dim)'],
   silenced: ['∅', 'silenced', 'var(--arcane)'], berserk: ['✷', 'berserk', 'var(--bad)'], taunted: ['!', 'taunted', 'var(--gold)'], steadfast: ['◆', 'steadfast: cannot be frozen or knocked up', 'var(--fg)'] };
 const VETERAN = [{ t: '+1 attack', stat: 'atk', add: 1 }, { t: '+6 max HP', stat: 'hp', add: 6 }];   // levels past the end of a growth path
-const levelOptions = c => c.def.tree[c.level] || VETERAN;
+const levelOptions = c => [(c.def.paths[c.path || 0].steps[c.pstep || 0]) || { ...VETERAN[0], ic: '🗡️' }, ALT];
 const ITEMS = [
   { id: 'blade', name: 'Iron Blade', cost: 9, t: '+2 attack', stat: 'atk', add: 2, kind: 'carry' },
   { id: 'belt', name: 'Ogre Belt', cost: 8, t: '+10 max HP', stat: 'hp', add: 10, kind: 'tank' },
@@ -598,6 +684,28 @@ function autoTree(d) { const pk = Object.keys(d.procs)[0], far = d.range >= 3;
   return [[boost('q', d.ab.q), boost('w', d.ab.w)], [U('w', `W ${d.ab.w.name}: cooldown −1`, up.cd), far ? S('+1 range', 'range', 1) : S('+8 max HP', 'hp', 8)],
           [boost('r', d.ab.r, true), U('q', `Q ${d.ab.q.name}: cooldown −1`, up.cd)], [U('r', `R ${d.ab.r.name}: cooldown −1`, up.cd), P(`${PROCS[pk].name} +30%`, pk, 30)]]; }
 for (const d of ROSTER) if (!d.tree) d.tree = autoTree(d);
+// ── growth paths (2026-11-20): each champion has two, chosen once after the draft. A level-up grows ONE champion of
+// the team: the next step of its path, or a heal (+6 max HP, heals 8 now). ──
+const isHarm = ab => !!ab.mult, isHelp = ab => !isHarm(ab) && !!(ab.heal || ab.shield || ab.shape === 'rescue');
+const O = (o, ic) => ({ ...o, ic });
+function bigger(k, ab) { const K2 = k.toUpperCase();
+  if (ab.mult) return O(U(k, `${K2} ${ab.name}: +1× damage`, up.mult(1)), '💥');
+  if (ab.heal) return O(U(k, `${K2} ${ab.name}: heals +6`, a => { a.heal += 6; }), '💚');
+  return O(U(k, `${K2} ${ab.name}: shield +6`, a => { a.shield = (a.shield || 0) + 6; }), '🛡️'); }
+const faster = (k, ab) => O(U(k, `${k.toUpperCase()} ${ab.name}: cooldown −1`, up.cd), '⏱️');
+function buildPaths(d) {
+  const harm = ABK.filter(k => isHarm(d.ab[k])), help = ABK.filter(k => isHelp(d.ab[k])), pk = Object.keys(d.procs)[0];
+  const atk = O(S('+1 attack', 'atk', 1), '🗡️'), hp = O(S('+8 max HP', 'hp', 8), '❤️'), far = O(S('+1 range', 'range', 1), '🎯'), proc = O(P(`${PROCS[pk].name} +30%`, pk, 30), PICON[pk]);
+  const fill = (list, extra) => [...list, ...extra].slice(0, 4);
+  const init = O(S('+2 initiative', 'init', 2), '⏩');
+  const tempo = { name: 'Tempo', ic: '⏱️', blurb: 'abilities come back faster, and it acts sooner', steps: [faster('w', d.ab.w), faster('q', d.ab.q), init, faster('r', d.ab.r)] };
+  if (harm.length && help.length) return [
+    { name: 'Striker', ic: '🗡️', blurb: 'damage abilities hit harder', steps: fill(harm.map(k => bigger(k, d.ab[k])), [atk, faster(harm[harm.length - 1], d.ab[harm[harm.length - 1]]), proc]) },
+    { name: 'Warden', ic: '💚', blurb: 'heals and shields grow', steps: fill(help.map(k => bigger(k, d.ab[k])), [hp, faster(help[0], d.ab[help[0]]), proc]) }];
+  if (!harm.length) return [{ name: 'Healer', ic: '💚', blurb: 'heals and shields grow', steps: fill(help.map(k => bigger(k, d.ab[k])), [hp, proc]) }, tempo];
+  return [{ name: 'Power', ic: '💥', blurb: 'each ability hits harder', steps: [bigger('w', d.ab.w), bigger('r', d.ab.r), atk, bigger('q', d.ab.q)] }, tempo];
+}
+const ALT = { t: '+6 max HP, heals 8 now', stat: 'hp', add: 6, heal: 8, ic: '❤️' };
 // Balance (measured, see the README): one factor per champion scales its HP and what its abilities deal, heal and shield.
 const TUNE = {anchor: 0.75, ash: 0.75, brook: 0.9, bulwark: 1.4, cinder: 0.7, dusk: 1.2, ember: 1.0, fang: 1.05, flint: 1.15, gale: 1.5, gunner: 0.95, hail: 0.95, lens: 1.2, moss: 1.4, oriel: 0.9, pyra: 0.8, quartz: 1.35, ranger: 0.95, rime: 1.25, seer: 1.3, shiver: 1.45, thorn: 1.0, umbra: 0.7, viper: 1.0, wisp: 0.75};
 const BASE = new Map(ROSTER.map(d => [d.id, { hp: d.hp, ab: Object.fromEntries(ABK.map(k => [k, { mult: d.ab[k].mult, heal: d.ab[k].heal, shield: d.ab[k].shield, selfShield: d.ab[k].selfShield }])) }]));
@@ -609,7 +717,7 @@ setTune(TUNE);
 const ROLES = ['Top', 'Jungle', 'Mid', 'Bottom', 'Support'];
 const ODIR = { fr: [0, 1], fl: [-1, 1], r: [1, 0], l: [-1, 0] };
 const OARROW = { A: { fr: '↗', fl: '↖', r: '→', l: '←' }, B: { fr: '↘', fl: '↙', r: '→', l: '←' } };
-const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, poisonTurns: 3, mend: 5, shieldAmt: 4, thorns: 3, fireball: 4, levelRounds: [2, 4, 6, 8], bountyCap: 3,
+const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, poisonTurns: 3, mend: 5, shieldAmt: 4, thorns: 3, fireball: 4, levelRounds: [2, 4, 6, 8, 10, 12, 14, 16], bountyCap: 3,   // a level-up for each team at the end of every second round (one champion each; every round was measured slower)
   towerHp: 15,        // side towers' HP; 0 = indestructible (the first version's rule)
   gate: true,         // the nexus takes siege damage only once one of its side towers has fallen
   regen: 3,           // HP a champion regains at the start of a pulse if nothing hit it in the previous pulse (0 = off)
@@ -640,6 +748,11 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   rgLead: 2, rgBase: 1, rgMax: 5,   // how far the winners may move: rgBase + the current death timer in rounds, at most rgMax
   rgGap: 2,           // at least this many rounds between two regroups
   rgCost: 0,          // optional price of the walk: the dead return this many rounds sooner (0 = death timers are untouched)
+  rgCards: true,      // the winners play one objective card (Siege, Dragon, Baron, Rest), then the losers one answer (Rush back, Rest)
+  rgGeo: true,        // card sizes come from the formation (false = the first, flat version, for measuring)
+  rgSiege: 3, rgShape: 1,   // Siege / monster damage per champion in range of the target, +1 if its pattern is complete (2 measured too weak)
+  rgRest: 0.2, rgRestShape: 0.15,   // Rest: share of max HP for a champion beside an ally, more inside a complete pattern
+  rgRestFlat: 0.25,   // the flat version's sizes
   dragonHp: 16, dragonDmg: 3, dragonBack: 3, dragonProc: 0, dragonLevel: true, dragonCap: 3, dragonGold: 3,
   baronHp: 30, baronDmg: 5, baronFrom: 7, baronBack: 4, baronRounds: 2, baronGold: 6 };
 // "Pulse once per round" halves the fighting, so it plays longer matches (measured, see README).
@@ -660,8 +773,12 @@ const deathDelay = r => 1 + Math.floor((r - 1) / RULES.respawnStep);
 
 // ═════════════ state ═════════════
 let G = null, HEADLESS = false;
-const UI = { art: true, pulses: [], board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null };
-const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0 } });
+const UI = { art: true, pulses: [], board: 'small', sel: null, hover: null, aims: false, speed: 'normal', rules: false, timer: null, anim: null, diff: 'normal', moves: [], moveTag: '', slide: null };
+// Difficulty: how hard the AI thinks, and how much MARLOW coaches you (auto = a tip every turn, button = on request).
+const DIFF = { easy: { name: 'Easy', plan: 1, beam: 5, samples: 2, coach: 'auto' }, normal: { name: 'Normal', plan: 2, beam: 5, samples: 2, coach: 'button' }, hard: { name: 'Hard', plan: 2, beam: 5, samples: 2, coach: 'none' } };   // Hard = Normal's AI without the coach: a deeper search (beam 8, 3 samples) measured no stronger (46% vs ~45%)
+function setDiff(d) { UI.diff = d; try { localStorage.setItem('augury-diff', d); } catch (e) {} }
+const coaching = () => G && G.mode === 'play' ? DIFF[UI.diff].coach : 'none';
+const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
 // pulse rhythm: plain hits blur past, chances and kills get a full beat
@@ -670,11 +787,12 @@ function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.im
 const roll = pct => pct > 0 && rng() * 100 < pct;
 
 function newMatch(mode, seed) {
-  if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); }
+  if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); hideTip(); }
+  UI.moves = []; UI.moveTag = ''; UI.slide = null;
   clearTimeout(UI.timer); UI.anim = null;
   setBoard(UI.board);
   G = { mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
-        picks: { A: Array(5).fill(null), B: Array(5).fill(null) }, order: draftPlan().map(s => s[0]), kind: draftPlan().map(s => s[1]), banned: new Set(), di: 0, taken: new Set(),
+        picks: { A: Array(5).fill(null), B: Array(5).fill(null) }, order: draftPlan().map(s => s[0]), kind: draftPlan().map(s => s[1]), banned: new Set(), banList: { A: [], B: [] }, paths: { A: Array(5).fill(0), B: Array(5).fill(0) }, di: 0, taken: new Set(),
         champs: [], nexus: structure() ? { A: RULES.nexusHp, B: RULES.nexusHp } : { A: RULES.nexus, B: RULES.nexus }, round: 0, token: RULES.firstToken || 'B', turnTeam: null, turnNo: 0,
         log: [], winner: null, display: null, opened: new Set(), openTurn: 'A', levelQueue: null,
         towers: [...TOWERS.map(h => ({ pos: h, side: towerSide(h), kind: towerSide(h) ? 'side' : 'centre', hp: RULES.towerHp, max: RULES.towerHp, up: true })),
@@ -712,10 +830,12 @@ function draftOptions() {
 function draftPick(def) {
   if (G.phase !== 'draft' || !draftOptions().includes(def)) return;
   const team = G.order[G.di];
-  if (draftKind() === 'ban') { G.banned.add(def.id); G.taken.add(def.id); logLine(team, `${team} bans ${def.name}`); }
+  hideTip();
+  if (draftKind() === 'ban') { G.banned.add(def.id); G.taken.add(def.id); G.banList[team].push(def); logLine(team, `${team} bans ${def.name}`); }
   else { G.picks[team][ROLES.indexOf(def.role)] = def; G.taken.add(def.id); }
   G.di++;
-  if (G.di >= G.order.length) startOpening(); else { render(); draftAi(); }
+  if (G.di >= G.order.length) { for (const t of ['A', 'B']) G.paths[t] = aiPaths(t); if (G.humans.length) { G.phase = 'paths'; render(); } else startOpening(); }
+  else { render(); draftAi(); }
 }
 // AI: picks the champion whose elements best complete its own picks' patterns; bans the champion that would best
 // complete the enemy's picks (early on: the one that fits the most others), unless it wants that champion itself.
@@ -724,21 +844,40 @@ function draftAi() {
   later(() => { const team = G.order[G.di], w = RULES.draftFitBy ? RULES.draftFitBy[team] : RULES.draftFit ?? 1.5;
     const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = ROSTER.filter(d => !G.taken.has(d.id));
     let best = null, bv = -1e9;
-    for (const d of draftOptions()) { let v = rng() * 3;   // a little variety
-      if (draftKind() === 'ban') { const openForThem = !G.picks[other(team)][ROLES.indexOf(d.role)], openForMe = !G.picks[team][ROLES.indexOf(d.role)];
-        if (openForThem) v += w * (theirs.reduce((s, m) => s + pairFit(d, m), 0) + .25 * free.reduce((s, o) => s + pairFit(d, o), 0) / 2);
-        if (openForMe) v -= w * mine.reduce((s, m) => s + pairFit(d, m), 0); }
-      else for (const m of mine) v += w * pairFit(d, m);
+    for (const d of draftOptions()) { const v = rng() * 3 + draftScore(d, team, w);   // a little variety
       if (v > bv) { bv = v; best = d; } }
     draftPick(best); }, 260);
 }
+// How much a team wants to pick (or ban) a champion now: how many of its patterns the elements complete.
+function draftScore(d, team, w = 1.5) {
+  const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = ROSTER.filter(x => !G.taken.has(x.id)); let v = 0;
+  if (draftKind() === 'ban') { const openForThem = !G.picks[other(team)][ROLES.indexOf(d.role)], openForMe = !G.picks[team][ROLES.indexOf(d.role)];
+    if (openForThem) v += w * (theirs.reduce((s, m) => s + pairFit(d, m), 0) + .25 * free.reduce((s, o) => s + pairFit(d, o), 0) / 2);
+    if (openForMe) v -= w * mine.reduce((s, m) => s + pairFit(d, m), 0); }
+  else for (const m of mine) v += w * pairFit(d, m);
+  return v;
+}
+// Which patterns of a pick a candidate completes (for the coach): "Oriel's Light completes Ranger's W".
+function fitNotes(d, mine) { const out = [];
+  for (const m of mine) { if (m.role === d.role) continue;
+    for (const k of ABK) for (const [, el] of (m.ab[k].pat.need || [])) if (el && d.els.includes(el)) out.push(`${d.name}'s ${el} completes ${m.name}'s ${k.toUpperCase()}`);
+    for (const k of ABK) for (const [, el] of (d.ab[k].pat.need || [])) if (el && m.els.includes(el)) out.push(`${m.name}'s ${el} completes ${d.name}'s ${k.toUpperCase()}`); }
+  return [...new Set(out)]; }
+// Paths: the AI takes Warden on a mixed champion when nobody else on the team heals or shields, otherwise a coin flip.
+function aiPaths(team) {
+  const picks = G.picks[team];
+  return picks.map((d, i) => { if (!d) return 0; const ps = d.paths;
+    if (ps[1].name === 'Warden') return picks.some((o, j) => j !== i && o && ABK.some(k => isHelp(o.ab[k]))) ? 0 : 1;
+    return rng() < .5 ? 0 : 1; });
+}
+function confirmPaths() { if (G.phase !== 'paths') return; hideTip(); startOpening(); }
 
 // ═════════════ champions ═════════════
 function makeChamp(def, team, i) {
   return { id: G.champs.length, team, def, role: def.role, pos: START[team][i], home: START[team][i], maxHp: Math.round(def.hp * RULES.hpScale), hp: Math.round(def.hp * RULES.hpScale), atk: def.atk, range: def.range,
            init: def.init, dive: def.dive || 0, procs: { ...def.procs }, auraAmt: def.aura ? def.aura.amt : 0, mendAmt: RULES.mend,
            shield: 0, poison: 0, poisonTurns: 0, frozen: false, dead: false, respawnAt: 0, level: 0, picks: [], kills: 0, bounty: 0,
-           armor: 0, ab: copyAb(def), casts: { q: 0, w: 0, r: 0 }, spawn: null, items: [], revive: false, immune: false, charge: 0, air: false, rooted: false, blind: false, silenced: false, berserk: false, taunted: null, steadfast: false };
+           armor: 0, path: G.paths ? G.paths[team][i] : 0, pstep: 0, ab: copyAb(def), casts: { q: 0, w: 0, r: 0 }, spawn: null, items: [], revive: false, immune: false, charge: 0, air: false, rooted: false, blind: false, silenced: false, berserk: false, taunted: null, steadfast: false };
 }
 function makeChampFor(def, team, i) {   // drops control chances when that switch is off
   const c = makeChamp(def, team, i);
@@ -948,7 +1087,7 @@ function openingPlay(c, i) {
   if (G.phase !== 'opening' || c.team !== G.openTurn || G.opened.has(c.id)) return;
   playCard(c, i); G.opened.add(c.id); UI.sel = null; UI.hover = null;
   const n = ++G.cardsPlayed[c.team];
-  if (RULES.openLevels.includes(n)) { startOpeningLevel(c.team); return; }
+  if (RULES.openLevels.includes(n)) { grantLevels([{ team: c.team, why: `opening card ${n}` }], () => advanceOpening(c.team)); return; }
   advanceOpening(c.team);
 }
 function advanceOpening(team) {
@@ -958,14 +1097,6 @@ function advanceOpening(team) {
   else if (!left(team)) { startEndgame(); return; }
   render(); openingAi();
 }
-// A level-up earned in the opening: the team picks one champion and one of its two options.
-function startOpeningLevel(team) {
-  logLine('round', `Team ${team} earns a level-up (card ${G.cardsPlayed[team]})`);
-  if (!G.humans.includes(team)) { const mine = G.champs.filter(x => x.team === team); const low = Math.min(...mine.map(x => x.level));
-    const pool = mine.filter(x => x.level === low); const c = pool[Math.floor(rng() * pool.length)]; applyPick(c, aiLevelPick(c)); advanceOpening(team); return; }
-  G.phase = 'openlevel'; G.levelQueue = { team, opening: true }; render();
-}
-function humanOpeningLevel(c, k) { if (G.phase !== 'openlevel') return; const resume = G.levelQueue.resume; applyPick(c, k); G.levelQueue = null; if (resume) resume(); else advanceOpening(c.team); }
 function openingAi() {
   if (G.phase !== 'opening' || G.humans.includes(G.openTurn)) return;
   later(() => { const t = G.openTurn; let best = null, bv = -1e9;
@@ -987,7 +1118,7 @@ function startEndgame() {
 function beginTurn() {
   G.phase = 'move'; UI.sel = null; UI.hover = null;
   render();
-  if (!G.humans.includes(G.turnTeam)) later(aiTurn, G.humans.length ? 650 : 200);
+  if (!G.humans.includes(G.turnTeam)) later(aiTurn, G.humans.length ? 650 : 200); else coachMove();
 }
 function moveTargets(c) {
   if (c.rooted) return [];
@@ -1003,14 +1134,32 @@ function moveTargets(c) {
 function doMove(c, to) {
   if (G.phase !== 'move') return;
   if (c && (!to || c.dead || c.team !== G.turnTeam || !moveTargets(c).some(x => same(x, to)))) return;   // only legal moves
-  const team = G.turnTeam;
+  const team = G.turnTeam, from = c && c.pos;
   if (c && to) { logLine(team, `${team} moves ${nm(c)} to ${to[0]},${to[1]}`); c.pos = to; }
   else logLine(team, `${team} holds`);
   UI.sel = null; UI.hover = null;
-  if (RULES.onePulse && G.turnNo === 0) { G.turnNo = 1; G.turnTeam = other(G.turnTeam); beginTurn(); return; }
-  const events = runPulse(RULES.onePulse ? G.token : team);   // with one pulse, ties go to the team that moved first
-  if (HEADLESS) afterPulse();
-  else { G.phase = 'pulse'; animate(events, afterPulse); }
+  const go = () => {
+    if (RULES.onePulse && G.turnNo === 0) { G.turnNo = 1; G.turnTeam = other(G.turnTeam); beginTurn(); return; }
+    const events = runPulse(RULES.onePulse ? G.token : team);   // with one pulse, ties go to the team that moved first
+    if (HEADLESS) afterPulse();
+    else { G.phase = 'pulse'; animate(events, afterPulse); }
+  };
+  if (HEADLESS) return go();
+  // show the move: the champion slides, an arrow and a ghost mark where it came from (until the team moves again),
+  // and an AI move holds the board a moment before the pulse
+  UI.moves = UI.moves.filter(m => m.team !== team && !m.rg);
+  if (c && to) { UI.moves.push({ team, id: c.id, from, to }); startSlide(new Map([[c.id, from]])); UI.moveTag = `${tnm(team)} moves ${cn(c)} ${dist(from, to)} hex${dist(from, to) > 1 ? 'es' : ''}`; }
+  else UI.moveTag = `${tnm(team)} holds`;
+  G.phase = 'moving'; render();
+  const ai = !G.humans.includes(team);
+  UI.timer = setTimeout(go, (ai ? 900 : 350) * (UI.speed === 'fast' ? .5 : 1));
+}
+// A short slide from where the champions stood (a map id -> old hex) to where they stand now.
+function startSlide(fromMap) { if (HEADLESS || !fromMap.size) return; UI.slide = { t0: performance.now(), from: fromMap }; setTimeout(() => { if (UI.slide && performance.now() - UI.slide.t0 >= 500) { UI.slide = null; } }, 560); }
+function slideWrap(id, cx, cy, html) {
+  const s = UI.slide; if (!s || !s.from.has(id)) return html; const el = performance.now() - s.t0; if (el >= 500) return html;
+  const [fx, fy] = px(...s.from.get(id));
+  return `<g class="slide" style="--sx:${(fx - cx).toFixed(1)}px;--sy:${(fy - cy).toFixed(1)}px;animation-delay:-${Math.round(el)}ms">${html}</g>`;
 }
 function afterPulse() {
   G.display = null; G.actors = null; G.ev = null;
@@ -1041,7 +1190,7 @@ function endRound() {
   if (checkWin()) return;
   if (RULES.gold) for (const t of ['A','B']) { const g = RULES.income * alive(t).length; G.gold[t] += g; G.earned[t] += g; }
   if (G.round === 5) G.goldAt5 = { ...G.earned };
-  if (RULES.levelRounds.includes(G.round)) { startLevelUp(); return; }
+  if (RULES.levelRounds.includes(G.round)) { grantLevels(['A', 'B'].map(t => ({ team: t, why: `round ${G.round}` })), openShop); return; }
   openShop();
 }
 // ═════════════ regroup: the phase after a decisive fight ═════════════
@@ -1057,29 +1206,95 @@ function rgCheck() {
 }
 function startRegroup(w) {
   const l = other(w);
-  G.rg = { winner: w, loser: l, range: rgRange(), stage: 'winner', orig: new Map(alive().map(c => [c.id, c.pos])) };
+  G.rg = { winner: w, loser: l, range: rgRange(), stage: 'winner', card: null, orig: new Map(alive().map(c => [c.id, c.pos])) };
   G.rgRound = G.round; STATS.regroups++; G.phase = 'regroup'; UI.sel = null; UI.hover = null;
   // the walk takes time: the dead come back a round sooner (never sooner than the end of the next round)
   if (RULES.rgCost) for (const c of G.champs) if (c.dead && c.team === l) c.respawnAt = Math.max(Math.min(c.respawnAt, G.round + 1), c.respawnAt - RULES.rgCost);
   logLine('round', `Regroup: team ${w} won the fight`);
   logLine('sys', `Team ${w} places its champions up to ${G.rg.range} hexes away, then team ${l} moves its survivors and chooses where its dead return.`);
-  cue(3, `${tnm(w)} win the fight, and it's time to regroup.`, `Up to ${G.rg.range} hexes each. Baron, Dragon or the tower: where do they go?`);
+  cue(3, `${tnm(w)} win the fight, and it's time to regroup.`, RULES.rgCards ? `They get one objective card, then up to ${G.rg.range} hexes each. What do they take?` : `Up to ${G.rg.range} hexes each. Baron, Dragon or the tower: where do they go?`);
   rgStep();
 }
 function rgStep() {
   const team = rgTeam();
-  if (G.humans.includes(team)) { render(); return; }
-  render(); later(() => { rgAi(team); rgDone(); }, 900);
+  if (G.humans.includes(team)) { render(); coachRegroup(); return; }
+  render(); later(() => { const before = new Map(alive(team).map(c => [c.id, c.pos])); rgAi(team);
+    startSlide(new Map([...before].filter(([id, p]) => !same(p, G.champs[id].pos)))); render();
+    later(() => RULES.rgCards ? rgPlay(rgAiCard(team)) : rgDone(), 750); }, 500);
 }
 function rgDone() {
-  if (G.phase !== 'regroup') return;
-  UI.sel = null; UI.hover = null;
-  if (G.rg.stage === 'winner') { G.rg.stage = 'loser'; rgStep(); return; }
-  for (const c of G.champs) { const o = G.rg.orig.get(c.id); if (o && !c.dead && !same(o, c.pos)) logLine(c.team, `${nm(c)} regroups to ${c.pos[0]},${c.pos[1]}`); }
+  if (G.phase !== 'regroup' || !G.rg || G.rg.busy) return;
+  if (RULES.rgCards && !G.rg.card) return;   // with cards, playing the card ends the stage
+  UI.sel = null; UI.hover = null; UI.cardHi = null;
+  if (G.rg.stage === 'winner') { G.rg.stage = 'loser'; G.rg.card = null; rgStep(); return; }
+  const lit = t => alive(t).reduce((q, c) => q + ABK.filter(k => patOk(c, c.ab[k].pat)).length, 0);
+  STATS.rgLit.n++; STATS.rgLit.w += lit(G.rg.winner); STATS.rgLit.l += lit(G.rg.loser);
+  if (!HEADLESS) { UI.moves = [];
+    for (const c of G.champs) { const o = G.rg.orig.get(c.id); if (o && !c.dead && !same(o, c.pos)) { logLine(c.team, `${nm(c)} regroups to ${c.pos[0]},${c.pos[1]}`); UI.moves.push({ team: c.team, id: c.id, from: o, to: c.pos, rg: true }); } }
+    UI.moveTag = 'Regroup over: the arrows show where everyone went'; }
   G.rg = null; advanceTurn();
 }
+// -- regroup cards (2026-11-20, second version): place first, then play one card. A card's size comes from the
+// formation: Siege and the monster cards count the champions standing in range of the target (+1 each for a
+// champion whose pattern is complete), Rest heals only champions standing beside an ally (more inside a complete
+// pattern). Every card shows its live value while you place.
+// RULES.rgGeo = false gives the first version (flat values, for measuring). --
+const bldName = (t, T) => T ? `the ${TEAMN[t]} ${T.kind === 'base' ? 'base tower' : 'tower'}` : `the ${TEAMN[t]} nexus`;
+const litAny = c => ABK.some(k => patOk(c, c.ab[k].pat));
+const besideAlly = c => alive(c.team).some(o => o !== c && dist(o.pos, c.pos) === 1);
+function rgReach(team, h) { const L = links(); return RULES.rgGeo ? alive(team).filter(c => dist(c.pos, h) <= eff(c, L).range) : alive(team); }
+const rgPow = cs => RULES.rgGeo ? cs.reduce((q, c) => q + RULES.rgSiege + (litAny(c) ? RULES.rgShape : 0), 0) : RULES.rgSiege * cs.length;
+const restShare = c => !RULES.rgGeo ? RULES.rgRestFlat : !besideAlly(c) ? 0 : RULES.rgRest + (litAny(c) ? RULES.rgRestShape : 0);
+function rgCards(team) {
+  const rg = G.rg, foe = other(team), out = [];
+  const ev = pops => ({ actor: null, init: 99, special: true, pops, lines: [], snap: snap() });
+  const who = cs => cs.map(c => nm(c)).join(', ');
+  if (rg.stage === 'winner') {
+    const blds = structure() && nexusOpen(foe) ? [{ T: null, pos: NEXUS[foe][0], hp: G.nexus[foe] }] : attackableTowers(foe).map(T => ({ T, pos: T.pos, hp: T.hp }));
+    let best = null; for (const b of blds) { b.cs = rgReach(team, b.pos); b.dmg = rgPow(b.cs) * (baronOn(team) ? 2 : 1); if (!best || b.dmg > best.dmg || (b.dmg === best.dmg && b.hp < best.hp)) best = b; }
+    if (best) { const b = best, nx = !b.T, falls = b.dmg >= b.hp && b.dmg > 0;
+      out.push({ id: 'siege', ic: '🏰', name: 'Siege', who: b.cs.map(c => c.id), at: b.pos,
+        text: b.cs.length ? `${b.cs.length} in range of ${bldName(foe, b.T)} (${who(b.cs)}): it takes ${b.dmg}${baronOn(team) ? ' (Baron ×2)' : ''}, ${falls ? (nx ? 'it falls and you win' : 'it falls') : `${b.hp} → ${b.hp - b.dmg} HP`}` : `nobody stands in range of ${bldName(foe, b.T)} yet: 0 damage`,
+        v: nx ? (falls ? 999 : b.dmg * 3) : b.dmg + (falls ? 14 : 0),
+        apply: () => { const notes = [];
+          if (nx) G.nexus[foe] -= b.dmg; else { b.T.hp -= b.dmg; if (b.T.hp <= 0) towerFall(b.T, null, team, notes); }
+          talk.card(team, `${b.cs.length} of them hit ${bldName(foe, b.T)} for ${b.dmg}${falls ? ', and it falls' : ''}`);
+          return ev(b.dmg ? [{ hex: b.pos, text: '−' + b.dmg, cls: 'gold' }] : []); } }); }
+    for (const m of (G.monsters || []).filter(m => m.alive)) { const cs = rgReach(team, m.pos), d = rgPow(cs), kills = d >= m.hp && d > 0;
+      out.push({ id: m.kind, ic: m.kind === 'dragon' ? '🐉' : '👑', name: m.name, who: cs.map(c => c.id), at: m.pos,
+        text: cs.length ? `${cs.length} in range (${who(cs)}): the ${m.name} takes ${d}, ${kills ? (m.kind === 'dragon' ? 'you slay it and one champion levels up' : `you slay it: double damage to buildings for ${RULES.baronRounds} rounds`) : `${m.hp} → ${m.hp - d} HP (the last hit still takes it)`}` : `nobody stands in range of the ${m.name} yet: 0 damage`,
+        v: kills ? (m.kind === 'baron' ? 24 : 12) : d * .6,
+        apply: () => { const notes = [], p = m.pos; m.hp -= d; m.dmg[team] += d; if (m.hp <= 0) slayMonster(m, team, null, notes);
+          talk.card(team, `${cs.length} of them hit the ${m.name} for ${d}${kills ? ', and it is theirs' : ''}`);
+          return ev(d ? [{ hex: p, text: '−' + d, cls: 'gold' }] : []); } }); }
+  } else {
+    const dead = G.champs.filter(c => c.team === team && c.dead && c.respawnAt > G.round);
+    if (dead.length) out.push({ id: 'rush', ic: '⏩', name: 'Rush back', who: [], text: dead.map(c => `${nm(c)} back after round ${c.respawnAt - 1} (not ${c.respawnAt})`).join(' · '), v: dead.length * 7,
+      apply: () => { for (const c of dead) c.respawnAt = Math.max(G.round, c.respawnAt - 1); talk.card(team, `${dead.length > 1 ? 'their dead come' : `${nm(dead[0])} comes`} back a round sooner`); return ev([]); } });
+    // Fortify was cut on 2026-11-20 (played 2 times in 400 matches)
+  }
+  const heals = alive(team).map(c => [c, Math.min(Math.round(c.maxHp * restShare(c)), c.maxHp - c.hp)]), total = heals.reduce((q, [, g]) => q + g, 0), got = heals.filter(([, g]) => g > 0);
+  out.push({ id: 'rest', ic: '💚', name: 'Rest', who: RULES.rgGeo ? alive(team).filter(besideAlly).map(c => c.id) : [],
+    text: RULES.rgGeo ? `champions beside an ally heal ${Math.round(RULES.rgRest * 100)}% of max HP, ${Math.round((RULES.rgRest + RULES.rgRestShape) * 100)}% if their pattern is complete: ${got.length ? `+${total} HP (${got.map(([c, g]) => `${nm(c)} +${g}`).join(', ')}), and they are cleansed` : 'no wounded champion stands beside an ally yet: +0 HP'}`
+      : `every champion heals ${Math.round(RULES.rgRestFlat * 100)}% of max HP (+${total} HP in all) and is cleansed`, v: total * .7,
+    apply: () => { const pops = []; for (const [c, g] of heals) { if (RULES.rgGeo && !besideAlly(c)) continue; c.hp += g; c.poison = 0; clearStatus(c); if (g) pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); } talk.card(team, `they rest, +${total} HP`); return ev(pops); } });
+  return out;
+}
+const rgBest = team => rgCards(team).reduce((a, b) => b.v > a.v ? b : a);
+function rgAiCard(team) { let best = null, bv = -1e9; for (const c of rgCards(team)) { const v = c.v + rng() * 2; if (v > bv) { bv = v; best = c; } } return best.id; }
+// Playing the card ends the team's regroup: it resolves from where the champions now stand.
+function rgPlay(id) {
+  if (G.phase !== 'regroup' || !G.rg || G.rg.card || G.rg.busy) return;
+  const team = rgTeam(), card = rgCards(team).find(x => x.id === id); if (!card) return;
+  G.rg.card = id; STATS.rgCard[id] = (STATS.rgCard[id] || 0) + 1; UI.cardHi = null; UI.sel = null; UI.hover = null; hideTip();
+  logLine(team, `${team} plays the regroup card <em>${card.name}</em>: ${esc(card.text)}`);
+  const e = card.apply(); G.rg.busy = true;   // nothing else happens until the card's effect has played out
+  const cont = () => { G.rg.busy = false; if (checkWin()) return; bonusLevels(() => { G.phase = 'regroup'; rgDone(); }); };
+  if (HEADLESS) return cont();
+  animate([e], () => { G.display = null; G.actors = null; G.ev = null; cont(); }, true);
+}
 function rgTargets(c) {
-  const rg = G.rg; if (!rg || c.team !== rgTeam()) return [];
+  const rg = G.rg; if (!rg || rg.busy || c.team !== rgTeam()) return [];
   if (c.dead) return rg.stage !== 'loser' ? [] : HEXES.filter(h => nexusDist(c.team, h) <= RULES.homeRadius && !SOLID.has(K(h)) && !champAt(h) && !G.champs.some(o => o !== c && o.dead && o.team === c.team && same(o.spawn, h)));
   const from = rg.orig.get(c.id), foes = alive(other(c.team));
   return HEXES.filter(h => dist(h, from) <= rg.range && !SOLID.has(K(h)) && !champAt(h) && !foes.some(f => dist(f.pos, h) <= 1) && nexusDist(other(c.team), h) > 1);
@@ -1090,38 +1305,39 @@ function rgPlace(c, h) {
   UI.sel = null; UI.hover = null; render();
 }
 function hexClick(c, h) { if (G.phase === 'regroup') rgPlace(c, h); else doMove(c, h); }
-// AI: the winners pick something to take and stand around it in the best shape they can; the losers fall back and plan their return.
+// AI: tries one formation per objective (each Siege target, each monster, a huddle for Rest; for the losers: home,
+// or around a damaged building), and keeps the one whose best card plus shape is worth most.
 function rgAi(team) {
   const rg = G.rg, foe = other(team);
-  const towerDanger = (h, goal) => G.towers.filter(T => T.up && T.side === foe && !same(T.pos, goal) && dist(T.pos, h) <= (T.kind === 'base' ? RULES.baseTowerRange : 1)).length;
+  const towerDanger = (h, goal) => G.towers.filter(T => T.up && T.side === foe && !(goal && same(T.pos, goal)) && dist(T.pos, h) <= (T.kind === 'base' ? RULES.baseTowerRange : 1)).length;
+  const allies = (c, h) => alive(team).filter(o => o !== c && dist(o.pos, h) === 1).length;
   const place = (cs, score) => { for (let pass = 0; pass < 2; pass++) for (const c of cs) { const keep = c.pos; let best = keep, bv = -1e9;
     for (const h of [keep, ...rgTargets(c)]) { c.pos = h; const v = score(c, h) + shapeScore(team) + rng() * .2; if (v > bv) { bv = v; best = h; } }
     c.pos = best; } };
+  const reset = () => { for (const c of alive(team)) c.pos = rg.orig.get(c.id); };
+  let plans;
   if (rg.stage === 'winner') {
-    const goals = [...(G.monsters || []).filter(m => m.alive).map(m => ({ pos: m.pos, w: m.kind === 'baron' ? 3 : 1.6, kind: m.kind })), ...attackableTowers(foe).map(T => ({ pos: T.pos, w: T.kind === 'base' ? 2.4 : 2.2, kind: 'tower' })), ...(structure() && nexusOpen(foe) ? [{ pos: NEXUS[foe][0], w: 4, kind: 'nexus' }] : [])];
-    let goal = null, gv = -1e9;
-    for (const g of goals) { const n = alive(team).filter(c => dist(rg.orig.get(c.id), g.pos) - rg.range <= c.range).length; const v = g.w * n + rng() * .5; if (v > gv) { gv = v; goal = g; } }
-    if (!goal) return;
-    STATS.rgGoal[goal.kind]++; rg.goal = goal.kind;
-    logLine(team, `${team} regroups toward the ${goal.kind === 'tower' ? 'enemy tower' : goal.kind === 'nexus' ? 'enemy nexus' : goal.kind === 'baron' ? 'Baron' : 'Dragon'}`);
-    place([...alive(team)].sort((a, b) => a.range - b.range), (c, h) => -3 * Math.max(0, dist(h, goal.pos) - c.range) - 1.5 * towerDanger(h, goal.pos) - (c.range > 1 && dist(h, goal.pos) < 2 ? .5 : 0));
+    const goals = [...(G.monsters || []).filter(m => m.alive).map(m => ({ pos: m.pos, kind: m.kind })), ...attackableTowers(foe).map(T => ({ pos: T.pos, kind: 'tower' })), ...(structure() && nexusOpen(foe) ? [{ pos: NEXUS[foe][0], kind: 'nexus' }] : [])];
+    const W = { baron: 3, dragon: 1.6, tower: 2.2, nexus: 4 };   // pressure: champions left in range of the objective (the old regroup AI's weights)
+    plans = [...goals.map(g => ({ kind: g.kind, press: () => W[g.kind] * alive(team).filter(c => dist(c.pos, g.pos) <= c.range).length, run: () => place([...alive(team)].sort((a, b) => a.range - b.range), (c, h) => -3 * Math.max(0, dist(h, g.pos) - c.range) - 1.5 * towerDanger(h, g.pos) - (c.range > 1 && dist(h, g.pos) < 2 ? .5 : 0)) })),
+      { kind: 'rest', press: () => 0, run: () => place(alive(team), (c, h) => 1.5 * Math.min(2, allies(c, h)) - 1.5 * towerDanger(h, null)) }];
   } else {
-    place(alive(team), (c, h) => -1.2 * nexusDist(team, h));
-    const dead = G.champs.filter(c => c.dead && c.team === team);
-    try { for (const c of dead) { const opts = rgTargets(c); let best = null, bv = -1e9; c.dead = false;
-        for (const h of opts) { c.pos = h; const v = shapeScore(team) + rng() * .2; if (v > bv) { bv = v; best = h; } }
-        if (best) { c.pos = best; c.spawn = best; } else c.dead = true; } }
-    finally { for (const c of dead) c.dead = true; }
+    plans = [{ kind: 'home', press: () => 0, run: () => place(alive(team), (c, h) => -1.2 * nexusDist(team, h) + .3 * Math.min(2, allies(c, h))) }];
   }
+  let best = null, bv = -1e9;
+  for (const pl of plans) { reset(); pl.run(); const v = (RULES.rgCards ? rgBest(team).v : 0) + pl.press() + .5 * shapeScore(team) + rng() * .3;
+    if (v > bv) { bv = v; best = { kind: pl.kind, pos: new Map(alive(team).map(c => [c.id, c.pos])) }; } }
+  reset(); if (best) for (const c of alive(team)) c.pos = best.pos.get(c.id);
+  if (rg.stage === 'winner' && best) { const g = best.kind; if (STATS.rgGoal[g] != null) STATS.rgGoal[g]++; rg.goal = g;
+    logLine(team, `${team} regroups ${g === 'rest' ? 'into a huddle to rest' : `toward the ${g === 'tower' ? 'enemy tower' : g === 'nexus' ? 'enemy nexus' : g === 'baron' ? 'Baron' : 'Dragon'}`}`); }
+  if (rg.stage === 'loser') { const dead = G.champs.filter(c => c.dead && c.team === team);
+    try { for (const c of dead) { const opts = rgTargets(c); let b = null, v0 = -1e9; c.dead = false;
+        for (const h of opts) { c.pos = h; const v = shapeScore(team) + rng() * .2; if (v > v0) { v0 = v; b = h; } }
+        if (b) { c.pos = b; c.spawn = b; } else c.dead = true; } }
+    finally { for (const c of dead) c.dead = true; } }
 }
 // A level-up won outside the schedule (the Dragon): the team picks one champion.
-function bonusLevels(next) {
-  const t = G.bonusLevels.shift(); if (!t) return next();
-  logLine('round', `Team ${t} earns a level-up from the Dragon`);
-  if (!G.humans.includes(t)) { const mine = G.champs.filter(x => x.team === t), low = Math.min(...mine.map(x => x.level)), pool = mine.filter(x => x.level === low);
-    const c = pool[Math.floor(rng() * pool.length)]; applyPick(c, aiLevelPick(c)); return bonusLevels(next); }
-  G.phase = 'openlevel'; G.levelQueue = { team: t, opening: true, why: 'the Dragon', resume: () => bonusLevels(next) }; render();
-}
+function bonusLevels(next) { grantLevels(G.bonusLevels.splice(0).map(t => ({ team: t, why: 'the Dragon' })), next); }
 
 // ═════════════ gold and the shop ═════════════
 function openShop() {
@@ -1366,7 +1582,10 @@ function hitMonster(c, m, L, ctx) {
   d = Math.min(d, m.hp); m.hp -= d; m.dmg[c.team] += d;
   ctx.lines.push({ from: c.pos, to: m.pos, cls: 'strike' }); ctx.pops.push({ hex: m.pos, text: '−' + d, cls: 'gold' }); ctx.notes.push(`→ <em>${m.name}</em> −${d}`);
   if (m.hp > 0) return;
-  const t = c.team, steal = m.dmg[other(t)] > m.dmg[t];
+  slayMonster(m, c.team, c, ctx.notes);
+}
+function slayMonster(m, t, c, notes) {
+  const steal = m.dmg[other(t)] > m.dmg[t];
   m.alive = false; SOLID.delete(K(m.pos)); m.respawnAt = G.round + (m.kind === 'dragon' ? RULES.dragonBack : RULES.baronBack);
   const behind = teamScore(t) < teamScore(other(t));
   if (m.kind === 'dragon') { G.dragon[t] = Math.min(RULES.dragonCap, G.dragon[t] + 1); STATS.dragons++; if (RULES.dragonLevel) G.bonusLevels.push(t); }
@@ -1374,8 +1593,8 @@ function hitMonster(c, m, L, ctx) {
   if (steal) STATS.steals++;
   const gold = m.kind === 'dragon' ? RULES.dragonGold : RULES.baronGold;
   if (RULES.gold) { G.gold[t] += gold; G.earned[t] += gold; }
-  talk.monster(m, c, steal);
-  ctx.notes.push(`<span class="kill">${t} slays the ${m.name}${steal ? ' (STOLEN)' : ''}</span>: ${m.kind === 'dragon' ? `one champion of team ${t} levels up` : `towers and nexus take double damage from ${t}, and ${t} regenerates anywhere, until the end of round ${G.baronUntil[t]}`}${RULES.gold ? `, +${gold} gold` : ''}`);
+  talk.monster(m, c, steal, t);
+  notes.push(`<span class="kill">${t} slays the ${m.name}${steal ? ' (STOLEN)' : ''}</span>: ${m.kind === 'dragon' ? `one champion of team ${t} levels up` : `towers and nexus take double damage from ${t}, and ${t} regenerates anywhere, until the end of round ${G.baronUntil[t]}`}${RULES.gold ? `, +${gold} gold` : ''}`);
 }
 function nexusInRange(c, L) {
   const foe = other(c.team);
@@ -1393,7 +1612,11 @@ function towerInRange(c, L) {
 function hitTower(c, T, L, ctx) {
   let d = eff(c, L).atk; if (roll(pct(c, 'crit', L))) { d *= 2; STATS.procs++; } if (baronOn(c.team)) d *= 2;
   T.hp -= d; ctx.lines.push({ from: c.pos, to: T.pos, cls: 'strike' }); ctx.pops.push({ hex: T.pos, text: '−' + d, cls: 'gold' }); ctx.notes.push(`→ ${T.side} ${T.kind} tower −${d}`);
-  if (T.hp <= 0) { T.up = false; T.hp = 0; SOLID.delete(K(T.pos)); talk.tower(T, c); G.falls++; STATS.falls++; if (RULES.gold) { G.gold[c.team] += RULES.towerGold; G.earned[c.team] += RULES.towerGold; } ctx.notes.push(`<span class="kill">the ${T.side} ${T.kind} tower FALLS</span>${nexusOpen(T.side) && RULES.gate ? ` (nexus ${T.side} is open)` : T.kind === 'side' && RULES.baseTowers ? ` (the ${T.side} base towers can now be attacked)` : ''}`); }
+  if (T.hp <= 0) towerFall(T, c, c.team, ctx.notes);
+}
+function towerFall(T, c, team, notes) {
+  T.up = false; T.hp = 0; SOLID.delete(K(T.pos)); talk.tower(T, c); G.falls++; STATS.falls++; if (RULES.gold) { G.gold[team] += RULES.towerGold; G.earned[team] += RULES.towerGold; }
+  notes.push(`<span class="kill">the ${T.side} ${T.kind} tower FALLS</span>${nexusOpen(T.side) && RULES.gate ? ` (nexus ${T.side} is open)` : T.kind === 'side' && RULES.baseTowers ? ` (the ${T.side} base towers can now be attacked)` : ''}`);
 }
 function kill(t, src, notes, neutral) {
   if (t.dead) return;
@@ -1426,7 +1649,8 @@ function finishOnScore() {
 }
 const STATS_k = t => G.champs.filter(c => c.team === t).reduce((s, c) => s + c.kills, 0);
 function finish() {
-  G.phase = 'over'; for (const c of G.champs) { const z = STATS.ch[c.def.id] || (STATS.ch[c.def.id] = { g: 0, w: 0, q: 0, wc: 0, r: 0 }); z.g++; if (c.team === G.winner) z.w++; } STATS.matches++; STATS.rounds += G.round; if (G.winner === 'A') STATS.winsA++; if (G.winner === 'draw') STATS.draws++;
+  G.phase = 'over'; for (const c of G.champs) { const z = STATS.ch[c.def.id] || (STATS.ch[c.def.id] = { g: 0, w: 0, q: 0, wc: 0, r: 0 }); z.g++; if (c.team === G.winner) z.w++;
+    const pk = c.def.id + ':' + c.def.paths[c.path].name, y = STATS.path[pk] || (STATS.path[pk] = { g: 0, w: 0 }); y.g++; if (c.team === G.winner) y.w++; } STATS.matches++; STATS.rounds += G.round; if (G.winner === 'A') STATS.winsA++; if (G.winner === 'draw') STATS.draws++;
   for (const t of G.fights) { STATS.fw++; if (t === G.winner) STATS.fwWin++; }
   if (G.bigFight) { STATS.big++; if (G.bigFight.team === G.winner) STATS.bigWin++; }
   if (G.goldAt5 && G.goldAt5.A !== G.goldAt5.B) { STATS.gl++; if ((G.goldAt5.A > G.goldAt5.B ? 'A' : 'B') === G.winner) STATS.glWin++; }
@@ -1440,32 +1664,41 @@ function finish() {
   STATS.steps += G.stanceSteps; STATS.stancePulses += G.stancePulses;
   for (const b of (G.baronTakes || [])) { if (b.team === G.winner) STATS.baronWin++; if (b.behind) { STATS.baronBehind++; if (b.team === G.winner) STATS.baronBehindWin++; } }
   render();
-  if (G.mode === 'watch' && !HEADLESS) UI.timer = setTimeout(() => newMatch('watch'), 2500);
 }
 
-// ═════════════ level-ups on a schedule ═════════════
-function startLevelUp() {
-  const lv = RULES.levelRounds.indexOf(G.round);
-  logLine('round', `Level ${lv + 1}: every champion grows`);
-  for (const t of ['A','B']) if (!G.humans.includes(t)) for (const c of G.champs.filter(x => x.team === t)) applyPick(c, aiLevelPick(c));
-  if (!G.humans.length) { openShop(); return; }
-  G.phase = 'levelup'; G.levelQueue = { lv, picks: {} }; render();
+// ═════════════ level-ups ═════════════
+// Every level-up grows ONE champion of the team: the next step of its path, or a heal. A list of grants is handed out
+// in order; the AI answers at once, a human team waits in the strip under the board.
+function grantLevels(list, next) {
+  const it = list.shift(); if (!it) return next();
+  const t = it.team; STATS.levels++;
+  logLine('round', `Team ${t} levels up one champion (${it.why})`);
+  if (!G.humans.includes(t)) { const [c, k] = aiLevel(t); applyPick(c, k); return grantLevels(list, next); }
+  G.phase = 'levelup'; G.levelQueue = { team: t, why: it.why, resume: () => grantLevels(list, next) }; UI.sel = null; render(); coachLevel();
 }
+function humanLevel(c, k) { const q = G.levelQueue; if (G.phase !== 'levelup' || !q || c.team !== q.team) return; hideTip(); applyPick(c, k); G.levelQueue = null; q.resume(); }
 function applyPick(c, k) {
-  const o = levelOptions(c)[k]; c.picks.push(k); c.level++;
+  const o = levelOptions(c)[k]; c.picks.push(k); c.level++; if (k === 0) c.pstep++; else STATS.alts++;
   if (o.up) o.up(c.ab[o.ab]);
   if (o.proc && (RULES.cc || !CC_KEYS.includes(o.proc))) c.procs[o.proc] = Math.min(100, (c.procs[o.proc] || 0) + o.add);
-  if (o.stat === 'atk') c.atk += o.add; if (o.stat === 'range') c.range += o.add; if (o.stat === 'dive') c.dive += o.add; if (o.stat === 'mend') c.mendAmt += o.add;
+  if (o.stat === 'atk') c.atk += o.add; if (o.stat === 'range') c.range += o.add; if (o.stat === 'dive') c.dive += o.add; if (o.stat === 'mend') c.mendAmt += o.add; if (o.stat === 'init') c.init += o.add;
   if (o.stat === 'hp') { c.maxHp += o.add; if (!c.dead) c.hp += o.add; }
+  if (o.heal && !c.dead) c.hp = Math.min(c.maxHp, c.hp + o.heal);
   if (o.aura) c.auraAmt += o.aura;
   logLine(c.team, `${nm(c)} reaches level ${c.level}: ${o.t}`);
 }
-function humanLevelPick(c, k) { if (!G.levelQueue) return; G.levelQueue.picks[c.id] = k; render(); }
-function confirmLevels() {
-  const q = G.levelQueue, mine = G.champs.filter(c => G.humans.includes(c.team));
-  if (!mine.every(c => q.picks[c.id] != null)) return;
-  for (const c of mine) applyPick(c, q.picks[c.id]);
-  G.levelQueue = null; openShop();
+// AI: grow what has been firing, heal a champion that is badly hurt, keep levels spread out.
+function aiLevel(t) {
+  const smart = RULES.aiLevelsBy ? RULES.aiLevelsBy[t] : RULES.aiLevels; let best = null, bv = -1e9;
+  for (const c of G.champs.filter(x => x.team === t)) levelOptions(c).forEach((o, k) => { const v = (smart ? levelValue(c, o) : 0) + rng() * (smart ? .5 : 5); if (v > bv) { bv = v; best = [c, k]; } });
+  return best;
+}
+function levelValue(c, o) {
+  let v = 3 - c.level * .7;
+  if (o.heal) v += c.dead ? -1 : 6 * (c.maxHp - c.hp) / c.maxHp - 1.2;
+  else if (o.ab) v += 1 + Math.min(4, c.casts[o.ab] || 0) * (o.ab === 'q' ? .4 : o.ab === 'w' ? .7 : 1);
+  else v += 1.6;
+  return v;
 }
 
 // ═════════════ AI: one move, judged on the expected outcome of the next pulse ═════════════
@@ -1505,7 +1738,7 @@ function evaluate(team) {
 //   3. it keeps the move that leaves it best off: champions alive and healthy, buildings, monsters, and how many of its
 //      patterns are complete at the end (so a move that sets up next turn's abilities counts).
 // RULES.aiPlan: 0 = the old one-move judgement, 1 = step 1 only, 2 = all three. RULES.aiPlanBy = { A: 2, B: 0 } sets it per team.
-const aiPlan = team => RULES.aiPlanBy ? RULES.aiPlanBy[team] : RULES.aiPlan;
+const aiPlan = team => RULES.aiPlanBy ? RULES.aiPlanBy[team] : G && G.mode === 'play' ? DIFF[UI.diff].plan : RULES.aiPlan;
 // Run fn on the live match, then put everything back exactly as it was (state, dice, counters, nothing on screen).
 function dry(fn) {
   const hs = HEADLESS, st = STATS, solid = SOLID; HEADLESS = true; STATS = freshStats(); SOLID = new Set(solid);
@@ -1537,8 +1770,15 @@ function staticMoves(team) {
 }
 function aiTurn() {
   if (G.phase !== 'move') return;
-  const team = G.turnTeam, foe = other(team), plan = aiPlan(team);
+  const team = G.turnTeam;
   if (RULES.stance) G.stance[team] = aiStance(team);
+  const pick = aiChoose(team);
+  if (pick.c) doMove(pick.c, pick.to); else doMove(null, null);
+}
+// The move the AI would make for a team (also used by the coach, inside dry() so the dice are untouched).
+function aiChoose(team, planOv) {
+  const foe = other(team), plan = planOv ?? aiPlan(team), dif = G.mode === 'play' && planOv == null ? DIFF[UI.diff] : null;
+  const beam = dif ? dif.beam : RULES.aiBeamBy ? RULES.aiBeamBy[team] : RULES.aiBeam, samples = dif ? dif.samples : RULES.aiSamplesBy ? RULES.aiSamplesBy[team] : RULES.aiSamples;   // *By: per team, for measuring
   const cands = staticMoves(team); let pick;
   if (!plan) { for (const m of cands) m.s = m.v + rng() * 0.3; pick = cands.sort((a, b) => b.s - a.s)[0]; }
   else {
@@ -1549,20 +1789,13 @@ function aiTurn() {
       return material(team) + K * evaluate(team); });
     for (const m of cands) m.s = after(m, 0, false) + m.v * .05;
     cands.sort((a, b) => b.s - a.s);
-    if (plan >= 2) { const top = cands.slice(0, RULES.aiBeam);
-      for (const m of top) { let t = 0; for (let k = 0; k < RULES.aiSamples; k++) t += after(m, k, true); m.s = t / RULES.aiSamples + m.s * .25; }
+    if (plan >= 2) { const top = cands.slice(0, beam);
+      for (const m of top) { let t = 0; for (let k = 0; k < samples; k++) t += after(m, k, true); m.s = t / samples + m.s * .25; }
       pick = top.sort((a, b) => b.s - a.s)[0]; }
     else pick = cands[0];
   }
-  if (pick.c) doMove(pick.c, pick.to); else doMove(null, null);
+  return pick;
 }
-// Level-ups: the AI strengthens the ability the champion has actually been firing.
-function aiLevelPick(c) {
-  if (RULES.aiLevelsBy ? !RULES.aiLevelsBy[c.team] : !RULES.aiLevels) return rng() < 0.5 ? 0 : 1;
-  const val = o => (o.ab ? 1 + (c.casts[o.ab] || 0) * (o.ab === 'q' ? .5 : o.ab === 'w' ? .8 : 1.2) : 2.5) + rng();
-  const opts = levelOptions(c); return val(opts[0]) >= val(opts[1]) ? 0 : 1;
-}
-
 // ═════════════ animation ═════════════
 // Champions with the same initiative are shown together as one beat (they still resolve in order).
 function toBeats(events) {
@@ -1586,7 +1819,7 @@ function animate(events, done, replay) {
 }
 function skipAnim() { if (!UI.anim) return; clearTimeout(UI.timer); const d = UI.anim.done; UI.anim = null; showRecap(UI.lastPulse && UI.lastPulse.recap); d(); }
 function replayPulse() {   // on your own turn: watch the last pulse again, then come back to the board as it is
-  if (!UI.lastPulse || UI.anim || G.phase !== 'move') return;
+  if (!UI.lastPulse || UI.anim || (G.phase !== 'move' && G.phase !== 'over')) return;
   const phase = G.phase; G.phase = 'pulse'; UI.replaying = true;
   animate(UI.lastPulse.events, () => { UI.replaying = false; G.phase = phase; G.display = null; G.actors = null; G.ev = null; render(); }, true);
 }
@@ -1624,7 +1857,7 @@ const talk = {
   revive(t) { cue(3, `${cn(t)} should be dead, but the Phoenix Feather says no!`, `Back on 8 HP. That one item just bought a whole extra fight.`); },
   tower(T, c) {
     const open = nexusOpen(T.side) && RULES.gate, left = sideTowers(T.side).length;
-    cue(3, pick('tower', [`The ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'} falls!`, `${cn(c)} brings down the ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'}!`, `Down goes the ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'}!`]),
+    cue(3, pick('tower', [`The ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'} falls!`, `${c ? cn(c) + ' brings' : tnm(other(T.side)) + ' bring'} down the ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'}!`, `Down goes the ${tnm(T.side)} ${T.kind === 'base' ? 'base tower' : 'tower'}!`]),
       open ? `And that opens the ${tnm(T.side)} nexus. This is where games end.` : T.kind === 'side' && RULES.baseTowers ? `The base towers are exposed now. ${tnm(T.side)} have to defend at home.` : left ? `${left} ${tnm(T.side)} tower${left > 1 ? 's' : ''} left standing.` : null);
   },
   nexus(foe, c, was) {
@@ -1633,12 +1866,13 @@ const talk = {
     else if (now <= 0) cue(3, `The ${tnm(foe)} nexus explodes! ${tnm(other(foe))} win it!`, `What a finish.`);
     else if (was > max * .34 && now <= max * .34) cue(3, `The ${tnm(foe)} nexus is down to ${now}!`, `One more good pulse and this is over.`);
   },
-  monster(m, c, steal) {
-    const t = c.team;
-    if (steal) cue(3, `STOLEN! ${cn(c)} snipes the ${m.name} from under ${tnm(other(t))}'s noses!`, `${tnm(other(t))} did the work and ${tnm(t)} take the reward. Brutal.`);
-    else if (m.kind === 'dragon') cue(3, pick('drag', [`${tnm(t)} take the Dragon!`, `${cn(c)} lands the last hit on the Dragon!`]), G.dragon[t] >= 2 ? `That's Dragon number ${G.dragon[t]} for ${tnm(t)}, and another level-up.` : `One of their champions levels up right now.`);
+  monster(m, c, steal, team) {
+    const t = team || c.team, who = c ? cn(c) : tnm(t);
+    if (steal) cue(3, `STOLEN! ${who} snipes the ${m.name} from under ${tnm(other(t))}'s noses!`, `${tnm(other(t))} did the work and ${tnm(t)} take the reward. Brutal.`);
+    else if (m.kind === 'dragon') cue(3, pick('drag', [`${tnm(t)} take the Dragon!`, `${who} lands the last hit on the Dragon!`]), G.dragon[t] >= 2 ? `That's Dragon number ${G.dragon[t]} for ${tnm(t)}, and another level-up.` : `One of their champions levels up right now.`);
     else cue(3, `${tnm(t)} slay the Baron!`, `Double damage to buildings for ${RULES.baronRounds} rounds. Watch the towers melt.`);
   },
+  card(t, what) { cue(3, `${tnm(t)} play their regroup card: ${what}.`); },
   appears(m) { if (m.kind === 'baron') cue(3, `The Baron has woken up at the river!`, `${RULES.baronHp} HP and a huge reward. Whoever is ahead should be looking at it.`); },
 };
 // After each champion acts: did its special just charge, and did anyone drop low (and who is about to hit them)?
@@ -1681,6 +1915,70 @@ function showRecap(r) {
   el.innerHTML = `<span class="lbl2">PULSE ${r.pulse}</span>${verdict}: ${tnm('A')} ${d.A} dmg, ${tnm('B')} ${d.B}${ks ? ` · ${ks}` : ''}`;
 }
 
+// ═════════════ the coach (2026-11-20) ═════════════
+// MARLOW gives tips without giving the answer away: which ability is one step from lighting, that a kill is on offer,
+// which card or level-up he would take. The tip comes from the planning AI's own choice for your team, worked out
+// inside dry() so the match's dice are untouched. Easy: a tip on every one of your turns; Normal: the Hint button.
+function coach(text) {
+  if (HEADLESS) return; const el = document.getElementById('feed'); if (!el) return;
+  for (const o of el.querySelectorAll('.coach')) o.remove();
+  const ln = h(`<div class="ln t3 coach"><span class="who mar">MARLOW · TIP</span>${text}</div>`); el.appendChild(ln);
+  while (el.children.length > 4) el.firstElementChild.remove();
+  setTimeout(() => ln.classList.add('out'), 16000); setTimeout(() => ln.remove(), 16700);
+  logLine('sys', `💡 ${text}`); renderLog();
+}
+const litSet = t => new Set(alive(t).flatMap(c => ABK.filter(k => patOk(c, c.ab[k].pat)).map(k => c.id + k)));
+function moveTip(t) {
+  const pick = dry(() => aiChoose(t, 2)), foe = other(t);
+  const lit0 = litSet(t); let lit1 = lit0, from = null;
+  if (pick.c) { from = pick.c.pos; pick.c.pos = pick.to; lit1 = litSet(t); pick.c.pos = from; }
+  const gained = [...lit1].filter(x => !lit0.has(x)).map(x => ({ c: G.champs[+x.slice(0, -1)], k: x.slice(-1) })).sort((a, b) => SHAPE_W[b.k] - SHAPE_W[a.k]);
+  const kills = dry(() => { const before = alive(foe); if (pick.c) pick.c.pos = pick.to; runPulse(t); return before.filter(c => c.dead); });
+  const lost = [...lit0].filter(x => !lit1.has(x)).length;
+  if (!pick.c) return lit0.size ? `I'd <b>hold</b> this turn. Your shapes are standing, and every move I can see breaks one or walks into trouble.` : `Nothing in reach is worth it this turn. Holding is fine; look where the enemy will be next turn.`;
+  if (gained.length) { const g = gained[0], ab = g.c.ab[g.k];
+    return g.c === pick.c ? `${cn(g.c)} can light its own <b>${g.k.toUpperCase()}</b> ${esc(ab.name)} this turn: it needs ${esc(patText(ab.pat))}. Find the hex.`
+      : `${cn(g.c)}'s <b>${g.k.toUpperCase()}</b> ${esc(ab.name)} is one move away: it needs ${esc(patText(ab.pat))}. Who on your team can get there?`; }
+  if (kills.length) return `There's a kill on offer this pulse: ${cn(kills[0])} on ${kills[0].hp} HP. One move puts it in reach. Show targets helps.`;
+  if (nexusDist(t, pick.to) < nexusDist(t, from) && pick.c.hp <= pick.c.maxHp * .5) return `${cn(pick.c)} is on ${pick.c.hp} HP and in the line of fire. Getting it out of reach matters more than anything else this turn.`;
+  return `Look at your ${pick.c.role.toLowerCase()}: a better spot is within ${RULES.spd} hexes${lost ? '' : ', and it breaks none of your shapes'}. Hover the green hexes and watch the letters.`;
+}
+function coachMove(force) {
+  if (!G || G.phase !== 'move' || !G.humans.includes(G.turnTeam) || (!force && coaching() !== 'auto')) return;
+  const t = G.turnTeam, turn = `${G.round}.${G.turnNo}`; if (!force && UI.coached === turn) return; UI.coached = turn;
+  setTimeout(() => { if (G.phase === 'move' && G.turnTeam === t) coach(moveTip(t)); }, 60);
+}
+function coachRegroup(force) {
+  if (!G || G.phase !== 'regroup' || !G.rg || !G.humans.includes(rgTeam()) || (!force && coaching() !== 'auto')) return;
+  const t = rgTeam(), plan = dry(() => { rgAi(t); const b = RULES.rgCards ? rgBest(t) : null; return b && { id: b.id, ic: b.ic, name: b.name, n: b.who.length, at: b.at, v: b.v }; });
+  if (!plan) { coach(G.rg.stage === 'winner' ? 'Stand where your patterns light around the next target.' : 'Pull your survivors home and plan where your dead return.'); return; }
+  const tgt = plan.at ? (plan.id === 'siege' ? 'the building' : `the ${plan.name}`) : '';
+  const how = { siege: `get ${plan.n} champions in range of ${tgt}, ideally with their patterns complete (+1 each)`, dragon: `get ${plan.n} champions in range of the Dragon`, baron: `get ${plan.n} champions in range of the Baron`,
+    rest: 'huddle up: only champions beside an ally heal, and more if their pattern is complete', rush: 'pull back home and choose good return hexes' }[plan.id];
+  coach(`I'd aim for <b>${plan.ic} ${plan.name}</b>: ${how}. The card counts where you stand when you play it, so place first and watch its number grow.`);
+}
+function coachLevel(force) {
+  if (!G || G.phase !== 'levelup' || !G.levelQueue || (!force && coaching() !== 'auto')) return;
+  const t = G.levelQueue.team; let best = null, bv = -1e9;
+  for (const c of G.champs.filter(x => x.team === t)) levelOptions(c).forEach((o, k) => { const v = levelValue(c, o); if (v > bv) { bv = v; best = [c, k, o]; } });
+  UI.recLevel = best ? best[0].id + ':' + best[1] : null;
+  const [c, k, o] = best, fired = o.ab ? c.casts[o.ab] || 0 : 0;
+  const why = k === 1 ? `it is on ${c.hp} of ${c.maxHp} HP` : fired ? `it has fired its ${o.ab.toUpperCase()} ${fired} time${fired === 1 ? '' : 's'}, so that step pays off` : c.level === Math.min(...G.champs.filter(x => x.team === t).map(x => x.level)) ? 'it is the furthest behind, and this is the first step of its path' : 'that step is the strongest on offer';
+  coach(`I'd grow ${cn(c)}: <b>${esc(o.t)}</b>, because ${why}.`); render();
+}
+// Draft tips (Easy): champions that complete your picks' patterns glow; in a ban, the one the enemy wants most is marked.
+function draftTip() {
+  const team = G.order[G.di]; if (!G.humans.includes(team) || coaching() !== 'auto') return { text: '', fits: new Map(), threat: null };
+  const opts = draftOptions(), mine = G.picks[team].filter(Boolean);
+  if (draftKind() === 'ban') { const theirs = G.picks[other(team)].filter(Boolean), sc = d => draftScore(d, team);
+    const th = opts.slice().sort((a, b) => sc(b) - sc(a))[0], notes = theirs.length ? fitNotes(th, theirs) : [];
+    return { fits: new Map(), threat: th ? th.id : null, text: th ? `Ban suggestion: <b>${esc(th.name)}</b>. ${notes.length ? esc(notes.slice(0, 2).join('; ')) + '.' : 'Its elements fit more of the roster than anyone else left.'}` : '' }; }
+  if (!mine.length) return { fits: new Map(), threat: null, text: 'First pick: take a champion whose W and R need common elements, or one with many elements of its own. After it, I will light up who fits.' };
+  const fits = new Map(opts.map(d => [d.id, mine.reduce((q, m) => q + pairFit(d, m), 0)]).filter(([, v]) => v > 0));
+  const top = [...fits].sort((a, b) => b[1] - a[1])[0], d = top && ROSTER.find(x => x.id === top[0]);
+  return { fits, threat: null, text: d ? `Gold = fits your team. Best fit: <b>${esc(d.name)}</b> (${esc(fitNotes(d, mine).slice(0, 2).join('; '))}).` : 'Nobody left completes your patterns; take the strongest champion for the role.' };
+}
+
 // ═════════════ logging and helpers ═════════════
 function logLine(cls, html) { if (!HEADLESS) G.log.push({ cls, html }); }
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1697,11 +1995,13 @@ function render() {
   document.getElementById('m-nexB').textContent = Math.max(0, nx.B);
   document.getElementById('m-goldA').textContent = RULES.gold ? G.gold.A : '–';
   document.getElementById('m-goldB').textContent = RULES.gold ? G.gold.B : '–';
-  document.getElementById('m-phase').textContent = { draft: 'Draft', regroup: G.rg ? `Regroup · ${rgTeam()}` : '', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: 'Level up', openlevel: `Level up · ${G.levelQueue ? G.levelQueue.team : ''}`, shop: 'Shop', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
+  document.getElementById('m-phase').textContent = { draft: 'Draft', regroup: G.rg ? `Regroup · ${rgTeam()}` : '', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: `Level up · ${G.levelQueue ? G.levelQueue.team : ''}`, paths: 'Paths', moving: `${G.turnTeam} moved`, shop: 'Shop', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
   document.getElementById('b-board').textContent = `Board: ${BOARDS[UI.board].name} (${BOARDS[UI.board].size})`;
   document.getElementById('b-aims').classList.toggle('on', UI.aims);
   document.getElementById('b-art').textContent = UI.art ? 'Art: sprites' : 'Art: tokens';
   document.getElementById('b-speed').textContent = `Speed: ${UI.speed}`;
+  document.getElementById('b-diff').textContent = `Difficulty: ${DIFF[UI.diff].name}`;
+  document.getElementById('movetag').innerHTML = G.phase === 'draft' || G.phase === 'paths' ? '' : UI.moveTag;
   document.getElementById('b-nexus').textContent = structure() ? 'Nexus: destroy it' : 'Nexus: score';
   document.getElementById('b-pulse').textContent = RULES.onePulse ? 'Pulse: once per round' : 'Pulse: after every move';
   renderRail('A'); renderRail('B'); renderHand(); renderBoard(); renderPrompt(); renderLog(); renderStrip(); renderOverlay();
@@ -1747,7 +2047,7 @@ function abList(abs, c) {
 }
 function abPipsSvg(c, cx, y) {
   if (G.display || c.dead || !c.ab) return '';
-  return `<text class="st" x="${cx}" y="${y}" style="font-size:11px;font-weight:800;letter-spacing:1px;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${ABK.map(k => { const ok = patOk(c, c.ab[k].pat), cd = abCool(c, k);
+  return `${UI.art ? `<rect x="${cx - 19}" y="${y - 10}" width="38" height="13" rx="6.5" fill="#0b0f16c8" stroke="#ffffff22"></rect>` : ''}<text class="st" x="${cx}" y="${y}" style="font-size:11px;font-weight:800;letter-spacing:1px;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${ABK.map(k => { const ok = patOk(c, c.ab[k].pat), cd = abCool(c, k);
     return `<tspan style="fill:${ok ? (cd ? '#a8853a' : '#ffe07a') : '#66708a'}">${k.toUpperCase()}</tspan>`; }).join('<tspan> </tspan>')}</text>`;
 }
 // Around the selected champion: which hexes its patterns want an ally in (letters of the abilities, coloured by element).
@@ -1760,6 +2060,21 @@ function patternGuide(svg, c) {
         const w = want[K(h)] || (want[K(h)] = { h, items: [] }); w.items.push({ k, col: el ? ELS[el][1] : '#ffd66b', done, either: GROUP[g].length > 1 }); } } }
   for (const { h, items } of Object.values(want)) { const [cx, cy] = px(...h);
     svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * .05}" style="font-size:11px;font-weight:800;paint-order:stroke;stroke:#0b0f16;stroke-width:3px;pointer-events:none">${items.map(i => `<tspan style="fill:${i.col};opacity:${i.done ? .45 : 1}">${i.k.toUpperCase()}${i.either ? '?' : ''}</tspan>`).join('')}</text>`)); }
+}
+// Every dead champion shows where it will return and when, so a deserted half reads at a glance.
+function deadMarks(svg) {
+  if (!G.champs.length || G.phase === 'draft') return;
+  const v = c => view(c), by = {};
+  for (const c of G.champs) { const s = v(c); if (!s.dead) continue; const h = c.spawn || c.home, k = K(h), n = by[k] = (by[k] || 0) + 1, [cx, cy0] = px(...h), cy = cy0 - HEX * (UI.art ? 1.55 : .9) - (n - 1) * 26, col = c.team === 'A' ? 'var(--a)' : 'var(--b)';
+    const when = `back R${c.respawnAt}`;
+    svg.appendChild(sv(`<g style="pointer-events:none" opacity=".92"><circle cx="${cx}" cy="${cy}" r="12" fill="#0b0f16" stroke="${col}" stroke-width="2" stroke-dasharray="3 2"></circle>${UI.art ? `<image href="art/${c.def.id}.png" x="${cx - 11}" y="${cy - 11}" width="22" height="22" preserveAspectRatio="xMidYMin slice" style="filter:grayscale(1) brightness(.8)" clip-path="circle(11px at 11px 11px)"></image>` : `<text class="lbl" x="${cx}" y="${cy + 1}">${esc(c.def.name.slice(0, 2))}</text>`}<text class="lbl" x="${cx + 15}" y="${cy + 1}" style="text-anchor:start;font-size:10px;font-weight:700;fill:${col};paint-order:stroke;stroke:#0b0f16;stroke-width:3px">† ${when}</text></g>`)); }
+}
+// The last move of each team (and every move of a regroup): a ghost ring where the champion stood and a dashed arrow.
+function lastMoves(svg) {
+  if (G.phase === 'draft' || G.display && !UI.moves.length) return;
+  for (const m of UI.moves) { if (same(m.from, m.to)) continue; const [x1, y1] = px(...m.from), [x2, y2] = px(...m.to), col = m.team === 'A' ? 'var(--a)' : 'var(--b)';
+    const mx = (x1 + x2) / 2 + (y2 - y1) * .18, my = (y1 + y2) / 2 - (x2 - x1) * .18, ex = x2 - (x2 - x1) * .12, ey = y2 - (y2 - y1) * .12;
+    svg.appendChild(sv(`<g><ellipse class="ghostmv" cx="${x1}" cy="${y1 + HEX * .16}" rx="${HEX * .55}" ry="${HEX * .55 * isoK()}" style="stroke:${col}"></ellipse><path class="lastmv" d="M${x1} ${y1} Q${mx} ${my} ${ex} ${ey}" style="stroke:${col}" marker-end="url(#mv${m.team})"></path></g>`)); }
 }
 function spawnGhosts(svg) {
   if (G.phase !== 'regroup') return;
@@ -1791,7 +2106,7 @@ function renderRail(team) {
 c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more gold">⭐<b>${c0.bounty}</b></span>` : '',
       c0.items.length ? `<span class="ic st" title="${esc(c0.items.map(id => ITEMS.find(x => x.id === id).name).join(', '))}">🎒<b>${c0.items.length}</b></span>` : ''].join('');
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
-      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span><span class="role">${c0.role}</span><span class="lv">${c.dead ? `† back R${c0.respawnAt}` : `Lv ${c0.level}`}</span></div>
+      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span><span class="role">${c0.role}</span><span class="lv">${c.dead ? `† back R${c0.respawnAt}` : `${c0.def.paths[c0.path].ic} Lv ${c0.level}`}</span></div>
         <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div></div></div>
       <div class="icons">${stat('🗡️', e.atk, e.atk > c0.atk, 'attack')}${stat('🎯', e.range, e.range > c0.range, 'range')}${stat('⏩', e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(e.home ? '🏠' : '🧱', e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat('🦘', c0.dive, false, 'leap') : ''}${chances}${sts}</div>
       <div class="abrow">${abChips(c0)}</div>
@@ -1809,15 +2124,15 @@ c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more
 }
 // The hover card: targeting, synergy, special, items, every chance explained, next level and the growth path.
 function tipHtml(c0) {
-  const L = links(), e = eff(c0, L), sp = c0.def.special, lv = levelOptions(c0), nextRound = RULES.levelRounds.find(r => r > G.round);
+  const L = links(), e = eff(c0, L), sp = c0.def.special, ps = c0.def.paths[c0.path];
   const procs = Object.keys(PROCS).filter(k => (c0.procs[k] || 0) > 0).map(k => `<li>${PICON[k]} <b>${esc(PROCS[k].name)} ${pct(c0, k, L)}%</b>: ${esc(PROCS[k].text)}</li>`).join('');
   const items = c0.items.map(id => { const it = ITEMS.find(x => x.id === id); return `<li>🎒 <b>${esc(it.name)}</b>: ${esc(it.t)}</li>`; }).join('');
   return `<div class="tiphd">${UI.art ? `<img src="art/${c0.def.id}.png" alt="">` : ''}<div><b>${esc(c0.def.name)}</b><span>${c0.role} · ${c0.def.els.join(' + ')} · Lv ${c0.level}</span><span>HP ${Math.max(0, c0.hp)}/${c0.maxHp} · 🗡️ ${e.atk} · 🎯 ${e.range} · ⏩ ${e.init}${e.armor ? ` · 🧱 ${e.armor}` : ''}${c0.dive ? ` · 🦘 ${c0.dive}` : ''}</span></div></div>
     <div class="stats"><span class="chip rule">basic attack targets: ${RULE_TEXT[c0.def.target]}</span></div>
     ${abList(c0.ab, c0)}
     <ul>${procs}${items}</ul>
-    <p class="next">Next level${nextRound ? ` (end of round ${nextRound})` : ''}: <b>${esc(lv[0].t)}</b> or <b>${esc(lv[1].t)}</b></p>
-    <ol class="path">${c0.def.tree.map((opts, i) => `<li>${opts.map((o, k) => `<span class="${c0.picks[i] === k ? 'pick' : c0.picks[i] != null ? 'not' : ''}">${esc(o.t)}</span>`).join(' or ')}</li>`).join('')}</ol>`;
+    <p class="next">Path: <b>${ps.ic} ${esc(ps.name)}</b> (${esc(ps.blurb)}), ${Math.min(c0.pstep, 4)} of 4 steps taken${c0.level - c0.pstep ? `, ${c0.level - c0.pstep} heal${c0.level - c0.pstep > 1 ? 's' : ''}` : ''}</p>
+    <ol class="path">${ps.steps.map((o, i) => `<li><span class="${i < c0.pstep ? 'pick' : ''}">${o.ic} ${esc(o.t)}</span></li>`).join('')}</ol>`;
 }
 function showTip(card, c0, team) {
   const tip = document.getElementById('tip'); tip.innerHTML = tipHtml(c0); tip.hidden = false;
@@ -1831,8 +2146,31 @@ function hideTip() { const tip = document.getElementById('tip'); if (tip) tip.hi
 // champion; a champion's group leaves once it has played. Steps are short: role letter + arrow.
 const ROLE_LETTER = { top: 'T', jungle: 'J', mid: 'M', bottom: 'B', support: 'S' };
 const shortCard = (c, i) => c.def.cards[i].map(st => { const [role, dir] = st.split(' '); return `<span>${ROLE_LETTER[role]}${OARROW[c.team][dir]}</span>`; }).join('');
+const optHtml = o => { const [a, b] = o.t.includes(': ') ? o.t.split(': ') : [o.t, '']; return `<span class="oi">${o.ic || '⭐'}<sup>+</sup></span><span>${esc(a)}${b ? `<small>${esc(b)}</small>` : ''}</span>`; };
 function renderHand() {
   const el = document.getElementById('hand');
+  if (G.phase === 'levelup' && G.levelQueue && G.humans.includes(G.levelQueue.team)) { const t = G.levelQueue.team;
+    el.hidden = false; el.className = `hand ${t}`;
+    el.innerHTML = `<div class="handhd"><b>Level-up (${esc(G.levelQueue.why)})</b><span>grow ONE champion: the next step of its path, or a heal</span>${coaching() === 'button' ? '<button class="ocard" id="lv-hint">💡 Hint</button>' : ''}</div><div class="handrow lv"></div>`;
+    const row = el.querySelector('.handrow');
+    for (const c of G.champs.filter(x => x.team === t)) { const ps = c.def.paths[c.path];
+      const g = h(`<div class="hgroup ${c.dead ? 'dead' : ''}"><div class="who">${UI.art ? `<img src="art/${c.def.id}.png" alt="">` : ''}<b>${esc(nm(c))}</b><span class="pth" title="${ps.name}: ${Math.min(c.pstep, 4)} of 4 steps">Lv ${c.level} · ${ps.ic} ${Math.min(c.pstep, 4)}/4 · ${c.dead ? 'dead' : `${c.hp}/${c.maxHp} HP`}</span></div><div class="two"></div></div>`);
+      levelOptions(c).forEach((o, k) => { const b = h(`<button class="lvopt ${UI.recLevel === c.id + ':' + k ? 'rec' : ''}" title="${esc(o.t)}">${optHtml(o)}</button>`);
+        b.addEventListener('click', () => { UI.recLevel = null; humanLevel(c, k); }); g.querySelector('.two').appendChild(b); });
+      g.addEventListener('mouseenter', () => { UI.tipFor = c.id; showTip(g, c, 'A'); }); g.addEventListener('mouseleave', () => { UI.tipFor = null; hideTip(); });
+      row.appendChild(g); }
+    const hb = el.querySelector('#lv-hint'); if (hb) hb.addEventListener('click', () => coachLevel(true));
+    return; }
+  if (G.phase === 'regroup' && G.rg && RULES.rgCards && !G.rg.card && G.humans.includes(rgTeam())) { const t = rgTeam(), cs = rgCards(t), best = cs.reduce((a, b) => b.v > a.v ? b : a);
+    el.hidden = false; el.className = `hand ${t}`;
+    el.innerHTML = `<div class="handhd"><b>Regroup: place, then play a card</b><span>each card counts where your champions stand now (hover a card to see who counts); playing it ends your regroup</span>${coaching() === 'button' ? '<button class="ocard" id="rg-hint">💡 Hint</button>' : ''}</div><div class="rgcards"></div>`;
+    const row = el.querySelector('.rgcards');
+    for (const c of cs) { const b = h(`<button class="rgcard ${coaching() === 'auto' && c === best ? 'rec' : ''}"><span class="ci">${c.ic}</span><span><b>${esc(c.name)}</b><span>${esc(c.text)}</span></span></button>`);
+      b.addEventListener('click', () => rgPlay(c.id));
+      b.addEventListener('mouseenter', () => { UI.cardHi = { who: c.who || [], at: c.at || null }; renderBoard(); });
+      b.addEventListener('mouseleave', () => { UI.cardHi = null; renderBoard(); }); row.appendChild(b); }
+    const hb = el.querySelector('#rg-hint'); if (hb) hb.addEventListener('click', () => coachRegroup(true));
+    return; }
   if (G.phase !== 'opening') { el.hidden = true; el.innerHTML = ''; return; }
   const t = G.openTurn, mine = G.humans.includes(t), left = G.champs.filter(c => c.team === t && !G.opened.has(c.id));
   el.hidden = false; el.className = `hand ${t}`;
@@ -1857,9 +2195,9 @@ function renderBoard() {
   const pts = [...HEXES, ...((G && G.towers) || []).filter(t => t.kind === 'base').map(t => t.pos)].map(x => px(...x)), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = HEX * 1.2;
   const padTop = pad + (UI.art ? HEX * 1.3 : 0);   // sprites stand above their hex
   svg.setAttribute('viewBox', `${Math.min(...xs) - pad} ${Math.min(...ys) - padTop} ${Math.max(...xs) - Math.min(...xs) + 2 * pad} ${Math.max(...ys) - Math.min(...ys) + pad + padTop}`);
-  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker>${UI.art ? '<pattern id="grass" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/grass.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern>' : ''}</defs>`));
+  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker><marker id="mvA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5ab4ff"/></marker><marker id="mvB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a59"/></marker>${UI.art ? '<pattern id="grass" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/grass.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern>' : ''}</defs>`));
   svg.classList.toggle('art', UI.art);
-  const ART = UI.art, depth = [];   // in the art view, sprites are collected and drawn back to front
+  const ART = UI.art, depth = [], plates = [];   // in the art view, sprites are collected and drawn back to front; plates go on top
   const put = (y, el) => ART ? depth.push({ y, el }) : svg.appendChild(el);
   const hitHexes = new Set(G.display && G.ev ? G.ev.pops.filter(p => p.cls === 'bad' || p.cls === 'gold').map(p => K(p.hex)) : []);
   const sprite = (name, cx, foot, hgt, cls = '') => `<image class="spr ${cls}" href="art/${name}.png" x="${cx - hgt / 2}" y="${foot - hgt}" width="${hgt}" height="${hgt}" preserveAspectRatio="xMidYMax meet"></image>`;
@@ -1951,7 +2289,8 @@ function renderBoard() {
     const mine = G.humans.includes(c0.team) && ((G.phase === 'move' && G.turnTeam === c0.team) || (G.phase === 'regroup' && rgTeam() === c0.team));
     const iniCls = eb && e.init > eb.init ? 'up' : eb && e.init < eb.init ? 'down' : e.init > c0.init ? 'up' : '';
     const isActor = (G.actors || []).includes(c0.id);
-    const g = ART ? sv(artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes)) : sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
+    const tk = ART ? artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) : null; if (tk) plates.push(tk.plate);
+    const g = ART ? sv(tk.body) : sv(`<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''}" ${mine ? 'tabindex="0"' : ''}>
       <circle class="body" cx="${cx}" cy="${cy}" r="${HEX * .6}"></circle>
       <text class="g" x="${cx}" y="${cy - 1}">${esc(c0.def.name[0])}</text>
       <rect x="${cx - HEX * .55}" y="${cy + HEX * .5}" width="${HEX * 1.1}" height="4" rx="1" fill="#0b0f16"></rect>
@@ -1967,6 +2306,11 @@ function renderBoard() {
     else if (sel && reachSet.has(K(c.pos))) g.addEventListener('click', () => hexClick(sel, c.pos));
     put(cy, g); }
   depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
+  if (plates.length) svg.appendChild(sv(`<g>${plates.join('')}</g>`));
+  deadMarks(svg); lastMoves(svg);
+  if (UI.cardHi && G.phase === 'regroup') { for (const id of UI.cardHi.who) { const c = G.champs[id]; if (c.dead) continue; const [cx, cy] = px(...c.pos);
+      svg.appendChild(sv(`<ellipse cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .78}" ry="${HEX * .78 * isoK()}" style="fill:none;stroke:#ffe07a;stroke-width:3;pointer-events:none"></ellipse>`)); }
+    if (UI.cardHi.at) { const [cx, cy] = px(...UI.cardHi.at); svg.appendChild(sv(`<polygon points="${hexPts(cx, cy)}" style="fill:#ffe07a33;stroke:#ffe07a;stroke-width:3;stroke-dasharray:6 4;pointer-events:none"></polygon>`)); } }
   // the destinations stay clickable above the sprites (a sprite standing in front would otherwise cover them)
   if (ART) for (const x of reach) { const hp = sv(`<polygon class="hexhit" points="${hexPts(...px(...x))}"></polygon>`);
     hp.addEventListener('click', () => hexClick(sel, x));
@@ -2036,10 +2380,12 @@ function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a ch
   const phase = ((performance.now() / 1000 + c0.id * .37) % 1.4).toFixed(2);
   const sts = statusList(c), sk = 'paint-order:stroke;stroke:#0b0f16;stroke-width:2px', sf = statusFx(c, cx, cy, foot, H);
   const low = c.hp > 0 && c.hp <= c0.maxHp * .3, ready = !G.display && !c0.dead && abReady(c0, 'r') && !sf.filter;
-  return `<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''} ${hitHexes.has(K(c.pos)) ? 'hit' : ''} ${ready ? 'ready' : ''}" ${mine ? 'tabindex="0"' : ''}>
+  const body = `<g class="tok ${c0.team} ${mine ? 'mine' : ''} ${UI.sel === c0.id ? 'sel' : ''} ${isActor ? 'actor' : ''} ${hitHexes.has(K(c.pos)) ? 'hit' : ''} ${ready ? 'ready' : ''}" ${mine ? 'tabindex="0"' : ''}>${slideWrap(c0.id, cx, cy, `
     ${low ? `<ellipse class="lowring" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .72}" ry="${HEX * .34}"></ellipse>` : ''}
     <ellipse class="body" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .55}" ry="${HEX * .24}"></ellipse>${sf.back}
-    <g transform="translate(0 ${sf.lift})"><g class="sprw" style="--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:-${phase}s"><image class="spr" href="art/${c0.def.id}.png" x="${cx - H / 2}" y="${foot - H}" width="${H}" height="${H}" preserveAspectRatio="xMidYMax meet" ${sf.filter ? `style="filter:${sf.filter}"` : ''}></image></g>${sf.front}</g>
+    <g transform="translate(0 ${sf.lift})"><g class="sprw" style="--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:-${phase}s"><image class="spr" href="art/${c0.def.id}.png" x="${cx - H / 2}" y="${foot - H}" width="${H}" height="${H}" preserveAspectRatio="xMidYMax meet" ${sf.filter ? `style="filter:${sf.filter}"` : ''}></image></g>${sf.front}</g>`)}</g>`;
+  // the plate (HP, initiative, Q W R, statuses) is drawn above every sprite and tower, so nothing in front hides it
+  const plate = `<g class="tok plate ${c0.team}" style="pointer-events:none">${slideWrap(c0.id, cx, cy, `
     <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0}" height="4" rx="1" fill="#0b0f16"></rect>
     <rect x="${cx - HEX * .45}" y="${cy + HEX * .42}" width="${HEX * 1.0 * Math.max(0, c.hp) / c0.maxHp}" height="4" rx="1" fill="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>
     <circle class="inibg ${iniCls}" cx="${cx - HEX * .62}" cy="${cy + HEX * .48}" r="7"></circle>
@@ -2047,8 +2393,8 @@ function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a ch
     ${sts.map((k, j) => `<text class="st" x="${cx + HEX * .72}" y="${cy - HEX * 1.2 + j * 15}" style="fill:${STATUS[k][2]};${sk}">${STATUS[k][0]}</text>`).join('')}
     ${abPipsSvg(c0, cx, cy + HEX * .82)}
     ${c.poison ? `<text class="st" x="${cx - HEX * .72}" y="${cy - HEX * .9}" style="fill:var(--poison);${sk}">☠${c.poison > 1 ? c.poison : ''}</text>` : ''}
-    ${c0.level ? `<text class="st" x="${cx + HEX * .66}" y="${cy + HEX * .55}" style="fill:var(--gold);font-size:9px;${sk}">${'•'.repeat(c0.level)}</text>` : ''}
-  </g>`;
+    ${c0.level ? `<text class="st" x="${cx + HEX * .66}" y="${cy + HEX * .55}" style="fill:var(--gold);font-size:9px;${sk}">${c0.level}</text>` : ''}`)}</g>`;
+  return { body, plate };
 }
 function renderPrompt() {
   const p = document.getElementById('prompt'), b = document.getElementById('btns'); b.innerHTML = '';
@@ -2060,22 +2406,26 @@ function renderPrompt() {
     const sel = UI.sel != null ? G.champs[UI.sel] : null;
     const after = RULES.onePulse ? (G.turnNo === 0 ? 'Then the other team moves, and everyone acts once, fastest first.' : 'Then everyone acts once, fastest first.') : 'Then everyone acts once, fastest first.';
     p.innerHTML = sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to see which abilities light up (Q W R under each champion) and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. ${after}`;
-    btn('Hold', () => doMove(null, null)); if (UI.lastPulse) btn('↺ Replay last pulse', replayPulse); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
+    btn('Hold', () => doMove(null, null)); if (UI.lastPulse) btn('↺ Replay last pulse', replayPulse); if (coaching() === 'button') btn('💡 Hint', () => coachMove(true)); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
     if (RULES.stance) { const t = G.turnTeam; for (const k of Object.keys(STANCES)) btn(`Stance: ${STANCES[k]}`, () => setStance(t, k), G.stance[t] === k ? 'on' : ''); }
     return; }
-  if (G.phase === 'regroup') { const rg = G.rg, t = rgTeam();
+  if (G.phase === 'regroup' && G.rg && G.rg.busy) { p.textContent = 'Regroup: the card takes effect…'; return; }
+  if (G.phase === 'regroup' && G.rg) { const rg = G.rg, t = rgTeam();
     if (!G.humans.includes(t)) { p.textContent = `Regroup: team ${t} is ${rg.stage === 'winner' ? 'placing its champions' : 'falling back and planning its return'}…`; return; }
     const sel = UI.sel != null ? G.champs[UI.sel] : null, dead = G.champs.filter(c => c.team === t && c.dead);
     p.innerHTML = rg.stage === 'winner'
       ? `<b>Regroup: you won the fight.</b> Place your champions, each up to <b>${rg.range}</b> hexes from where it stood (longer death timers, longer moves): around the Baron, the Dragon or a tower. Not beside an enemy, not at the enemy nexus. ${sel ? `Placing <b>${esc(nm(sel))}</b>.` : 'Select a champion, then a hex.'}`
       : `<b>Regroup: you lost the fight.</b> Move your survivors up to <b>${rg.range}</b> hexes${dead.length ? `, and choose where ${dead.map(c => `<b>${esc(nm(c))}</b> (back after round ${c.respawnAt})`).join(', ')} will return: click a fallen champion's card, then a hex near your nexus` : ''}. ${sel ? `Placing <b>${esc(nm(sel))}</b>.` : ''}`;
+    if (RULES.rgCards) { p.innerHTML += ' Then play a card below the board: its number changes as you place.'; if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); }); return; }
     btn('Done', rgDone, 'primary'); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
     return; }
+  if (G.phase === 'moving') { p.innerHTML = `${UI.moveTag}. The pulse starts in a moment…`; return; }
+  if (G.phase === 'paths') { p.textContent = 'Choose a growth path for each of your champions.'; return; }
   if (G.phase === 'pulse') { const as = (G.actors || []).map(i => G.champs[i]); p.innerHTML = as.length ? `Pulse, initiative ${G.ev.init}: <b>${as.map(a => esc(nm(a))).join(', ')}</b> ${as.length > 1 ? 'act' : 'acts'}.` : 'Pulse: start of pulse.'; btn('Skip', skipAnim); return; }
-  if (G.phase === 'levelup') { p.textContent = 'Level up: choose one option for each of your champions.'; return; }
-  if (G.phase === 'openlevel') { p.textContent = 'Opening level-up: pick one champion and how it grows.'; return; }
+  if (G.phase === 'levelup') { p.innerHTML = G.levelQueue && G.humans.includes(G.levelQueue.team) ? `<b>Level-up:</b> pick one button in the strip below the board. Left = the next step of that champion's path, right = +6 max HP and heal 8 now. Hover a champion for its card.` : 'Level up…'; return; }
   if (G.phase === 'shop') { p.textContent = `Shop: you have ${G.gold.A} gold.`; return; }
-  if (G.phase === 'over') { p.textContent = G.winner === 'draw' ? 'A draw.' : `Team ${G.winner} wins in round ${G.round}.`; btn('Play again', () => newMatch('play'), 'primary'); btn('Watch AI vs AI', () => newMatch('watch')); }
+  if (G.phase === 'over') { p.innerHTML = `${G.winner === 'draw' ? 'A draw.' : `<b>${tnm(G.winner)} (team ${G.winner}) win in round ${G.round}.</b>`} The board stays as the match ended: hover the cards, scroll the log, or replay the last pulse.`;
+    btn('Play again', () => newMatch('play'), 'primary'); btn('Watch AI vs AI', () => newMatch('watch')); if (UI.lastPulse) btn('↺ Replay last pulse', replayPulse); }
 }
 function renderLog() { const el = document.getElementById('log'); el.innerHTML = G.log.slice(-120).map(l => `<div class="${l.cls}">${l.html}</div>`).join(''); el.scrollTop = el.scrollHeight; }
 function renderStrip() { const s = STATS; document.getElementById('strip').innerHTML = `<span>matches <b>${s.matches}</b></span><span>A wins <b>${s.matches ? Math.round(100 * s.winsA / s.matches) : 0}%</b></span><span>avg rounds <b>${s.matches ? (s.rounds / s.matches).toFixed(1) : '–'}</b></span><span>deaths <b>${s.deaths}</b></span><span>chances that fired <b>${s.procs}</b></span><span>seed <b>${G ? G.startSeed : ''}</b></span>${pulseText()}`; }
@@ -2092,31 +2442,12 @@ function renderOverlay() {
       <h3>Abilities and patterns</h3><p>Each champion has a basic attack and three abilities: Q (easy), W (harder), R (hardest). An ability can fire only while its <b>pattern</b> is complete: allies standing in the right hexes around the champion, sometimes of a given element. The small diagram shows the champion in the middle with its front (toward the enemy nexus) at the top: a filled dot must hold an ally, ringed dots mean "one of these", the colour is the element needed (gold = any ally), red rings must stay empty.</p>
       <p>When a champion acts it uses the hardest ability that is lit (pattern complete, off cooldown, with a target); otherwise it makes its basic attack by its own rule (nearest, lowest HP, highest HP, back line, highest attack, most crowded). After firing, an ability rests for its cooldown, counted in pulses. At the start of the match they come online one after another: Q in the first pulse, W from the second, R from the third. Some abilities move champions: push or pull an enemy, swap places with an ally, step aside after the hit, pull a wounded ally to safety. These moves are certain, never a chance, and dashed arrows on the board show them before they happen. The letters Q W R under each champion show the state: bright = fires next pulse, dull gold = pattern complete but cooling down, grey = pattern not complete. Hover a destination before you move to see them change.</p>
       <h3>Chances and statuses</h3><p>A champion has one general chance on its basic attack (the percentage on its card). Statuses come from abilities: frozen and airborne skip an action, rooted cannot be moved this round, blinded misses its next attack, silenced and enraged champions cannot use abilities on their next action (an enraged one hits the nearest champion of either team), taunted must attack the taunter. A champion that just skipped an action cannot be frozen or knocked up again until it has acted.</p>
-      <h3>Growth</h3><p>At the end of rounds ${RULES.levelRounds.join(', ')} every champion levels up and you pick one of two options, mostly a choice of which ability gets stronger. The path is on each champion's card. A kill gives the killer +1 attack, up to ${RULES.bountyCap}.</p>
-      <h3>Regroup</h3><p>When a pulse leaves one team ${RULES.rgLead} or more champions up, the walking is skipped. The winners place each of their champions up to ${RULES.rgBase} + the current death timer hexes away (at most ${RULES.rgMax}), so early regroups are short and late ones long; not beside an enemy and not at the enemy nexus. Then the losers move their survivors the same distance and choose, near their nexus, where their dead will return. ${RULES.rgCost ? `The walk takes time, so the dead return ${RULES.rgCost} round sooner.` : 'Death timers do not change: the winners use the time the losers are away.'} At most one regroup every ${RULES.rgGap} rounds.</p>
+      <h3>Growth</h3><p>After the draft you choose one of two growth paths for each champion (for example Power: abilities hit harder, or Tempo: they come back faster; a champion that both hits and heals chooses Striker or Warden). Your team gets one level-up at the end of every round from round ${RULES.levelRounds[0]}, after opening cards ${RULES.openLevels.join(', ')}, and for every Dragon. Each level-up grows ONE champion of your choice: the next step of its path, or a heal (+6 max HP and 8 HP now). A kill gives the killer +1 attack, up to ${RULES.bountyCap}.</p>
+      <h3>Regroup</h3><p>When a pulse leaves one team ${RULES.rgLead} or more champions up, the walking is skipped. The winners place each of their champions up to ${RULES.rgBase} + the current death timer hexes away (at most ${RULES.rgMax}), so early regroups are short and late ones long; not beside an enemy and not at the enemy nexus. Then the losers move their survivors the same distance and choose, near their nexus, where their dead will return. ${RULES.rgCards ? `Instead of pressing Done, each side ends its placing by playing one card, and the card counts where the champions stand: Siege (the enemy building with most of your champions in range takes ${RULES.rgSiege} per champion in range, +${RULES.rgShape} for each whose pattern is complete), Dragon or Baron (the same, on the monster; if it dies the reward is yours), Rest (champions beside an ally heal ${Math.round(RULES.rgRest * 100)}% of max HP, ${Math.round((RULES.rgRest + RULES.rgRestShape) * 100)}% inside a complete pattern). Losers: Rush back (the dead return a round sooner) or Rest. Every card shows its current number while you place. ` : ''} ${RULES.rgCost ? `The walk takes time, so the dead return ${RULES.rgCost} round sooner.` : 'Death timers do not change: the winners use the time the losers are away.'} At most one regroup every ${RULES.rgGap} rounds.</p>
       <h3>Monsters</h3><p>The Dragon (left on the river, ${RULES.dragonHp} HP) and from round ${RULES.baronFrom} the Baron (right, ${RULES.baronHp} HP) stand one hex in from the edge, with six hexes around them, and hit an adjacent champion each pulse. A champion with nothing else in range attacks a monster in range. The team that lands the killing blow takes the reward. Dragon: one champion of your choice levels up; back after ${RULES.dragonBack} rounds. Baron: for ${RULES.baronRounds} rounds the team deals double damage to towers and the nexus and regenerates anywhere; back after ${RULES.baronBack} rounds.</p>
       <h3>Towers and the nexus</h3><p>Each side has one tower in the middle of its half (${RULES.towerHp} HP) and two base towers behind its nexus. Towers hit an enemy in reach at the start of each pulse. The base towers open once the middle tower has fallen, and the nexus (${RULES.nexusHp} HP) once a base tower has. A champion with no enemy champion in range attacks a building in range. Destroy the nexus to win; after round ${RULES.rounds} the higher nexus HP wins, then more towers standing.</p>
       <h3>After a death</h3><p>The dead return one round later in rounds 1 to ${RULES.respawnStep}, two rounds later in rounds ${RULES.respawnStep + 1} to ${2 * RULES.respawnStep}, and so on. A champion on its own half that was not hit in the previous pulse regains ${RULES.regen} HP.</p></div>`);
     box.querySelector('#close-rules').addEventListener('click', () => { UI.rules = false; render(); });
-    ov.appendChild(box); return; }
-  if (G.phase === 'levelup' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
-    const q = G.levelQueue, mine = G.champs.filter(c => G.humans.includes(c.team));
-    const box = h(`<div class="box"><h2>Level ${q.lv + 1}: choose how each champion grows</h2><p>One option per champion. The whole path is on each champion's card, so you can plan ahead.</p></div>`);
-    for (const c of mine) { const opts = levelOptions(c);
-      const row = h(`<div class="lvl"><div class="who"><b>${esc(nm(c))}</b><span class="next">${c.role} · Lv ${c.level} → ${c.level + 1}</span></div>${opts.map((o, k) => `<button data-k="${k}" class="${q.picks[c.id] === k ? 'chosen' : ''}">${esc(o.t)}</button>`).join('')}</div>`);
-      row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => humanLevelPick(c, +b.dataset.k)));
-      box.appendChild(row); }
-    const done = mine.every(c => q.picks[c.id] != null);
-    const go = h(`<div class="row"><button class="primary" ${done ? '' : 'disabled'}>Continue to round ${G.round + 1}</button></div>`);
-    go.querySelector('button').addEventListener('click', confirmLevels); box.appendChild(go);
-    ov.appendChild(box); return; }
-  if (G.phase === 'openlevel' && G.levelQueue) { ov.hidden = false; ov.innerHTML = '';
-    const mine = G.champs.filter(c => c.team === G.levelQueue.team);
-    const box = h(`<div class="box"><h2>${G.levelQueue.why ? 'Level-up from ' + G.levelQueue.why : 'Opening level-up'}: one champion grows now</h2><p>${G.levelQueue.why ? 'Your team took ' + G.levelQueue.why + '.' : `You earned this by playing your ${['', 'first', 'second', 'third', 'fourth', 'fifth'][G.cardsPlayed[G.levelQueue.team]]} card.`} Pick one option on one champion. The others wait for the round level-ups.</p></div>`);
-    for (const c of mine) { const opts = levelOptions(c);
-      const row = h(`<div class="lvl"><div class="who"><b>${esc(nm(c))}</b><span class="next">${c.role} · Lv ${c.level} → ${c.level + 1}</span></div>${opts.map((o, k) => `<button data-k="${k}">${esc(o.t)}</button>`).join('')}</div>`);
-      row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => humanOpeningLevel(c, +b.dataset.k)));
-      box.appendChild(row); }
     ov.appendChild(box); return; }
   if (G.phase === 'shop') { ov.hidden = false; ov.innerHTML = '';
     const team = G.humans[0], gold = G.gold[team], sel = G.shopSel ? ITEMS.find(x => x.id === G.shopSel) : null;
@@ -2130,29 +2461,58 @@ function renderOverlay() {
         b.addEventListener('click', () => { if (buy(team, sel, c)) { G.shopSel = null; render(); } }); row.appendChild(b); }
       box.appendChild(row); }
     ov.appendChild(box); return; }
+  if (G.phase === 'paths') { ov.hidden = false; ov.innerHTML = '';
+    const team = G.humans[0];
+    const box = h(`<div class="box"><div class="row"><h2>Growth paths: how should each champion grow?</h2><button class="primary" id="paths-go" style="margin-left:auto">Start the match</button></div>
+      <p>Each champion grows along one of two paths. During the match your team gets one level-up per round (from round ${RULES.levelRounds[0]}), plus after opening cards ${RULES.openLevels.join(', ')} and every Dragon: you pick ONE champion, and it takes the next step of its path or a heal (+6 max HP, heals 8 now). ${coaching() === 'auto' ? 'The selected paths are my suggestions.' : 'The selected paths are the AI\'s suggestion.'}</p><div class="paths"></div></div>`);
+    const list = box.querySelector('.paths');
+    G.picks[team].forEach((d, i) => { const row = h(`<div class="prow"><div class="who">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div><b>${esc(d.name)}</b><span class="next">${ROLES[i]} · ${d.els.join(' + ')}</span></div></div></div>`);
+      d.paths.forEach((ps, k) => { const b = h(`<button class="pbtn ${G.paths[team][i] === k ? 'chosen' : ''}"><span class="pn">${ps.ic} ${esc(ps.name)}<small>${esc(ps.blurb)}</small></span><ol>${ps.steps.map(o => `<li>${o.ic} ${esc(o.t)}</li>`).join('')}</ol></button>`);
+        b.addEventListener('click', () => { G.paths[team][i] = k; render(); }); row.appendChild(b); });
+      list.appendChild(row); });
+    box.querySelector('#paths-go').addEventListener('click', confirmPaths);
+    ov.appendChild(box); return; }
   if (G.phase !== 'draft') { ov.hidden = true; ov.innerHTML = ''; return; }
   ov.hidden = false; ov.innerHTML = '';
-  const team = G.order[G.di], human = G.humans.includes(team);
-  const box = h(`<div class="box"><div class="row"><h2>Draft: ${G.kind[G.di] === 'ban' ? (human ? 'your BAN' : 'the AI bans') : (human ? 'your pick' : 'the AI picks')} (team ${team})</h2><div class="row" style="margin-left:auto">
-      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="bans">Bans: ${RULES.bans} ⇄</button><button data-m="rules">Rules</button></div></div>
-    <p>${RULES.bans === 'none' ? '' : `Bans (${RULES.bans} per team): a banned champion is out for both teams; at most ${RULES.banPerRole} bans per role. `}Picks in snake order A B B A A B B A A B, one champion per role. Each champion has a basic attack and three abilities. An ability fires only while its pattern is complete: the diagram shows the champion in the middle, front at the top, and where allies must stand (colour = the element needed, gold = any ally, rings = one of these, red = must be empty).</p><div class="dcols"></div></div>`);
-  const cols = box.querySelector('.dcols');
-  for (const role of ROLES) { const col = h(`<div class="dcol"><h3>${role}</h3></div>`);
-    for (const d of ROSTER.filter(x => x.role === role)) { const takenBy = ['A','B'].find(t => G.picks[t].includes(d)), isBanned = G.banned.has(d.id);
-      const can = human && draftOptions().includes(d);
-      const fake = { def: d, procs: d.procs, auraAmt: d.aura ? d.aura.amt : 0, pos: [99, 99], team: 'A', init: d.init, atk: d.atk, range: d.range, bounty: 0 };
-      const card = h(`<div class="dcard ${can ? 'pick' : ''} ${takenBy ? 'taken ' + takenBy : ''} ${isBanned ? 'taken' : ''}">
-        <div style="display:flex;gap:8px;align-items:center">${UI.art ? `<img class="pt" src="art/${d.id}.png" alt="">` : ''}<b class="n">${esc(d.name)}</b> <span class="els">${elIcons(d)} ${d.els.join(' + ')}</span>${takenBy ? ` <span class="chip">team ${takenBy}</span>` : ''}${isBanned ? ' <span class="chip" style="color:var(--bad);border-color:var(--bad)">BANNED</span>' : ''}</div>
-        <div class="stats">HP <b>${Math.round(d.hp * RULES.hpScale)}</b> ATK <b>${d.atk}</b> RNG <b>${d.range}</b> INIT <b>${d.init}</b>${d.dive ? ` LEAP <b>${d.dive}</b>` : ''}</div>
-        <div class="stats"><span class="chip rule">targets: ${RULE_TEXT[d.target]}</span></div>
-        <div class="procs">${Object.keys(d.procs).map(k => `<span>${PROCS[k].name}</span><span class="bar"><i style="width:${d.procs[k]}%;background:${PROCS[k].color}"></i></span><span class="pct">${d.procs[k]}%</span>`).join('')}</div>
-        ${abListShort(d.ab)}</div>`);
-      if (can) card.addEventListener('click', () => draftPick(d));
-      col.appendChild(card); }
-    cols.appendChild(col); }
+  const team = G.order[G.di], human = G.humans.includes(team), kind = G.kind[G.di], tip = draftTip(), opts = draftOptions();
+  const nb = t => G.kind.filter((k, i) => k === 'ban' && G.order[i] === t).length, banNo = G.order.slice(0, G.di + 1).filter((t, i) => t === team && G.kind[i] === 'ban').length;
+  const sideHtml = t => { const nowBan = kind === 'ban' && team === t ? G.banList[t].length : -1, nowPick = kind === 'pick' && team === t;
+    return `<div class="side ${t}"><span class="lab">TEAM ${t} · ${TEAMN[t].toUpperCase()}${G.humans.includes(t) ? ' · YOU' : ' · AI'}</span>
+      <div class="srow">${Array.from({ length: nb(t) }, (_, i) => { const d = G.banList[t][i]; return `<div class="slot ban ${i === nowBan ? 'now' : ''}" title="${d ? esc(d.name) + ' (banned)' : 'ban'}">${d ? `<img src="art/${d.id}.png" alt="">` : '<span class="sl">ban</span>'}</div>`; }).join('')}</div>
+      <div class="srow">${ROLES.map((r, i) => { const d = G.picks[t][i]; return `<div class="slot pick ${d ? 'filled' : ''} ${nowPick && !d ? 'now' : ''}" title="${r}${d ? ': ' + esc(d.name) : ''}">${d ? `<img src="art/${d.id}.png" alt="">` : ''}<span class="sl">${d ? esc(d.name) : r}</span></div>`; }).join('')}</div></div>`; };
+  const box = h(`<div class="box draft"><div class="row"><h2>Draft</h2><div class="row" style="margin-left:auto">
+      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="bans">Bans: ${RULES.bans} ⇄</button><button data-m="diff">Difficulty: ${DIFF[UI.diff].name} ⇄</button><button data-m="rules">Rules</button></div></div>
+    <div class="slots">${sideHtml('A')}<div class="banner ${kind} ${team}"><b>${kind === 'ban' ? 'BAN PHASE' : 'PICK PHASE'}</b><span>${tnm(team)} ${kind === 'ban' ? `ban${human ? '' : 's'} · ${banNo} of ${nb(team)}` : `pick${human ? '' : 's'} · ${G.picks[team].filter(Boolean).length + 1} of 5`}${human ? ' · your turn' : ''}</span></div>${sideHtml('B')}</div>
+    ${tip.text ? `<div class="coachbox"><span class="who">MARLOW · TIP</span>${tip.text}</div>` : ''}
+    <div class="dgrid"></div>
+    <p>Hover a portrait for its abilities and patterns. ${kind === 'ban' ? 'A banned champion is out for both teams.' : 'One champion per role; picks go in snake order.'}</p></div>`);
+  const grid = box.querySelector('.dgrid');
+  for (const role of ROLES) { const row = h(`<div class="rrow"><span class="rlab">${role}</span></div>`);
+    for (const d of ROSTER.filter(x => x.role === role)) { const takenBy = ['A', 'B'].find(t => G.picks[t].includes(d)), isBanned = G.banned.has(d.id), can = human && opts.includes(d), fit = tip.fits.get(d.id);
+      const t = h(`<div class="tile ${can ? 'can' : ''} ${takenBy ? 'taken ' + takenBy : ''} ${isBanned ? 'banned' : ''} ${can && fit ? 'fit' : ''} ${can && tip.threat === d.id ? 'threat' : ''}">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div class="tn"><b>${esc(d.name)}</b><span>${elIcons(d)}</span></div>${can && fit ? `<span class="fitb">+${fit}</span>` : ''}</div>`);
+      if (can) t.addEventListener('click', () => draftPick(d));
+      t.addEventListener('mouseenter', () => showTipAt(t, defTipHtml(d, human ? G.picks[team].filter(Boolean) : [])));
+      t.addEventListener('mouseleave', hideTip);
+      row.appendChild(t); }
+    grid.appendChild(row); }
   box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m;
-    if (m === 'bans') { const o = ['none', '1+1', '2', '2+2']; RULES.bans = o[(o.indexOf(RULES.bans) + 1) % o.length]; newMatch(G.mode); } else if (m === 'rules') { UI.rules = true; render(); } else if (m === 'nexus') document.getElementById('b-nexus').click(); else if (m === 'pulse') document.getElementById('b-pulse').click(); else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
+    if (m === 'bans') { const o = ['none', '1+1', '2', '2+2']; RULES.bans = o[(o.indexOf(RULES.bans) + 1) % o.length]; newMatch(G.mode); } else if (m === 'diff') { const o = ['easy', 'normal', 'hard']; setDiff(o[(o.indexOf(UI.diff) + 1) % 3]); render(); } else if (m === 'rules') { UI.rules = true; render(); } else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
   ov.appendChild(box);
+}
+// The draft hover card: everything about a roster entry.
+function defTipHtml(d, mine) {
+  const fits = mine.length ? fitNotes(d, mine) : [];
+  return `<div class="tiphd">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div><b>${esc(d.name)}</b><span>${d.role} · ${elIcons(d)} ${d.els.join(' + ')}</span><span>HP ${Math.round(d.hp * RULES.hpScale)} · 🗡️ ${d.atk} · 🎯 ${d.range} · ⏩ ${d.init}${d.dive ? ` · 🦘 ${d.dive}` : ''}</span></div></div>
+    <div class="stats"><span class="chip rule">basic attack targets: ${RULE_TEXT[d.target]}</span>${Object.keys(d.procs).map(k => `<span class="chip">${PICON[k]} ${PROCS[k].name} ${d.procs[k]}%</span>`).join('')}</div>
+    ${abList(d.ab)}
+    <p class="path">Paths: ${d.paths.map(ps => `<b>${ps.ic} ${esc(ps.name)}</b> (${ps.steps.map(o => o.ic).join(' ')})`).join(' or ')}</p>
+    ${fits.length ? `<p class="next" style="color:var(--gold)">Fits your team: ${esc(fits.join('; '))}</p>` : ''}`;
+}
+function showTipAt(el, html) {
+  const tip = document.getElementById('tip'); tip.innerHTML = html; tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, hgt = tip.offsetHeight;
+  let x = r.right + 8; if (x + w > innerWidth - 8) x = r.left - w - 8; if (x < 8) x = Math.max(8, Math.min(innerWidth - w - 8, r.left));
+  tip.style.left = x + 'px'; tip.style.top = Math.max(8, Math.min(innerHeight - hgt - 8, r.top - 40)) + 'px';
 }
 
 // ═════════════ headless runs (for measuring) ═════════════
@@ -2166,7 +2526,7 @@ function simulate(n, board, seed = 1, rules = {}) {
   const S = STATS; window.STATS_last = { ...STATS };
   const out = { rounds: +(S.rounds / n).toFixed(1), byNexus: Math.round(100 * ends.nexus / n) + '%', deaths: +(S.deaths / n).toFixed(1), winA: Math.round(100 * S.winsA / n) + '%', draws: Math.round(100 * S.draws / n) + '%',
     fightWinThenWin: S.fw ? Math.round(100 * S.fwWin / S.fw) + '%' : '-', bigFightThenWin: S.big ? Math.round(100 * S.bigWin / S.big) + '%' : '-', bigFightShare: Math.round(100 * S.big / n) + '%', towersFallen: +(S.falls / n).toFixed(1),
-    swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1), comeback: S.fw ? Math.round(100 - 100 * S.fwWin / S.fw) + '%' : '-', towerIn2: S.after ? Math.round(100 * S.conv2 / S.after) + '%' : '-', punished: S.after ? Math.round(100 * S.punished / S.after) + '%' : '-', stepsPerPulse: S.stancePulses ? +(S.steps / S.stancePulses).toFixed(2) : 0, dragons: +(S.dragons / n).toFixed(2), barons: +(S.barons / n).toFixed(2), baronTakerWins: S.barons ? Math.round(100 * S.baronWin / S.barons) + '%' : '-', baronWhenBehind: S.baronBehind ? `${S.baronBehind} taken, ${Math.round(100 * S.baronBehindWin / S.baronBehind)}% won` : '-', steals: S.barons + S.dragons ? Math.round(100 * S.steals / (S.barons + S.dragons)) + '%' : '-', regroups: +(S.regroups / n).toFixed(2), regroupGoals: JSON.stringify(S.rgGoal), castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`, basicsPerMatch: +(S.basics / n).toFixed(1) };
+    swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1), comeback: S.fw ? Math.round(100 - 100 * S.fwWin / S.fw) + '%' : '-', towerIn2: S.after ? Math.round(100 * S.conv2 / S.after) + '%' : '-', punished: S.after ? Math.round(100 * S.punished / S.after) + '%' : '-', stepsPerPulse: S.stancePulses ? +(S.steps / S.stancePulses).toFixed(2) : 0, dragons: +(S.dragons / n).toFixed(2), barons: +(S.barons / n).toFixed(2), baronTakerWins: S.barons ? Math.round(100 * S.baronWin / S.barons) + '%' : '-', baronWhenBehind: S.baronBehind ? `${S.baronBehind} taken, ${Math.round(100 * S.baronBehindWin / S.baronBehind)}% won` : '-', steals: S.barons + S.dragons ? Math.round(100 * S.steals / (S.barons + S.dragons)) + '%' : '-', regroups: +(S.regroups / n).toFixed(2), regroupGoals: JSON.stringify(S.rgGoal), rgCards: JSON.stringify(S.rgCard), litAfterRegroup: S.rgLit.n ? `${(S.rgLit.w / S.rgLit.n).toFixed(1)} winner · ${(S.rgLit.l / S.rgLit.n).toFixed(1)} loser` : '-', levelsPerMatch: +(S.levels / n).toFixed(1), healPicks: S.levels ? Math.round(100 * S.alts / S.levels) + '%' : '-', castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`, basicsPerMatch: +(S.basics / n).toFixed(1) };
   HEADLESS = false; UI.board = keepB; STATS = keepS; Object.assign(RULES, keepR); AIP.push = keepP; AIP.greedy = keepG; delete RULES.aiPush; delete RULES.greedy; newMatch('play');
   return out;
 }
@@ -2181,6 +2541,9 @@ document.getElementById('b-speed').addEventListener('click', () => { UI.speed = 
 document.getElementById('b-nexus').addEventListener('click', () => { Object.assign(RULES, structure() ? SCORE : DESTROY); newMatch(G.mode); });
 document.getElementById('b-pulse').addEventListener('click', () => { Object.assign(RULES, RULES.onePulse ? EVERY_MOVE : ONE_PULSE); newMatch(G.mode); });
 document.getElementById('b-rules').addEventListener('click', () => { UI.rules = true; render(); });
+document.getElementById('b-diff').addEventListener('click', () => { const o = ['easy', 'normal', 'hard']; setDiff(o[(o.indexOf(UI.diff) + 1) % 3]); render(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.rules) { UI.rules = false; render(); } else if (UI.sel != null) { UI.sel = null; UI.hover = null; render(); } } });
+for (const d of ROSTER) d.paths = buildPaths(d);   // after PICON exists
+try { const s = localStorage.getItem('augury-diff'); if (DIFF[s]) UI.diff = s; } catch (e) {}
 newMatch('play');
 </script>
