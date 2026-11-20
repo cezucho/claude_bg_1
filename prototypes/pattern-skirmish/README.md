@@ -373,6 +373,42 @@ champions it counts get a gold ring, its target a dashed hex):
   rounds / 54% by nexus even without cards; fixed by adding the old objective weights.
 - Scripted human matches on Easy and Normal after the change: no page errors.
 
+## Tactic points and the final fight (added 2026-11-21, after Esports Godfather)
+
+Owner asked to borrow two ideas from Esports Godfather (MOBA coach card game, 2024; research
+summary in the session of 2026-11-21): a banked point budget for cards, and a final fight.
+- **Tactic points.** +1 per round per team, at most 8. On your own turn, before moving, one card:
+  Siege 2, Dragon 3, Baron 3, Rest 3 (all count the formation, as the regroup cards did), Rush
+  back 2, Final fight 6. Costs are `RULES.tcost`. Regroup keeps its placing, without cards
+  (`rgCards: false`). The AI plays a card worth at least `tpWorth` (4) per point, saves when a
+  Final fight is in sight, and plays the Final fight only when a played-out copy says it wins.
+- **Final fight.** After round 18 there is no score: everyone returns and a final fight decides
+  the match. A Final fight card (6 points, 3+ enemies dead, who stay dead) forces one earlier.
+  In a final fight nobody is moved by hand: champions with nobody in reach step toward the nearest
+  enemy, then everyone acts; last team standing wins (after 12 pulses: more standing, then HP).
+
+| 150 matches each (seed 1) | rounds | by nexus | final by card | final at time | comeback |
+|---|---|---|---|---|---|
+| neither (no regroup cards either) | 15.1 | 61% | – | (39% on score) | 19% |
+| final fight only | 15.1 | 61% | – | 39% | 22% |
+| tactics, tpWorth 3 (first try: Rest 2) | 17.3* | 45%* | 0* | 55%* | 18%* |
+| tactics, tpWorth 3 | 15.0 | 58% | 7% | 35% | 21% |
+| **tactics, tpWorth 4 (default)** | **14.4** | **55%** | **19%** | **25%** | **20%** |
+| tactics, Rest 4, Final 5 | 14.3 | 43% | 31% | 27% | 16% |
+
+\* 20 matches. Default on a second seed (200): 14.7 rounds, 47% nexus, 23% Final by card, 30% at
+time, comeback 22%.
+
+- The final fight does its job: the 39% of matches that ended on a score now end in a fight.
+- The Final fight card is won by whoever plays it 97% of the time (the AI only plays a won one):
+  it is an "end it now" button for a won position, which shortens the endgame. Making it cheaper
+  cut comebacks to 16%.
+- **No phases yet:** first kill still in round 1.5 with or without points; the points shape when
+  cards are played, not when fighting starts. Rush back is the most-played card (3–7 per match).
+- With the cheap first Rest the AI healed every other round and matches dragged (17.3 rounds).
+- Interface: watched AI matches through a timed final fight and scripted human matches: no page
+  errors.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete
@@ -391,3 +427,7 @@ champions it counts get a gold ring, its target a dashed hex):
    or an honest handicap (the AI drafts better, extra level). Which?
 6. ~~Fortify~~ cut 2026-11-20 (owner). The losers now choose Rush back or Rest.
 7. Formation cards cost ~10% of nexus finishes: owner accepts the slower pace for now (2026-11-20).
+8. ~~Final fight card~~ cut 2026-11-21 (owner): it ended won positions (97% won by its player).
+   `RULES.finalCard` keeps it for measuring. Only the timed final fight remains.
+   After the cut (150 matches): 14.8 rounds, 67% by nexus, 33% timed final fight, comeback 18%.
+9. Phases (a quiet opening): owner decided not to pursue for now (2026-11-21).
