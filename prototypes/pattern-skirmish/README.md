@@ -549,6 +549,29 @@ AI vs AI, Small board, 840 matches. "Quiet" = the version before this section.
 once you know the champions; Speed: fast halves it. Whether the formation shapes are reachable in a
 real match: they ignore the board edge, towers and the enemy.
 
+## Look and feel: from web page to game (added 2026-11-21)
+
+Owner: make the interface stop looking like a generic website; free hand on fonts, colours and
+images. Direction chosen to match the champion sprites (chunky chibi cartoon): a painted twilight
+valley behind everything, panels framed in dark bronze with a gold edge, Lilita One (a chunky
+title face) for names, numbers and buttons, Nunito (rounded) for text. Team colours stay sky blue
+and ember red.
+
+- **New art** (`assets/data/art/pattern_ui.json`, all first try except one re-cut): the backdrop
+  (a valley with a stone arena in the middle), a crest (gold medallion with a violet eye), six
+  element gems that replace the element emoji everywhere. The generator learned a `backdrop`
+  kind (16:9, 1600 px JPEG).
+- **Title screen** on load: crest, AUGURY logo, Play / Watch / How to play, difficulty.
+- **Scoreboard** instead of the meter row: crest, Blue and Red nexus HP as bars around a round
+  medallion (which also names the phase), tactic points as diamond pips.
+- **Drawn stat icons** (attack, range, initiative, armour, leap, HP) replace the emoji on champion
+  cards and hover cards; chance and status icons are still emoji.
+- **Result banner** at the end: Victory (gold) / Defeat (silver) / "Red wins!" when watching, how
+  the match ended, kills per team, Play again / See the board / Main menu.
+- Chunky bevelled buttons, gold-trimmed panels, broadcast-style caster lines, Rules in two columns.
+- Checked by screenshots at 1500×900 and 1280×720; 4 scripted human matches with no errors; the
+  rules are untouched (headless numbers unchanged).
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

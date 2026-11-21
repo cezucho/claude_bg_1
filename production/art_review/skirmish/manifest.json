@@ -262,5 +262,69 @@
   "model": "gemini-3.1-flash-lite-image",
   "styleReference": null,
   "made": "2026-11-21T15:52:43"
+ },
+ {
+  "id": "backdrop",
+  "file": "backdrop.png",
+  "prompt": "A wide painted background for a cute cartoon fantasy strategy game, seen from slightly above: a magical twilight valley with a round stone arena plateau in the middle distance, soft misty pine forests on both sides, distant snowy mountains, floating glowing crystals and fireflies, a deep indigo and teal evening sky with warm golden light near the horizon. Hand-painted, soft, slightly blurred, low contrast and fairly dark so that game pieces placed on top stand out; the centre is calm and empty. No characters, no creatures, no text, no logo, no user interface, no border.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:19"
+ },
+ {
+  "id": "crest",
+  "file": "crest.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: A heraldic crest emblem for a fantasy game called Augury: a round gold medallion with a glowing violet all-seeing eye in the middle, small blue and red gems on the left and right sides, two crossed silver spears behind it. No letters. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:22"
+ },
+ {
+  "id": "el_fire",
+  "file": "el_fire.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: A fire element gem: a glowing orange-red teardrop ruby with a tiny flame shape inside. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:26"
+ },
+ {
+  "id": "el_frost",
+  "file": "el_frost.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: A frost element gem: a pale icy blue diamond crystal with a tiny snowflake shape inside. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:30"
+ },
+ {
+  "id": "el_earth",
+  "file": "el_earth.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: An earth element gem: a rounded warm brown and moss-green amber stone with a tiny leaf and rock shape inside. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:33"
+ },
+ {
+  "id": "el_storm",
+  "file": "el_storm.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: A storm element gem: a bright violet amethyst crystal with a tiny yellow lightning bolt inside. The background is one perfectly flat, uniform solid bright green colour (#00FF00) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use bright green anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:37"
+ },
+ {
+  "id": "el_light",
+  "file": "el_light.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: A light element gem: a radiant golden-yellow topaz star-cut gem with a tiny shining sun inside. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:38:40"
+ },
+ {
+  "id": "el_shadow",
+  "file": "el_shadow.png",
+  "prompt": "Cute cartoon mobile-game interface icon: a chunky faceted gemstone, thick dark brown outline, flat cel shading with one shadow tone and one bright highlight, saturated colours, seen straight from the front, centred, filling about 80% of the image. One object only. No ground, no cast shadow, no text, no frame, no border, no scenery. Subject: A shadow element gem: a deep dark purple-black onyx crescent-moon shaped gem with a faint purple glow. The background is one perfectly flat, uniform solid magenta colour (#FF00FF) filling the whole image edge to edge, with no gradient, no vignette and no texture. Do not use magenta anywhere on the subject.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T22:39:07"
  }
 ]

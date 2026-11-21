@@ -1,7 +1,8 @@
 <title>Augury Pattern Skirmish</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap">
 <style>
 /* Layout: a tactics table — team A rail | hex board with the pulse log | team B rail; stacks to one column on phones. One dark arena look, chosen on purpose. */
 :root {
@@ -392,17 +393,216 @@ svg.pat { flex: none; }
 @keyframes slide { from { transform: translate(var(--sx), var(--sy)); } to { transform: translate(0, 0); } }
 .lastmv { fill: none; stroke-width: 3.5; stroke-dasharray: 7 4; opacity: 1; pointer-events: none; filter: drop-shadow(0 0 2px #000); }
 .ghostmv { fill: #0b0f1640; stroke-width: 2.5; stroke-dasharray: 4 3; opacity: .95; pointer-events: none; }
+/* the title screen */
+.overlay.titleov { background: radial-gradient(ellipse at 50% 45%, #05080f1a 0%, #05080f99 70%, #05080fe6 100%), url(art/backdrop.jpg) center 35% / cover; backdrop-filter: none; align-items: center; }
+.title { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 24px; text-align: center; animation: tin .6s ease-out both; }
+@keyframes tin { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+.tcrest { width: 150px; height: 150px; object-fit: contain; filter: drop-shadow(0 8px 16px #000c) drop-shadow(0 0 24px #b08cff66); animation: float 3.2s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-6px); } }
+.title h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(56px, 9vw, 104px); line-height: .95; letter-spacing: .04em; text-transform: uppercase;
+  background: linear-gradient(180deg, #fff3c4 0%, #f7c54f 45%, #c2801c 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 4px 0 #4a2a05) drop-shadow(0 10px 18px #000); }
+.tsub { font-family: var(--display); font-size: 22px; letter-spacing: .3em; text-transform: uppercase; color: #e8e2ff; text-shadow: 0 2px 0 #000, 0 0 12px #7d5fc0; margin-bottom: 18px; }
+.tmenu { display: flex; flex-direction: column; gap: 10px; width: min(300px, 80vw); }
+.tmenu button { font-size: 18px; padding: 10px 16px; }
+.tmenu button.big { font-size: 22px; padding: 12px 18px; }
+.tfoot { margin-top: 14px; font-weight: 800; color: #e2ddf0; text-shadow: 0 1px 2px #000; display: flex; gap: 8px; align-items: center; }
+.tfoot button { font-size: 12px; padding: 2px 8px; }
+.help { columns: 2 380px; column-gap: 28px; }
+.help > .row { column-span: all; }
+.help h3 { break-after: avoid; }
+.help p { break-inside: avoid-column; }
+/* the result banner */
+.overlay.overov { background: radial-gradient(ellipse at 50% 45%, #05080f40 0%, #05080fcc 75%); backdrop-filter: blur(2px); align-items: center; }
+.result { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 26px 40px 30px; border-radius: 22px; animation: tin .5s ease-out both;
+  background: linear-gradient(180deg, #2a2347f2, #120f24f2); border: 3px solid var(--gold-deep); box-shadow: 0 0 0 2px #000, inset 0 0 0 2px #f7c54f33, 0 20px 60px #000, 0 0 60px #f7c54f44; }
+.result.lose { border-color: #6a5a7a; box-shadow: 0 0 0 2px #000, 0 20px 60px #000; filter: saturate(.75); }
+.result .tcrest { width: 110px; height: 110px; }
+.result h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(48px, 7vw, 84px); line-height: 1; letter-spacing: .04em; text-transform: uppercase;
+  background: linear-gradient(180deg, #fff3c4 0%, #f7c54f 45%, #c2801c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 #4a2a05) drop-shadow(0 8px 16px #000); }
+.result.lose h1 { background: linear-gradient(180deg, #e6e2f0 0%, #9d96b8 60%, #5f587a 100%); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 4px 0 #1c1830) drop-shadow(0 8px 16px #000); }
+.result .tsub { font-size: 15px; letter-spacing: .04em; text-transform: none; margin-bottom: 6px; }
+.rstats { display: flex; gap: 22px; font-weight: 800; margin-bottom: 14px; }
+.rstats b { font-family: var(--display); font-weight: 400; font-size: 28px; display: block; line-height: 1; }
+.rstats .A b { color: var(--a); } .rstats .B b { color: var(--b); }
+.tmenu.row2 { flex-direction: row; flex-wrap: wrap; justify-content: center; width: auto; }
+/* ═════════════ Theme (2026-11-21): a game, not a web page ═════════════
+   Matches the champion sprites: chunky chibi cartoon. A painted twilight valley behind everything, panels framed
+   in dark bronze with a gold edge, a chunky title face (Lilita One) for names, numbers and buttons, a rounded body
+   face (Nunito) for text. Team colours stay sky blue and ember red. */
+:root {
+  --bg: #0b1120; --panel: #19213a; --panel2: #222c48; --line: #5c4a2a; --hex: #1d2636; --hex-edge: #34425e;
+  --fg: #f6f0e1; --dim: #a9adc0; --a: #55baff; --b: #ff6d4d; --gold: #f7c54f; --gold-deep: #b8811f;
+  --bronze: #6e5631; --bronze-hi: #a98a4d; --ink: #0a0e1a;
+  --display: 'Lilita One', 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+html { background: var(--bg); scrollbar-color: var(--bronze) #0a0e1a; }
+body {
+  font-family: var(--body); font-weight: 600; color: var(--fg); min-height: 100vh;
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 45%, #0b112000 0%, #070b1680 70%, #05080fd9 100%),
+    linear-gradient(#0b112040, #0b112073),
+    url(art/backdrop.jpg) center 35% / cover fixed;
+}
+.num { font-variant-numeric: tabular-nums; }
+b, strong { font-weight: 800; }
+
+/* ── panels: bronze frame, gold inner edge, deep night fill ── */
+.card, .hand, .prompt, .log, .box, .form, .tile, .dcard {
+  background: linear-gradient(180deg, #232d4bf2 0%, #161d33f2 100%);
+  border: 2px solid var(--bronze); border-radius: 12px;
+  box-shadow: inset 0 0 0 1px #000c, inset 0 2px 0 #ffffff14, 0 6px 16px #0009;
+}
+.box { border-width: 3px; border-color: var(--bronze-hi); border-radius: 16px; box-shadow: inset 0 0 0 2px #000, inset 0 0 0 3px #f7c54f33, 0 20px 60px #000c; background: linear-gradient(180deg, #212a47f7, #131a2ef7); }
+.box h2 { font-family: var(--display); font-weight: 400; font-size: 28px; letter-spacing: .03em; color: var(--gold); text-shadow: 0 2px 0 #4a2f05, 0 4px 10px #000; }
+.box p { color: #cfd2df; }
+.overlay { background: radial-gradient(ellipse at center, #070b16b3, #03050ae6); backdrop-filter: blur(3px); }
+.help h3 { font-family: var(--display); font-weight: 400; font-size: 17px; letter-spacing: .04em; color: var(--gold); text-shadow: 0 2px 0 #000; }
+
+/* ── buttons: chunky, bevelled, pressable ── */
+button {
+  font-family: var(--display); font-weight: 400; font-size: 13.5px; letter-spacing: .03em; color: var(--fg);
+  background: linear-gradient(180deg, #45538a 0%, #2b355e 55%, #222a4b 100%);
+  border: 2px solid #0b1022; border-radius: 10px; padding: 5px 12px;
+  box-shadow: inset 0 1px 0 #ffffff40, inset 0 -3px 0 #00000059, 0 2px 0 #000b; text-shadow: 0 1px 0 #000a;
+  transition: transform .08s, filter .15s, box-shadow .15s;
+}
+button:hover:not([disabled]) { filter: brightness(1.18); border-color: #0b1022; }
+button:active:not([disabled]) { transform: translateY(2px); box-shadow: inset 0 1px 0 #ffffff30, inset 0 -1px 0 #00000059, 0 0 0 #000; }
+button.primary { color: #3a2304; text-shadow: 0 1px 0 #ffe9a8; background: linear-gradient(180deg, #ffe28a 0%, #f7c54f 50%, #d9972a 100%); border-color: #5a3a08; }
+button.on { color: var(--gold); box-shadow: inset 0 1px 0 #ffffff40, inset 0 -3px 0 #00000059, 0 0 0 2px var(--gold), 0 0 10px #f7c54f88; }
+.ocard, .lvopt, .rgcard, .pbtn { font-family: var(--body); font-weight: 800; letter-spacing: 0; text-shadow: none; background: linear-gradient(180deg, #2b355c, #1d2442); }
+.ocard:not([disabled]):hover, .lvopt:hover, .rgcard:hover:not([disabled]) { background: linear-gradient(180deg, #4a3c18, #2c2410); filter: none; border-color: var(--gold); }
+.ocard.rec, .lvopt.rec, .rgcard.rec { box-shadow: 0 0 0 2px var(--gold), 0 0 12px #f7c54faa; }
+
+/* ── the scoreboard ── */
+header.hud { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px 14px; border: 0; padding: 0 2px 6px; margin-bottom: 6px; }
+.crest { width: 46px; height: 46px; object-fit: contain; filter: drop-shadow(0 3px 4px #000c); }
+.score { display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
+.steam { display: flex; flex-direction: column; gap: 3px; width: min(270px, 26vw); }
+.steam .srow1 { display: flex; align-items: center; gap: 8px; }
+.steam.B .srow1 { justify-content: flex-end; }
+.tl { font-family: var(--display); font-size: 15px; letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 2px 0 #000; }
+.steam.A .tl { color: var(--a); } .steam.B .tl { color: var(--b); }
+.nbar { position: relative; height: 18px; border-radius: 9px; background: #070a14; border: 2px solid #05070e; box-shadow: 0 0 0 2px var(--bronze), inset 0 2px 4px #000; overflow: hidden; }
+.nbar i { position: absolute; top: 0; bottom: 0; transition: width .5s ease; box-shadow: inset 0 2px 0 #ffffff55, inset 0 -3px 0 #0004; }
+.nbar.A i { left: 0; background: linear-gradient(180deg, #9fdcff, #3a8fe0 60%, #2a6fc0); }
+.nbar.B i { right: 0; background: linear-gradient(180deg, #ffb39f, #f0573a 60%, #c93a22); }
+.nbar b { position: relative; z-index: 1; display: block; text-align: center; font-family: var(--display); font-weight: 400; font-size: 13px; line-height: 14px; color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+.tp { display: inline-flex; gap: 3px; }
+.tp .pip { display: inline-block; width: 9px; height: 9px; transform: rotate(45deg); background: #1a2036; border: 1px solid #000; box-shadow: inset 0 0 0 1px #ffffff1a; }
+.steam.A .tp .pip.on { background: linear-gradient(135deg, #bfe6ff, #3a8fe0); } .steam.B .tp .pip.on { background: linear-gradient(135deg, #ffd0c2, #f0573a); }
+.medal { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 118px; padding: 3px 14px 4px; border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 30%, #4a3714, #1c1408 80%); border: 3px solid var(--gold-deep); box-shadow: 0 0 0 2px #000, inset 0 2px 0 #ffe08a55, 0 0 16px #f7c54f44; }
+.medal span { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #e8c983; font-weight: 800; line-height: 1; }
+.medal b { font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.05; color: var(--gold); text-shadow: 0 2px 0 #4a2f05; }
+.medal em { font-style: normal; font-size: 10.5px; font-weight: 800; color: #f6f0e1; line-height: 1.1; white-space: nowrap; }
+header.hud .tools { margin-left: 0; justify-content: flex-end; gap: 5px; max-width: 520px; }
+header.hud .tools button { font-size: 12px; padding: 3px 9px; border-radius: 8px; }
+@media (max-width: 1100px) { header.hud { grid-template-columns: auto minmax(0, 1fr); } header.hud .tools { grid-column: 1 / -1; justify-content: center; max-width: none; } }
+
+/* ── champion cards in the side rails ── */
+.rail h2 { font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .08em; text-shadow: 0 2px 0 #000; }
+.rail .card { padding: 5px 7px; border-radius: 12px; }
+.card.A { background: linear-gradient(100deg, #1d4470ee 0%, #1c2640f2 42%, #161d33f2 100%); box-shadow: inset 0 0 0 1px #000c, inset 3px 0 0 var(--a), inset 0 2px 0 #ffffff14, 0 6px 16px #0009; }
+.card.B { background: linear-gradient(260deg, #6a2a1eee 0%, #2a2238f2 42%, #161d33f2 100%); box-shadow: inset 0 0 0 1px #000c, inset -3px 0 0 var(--b), inset 0 2px 0 #ffffff14, 0 6px 16px #0009; }
+.card.sel { border-color: var(--gold); box-shadow: inset 0 0 0 1px #000c, 0 0 0 1px var(--gold), 0 0 16px #f7c54f99; }
+.card.dead { opacity: .55; filter: grayscale(.8); }
+.card .row1 b, .card .hd b { font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .02em; text-shadow: 0 2px 0 #000; }
+.card .row1 .lv { font-family: var(--display); font-size: 12px; color: var(--gold); text-shadow: 0 1px 0 #000; }
+.rail .card .pt, .pt { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--bronze-hi); background: radial-gradient(circle at 50% 35%, #3b4a74, #141a2e); box-shadow: 0 0 0 1px #000, 0 2px 4px #000a; }
+.card.A .pt { border-color: var(--a); } .card.B .pt { border-color: var(--b); }
+.hp, .rail .hp { height: 8px; border-radius: 5px; background: #070a14; border: 1px solid #000; box-shadow: inset 0 1px 2px #000; }
+.hp i { background: linear-gradient(180deg, #b6ff9c, #4cc35b 55%, #2f8f3e); border-radius: 4px; box-shadow: inset 0 1px 0 #ffffff66; }
+.hp em, .rail .hp em { font-family: var(--display); font-weight: 400; font-size: 10px; top: -3px; text-shadow: 0 1px 1px #000, 0 0 2px #000; }
+.icons { gap: 1px 8px; }
+.ic b { font-family: var(--display); font-weight: 400; font-size: 12.5px; color: var(--fg); text-shadow: 0 1px 0 #000; }
+.ic.up b { color: var(--gold); }
+.ic.st { background: #0a0e1acc; border: 1px solid #3a3f55; border-radius: 8px; }
+.si { width: 13px; height: 13px; flex: none; filter: drop-shadow(0 1px 0 #000); vertical-align: -2px; }
+.tstats { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; font-weight: 800; color: var(--fg); }
+.tstats .si { margin-left: 4px; }
+.elg { width: 15px; height: 15px; object-fit: contain; vertical-align: -3px; filter: drop-shadow(0 1px 1px #000); }
+.card .els, .tile .tn span { display: inline-flex; gap: 1px; }
+.tile .elg { width: 18px; height: 18px; }
+
+/* ── Q W R chips ── */
+.ab { border-radius: 8px; border: 1.5px solid #353c58; background: linear-gradient(180deg, #151b30, #0b0f1d); padding: 0 5px 0 4px; opacity: .6; }
+.ab b { font-family: var(--display); font-weight: 400; font-size: 12px; color: #9aa0b8; }
+.ab.on { opacity: 1; border-color: var(--gold); background: linear-gradient(180deg, #5a4416, #2a1f0a); box-shadow: 0 0 6px #f7c54f88; } .ab.on b { color: #ffe08a; }
+.ab.wait { opacity: 1; border-color: #8a6a2c; } .ab.wait b { color: #d0a85a; }
+.ab.ps { border-color: #7d5fc0; background: linear-gradient(180deg, #2a2050, #120d24); opacity: .9; }
+.ab.fire { background: linear-gradient(180deg, #ffe08a, #d9972a); } .ab.fire b { color: #3a2304; }
+.abl .k { font-family: var(--display); font-weight: 400; font-size: 14px; color: #cfd2df; }
+
+/* ── the board ── */
+.boardwrap, .boardwrap:has(svg.art) {
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, #0a101c40 0%, #0a101cb3 90%);
+  border: 3px solid var(--bronze); border-radius: 18px;
+  box-shadow: inset 0 0 0 2px #000, inset 0 0 0 3px #f7c54f22, inset 0 0 60px #000d, 0 10px 30px #000b;
+}
+.pop { font-family: var(--display); font-weight: 400; font-size: 16px; stroke-width: 4px; }
+.art .pop { font-size: 19px; }
+.castlbl { font-family: var(--display); font-weight: 400; letter-spacing: .02em; }
+.lbl { font-family: var(--body); font-weight: 800; }
+.tok .ini { font-family: var(--display); font-weight: 400; font-size: 11px; }
+
+/* ── casters: broadcast lower-thirds ── */
+.feed .ln { background: linear-gradient(90deg, #0b1020f5, #182040ee); border: 1px solid #6e563188; border-left: 4px solid var(--dim); border-radius: 10px; box-shadow: 0 4px 12px #000a; font-size: 13px; font-weight: 700; }
+.feed .ln.t3 { border-left-color: var(--gold); font-size: 14px; }
+.feed .who { display: inline-block; font-family: var(--display); font-weight: 400; font-size: 11px; letter-spacing: .08em; padding: 0 6px; border-radius: 6px; margin-right: 6px; text-shadow: none; }
+.feed .who.kip { color: #3a2304; background: linear-gradient(180deg, #ffe08a, #f0b43a); }
+.feed .who.mar { color: #1c1036; background: linear-gradient(180deg, #d9c4ff, #a684f0); }
+.feed .an { color: #c9c4dc; font-weight: 600; }
+.recap, .movetag { background: linear-gradient(180deg, #151c33f2, #0b1020f2); border: 1px solid #6e5631aa; border-radius: 10px; font-weight: 700; color: #cfd2df; box-shadow: 0 4px 12px #000a; }
+.recap .lbl2 { font-family: var(--display); font-weight: 400; font-size: 12px; letter-spacing: .06em; color: var(--gold); }
+
+/* ── strip under the board, prompt, legend, log ── */
+.hand.A { box-shadow: inset 0 0 0 1px #000c, inset 4px 0 0 var(--a), 0 6px 16px #0009; } .hand.B { box-shadow: inset 0 0 0 1px #000c, inset 4px 0 0 var(--b), 0 6px 16px #0009; }
+.handhd b { font-family: var(--display); font-weight: 400; font-size: 16px; color: var(--gold); text-shadow: 0 2px 0 #000; }
+.hgroup .who b { font-family: var(--display); font-weight: 400; font-size: 13px; }
+.prompt { border-left: 4px solid var(--gold); }
+.prompt p { font-weight: 700; }
+.legend { font-size: 11px; color: #9aa0b8; opacity: .85; }
+.log { background: linear-gradient(180deg, #121830e6, #0b1020e6); }
+.log .round { font-family: var(--display); font-weight: 400; font-size: 14px; color: var(--gold); }
+.stat-strip { color: #9aa0b8; }
+
+/* ── draft ── */
+.box.draft { background: linear-gradient(180deg, #1d2643f7, #101629f7); }
+.rlab { font-family: var(--display); font-weight: 400; font-size: 14px; color: var(--gold); text-shadow: 0 2px 0 #000; letter-spacing: .06em; }
+.tile { border-radius: 12px; padding: 4px 6px 4px 4px; background: linear-gradient(160deg, #2b3760f2, #172038f2); transition: transform .12s, box-shadow .12s; }
+.tile img { width: 58px; height: 58px; border-radius: 10px; background: radial-gradient(circle at 50% 35%, #44558a, #141a2e); box-shadow: inset 0 0 0 2px #0006; }
+.tile .tn b { font-family: var(--display); font-weight: 400; font-size: 17px; text-shadow: 0 2px 0 #000; }
+.tile.can:hover { transform: translateY(-2px); border-color: var(--gold); background: linear-gradient(160deg, #4a3c18, #2a2210); box-shadow: 0 0 0 1px var(--gold), 0 8px 18px #000b; }
+.banner { border-width: 3px; border-radius: 16px; box-shadow: 0 0 0 2px #000, 0 0 24px #0008; }
+.banner b { font-family: var(--display); font-weight: 400; font-size: 26px; letter-spacing: .08em; text-shadow: 0 2px 0 #000; }
+.side .lab { font-family: var(--display); font-weight: 400; font-size: 13px; letter-spacing: .08em; }
+.slot { border-radius: 10px; border-color: var(--bronze); background: radial-gradient(circle at 50% 35%, #26304f, #0b1020); }
+.slot .sl { font-weight: 800; }
+.coachbox { border-radius: 10px; font-weight: 700; }
+.coachbox .who { font-family: var(--display); font-weight: 400; font-size: 12px; }
+.form { background: linear-gradient(180deg, #2a3458, #182040); }
+.form b { font-family: var(--display); font-weight: 400; font-size: 15px; color: var(--gold); }
+.pbtn .pn { font-family: var(--display); font-weight: 400; font-size: 15px; }
+.prow .who b, .lvl .who b, .shop .item b { font-family: var(--display); font-weight: 400; }
+.tip { background: linear-gradient(180deg, #212a47f7, #121a2ef7); border: 2px solid var(--bronze-hi); border-radius: 12px; box-shadow: inset 0 0 0 1px #000, 0 12px 30px #000c; font-weight: 600; }
+.tip .tiphd b { font-family: var(--display); font-weight: 400; font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 #000; }
+.chip { border-radius: 8px; font-weight: 700; }
 </style>
 
-<header class="top">
-  <div class="meter"><span>Round</span><b id="m-round" class="num">–</b></div>
-  <div class="meter"><span>Nexus A</span><b id="m-nexA" class="A num">30</b></div>
-  <div class="meter"><span>Nexus B</span><b id="m-nexB" class="B num">30</b></div>
-  <div class="meter" id="tp-meter-A"><span>Tactics A</span><b id="m-tpA" class="A num">0</b></div>
-  <div class="meter" id="tp-meter-B"><span>Tactics B</span><b id="m-tpB" class="B num">0</b></div>
-  <div class="meter" hidden><span>Gold A</span><b id="m-goldA" class="num" style="color:var(--gold)">0</b></div>
-  <div class="meter" hidden><span>Gold B</span><b id="m-goldB" class="num" style="color:var(--gold)">0</b></div>
-  <div class="meter"><span>Now</span><b id="m-phase">Draft</b></div>
+<header class="top hud">
+  <img class="crest" src="art/crest.png" alt="Augury">
+  <div class="score">
+    <div class="steam A"><div class="srow1"><span class="tl">Blue</span><span class="tp" id="tp-meter-A" title="tactic points"><span id="m-tpA"></span></span></div>
+      <div class="nbar A" title="Blue nexus"><i id="nbar-A"></i><b id="m-nexA" class="num">30</b></div></div>
+    <div class="medal"><span>Round</span><b id="m-round" class="num">–</b><em id="m-phase">Draft</em></div>
+    <div class="steam B"><div class="srow1"><span class="tp" id="tp-meter-B" title="tactic points"><span id="m-tpB"></span></span><span class="tl">Red</span></div>
+      <div class="nbar B" title="Red nexus"><i id="nbar-B"></i><b id="m-nexB" class="num">30</b></div></div>
+    <span hidden><b id="m-goldA"></b><b id="m-goldB"></b></span>
+  </div>
   <div class="tools">
     <button id="b-play">New: play A vs AI</button>
     <button id="b-watch">Watch AI vs AI</button>
@@ -920,7 +1120,7 @@ function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.im
 const roll = pct => pct > 0 && rng() * 100 < pct;
 
 function newMatch(mode, seed) {
-  syncRules();
+  syncRules(); UI.overSeen = false;
   if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); hideTip(); }
   UI.moves = []; UI.moveTag = ''; UI.slide = null;
   clearTimeout(UI.timer); UI.anim = null;
@@ -2412,10 +2612,12 @@ const view = c => G.display ? { ...c, ...G.display.champs[c.id] } : c;
 function render() {
   if (HEADLESS || !G) return;
   const nx = G.display ? G.display.nexus : G.nexus;
-  document.getElementById('m-round').textContent = G.round ? `${G.round}/${RULES.rounds}` : G.phase === 'opening' ? 'open' : '–';
+  document.getElementById('m-round').textContent = G.final ? 'Final' : G.round ? `${G.round}/${RULES.rounds}` : G.phase === 'opening' || (G.opened && G.phase !== 'draft' && G.phase !== 'paths') ? 'Opening' : 'Draft';
   document.getElementById('m-nexA').textContent = Math.max(0, nx.A);
   document.getElementById('m-nexB').textContent = Math.max(0, nx.B);
-  for (const t of ['A', 'B']) { document.getElementById('tp-meter-' + t).hidden = !RULES.tactics; document.getElementById('m-tp' + t).textContent = `${G.tp[t]}/${RULES.tpMax}`; }
+  for (const t of ['A', 'B']) { document.getElementById('tp-meter-' + t).hidden = !RULES.tactics;
+    document.getElementById('m-tp' + t).innerHTML = Array.from({ length: RULES.tpMax }, (_, k) => `<i class="pip ${k < G.tp[t] ? 'on' : ''}"></i>`).join('');
+    const full = structure() ? RULES.nexusHp : RULES.nexus; document.getElementById('nbar-' + t).style.width = `${Math.max(0, Math.min(100, 100 * nx[t] / full))}%`; }
   document.getElementById('m-goldA').textContent = RULES.gold ? G.gold.A : '–';
   document.getElementById('m-goldB').textContent = RULES.gold ? G.gold.B : '–';
   document.getElementById('m-phase').textContent = { draft: 'Draft', regroup: G.rg ? `Regroup · ${rgTeam()}` : '', opening: `Opening · ${G.openTurn}`, move: `${G.turnTeam} moves`, pulse: 'Pulse', levelup: `Level up · ${G.levelQueue ? G.levelQueue.team : ''}`, tactic: `${G.turnTeam} tactic`, final: 'FINAL FIGHT', paths: 'Paths', moving: `${G.turnTeam} moved`, shop: 'Shop', over: G.winner === 'draw' ? 'Draw' : `${G.winner} wins` }[G.phase];
@@ -2439,7 +2641,19 @@ function synText(c) {
   return a + b;
 }
 // ═════════════ patterns and abilities on screen ═════════════
-const elIcons = d => d.els.map(e => `<span title="${e}">${ELS[e][0]}</span>`).join('');
+const EL_IMG = { Fire: 'el_fire', Frost: 'el_frost', Earth: 'el_earth', Storm: 'el_storm', Light: 'el_light', Shadow: 'el_shadow' };
+const elIcons = d => d.els.map(e => `<img class="elg" src="art/${EL_IMG[e]}.png" alt="${e}" title="${e}">`).join('');
+// Small drawn stat icons (16 x 16), coloured per stat, replacing emoji on cards and hover cards.
+const ICO_PATH = {
+  atk: ['#ffb35c', '<path d="M13.5 1.5 6 9l1 1 7.5-7.5V1.5z" /><path d="M3 9.5 6.5 13l1.2-1.2-1.1-1.1 1.6-1.6-1.2-1.2-1.6 1.6-1.1-1.1z" /><circle cx="2.6" cy="13.4" r="1.6" />'],
+  range: ['#7fd4ff', '<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.8" /><circle cx="8" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8" /><circle cx="8" cy="8" r="1.1" />'],
+  init: ['#ffe36b', '<path d="M9.5 1 3 9h4l-1 6 6.5-8h-4z" />'],
+  armor: ['#d9c7a0', '<path d="M8 1 2.5 3v4.2C2.5 11 5 13.6 8 15c3-1.4 5.5-4 5.5-7.8V3z" />'],
+  home: ['#d9c7a0', '<path d="M8 1.5 1.5 7.5h2v6.5h3.5v-4h2v4h3.5V7.5h2z" />'],
+  leap: ['#9ff0b0', '<path d="M2 13c1-6 5-9 10-9V1.5L15.5 5 12 8.5V6c-4 0-7 2.5-8 7z" />'],
+  hp: ['#ff7a8a', '<path d="M8 14.5S1.5 10.4 1.5 5.8A3.4 3.4 0 0 1 8 4.2a3.4 3.4 0 0 1 6.5 1.6C14.5 10.4 8 14.5 8 14.5z" />'],
+};
+const ico = k => `<svg class="si" viewBox="0 0 16 16" aria-hidden="true" style="color:${ICO_PATH[k][0]}" fill="currentColor">${ICO_PATH[k][1]}</svg>`;
 // A pattern as a small diagram: the champion in the middle, front at the top. A filled cell must hold an ally;
 // ringed cells mean "one of these"; the colour is the element the ally needs (gold = any ally); red rings = must be empty.
 const CELL_XY = { FL: [-.5, -.87], FR: [.5, -.87], R: [1, 0], BR: [.5, .87], BL: [-.5, .87], L: [-1, 0] };
@@ -2538,7 +2752,7 @@ c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
       <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span><span class="role">${c0.role}</span><span class="lv">${c.dead ? (G.final ? '† out' : `† back R${c0.respawnAt}`) : c.broken ? '💀 broken' : `${c0.def.paths[c0.path].ic} Lv ${c0.level}`}</span></div>
         <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div></div></div>
-      <div class="icons">${stat('🗡️', e.atk, e.atk > c0.atk, 'attack')}${stat('🎯', e.range, e.range > c0.range, 'range')}${stat('⏩', e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(e.home ? '🏠' : '🧱', e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat('🦘', c0.dive, false, 'leap') : ''}${chances}${sts}</div>
+      <div class="icons">${stat(ico('atk'), e.atk, e.atk > c0.atk, 'attack')}${stat(ico('range'), e.range, e.range > c0.range, 'range')}${stat(ico('init'), e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(ico(e.home ? 'home' : 'armor'), e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat(ico('leap'), c0.dive, false, 'leap') : ''}${chances}${sts}</div>
       <div class="abrow">${abChips(c0)}</div>
     </div>`);
     if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button')) return; select(c0); });
@@ -2557,7 +2771,7 @@ function tipHtml(c0) {
   const L = links(), e = eff(c0, L), sp = c0.def.special, ps = c0.def.paths[c0.path];
   const procs = Object.keys(PROCS).filter(k => (c0.procs[k] || 0) > 0).map(k => `<li>${PICON[k]} <b>${esc(PROCS[k].name)} ${pct(c0, k, L)}%</b>: ${esc(PROCS[k].text)}</li>`).join('');
   const items = c0.items.map(id => { const it = ITEMS.find(x => x.id === id); return `<li>🎒 <b>${esc(it.name)}</b>: ${esc(it.t)}</li>`; }).join('');
-  return `<div class="tiphd">${UI.art ? `<img src="art/${c0.def.id}.png" alt="">` : ''}<div><b>${esc(c0.def.name)}</b><span>${c0.role} · ${c0.def.els.join(' + ')} · Lv ${c0.level}</span><span>HP ${Math.max(0, c0.hp)}/${c0.maxHp} · 🗡️ ${e.atk} · 🎯 ${e.range} · ⏩ ${e.init}${e.armor ? ` · 🧱 ${e.armor}` : ''}${c0.dive ? ` · 🦘 ${c0.dive}` : ''}</span></div></div>
+  return `<div class="tiphd">${UI.art ? `<img src="art/${c0.def.id}.png" alt="">` : ''}<div><b>${esc(c0.def.name)}</b><span>${c0.role} · ${c0.def.els.join(' + ')} · Lv ${c0.level}</span><span class="tstats">${ico('hp')} ${Math.max(0, c0.hp)}/${c0.maxHp} ${ico('atk')} ${e.atk} ${ico('range')} ${e.range} ${ico('init')} ${e.init}${e.armor ? ` ${ico('armor')} ${e.armor}` : ''}${c0.dive ? ` ${ico('leap')} ${c0.dive}` : ''}</span></div></div>
     <div class="stats"><span class="chip rule">basic attack targets: ${RULE_TEXT[c0.def.target]}</span></div>
     ${abList(c0.ab, c0)}
     <ul>${procs}${items}</ul>
@@ -2883,6 +3097,30 @@ function pulseText() { const P = UI.pulses; if (!P.length) return ''; const last
 const fmtClock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function renderOverlay() {
   const ov = document.getElementById('overlay');
+  if (UI.title) { ov.hidden = false; ov.innerHTML = ''; ov.classList.add('titleov');
+    const box = h(`<div class="title"><img class="tcrest" src="art/crest.png" alt=""><h1>Augury</h1><div class="tsub">Pattern Skirmish</div>
+      <div class="tmenu"><button class="primary big" id="t-play">Play vs AI</button><button class="big" id="t-watch">Watch AI vs AI</button><button id="t-rules">How to play</button></div>
+      <div class="tfoot">Difficulty: <b>${esc(DIFF[UI.diff].name)}</b> <button id="t-diff">Change</button></div></div>`);
+    box.querySelector('#t-play').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); newMatch('play'); });
+    box.querySelector('#t-watch').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); newMatch('watch'); });
+    box.querySelector('#t-rules').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); UI.rules = true; render(); });
+    box.querySelector('#t-diff').addEventListener('click', () => { const o = ['easy', 'normal', 'hard']; setDiff(o[(o.indexOf(UI.diff) + 1) % 3]); render(); });
+    ov.appendChild(box); return; }
+  ov.classList.remove('titleov');
+  if (G.phase === 'over' && !UI.overSeen && G.winner) {   // the result, as a banner over the board
+    ov.hidden = false; ov.innerHTML = ''; ov.classList.add('overov');
+    const me = G.humans[0], w = G.winner, won = me ? w === me : null;
+    const head = w === 'draw' ? 'Draw' : me ? (won ? 'Victory!' : 'Defeat') : `${TEAMN[w]} wins!`;
+    const why = w === 'draw' ? 'Both nexuses fell together.' : G.final ? `${TEAMN[w]} won the final fight after round ${G.round}.` : `The ${TEAMN[other(w)]} nexus fell in round ${G.round}.`;
+    const k = t => STATS_k(t);
+    const box = h(`<div class="result ${w === 'draw' ? '' : won === false ? 'lose' : ''} ${w}"><img class="tcrest" src="art/crest.png" alt=""><h1>${esc(head)}</h1><div class="tsub">${esc(why)}</div>
+      <div class="rstats"><span class="A"><b>${k('A')}</b> Blue kills</span><span class="B"><b>${k('B')}</b> Red kills</span></div>
+      <div class="tmenu row2"><button class="primary big" id="r-again">${G.mode === 'watch' ? 'Watch another' : 'Play again'}</button><button id="r-board">See the board</button><button id="r-menu">Main menu</button></div></div>`);
+    box.querySelector('#r-again').addEventListener('click', () => { ov.classList.remove('overov'); newMatch(G.mode === 'watch' ? 'watch' : 'play'); });
+    box.querySelector('#r-board').addEventListener('click', () => { UI.overSeen = true; ov.classList.remove('overov'); render(); });
+    box.querySelector('#r-menu').addEventListener('click', () => { ov.classList.remove('overov'); UI.title = true; render(); });
+    ov.appendChild(box); return; }
+  ov.classList.remove('overov');
   if (UI.formsOpen && G && G.humans.length) { ov.hidden = false; ov.innerHTML = ''; const t = G.humans[0];
     const box = h(`<div class="box help forms"><div class="row"><h2>Three shapes for your team</h2><button id="close-forms" class="primary" style="margin-left:auto">Got it</button></div>
       <p>Abilities fire only when allies stand in the right hexes around a champion. These shapes light the most of your champions' abilities (gold letters). You will rarely hold one exactly, but aim for it: play the opening cards that bring your champions together like this, then move one champion at a time to complete the pattern.${coaching() === 'auto' ? ' The gold-bordered opening card is the one that lights the most right now.' : ''}</p>
@@ -2960,7 +3198,7 @@ function renderOverlay() {
 // The draft hover card: everything about a roster entry.
 function defTipHtml(d, mine) {
   const fits = mine.length ? fitNotes(d, mine) : [];
-  return `<div class="tiphd">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div><b>${esc(d.name)}</b><span>${d.role} · ${elIcons(d)} ${d.els.join(' + ')}</span><span>HP ${Math.round(d.hp * RULES.hpScale)} · 🗡️ ${d.atk} · 🎯 ${d.range} · ⏩ ${d.init}${d.dive ? ` · 🦘 ${d.dive}` : ''}</span></div></div>
+  return `<div class="tiphd">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div><b>${esc(d.name)}</b><span>${d.role} · ${elIcons(d)} ${d.els.join(' + ')}</span><span class="tstats">${ico('hp')} ${Math.round(d.hp * RULES.hpScale)} ${ico('atk')} ${d.atk} ${ico('range')} ${d.range} ${ico('init')} ${d.init}${d.dive ? ` ${ico('leap')} ${d.dive}` : ''}</span></div></div>
     <div class="stats"><span class="chip rule">basic attack targets: ${RULE_TEXT[d.target]}</span>${Object.keys(d.procs).map(k => `<span class="chip">${PICON[k]} ${PROCS[k].name} ${d.procs[k]}%</span>`).join('')}</div>
     ${abList(d.ab, null, d)}
     <p class="path">Paths: ${d.paths.map(ps => `<b>${ps.ic} ${esc(ps.name)}</b> (${ps.steps.map(o => o.ic).join(' ')})`).join(' or ')}</p>
@@ -3003,5 +3241,6 @@ document.getElementById('b-diff').addEventListener('click', () => { const o = ['
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.rules) { UI.rules = false; render(); } else if (UI.sel != null) { UI.sel = null; UI.hover = null; render(); } } });
 for (const d of ROSTER) d.paths = buildPaths(d);   // after PICON exists
 try { const s = localStorage.getItem('augury-diff'); if (DIFF[s]) UI.diff = s; } catch (e) {}
+UI.title = true;   /* the title screen first; Play starts a fresh match */
 newMatch('play');
 </script>

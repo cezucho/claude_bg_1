@@ -8,6 +8,8 @@ raw image is sent with every later character request so the set matches.
 The API key is read from GEMINI_API_KEY, else tools/asset_gen/.env.local (GEMINI_API_KEY=...;
 git-ignored). It is never printed or saved.
 
+Kinds: character / structure (cut out of a flat key colour), texture (256 px tile), backdrop (16:9, 1600 px JPEG).
+
 Usage (from the project folder):
     python tools/asset_gen/gen_sprites.py                  # every asset not yet made
     python tools/asset_gen/gen_sprites.py --only ember,rime --force
@@ -49,13 +51,13 @@ def api_key():
     sys.exit("No key: set GEMINI_API_KEY, or put GEMINI_API_KEY=... in tools/asset_gen/.env.local")
 
 
-def generate(prompt, model, key, ref=None):
+def generate(prompt, model, key, ref=None, aspect="1:1"):
     parts = []
     if ref:
         parts.append({"inlineData": {"mimeType": "image/png", "data": base64.b64encode(open(ref, "rb").read()).decode()}})
     parts.append({"text": prompt})
     body = {"contents": [{"role": "user", "parts": parts}],
-            "generationConfig": {"responseModalities": ["TEXT", "IMAGE"], "imageConfig": {"aspectRatio": "1:1"}}}
+            "generationConfig": {"responseModalities": ["TEXT", "IMAGE"], "imageConfig": {"aspectRatio": aspect}}}
     req = urllib.request.Request(ENDPOINT.format(model=model), data=json.dumps(body).encode(), method="POST",
                                  headers={"Content-Type": "application/json", "x-goog-api-key": key})
     try:
@@ -72,7 +74,7 @@ def generate(prompt, model, key, ref=None):
 
 
 def prompt_for(spec, a, with_ref):
-    if a["kind"] == "texture":
+    if a["kind"] in ("texture", "backdrop"):
         return a["prompt"]
     name, hexc = spec["backgrounds"][a["bg"]]
     style = spec["styleCharacter"] if a["kind"] == "character" else spec["styleStructure"]
@@ -155,7 +157,7 @@ def main():
             use_ref = asset["kind"] == "character" and asset["id"] != "anchor" and os.path.exists(ref)
             prompt = prompt_for(spec, asset, use_ref)
             try:
-                data = generate(prompt, asset["model"], key, ref if use_ref else None)
+                data = generate(prompt, asset["model"], key, ref if use_ref else None, "16:9" if asset["kind"] == "backdrop" else "1:1")
             except Exception as e:
                 print("FAILED", asset["id"], str(e)[:400], flush=True)
                 continue
@@ -168,9 +170,11 @@ def main():
             print("generated", asset["id"], "with", asset["model"], flush=True)
         if not os.path.exists(raw):
             continue
-        out = os.path.join(OUT, asset["id"] + (".jpg" if asset["kind"] == "texture" else ".png"))
+        out = os.path.join(OUT, asset["id"] + (".jpg" if asset["kind"] in ("texture", "backdrop") else ".png"))
         if asset["kind"] == "texture":
             make_texture(raw, out)
+        elif asset["kind"] == "backdrop":   # a wide painting behind the interface, kept large
+            im = Image.open(raw).convert("RGB"); im.resize((1600, round(1600 * im.height / im.width)), Image.LANCZOS).save(out, quality=84, optimize=True)
         else:
             cut_out(raw, spec["backgrounds"][asset["bg"]][1], out)
         print("  ->", os.path.relpath(out, ROOT), flush=True)
