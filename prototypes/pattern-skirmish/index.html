@@ -15,7 +15,7 @@
 }
 html, body { background: var(--bg); color: var(--fg); }
 [hidden] { display: none !important; }
-body { font-family: var(--body); font-size: 14px; line-height: 1.4; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body { font-family: var(--body); font-size: 14px; line-height: 1.4; padding-block: 6px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 button { font: inherit; color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
 button:hover:not([disabled]) { border-color: var(--dim); }
 button:focus-visible, .tok:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -24,16 +24,17 @@ button.primary { background: var(--gold); color: #1b1407; border-color: var(--go
 button.on { border-color: var(--gold); color: var(--gold); }
 .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
-header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+header.top .tools button { padding: 4px 8px; font-size: 12.5px; }
 .brand { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: .12em; text-transform: uppercase; }
 .brand small { color: var(--dim); font-weight: 500; letter-spacing: .08em; font-size: 12px; margin-left: 6px; }
 .meter { display: flex; flex-direction: column; gap: 1px; }
-.meter span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
-.meter b { font-family: var(--display); font-size: 20px; font-weight: 700; }
+.meter span { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.meter b { font-family: var(--display); font-size: 16px; font-weight: 700; line-height: 1.1; }
 .meter b.A { color: var(--a); } .meter b.B { color: var(--b); }
 .tools { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
 
-.table { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 300px); gap: 14px; align-items: start; }
+.table { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 220px); gap: 10px; align-items: start; }
 @media (max-width: 1100px) { .table { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .centre { grid-column: 1 / -1; order: -1; } }
 @media (max-width: 680px) { .table { grid-template-columns: minmax(0, 1fr); } }
 .rail { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -52,9 +53,13 @@ header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px
 .card .hd .lv { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--gold); }
 /* Compact cards (D-077): the five champions of a team fit the screen; details are in the hover card */
 .rail { gap: 6px; }
-.rail .card { padding: 6px 8px; gap: 4px; }
+.rail .card { padding: 4px 6px; gap: 2px; }
 .rail .card .hd { align-items: center; gap: 8px; }
-.rail .card .pt { width: 40px; height: 40px; }
+.rail .card .pt { width: 30px; height: 30px; }
+.rail .icons { gap: 0 6px; font-size: 11.5px; } .rail .ic b { font-size: 11px; } .rail .ic.st { font-size: 10.5px; padding: 0 3px; }
+.rail .card .row1 b { font-size: 13px; } .rail .card .row1 .role { display: none; }
+.rail .hp { height: 6px; } .rail .hp em { font-size: 9px; top: -3px; right: 2px; }
+.rail .card .nm { gap: 2px; }
 .card .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .card .row1 { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .card .row1 b { font-family: var(--display); font-size: 15px; }
@@ -125,7 +130,13 @@ details.tree li .not { text-decoration: line-through; opacity: .6; }
 @keyframes lowpulse { 0%, 100% { opacity: .35; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.06); } }
 .ready .spr { animation: readyglow 1.1s ease-in-out infinite; }
 @keyframes readyglow { 0%, 100% { filter: drop-shadow(0 0 2px #ffd36a); } 50% { filter: drop-shadow(0 0 9px #ffd36a) brightness(1.12); } }
-svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-action: manipulation; }
+svg#board { transition: transform .45s ease; }
+.pop.psn { fill: #1f8a3a; stroke: #e6ffe9; stroke-width: 3px; }
+.castlbl { font-family: var(--display); font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: #0b0f16; stroke-width: 4px; pointer-events: none; }
+.ab.fire { opacity: 1; border-color: var(--gold); background: #3a2c0c; box-shadow: 0 0 8px var(--gold); transform: scale(1.15); } .ab.fire b { color: var(--gold); }
+.ic.flash { animation: icflash .5s ease-in-out 3; border-color: var(--gold) !important; }
+@keyframes icflash { 50% { background: #5a4510; transform: scale(1.25); } }
+svg#board { display: block; width: 100%; height: auto; max-height: calc(100vh - 120px); touch-action: manipulation; }
 .hexp { fill: var(--hex); stroke: var(--hex-edge); stroke-width: 1; }
 .hexp.hill { fill: #2a2a22; }
 .hexp.tower { fill: #2b3346; stroke: #56647f; }
@@ -152,7 +163,7 @@ svg#board { display: block; width: 100%; height: auto; max-height: 64vh; touch-a
 .tok .inibg { fill: var(--dim); } .tok .inibg.up { fill: var(--gold); } .tok .inibg.down { fill: var(--bad); }
 .tok .st { font-size: 11px; text-anchor: middle; pointer-events: none; }
 /* Art view (D-075): sprites, isometric squash, code-driven motion */
-svg#board.art { max-height: 70vh; }
+svg#board.art { max-height: calc(100vh - 110px); }
 .boardwrap:has(svg.art) { background: radial-gradient(ellipse at center, #2b3a2a 0%, #141b14 80%); }
 .art .hexp { fill: url(#grass); stroke: #2f4a22; stroke-width: .8; }
 .art .hexp.reach { stroke: var(--good); stroke-width: 2; }
@@ -169,11 +180,16 @@ svg#board.art { max-height: 70vh; }
 .hgroup .who { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 .hgroup .who img { width: 22px; height: 22px; object-fit: cover; object-position: 50% 0; border-radius: 50%; background: #2a3448; }
 .hgroup .two { display: flex; gap: 4px; }
+.forms { max-width: 820px; } .formrow { display: flex; flex-wrap: wrap; gap: 12px; } .form { flex: 1 1 230px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.form p { margin: 0; } .form .dim { color: var(--dim); font-size: 11.5px; } .formsvg { display: block; margin: 0 auto; }
+.ocard.rec { border-color: var(--gold); box-shadow: 0 0 6px var(--gold); }
 .ocard { padding: 3px 7px; font-family: var(--mono); font-size: 12.5px; display: flex; gap: 6px; border-radius: 5px; }
 .ocard:not([disabled]):hover { border-color: var(--gold); background: #2c2614; }
 .ocard[disabled] { opacity: .8; cursor: default; }
 .tint { pointer-events: none; stroke: none; fill: none; }
-.tint.hill { fill: #e0b75a55; } .tint.tower { fill: #9aa0ab70; } .tint.nexA { fill: #5ab4ff50; } .tint.nexB { fill: #ff7a5950; }
+.tint.hill, .tint.river, .tint.pit, .tint.mid { fill: none; } .tint.halfA { fill: #5ab4ff14; } .tint.halfB { fill: #ff7a5914; }
+.art .hexp.river { fill: url(#river); } .art .hexp.hill { fill: url(#hillt); } .art .hexp.pit { fill: url(#pit); }
+.hexp.river { fill: #1d3a4a; } .hexp.pit { fill: #2a1f3a; } .tint.tower { fill: #9aa0ab70; } .tint.nexA { fill: #5ab4ff50; } .tint.nexB { fill: #ff7a5950; }
 .tint.reach { fill: #7bd88f45; } .tint.hover { fill: #7bd88f90; }
 .art .lbl { fill: #f3f6fb; paint-order: stroke; stroke: #0b0f16; stroke-width: 2px; }
 .spr { pointer-events: none; } .tok.mine .spr { pointer-events: auto; cursor: pointer; }
@@ -282,6 +298,8 @@ svg#board.art { max-height: 70vh; }
 .abl { display: flex; gap: 7px; align-items: flex-start; font-size: 11.5px; line-height: 1.3; }
 .abl .k { font-family: var(--mono); color: var(--dim); width: 10px; }
 .abl i { color: var(--dim); } .abl .cd { color: var(--dim); font-size: 10.5px; }
+.ab.ps { border-color: #c49bff66; } .ab.ps .psi { color: #c49bff; font-style: normal; font-size: 13px; position: static; }
+.abl.ps .psbig { display: inline-block; text-align: center; color: #c49bff; font-size: 20px; line-height: 30px; }
 .abl.on .k, .abl.on .cd { color: var(--gold); } .abl.wait .k { color: #b89a55; }
 .dcard .ablist { gap: 3px; } .dcard .abl { font-size: 11px; }
 svg.pat { flex: none; }
@@ -377,7 +395,6 @@ svg.pat { flex: none; }
 </style>
 
 <header class="top">
-  <div class="brand">Augury<small>pattern skirmish</small></div>
   <div class="meter"><span>Round</span><b id="m-round" class="num">–</b></div>
   <div class="meter"><span>Nexus A</span><b id="m-nexA" class="A num">30</b></div>
   <div class="meter"><span>Nexus B</span><b id="m-nexB" class="B num">30</b></div>
@@ -486,7 +503,7 @@ const PROCS = {
 const CC_KEYS = ['taunt', 'root', 'blind', 'silence', 'airborne', 'berserk'];
 // statuses shown on tokens and cards
 const STATUS = { frozen: ['❄', 'frozen', 'var(--frost)'], air: ['⤒', 'airborne', 'var(--frost)'], rooted: ['⚓', 'rooted', 'var(--poison)'], blind: ['◐', 'blinded', 'var(--dim)'],
-  silenced: ['∅', 'silenced', 'var(--arcane)'], berserk: ['✷', 'berserk', 'var(--bad)'], taunted: ['!', 'taunted', 'var(--gold)'], steadfast: ['◆', 'steadfast: cannot be frozen or knocked up', 'var(--fg)'] };
+  silenced: ['∅', 'silenced', 'var(--arcane)'], berserk: ['✷', 'berserk', 'var(--bad)'], taunted: ['!', 'taunted', 'var(--gold)'], steadfast: ['◆', 'steadfast: cannot be frozen or knocked up', 'var(--fg)'], broken: ['✝', 'broken: at 0 HP, half attack, no abilities; dies at the end of the round unless an ally heals it', 'var(--bad)'] };
 const VETERAN = [{ t: '+1 attack', stat: 'atk', add: 1 }, { t: '+6 max HP', stat: 'hp', add: 6 }];   // levels past the end of a growth path
 const levelOptions = c => [(c.def.paths[c.path || 0].steps[c.pstep || 0]) || { ...VETERAN[0], ic: '🗡️' }, ALT];
 const ITEMS = [
@@ -517,7 +534,8 @@ const CELL = { FR: [0, 1], FL: [-1, 1], R: [1, 0], L: [-1, 0], BR: [1, -1], BL: 
 const GROUP = { F: ['FL', 'FR'], B: ['BL', 'BR'], S: ['L', 'R'], N: ['FL', 'FR', 'R', 'BR', 'BL', 'L'], FL: ['FL'], FR: ['FR'], L: ['L'], R: ['R'], BL: ['BL'], BR: ['BR'] };
 const GROUP_TEXT = { F: 'in front', B: 'behind', S: 'at its side', N: 'beside it', FL: 'front left', FR: 'front right', L: 'on its left', R: 'on its right', BL: 'behind left', BR: 'behind right' };
 const need = (...n) => ({ need: n }), lone = n => ({ lone: n }), beside = n => ({ count: n });
-const patText = pat => pat.count ? `${['', 'one', 'two', 'three'][pat.count]} allies beside it` : pat.lone ? (pat.lone > 1 ? `no ally within ${pat.lone} hexes` : 'no ally beside it') : pat.need.map(([g, el]) => `${el ? `a ${el} ally` : 'an ally'} ${GROUP_TEXT[g]}`).join(' and ');
+const patText = pat => patText0(pat) + (pat.x ? `, and ${X_TEXT[pat.x.k](pat.x)}` : '');
+const patText0 = pat => pat.count ? `${['', 'one', 'two', 'three'][pat.count]} allies beside it` : pat.lone ? (pat.lone > 1 ? `no ally within ${pat.lone} hexes` : 'no ally beside it') : pat.need.map(([g, el]) => `${el ? `a ${el} ally` : 'an ally'} ${GROUP_TEXT[g]}`).join(' and ');
 const ABK = ['q', 'w', 'r'], SHAPE_W = { q: .3, w: .7, r: 1.2 };
 const AB = (name, pat, cd, look, fx) => ({ name, pat, cd, look, status: [], ...fx });
 const U = (ab, t, up) => ({ t, ab, up });
@@ -690,6 +708,97 @@ function autoTree(d) { const pk = Object.keys(d.procs)[0], far = d.range >= 3;
   return [[boost('q', d.ab.q), boost('w', d.ab.w)], [U('w', `W ${d.ab.w.name}: cooldown −1`, up.cd), far ? S('+1 range', 'range', 1) : S('+8 max HP', 'hp', 8)],
           [boost('r', d.ab.r, true), U('q', `Q ${d.ab.q.name}: cooldown −1`, up.cd)], [U('r', `R ${d.ab.r.name}: cooldown −1`, up.cd), P(`${PROCS[pk].name} +30%`, pk, 30)]]; }
 for (const d of ROSTER) if (!d.tree) d.tree = autoTree(d);
+// ── passives (2026-11-21): with RULES.passives the Q slot holds one of these instead of a cast ability.
+// kind says which hook runs it; n is its size. Quiet ones (bonus damage, auras) add no beat to the pulse. ──
+const PASSIVE = {
+  anchor: { name: 'Bedrock', kind: 'aura', aura: 'armor', n: 1, t: 'allies beside it take 1 less damage per hit' },
+  bulwark: { name: 'Glacial Hide', kind: 'hide', n: 2, t: 'takes 2 less damage from abilities' },
+  cinder: { name: 'Burning Core', kind: 'burnback', n: 1, t: 'an enemy that hits it from the next hex is poisoned' },
+  gale: { name: 'Tailwind', kind: 'move', n: 1, t: 'moves 1 hex further on your turn' },
+  thorn: { name: 'Intervene', kind: 'guard', n: 6, t: 'once per round, when an ally beside it would be broken, Thorn swaps places with it and takes the blow: the ally keeps 1 HP, Thorn loses 6' },
+  ember: { name: 'Wildfire', kind: 'spread', n: 2, t: 'when it breaks an enemy, every enemy beside that one is poisoned ×2' },
+  viper: { name: 'Coup de Grâce', kind: 'reaper', t: 'its basic attack goes for a broken enemy first and finishes it' },
+  fang: { name: 'Bloodscent', kind: 'bonus', when: 'wounded', n: 2, t: '+2 damage against enemies at half HP or less' },
+  wisp: { name: 'Elusive', kind: 'elusive', t: 'after it acts, if an enemy stands beside it, it steps back one hex' },
+  shiver: { name: 'Shatter', kind: 'bonus', when: 'frozen', n: 2, t: '+2 damage against frozen or rooted enemies' },
+  lens: { name: 'Refract', kind: 'refract', t: 'its basic attack also hits one enemy beside the target, for half' },
+  rime: { name: 'Frostbite', kind: 'frostbite', t: 'an enemy its basic attack hits is rooted: it cannot be moved until the round ends' },
+  pyra: { name: 'Kindling', kind: 'bonus', when: 'poisoned', n: 2, t: '+2 damage against poisoned enemies' },
+  umbra: { name: 'Dark Harvest', kind: 'harvest', n: 3, t: 'each time an enemy within 3 is broken, +1 attack for the rest of the match (up to +3)' },
+  quartz: { name: 'Crystal Shell', kind: 'shell', n: 2, t: 'takes 2 less damage per hit from enemies 2 or more hexes away' },
+  ranger: { name: 'Steady Aim', kind: 'steady', n: 3, t: '+1 attack for each pulse in a row that starts with it on the same hex (up to +3)' },
+  gunner: { name: 'Recoil', kind: 'recoil', t: 'its basic attack pushes an enemy standing beside it one hex away' },
+  flint: { name: 'Headshot', kind: 'bonus', when: 'full', n: 3, t: '+3 damage against enemies at full HP' },
+  hail: { name: 'Cold Snap', kind: 'chill', t: 'the first enemy its basic attack hits each round is silenced (no ability on its next action)' },
+  dusk: { name: 'Ambush', kind: 'bonus', when: 'alone', n: 3, t: '+3 damage against enemies with no ally beside them' },
+  oriel: { name: 'Lifeline', kind: 'lifeline', n: 5, t: 'once per round, when an ally within 2 would be broken, it is healed to 5 HP instead' },
+  seer: { name: 'Omen', kind: 'omen', n: 3, t: 'at the start of each round, the enemy with the highest attack within 3 is blinded (misses its next attack)' },
+  brook: { name: 'Spring', kind: 'spring', n: 2, t: 'at the start of each pulse, heals the most wounded ally beside it for 2 (not a broken one)' },
+  ash: { name: 'Ember Heart', kind: 'aura', aura: 'atk', n: 1, t: '+1 attack to allies beside it' },
+  moss: { name: 'Bark', kind: 'grove', n: 2, t: 'at the start of each round, allies beside it gain a shield of 2' },
+};
+// ── rare abilities (2026-11-21): with RULES.rare, W and R need these patterns. Most add a second spot or an extra
+// condition: foes(n, r) = n enemies within r, river = standing on the middle row, deep = standing in the enemy half,
+// allyHurt = an ally within 2 at half HP or less (or broken). fin = abilities that finish broken enemies. ──
+const XC = { foes: (n, r = 1) => ({ k: 'foes', n, r }), river: { k: 'river' }, deep: { k: 'deep' }, allyHurt: { k: 'allyHurt' } };
+const { foes: xFoes, river: xRiver, deep: xDeep, allyHurt: xHurt } = XC;
+const RARE = {
+  anchor: { w: [need(['B']), xFoes(1)], r: [need(['F']), xFoes(1, 2)] },
+  bulwark: { w: [need(['S']), xFoes(1)], r: [need(['N']), xFoes(2)] },
+  ember: { w: [need(['S']), xFoes(1)], r: [need(['B'], ['S']), xFoes(2, 2)], fin: ['w'] },
+  viper: { w: [need(['N']), xDeep], r: [lone(2), xDeep], fin: ['r'] },
+  lens: { w: [need(['S'], ['B']), xFoes(2, 2)], r: [need(['F']), xRiver] },
+  rime: { w: [need(['F', 'Earth'], ['B'])], r: [need(['FL'], ['FR'])] },
+  ranger: { w: [need(['B', 'Light'], ['S'])], r: [need(['F']), xRiver] },
+  gunner: { w: [need(['F'], ['S'])], r: [need(['F']), xRiver] },
+  oriel: { w: [need(['N'])], r: [need(['FL'], ['FR']), xHurt] },
+  seer: { w: [need(['N', 'Storm'], ['B']), xFoes(1, 2)], r: [need(['F']), xRiver] },
+  cinder: { w: [need(['S']), xFoes(1, 2)], r: [need(['N']), xFoes(2)] },
+  gale: { w: [need(['S']), xFoes(1)], r: [need(['N']), xRiver], fin: ['w'] },
+  thorn: { w: [need(['B']), xFoes(1, 2)], r: [beside(3), xHurt] },
+  fang: { w: [need(['F']), xFoes(1)], r: [beside(1), xFoes(2)], fin: ['w'] },
+  wisp: { w: [need(['S']), xFoes(1, 2)], r: [need(['N']), xRiver], fin: ['w'] },
+  shiver: { w: [need(['N', 'Frost'], ['B'])], r: [need(['N']), xFoes(2)] },
+  pyra: { w: [need(['S', 'Fire'], ['B'])], r: [need(['N']), xRiver] },
+  umbra: { w: [need(['S', 'Shadow'], ['B'])], r: [need(['S']), xRiver] },
+  quartz: { w: [need(['F']), xFoes(2, 2)], r: [need(['F']), xRiver] },
+  flint: { w: [need(['F'], ['B'])], r: [need(['B', 'Light'], ['F'])], fin: ['w'] },
+  hail: { w: [need(['F'], ['B'])], r: [need(['F']), xRiver] },
+  dusk: { w: [need(['S']), xFoes(1)], r: [need(['N']), xDeep], fin: ['r'] },
+  brook: { w: [need(['F']), xFoes(2, 2)], r: [need(['F']), xRiver] },
+  ash: { w: [need(['F'], ['B'])], r: [beside(3), xHurt] },
+  moss: { w: [need(['F', 'Earth']), xFoes(2, 2)], r: [need(['F'], ['B']), xFoes(2, 2)] },
+};
+// ── Q with passives (2026-11-21, second playtest): one specific spot, or one ally of a given element beside it ──
+const QPAT = {
+  anchor: need(['N']), bulwark: need(['N']), cinder: need(['N']), gale: need(['N', 'Storm']), thorn: need(['B']),
+  ember: need(['N']), viper: lone(1), fang: need(['S']), wisp: lone(1), shiver: need(['B']),
+  lens: need(['FR']), rime: need(['S', 'Frost']), pyra: need(['F']), umbra: need(['S', 'Shadow']), quartz: need(['N', 'Light']),
+  ranger: need(['L']), gunner: need(['N', 'Earth']), flint: need(['R']), hail: need(['S', 'Light']), dusk: need(['N', 'Shadow']),
+  oriel: need(['F'], ['S']), seer: need(['B', 'Storm']), brook: need(['F'], ['S']), ash: need(['B', 'Fire']), moss: need(['B']),
+};
+const SECOND_EL = { oriel: 'Storm', brook: 'Light', ash: 'Shadow', moss: 'Frost', shiver: 'Storm', pyra: 'Light', umbra: 'Fire' };
+const ORIG_ELS = new Map(ROSTER.map(d => [d.id, [...d.els]]));
+const ORIG_AB = new Map(ROSTER.map(d => [d.id, Object.fromEntries(ABK.map(k => [k, { pat: d.ab[k].pat, cd: d.ab[k].cd }]))]));
+let RARE_ON = false, TUNE_NOW = null, RULESET = '';
+// Puts the roster in line with the switches (called at the start of every match, so headless runs can flip them).
+function syncRules() {
+  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls].join();
+  if (key === RULESET) return; RULESET = key; RARE_ON = !!RULES.rare;
+  for (const d of ROSTER) { const o = ORIG_AB.get(d.id), x = RARE[d.id];
+    for (const k of ['w', 'r']) { const a = d.ab[k];
+      a.pat = RARE_ON ? (x[k][1] ? { ...x[k][0], x: x[k][1] } : x[k][0]) : o[k].pat;
+      a.cd = RARE_ON ? RULES.rareCd[k] : o[k].cd;
+      a.finisher = !!(RULES.deathPhase && RARE_ON && (x.fin || []).includes(k)); }
+    const q = d.ab.q, qm = RULES.passives && RULES.qCast; q.pat = qm ? QPAT[d.id] : o.q.pat; q.cd = qm ? RULES.qCd : o.q.cd;
+    d.els = RULES.moreEls && SECOND_EL[d.id] ? [...ORIG_ELS.get(d.id), SECOND_EL[d.id]] : [...ORIG_ELS.get(d.id)]; }
+  setTune(TUNE_NOW || TUNE);
+  for (const d of ROSTER) d.paths = buildPaths(d);
+}
+const psOf = c => RULES.passives && c && c.def ? PASSIVE[c.def.id] : null;
+const hasPs = (c, kind) => { const p = psOf(c); return p && p.kind === kind ? p : null; };
+const rkey = () => G.final ? 'f' + G.final.pulses : 'r' + G.round;   // "this round" (in the final fight every pulse is a round)
+const psCount = k => { STATS.ps[k] = (STATS.ps[k] || 0) + 1; };
 // ── growth paths (2026-11-20): each champion has two, chosen once after the draft. A level-up grows ONE champion of
 // the team: the next step of its path, or a heal (+6 max HP, heals 8 now). ──
 const isHarm = ab => !!ab.mult, isHelp = ab => !isHarm(ab) && !!(ab.heal || ab.shield || ab.shape === 'rescue');
@@ -700,24 +809,27 @@ function bigger(k, ab) { const K2 = k.toUpperCase();
   return O(U(k, `${K2} ${ab.name}: shield +6`, a => { a.shield = (a.shield || 0) + 6; }), '🛡️'); }
 const faster = (k, ab) => O(U(k, `${k.toUpperCase()} ${ab.name}: cooldown −1`, up.cd), '⏱️');
 function buildPaths(d) {
-  const harm = ABK.filter(k => isHarm(d.ab[k])), help = ABK.filter(k => isHelp(d.ab[k])), pk = Object.keys(d.procs)[0];
+  const CK = psK('q') ? ['w', 'r'] : ABK;   // with passives, Q is not an ability any more: no Q steps
+  const harm = CK.filter(k => isHarm(d.ab[k])), help = CK.filter(k => isHelp(d.ab[k])), pk = Object.keys(d.procs)[0];
   const atk = O(S('+1 attack', 'atk', 1), '🗡️'), hp = O(S('+8 max HP', 'hp', 8), '❤️'), far = O(S('+1 range', 'range', 1), '🎯'), proc = O(P(`${PROCS[pk].name} +30%`, pk, 30), PICON[pk]);
   const fill = (list, extra) => [...list, ...extra].slice(0, 4);
   const init = O(S('+2 initiative', 'init', 2), '⏩');
-  const tempo = { name: 'Tempo', ic: '⏱️', blurb: 'abilities come back faster, and it acts sooner', steps: [faster('w', d.ab.w), faster('q', d.ab.q), init, faster('r', d.ab.r)] };
+  const tempo = { name: 'Tempo', ic: '⏱️', blurb: 'abilities come back faster, and it acts sooner', steps: psK('q') ? [faster('w', d.ab.w), init, faster('r', d.ab.r), hp] : [faster('w', d.ab.w), faster('q', d.ab.q), init, faster('r', d.ab.r)] };
   if (harm.length && help.length) return [
     { name: 'Striker', ic: '🗡️', blurb: 'damage abilities hit harder', steps: fill(harm.map(k => bigger(k, d.ab[k])), [atk, faster(harm[harm.length - 1], d.ab[harm[harm.length - 1]]), proc]) },
     { name: 'Warden', ic: '💚', blurb: 'heals and shields grow', steps: fill(help.map(k => bigger(k, d.ab[k])), [hp, faster(help[0], d.ab[help[0]]), proc]) }];
   if (!harm.length) return [{ name: 'Healer', ic: '💚', blurb: 'heals and shields grow', steps: fill(help.map(k => bigger(k, d.ab[k])), [hp, proc]) }, tempo];
-  return [{ name: 'Power', ic: '💥', blurb: 'each ability hits harder', steps: [bigger('w', d.ab.w), bigger('r', d.ab.r), atk, bigger('q', d.ab.q)] }, tempo];
+  return [{ name: 'Power', ic: '💥', blurb: 'each ability hits harder', steps: [bigger('w', d.ab.w), bigger('r', d.ab.r), atk, psK('q') ? hp : bigger('q', d.ab.q)] }, tempo];
 }
 const ALT = { t: '+6 max HP, heals 8 now', stat: 'hp', add: 6, heal: 8, ic: '❤️' };
 // Balance (measured, see the README): one factor per champion scales its HP and what its abilities deal, heal and shield.
-const TUNE = {anchor: 0.75, ash: 0.75, brook: 0.9, bulwark: 1.4, cinder: 0.7, dusk: 1.2, ember: 1.0, fang: 1.05, flint: 1.15, gale: 1.5, gunner: 0.95, hail: 0.95, lens: 1.2, moss: 1.4, oriel: 0.9, pyra: 0.8, quartz: 1.35, ranger: 0.95, rime: 1.25, seer: 1.3, shiver: 1.45, thorn: 1.0, umbra: 0.7, viper: 1.0, wisp: 0.75};
+const TUNE = {anchor: 0.95, ash: 0.8, brook: 1.0, bulwark: 1.3, cinder: 0.75, dusk: 1.05, ember: 1.0, fang: 1.0, flint: 1.0, gale: 1.1, gunner: 1.2, hail: 1.05, lens: 1.2, moss: 1.4, oriel: 0.65, pyra: 0.75, quartz: 1.35, ranger: 0.75, rime: 1.35, seer: 1.6, shiver: 1.2, thorn: 1.0, umbra: 0.6, viper: 1.3, wisp: 0.7};
 const BASE = new Map(ROSTER.map(d => [d.id, { hp: d.hp, ab: Object.fromEntries(ABK.map(k => [k, { mult: d.ab[k].mult, heal: d.ab[k].heal, shield: d.ab[k].shield, selfShield: d.ab[k].selfShield }])) }]));
 function setTune(T) {
+  TUNE_NOW = T;
   for (const d of ROSTER) { const t = T[d.id] ?? 1, b = BASE.get(d.id); d.hp = Math.round(b.hp * t);
-    for (const k of ABK) { const a = d.ab[k], o = b.ab[k]; if (o.mult) a.mult = Math.round(o.mult * t * 10) / 10; for (const f of ['heal', 'shield', 'selfShield']) if (o[f]) a[f] = Math.max(1, Math.round(o[f] * t)); } }
+    for (const k of ABK) { const a = d.ab[k], o = b.ab[k], m = RARE_ON && k !== 'q' ? RULES.rareMult : 1;
+      if (o.mult) a.mult = Math.round(o.mult * t * m * 10) / 10; for (const f of ['heal', 'shield', 'selfShield']) if (o[f]) a[f] = Math.max(1, Math.round(o[f] * t * m)); } }
 }
 setTune(TUNE);
 const ROLES = ['Top', 'Jungle', 'Mid', 'Bottom', 'Support'];
@@ -748,6 +860,18 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   aiPlan: 2, aiBeam: 5, aiSamples: 2, aiShape: 0.15, aiLevels: true,   // the planning AI (see aiTurn): depth, how many moves it studies in depth, dice samples, weight of complete patterns
   poison: 1,
   stagger: true,      // abilities come online one after another at the start: Q in pulse 1, W in pulse 2, R in pulse 3
+  // ── the quieter pulse (2026-11-21): each switch can be turned off on its own to measure what it does ──
+  passives: true,     // every champion has a passive (see PASSIVE)
+  qCast: true,        // with passives: Q is still cast, with a medium pattern (QPAT) and a longer rest (false = the passive replaces Q)
+  qCd: 3,             // Q's cooldown in pulses with qCast
+  moreEls: true,      // seven champions get a second element (SECOND_EL): the supports and three that no pattern asked for
+  rare: true,         // W and R need harder patterns (see RARE), hit about twice as hard and rest longer
+  rareMult: 2, rareCd: { w: 4, r: 6 },   // with rare: damage, heal and shield factor for W and R; their cooldowns in pulses
+  deathPhase: true,   // a champion that drops to 0 HP is broken, not dead: it dies at the end of the round unless healed first
+  brokenAtk: 0.5,     // a broken champion keeps acting with this share of its attack, and casts nothing
+  openCards: 3,       // opening cards each team plays (5 = every champion plays one); the others start at the base
+  openBack: true,
+  shieldCap: 0.5,     // a shield never exceeds this share of max HP (shields last until used, and W/R shields doubled)     // with fewer cards: champions that played none start the fight beside their own nexus
   hpScale: 1.25,      // abilities hit harder than basic attacks did, so champions are tougher
   bans: '1+1', banPerRole: 2,   // bans in the draft (see draftPlan): each team bans one champion before the picks and one more once both have two picks
   regroup: true,      // after a pulse that leaves one team rgLead champions up, both teams re-place their champions (see "regroup")
@@ -786,15 +910,17 @@ const UI = { art: true, pulses: [], board: 'small', sel: null, hover: null, aims
 const DIFF = { easy: { name: 'Easy', plan: 1, beam: 5, samples: 2, coach: 'auto' }, normal: { name: 'Normal', plan: 2, beam: 5, samples: 2, coach: 'button' }, hard: { name: 'Hard', plan: 2, beam: 5, samples: 2, coach: 'none' } };   // Hard = Normal's AI without the coach: a deeper search (beam 8, 3 samples) measured no stronger (46% vs ~45%)
 function setDiff(d) { UI.diff = d; try { localStorage.setItem('augury-diff', d); } catch (e) {} }
 const coaching = () => G && G.mode === 'play' ? DIFF[UI.diff].coach : 'none';
-const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, tac: {}, final: { time: 0, card: 0, cardWin: 0 }, fk: 0, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0 });
+const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, tac: {}, final: { time: 0, card: 0, cardWin: 0 }, fk: 0, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0,
+  pulses: 0, broken: 0, saved: 0, finished: 0, reaped: 0, ps: {}, abFire: {}, quiet: 0, r1dmg: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
 // pulse rhythm: plain hits blur past, chances and kills get a full beat
-const delay = special => (special ? 700 : 220) * (UI.speed === 'fast' ? 0.4 : 1);
+const delay = special => (special ? 850 : 380) * (UI.speed === 'fast' ? 0.45 : 1);
 function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 const roll = pct => pct > 0 && rng() * 100 < pct;
 
 function newMatch(mode, seed) {
+  syncRules();
   if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); hideTip(); }
   UI.moves = []; UI.moveTag = ''; UI.slide = null;
   clearTimeout(UI.timer); UI.anim = null;
@@ -903,6 +1029,7 @@ function links() {
   for (const g of alive()) for (const r of alive(g.team)) {
     if (g === r || dist(g.pos, r.pos) !== 1) continue;
     if (g.def.aura) L.push({ from: g, to: r, kind: g.def.aura.kind, amt: g.auraAmt });
+    { const p = hasPs(g, 'aura'); if (p && !g.broken) L.push({ from: g, to: r, kind: p.aura, amt: p.n, ps: true }); }
     if (r.def.bond && r.def.bond.tag === g.def.tag) L.push({ from: g, to: r, kind: r.def.bond.kind, amt: r.def.bond.amt, bond: true });
   }
   return L;
@@ -912,7 +1039,8 @@ function eff(c, L) {
   for (const l of L) if (l.to === c) b[l.kind] += l.amt;
   const home = RULES.homeZone && G.champs.length && nexusDist(c.team, c.pos) <= RULES.homeRadius ? RULES.homeArmor : 0;
   const drag = G.dragon ? G.dragon[c.team] * RULES.dragonProc : 0;
-  return { init: c.init + b.init, atk: c.atk + b.atk + c.bounty, range: c.range + (onHill(c.pos) ? 1 : 0), armor: b.armor + (c.armor || 0) + home, proc: b.proc + drag, home, b };
+  const atk0 = c.atk + b.atk + c.bounty + (c.still || 0) + (c.harvest || 0), atk = c.broken ? Math.max(1, Math.ceil(atk0 * RULES.brokenAtk)) : atk0;
+  return { init: c.init + b.init, atk, range: c.range + (onHill(c.pos) ? 1 : 0), armor: b.armor + (c.armor || 0) + home, proc: b.proc + drag, home, b };
 }
 const pct = (c, k, L) => (c.procs[k] || 0) > 0 && !c.silenced && (RULES.cc || !CC_KEYS.includes(k)) ? Math.min(100, c.procs[k] + eff(c, L).proc) : 0;
 
@@ -921,10 +1049,23 @@ const copyAb = def => Object.fromEntries(ABK.map(k => [k, { ...def.ab[k], status
 function allyAt(c, cell) { const o = champAt(add(c.pos, frame(c.team, CELL[cell]))); return o && o.team === c.team && o !== c ? o : null; }
 function patOk(c, pat) {
   if (RULES.dbgPat) return true;
+  if (pat.x && !G.ignoreX && !xOk(c, pat.x)) return false;
   if (pat.lone) return !alive(c.team).some(o => o !== c && dist(o.pos, c.pos) <= pat.lone);
   if (pat.count) return alive(c.team).filter(o => o !== c && dist(o.pos, c.pos) === 1).length >= pat.count;
   return pat.need.every(([g, el]) => GROUP[g].some(cell => { const o = allyAt(c, cell); return o && (!el || o.def.els.includes(el)); }));
 }
+// The extra condition of a rare pattern (see RARE).
+function xOk(c, x) {
+  switch (x.k) {
+    case 'foes': return alive(other(c.team)).filter(o => !o.broken && dist(o.pos, c.pos) <= x.r).length >= x.n;
+    case 'river': return c.pos[1] === 0;
+    case 'deep': return inEnemyHalf(c);
+    case 'allyHurt': return alive(c.team).some(a => dist(a.pos, c.pos) <= 2 && (a.broken || a.hp <= a.maxHp / 2));
+  }
+  return true;
+}
+const X_TEXT = { foes: x => `${x.n === 1 ? 'an enemy' : x.n + ' enemies'} ${x.r === 1 ? 'beside it' : 'within ' + x.r}`, river: () => 'it stands in the river (the middle row)', deep: () => 'it stands in the enemy half', allyHurt: () => 'an ally within 2 is at half HP or less' };
+const X_ICON = { foes: '⚔', river: '≈', deep: '➚', allyHurt: '♥' };
 // Outside a pulse, "ready" means ready when the next pulse starts (cooldowns tick down at the start of a pulse).
 const abCool = (c, k) => Math.max(0, c.ab[k].cdLeft - (G.inPulse ? 0 : 1));
 const abReady = (c, k) => abCool(c, k) === 0 && patOk(c, c.ab[k].pat);
@@ -941,7 +1082,8 @@ function abTargets(c, ab, L, swapped) {
   if (ab.swap && !swapped) {   // judged from where the champion will stand after the swap
     const o = swapMate(c, ab.swap); if (!o) return null;
     const a = c.pos, b = o.pos; c.pos = b; o.pos = a; const ts = abTargets(c, ab, L, true); c.pos = a; o.pos = b; return ts; }
-  const e = eff(c, L), foes = alive(other(c.team)), inR = r => foes.filter(x => dist(x.pos, c.pos) <= r);
+  const e = eff(c, L), foes = alive(other(c.team)).filter(x => !x.broken || ab.finisher), inR = r => foes.filter(x => dist(x.pos, c.pos) <= r);
+  if (ab.finisher && ['target', 'hook', 'line', 'splash'].includes(ab.shape)) { const b = foes.filter(x => x.broken && dist(x.pos, c.pos) <= e.range).sort((a, b) => a.id - b.id)[0]; if (b) return [b]; }
   const aim = () => { const a = aimOf(c, L); return a.target && a.target.team !== c.team && !a.leap ? a.target : null; };
   switch (ab.shape) {
     case 'target': { const t = aim(); return t ? [t] : null; }
@@ -963,8 +1105,8 @@ function abTargets(c, ab, L, swapped) {
 }
 // The ability a champion would use now: the hardest one whose pattern is complete, that is off cooldown and has a target.
 function nextAbility(c, L) {
-  if (c.silenced || c.berserk || RULES.dbgNoAb) return null;
-  for (const k of (RULES.dbgOnly || ['r', 'w', 'q'])) if (abReady(c, k)) { const ts = abTargets(c, c.ab[k], L); if (ts) return { k, ab: c.ab[k], ts }; }
+  if (c.silenced || c.berserk || c.broken || RULES.dbgNoAb) return null;
+  for (const k of (RULES.dbgOnly || (psK('q') ? ['r', 'w'] : ['r', 'w', 'q']))) if (abReady(c, k)) { const ts = abTargets(c, c.ab[k], L); if (ts) return { k, ab: c.ab[k], ts }; }
   return null;
 }
 // Where the champion's next ability would move anyone, judged on the board as it stands (for the preview arrows).
@@ -984,11 +1126,17 @@ function applyStatus(c, t, s, ctx) {
   else if (s === 'taunt') t.taunted = c.id; else t[s] = true;
 }
 function castAbility(c, act, L, ctx) {
+  G.casting = c; G.finisher = act.ab.finisher ? c : null;
+  try { castAbility0(c, act, L, ctx); } finally { G.casting = null; G.finisher = null; }
+}
+function castAbility0(c, act, L, ctx) {
   const { k, ab } = act, e = eff(c, L); let ts = act.ts;
+  STATS.abFire[c.def.id + ':' + k] = (STATS.abFire[c.def.id + ':' + k] || 0) + 1; ctx.cast = true; ctx.castInfo = { k, name: ab.name };
   ab.cdLeft = ab.cd; STATS.casts[k]++; c.casts[k]++; { const z = STATS.ch[c.def.id] || (STATS.ch[c.def.id] = { g: 0, w: 0, q: 0, wc: 0, r: 0 }); z[k === 'w' ? 'wc' : k]++; }
   const tag = k === 'q' ? 'i' : 'em';   // Q is routine and plays as a quick beat; W and R get the full beat
   const moved = (who, to, kind) => { ctx.lines.push({ from: who.pos, to, cls: 'leap' }); who.pos = to; STATS.forced[kind]++; };
-  if (k === 'r') cue(2, `${cn(c)} fires <em>${esc(ab.name)}</em>!`);
+  if (RULES.rare) cue(k === 'q' ? 2 : 3, `${cn(c)} fires <em>${esc(ab.name)}</em> (${k.toUpperCase()})!`, `${esc(nm(c))}: ${esc(abText(ab))}.`);   // W and R are headlines, Q a mention   // a rare cast is a headline: the board holds while it plays
+  else if (k === 'r') cue(2, `${cn(c)} fires <em>${esc(ab.name)}</em>!`);
   if (ab.swap) { const o = swapMate(c, ab.swap); if (o) { const a = c.pos, b = o.pos; ctx.lines.push({ from: a, to: b, cls: 'leap' }, { from: b, to: a, cls: 'leap' }); c.pos = b; o.pos = a; STATS.forced.swap++; ts = abTargets(c, ab, L, true) || []; } }
   if (ab.shape === 'rescue') { const x = ts[0], d = fetchDest(c); if (d) moved(x, d, 'fetch');
     if (ab.heal) { const g = Math.min(ab.heal, x.maxHp - x.hp); x.hp += g; if (g) ctx.pops.push({ hex: x.pos, text: '+' + g, cls: 'good' }); }
@@ -1028,12 +1176,14 @@ function abValue(c, act, L) {
     v += (ab.poison || 0) * 3; }
   return v + (ab.selfShield || 0) * .4 + (ab.shape === 'hook' ? 1.5 : 0);
 }
-const shapeScore = team => { let v = 0; for (const c of alive(team)) for (const k of ABK) if (patOk(c, c.ab[k].pat)) v += SHAPE_W[k]; return v; };
+const shapeScore = team => { let v = 0; for (const c of alive(team)) for (const k of ABK) if (!psK(k) && patOk(c, c.ab[k].pat)) v += SHAPE_W[k]; return v; };
 
 // Targeting is public and deterministic: who a champion attacks depends only on positions and HP.
 function pickTarget(c, L, reach) {
   const r = reach ?? eff(c, L).range;
-  let pool = alive(other(c.team)).filter(x => dist(c.pos, x.pos) <= r);
+  const reaper = !!hasPs(c, 'reaper');
+  let pool = alive(other(c.team)).filter(x => dist(c.pos, x.pos) <= r && (!x.broken || reaper));
+  if (reaper) { const b = pool.filter(x => x.broken).sort((a, b) => dist(c.pos, a.pos) - dist(c.pos, b.pos) || a.id - b.id)[0]; if (b) return b; }
   if (c.range <= 1) pool = pool.filter(x => !x.air);   // melee cannot reach a knocked-up champion
   if (!pool.length) return null;
   const d = x => dist(c.pos, x.pos);
@@ -1051,8 +1201,8 @@ function diveSpot(c, t) {
 }
 function aimOf(c, L) {   // { target, leap } as the champion would act now
   const r = eff(c, L).range;
-  if (c.berserk) { const near = alive().filter(x => x !== c && dist(x.pos, c.pos) <= r && !(c.range <= 1 && x.air)).sort((a, b) => dist(a.pos, c.pos) - dist(b.pos, c.pos) || a.hp - b.hp)[0]; if (near) return { target: near }; }
-  if (c.taunted != null) { const tt = G.champs[c.taunted]; if (!tt.dead && dist(tt.pos, c.pos) <= r && !(c.range <= 1 && tt.air)) return { target: tt }; }
+  if (c.berserk) { const near = alive().filter(x => x !== c && !x.broken && dist(x.pos, c.pos) <= r && !(c.range <= 1 && x.air)).sort((a, b) => dist(a.pos, c.pos) - dist(b.pos, c.pos) || a.hp - b.hp)[0]; if (near) return { target: near }; }
+  if (c.taunted != null) { const tt = G.champs[c.taunted]; if (!tt.dead && !tt.broken && dist(tt.pos, c.pos) <= r && !(c.range <= 1 && tt.air)) return { target: tt }; }
   let t = pickTarget(c, L);
   if (t) return { target: t };
   if (c.dive && !c.rooted) { t = pickTarget(c, L, eff(c, L).range + c.dive); if (t) { const s = diveSpot(c, t); if (s) return { target: t, leap: s }; } }
@@ -1069,7 +1219,8 @@ function startOpening() {
   for (const t of ['A','B']) G.picks[t].forEach((d, i) => G.champs.push(makeChampFor(d, t, i)));
   G.opened = new Set(); G.openTurn = RULES.openFirst || 'A';
   logLine('round', 'Opening');
-  logLine('sys', 'Teams alternate. Each champion plays one of its two movement cards; every card moves one or more roles one hex at a time. A blocked step is skipped.');
+  logLine('sys', RULES.openCards >= 5 ? 'Teams alternate. Each champion plays one of its two movement cards; every card moves one or more roles one hex at a time. A blocked step is skipped.' : `Teams alternate. Each team plays ${RULES.openCards} cards, one per champion; every card moves one or more roles one hex at a time. A blocked step is skipped. Champions not moved stay at the base.`);
+  UI.forms = null; UI.formsOpen = !HEADLESS && G.humans.length > 0 && coaching() === 'auto';
   render(); openingAi();
 }
 const cardText = (c, i) => c.def.cards[i].map(s => { const [role, dir] = s.split(' '); return `${role} ${OARROW[c.team][dir]}`; }).join(' · ');
@@ -1092,14 +1243,16 @@ function playCard(c, i, quiet) {
   if (!quiet) { logLine(c.team, `${nm(c)} plays its card ${i + 1}: ${cardText(c, i)}${mv.some(m => m.blocked) ? ' (a step was blocked)' : ''}`); }
 }
 function openingPlay(c, i) {
-  if (G.phase !== 'opening' || c.team !== G.openTurn || G.opened.has(c.id)) return;
+  if (G.phase !== 'opening' || c.team !== G.openTurn || G.opened.has(c.id) || G.cardsPlayed[c.team] >= RULES.openCards) return;
   playCard(c, i); G.opened.add(c.id); UI.sel = null; UI.hover = null;
   const n = ++G.cardsPlayed[c.team];
-  if (RULES.openLevels.includes(n)) { grantLevels([{ team: c.team, why: `opening card ${n}` }], () => advanceOpening(c.team)); return; }
+  // with fewer cards, levels due after later cards come with the last one
+  const lv = RULES.openLevels.filter(x => Math.min(x, RULES.openCards) === n).map(() => ({ team: c.team, why: `opening card ${n}` }));
+  if (lv.length) { grantLevels(lv, () => advanceOpening(c.team)); return; }
   advanceOpening(c.team);
 }
 function advanceOpening(team) {
-  const left = t => G.champs.some(x => x.team === t && !G.opened.has(x.id));
+  const left = t => G.cardsPlayed[t] < RULES.openCards && G.champs.some(x => x.team === t && !G.opened.has(x.id));
   G.phase = 'opening';
   if (left(other(team))) G.openTurn = other(team);
   else if (!left(team)) { startEndgame(); return; }
@@ -1115,9 +1268,78 @@ function openingAi() {
     openingPlay(...best); }, 420);
 }
 
+// ═════════════ formations (Easy-mode helper, 2026-11-21) ═════════════
+// Searches shapes for a team's five champions, judged on the formation alone (the extra conditions of rare
+// patterns, like "in the river", are left out and named instead). Hill-climbing from many random starts on a
+// small patch; the three best shapes that light different sets of abilities are kept. Runs inside dry().
+const FORM_W = { q: 1, w: 1.5, r: 2 };
+function formations(team) {
+  return dry(() => {
+    const cs = G.champs.filter(c => c.team === team), keys = ABK.filter(k => !psK(k)), patch = hexagon(2);
+    for (const c of G.champs) c.dead = c.team !== team;
+    G.ignoreX = true;
+    let seed = 12345; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    const score = () => cs.reduce((v, c) => v + keys.reduce((m, k) => m + (patOk(c, c.ab[k].pat) ? FORM_W[k] : 0), 0), 0);
+    const found = new Map();
+    for (let run = 0; run < 60; run++) {
+      const pool = [...patch].sort(() => rnd() - .5); cs.forEach((c, i) => c.pos = pool[i]);
+      let best = score(), better = true;
+      while (better) { better = false;
+        for (const c of cs) { const from = c.pos;
+          for (const h of patch) { if (cs.some(o => same(o.pos, h))) continue; c.pos = h; const v = score(); if (v > best + 1e-9) { best = v; better = true; break; } c.pos = from; }
+          if (better) break; }
+        if (!better) for (let i = 0; i < cs.length && !better; i++) for (let j = i + 1; j < cs.length; j++) { const a = cs[i].pos; cs[i].pos = cs[j].pos; cs[j].pos = a; const v = score(); if (v > best + 1e-9) { best = v; better = true; break; } cs[j].pos = cs[i].pos; cs[i].pos = a; } }
+      const lit = cs.flatMap(c => keys.filter(k => patOk(c, c.ab[k].pat)).map(k => c.id + k)).sort().join();
+      if (!found.has(lit) || found.get(lit).score < best) found.set(lit, { score: best, pos: new Map(cs.map(c => [c.id, c.pos])),
+        lit: cs.map(c => ({ id: c.id, ks: keys.filter(k => patOk(c, c.ab[k].pat)), x: keys.filter(k => patOk(c, c.ab[k].pat) && c.ab[k].pat.x).map(k => `${k.toUpperCase()}: ${X_TEXT[c.ab[k].pat.x.k](c.ab[k].pat.x)}`) })) }); }
+    G.ignoreX = false;
+    return [...found.values()].sort((a, b) => b.score - a.score).slice(0, 3);
+  });
+}
+// Where each champion stands in a shape, in words: front / middle / back (front = toward the enemy).
+function formWords(f, team) {
+  const rs = [...f.pos.values()].map(h => frame(team, h)[1]), hi = Math.max(...rs), lo = Math.min(...rs), out = { front: [], mid: [], back: [] };
+  for (const [id, h] of f.pos) { const r = frame(team, h)[1]; out[r === hi && hi !== lo ? 'front' : r === lo && hi !== lo ? 'back' : 'mid'].push(nm(G.champs[id])); }
+  return out;
+}
+function formSvg(f, team) {
+  const s = 26, P = ([q, r]) => [s * SQ3 * (q + r / 2), -s * 1.5 * r];
+  const pts = [...f.pos.values()].map(P), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = s * 1.6;
+  const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad - 8, w = Math.max(...xs) - Math.min(...xs) + 2 * pad, hgt = Math.max(...ys) - Math.min(...ys) + 2 * pad + 18;
+  const hex = (cx, cy) => [0, 1, 2, 3, 4, 5].map(k => { const a = Math.PI / 180 * (60 * k - 30); return `${(cx + s * .96 * Math.cos(a)).toFixed(1)},${(cy + s * .96 * Math.sin(a)).toFixed(1)}`; }).join(' ');
+  let o = `<svg viewBox="${x0} ${y0} ${w} ${hgt}" width="230" class="formsvg">`;
+  const near = new Map(); for (const h of f.pos.values()) for (const d of [[0, 0], ...DIRS]) { const n = add(h, d); near.set(K(n), n); }
+  for (const h of near.values()) { const [cx, cy] = P(h); o += `<polygon points="${hex(cx, cy)}" fill="#1d2636" stroke="#34425e"></polygon>`; }
+  for (const [id, h] of f.pos) { const c = G.champs[id], [cx, cy] = P(h), L = f.lit.find(l => l.id === id);
+    o += `<polygon points="${hex(cx, cy)}" fill="${team === 'A' ? '#1d3d5c' : '#5a2a22'}" stroke="${team === 'A' ? '#5ab4ff' : '#ff7a59'}" stroke-width="1.5"></polygon>`;
+    o += UI.art ? `<image href="art/${c.def.id}.png" x="${cx - s * .8}" y="${cy - s * 1.05}" width="${s * 1.6}" height="${s * 1.6}"></image>` : `<text x="${cx}" y="${cy}" text-anchor="middle" style="font:700 14px sans-serif;fill:#fff">${esc(nm(c)[0])}</text>`;
+  }
+  for (const [id, h] of f.pos) { const [cx, cy] = P(h), L = f.lit.find(l => l.id === id);   /* letters last, so no portrait covers them */
+    o += `<text x="${cx}" y="${cy + s * .78}" text-anchor="middle" style="font:800 10px sans-serif;letter-spacing:1px;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${ABK.filter(k => !psK(k)).map(k => `<tspan style="fill:${L.ks.includes(k) ? '#ffe07a' : '#56607a'}">${k.toUpperCase()}</tspan>`).join(' ')}</text>`; }
+  return o + `<text x="${x0 + w / 2}" y="${Math.min(...ys) - pad + 4}" text-anchor="middle" style="font:700 10px sans-serif;fill:#8e9ab4;letter-spacing:.12em">▲ TOWARD THE ENEMY</text></svg>`;
+}
+function formHtml(team) {
+  const fs = UI.forms || (UI.forms = formations(team)), keys = ABK.filter(k => !psK(k)), total = 5 * keys.length;
+  return fs.map((f, i) => { const w = formWords(f, team), n = f.lit.reduce((a, l) => a + l.ks.length, 0), xs = f.lit.filter(l => l.x.length);
+    return `<div class="form"><b>Shape ${i + 1}: ${n} of ${total} abilities lit</b>${formSvg(f, team)}
+      <p>${w.front.length ? `In front: <b>${esc(w.front.join(', '))}</b>. ` : ''}${w.mid.length ? `Middle: <b>${esc(w.mid.join(', '))}</b>. ` : ''}${w.back.length ? `Behind: <b>${esc(w.back.join(', '))}</b>.` : ''}</p>
+      ${xs.length ? `<p class="dim">When it fires, also needs: ${xs.map(l => `${esc(nm(G.champs[l.id]))} ${esc(l.x.join('; '))}`).join(' · ')}</p>` : ''}</div>`; }).join('');
+}
+// The opening card that lights the most abilities (formation only) right after it is played.
+function bestCard(team) {
+  return dry(() => { G.ignoreX = true; let best = null, bv = -1;
+    for (const c of alive(team)) if (!G.opened.has(c.id)) for (let i = 0; i < 2; i++) { const keep = G.champs.map(x => x.pos); playCard(c, i, true);
+      const v = alive(team).reduce((a, x) => a + ABK.filter(k => !psK(k) && patOk(x, x.ab[k].pat)).reduce((m, k) => m + FORM_W[k], 0), 0); G.champs.forEach((x, j) => x.pos = keep[j]);
+      if (v > bv) { bv = v; best = c.id + ':' + i; } }
+    G.ignoreX = false; return best; });
+}
+
 // ═════════════ endgame turns ═════════════
 function startEndgame() {
   G.phase = 'move'; G.round = 1; G.turnNo = 0; G.turnTeam = G.token;
+  if (RULES.openBack && RULES.openCards < 5) for (const c of G.champs.filter(x => !G.opened.has(x.id))) {   // the champions that played no card wait at the base
+    const spot = HEXES.filter(h => nexusDist(c.team, h) <= 1 && !SOLID.has(K(h)) && !champAt(h)).sort((a, b) => dist(a, c.pos) - dist(b, c.pos) || K(a).localeCompare(K(b)))[0];
+    if (spot) c.pos = spot; }
   if (RULES.stagger) for (const c of G.champs) { c.ab.w.cdLeft = 2; c.ab.r.cdLeft = 3; }   // Q fires in the first pulse, W from the second, R from the third
   logLine('round', `Round 1`);
   logLine('sys', `Each turn a team moves one champion up to ${RULES.spd} hexes (or holds), then everyone acts once, fastest first.`);
@@ -1131,7 +1353,7 @@ function beginTurn() {
 function moveTargets(c) {
   if (c.rooted) return [];
   const out = [], seen = new Set([K(c.pos)]); let fr = [c.pos];
-  for (let s = 0; s < RULES.spd; s++) { const nx = [];
+  for (let s = 0; s < RULES.spd + (hasPs(c, 'move') ? hasPs(c, 'move').n : 0); s++) { const nx = [];
     for (const at of fr) for (const d of DIRS) { const to = add(at, d), k = K(to);
       if (seen.has(k) || !onBoard(to) || SOLID.has(k)) continue; seen.add(k);
       const occ = champAt(to); if (occ && occ.team !== c.team) continue;
@@ -1172,7 +1394,10 @@ function slideWrap(id, cx, cy, html) {
 function afterPulse() {
   G.display = null; G.actors = null; G.ev = null;
   if (checkWin()) return;
-  bonusLevels(() => { if (rgCheck()) return; advanceTurn(); });
+  const go = () => { if (checkWin()) return; bonusLevels(() => { if (rgCheck()) return; advanceTurn(); }); };
+  const ev = G.turnNo === 1 ? reap() : null;   // the round's last pulse is over: the death check
+  if (!ev || HEADLESS) return go();
+  G.phase = 'pulse'; animate([ev], () => { G.display = null; G.actors = null; G.ev = null; go(); }, true);
 }
 function advanceTurn() {
   G.phase = 'move'; G.turnNo++;
@@ -1407,7 +1632,7 @@ function finalStep() {
 function finalLoop() {
   const evs = [], lines = finalStep();
   if (lines.length) evs.push({ actor: null, init: 99, special: false, pops: [], lines, snap: snap(), cue: [] });
-  evs.push(...runPulse(G.token)); G.final.pulses++;
+  evs.push(...runPulse(G.token)); { const d = reap(); if (d) evs.push(d); } G.final.pulses++;
   const over = G.nexus.A <= 0 || G.nexus.B <= 0 || !alive('A').length || !alive('B').length || G.final.pulses >= RULES.finalPulses;
   const next = () => { G.display = null; G.actors = null; G.ev = null; if (over) endFinal(); else finalLoop(); };
   if (HEADLESS) return next();
@@ -1476,36 +1701,53 @@ function freeNear(h) { if (!champAt(h)) return h; const seen = new Set([K(h)]); 
   while (fr.length) { const nx = []; for (const a of fr) for (const d of DIRS) { const b = add(a, d); if (seen.has(K(b)) || !onBoard(b) || SOLID.has(K(b))) continue; seen.add(K(b)); if (!champAt(b)) return b; nx.push(b); } fr = nx; }
   return h; }
 
+const capShields = () => { if (RULES.shieldCap) for (const c of G.champs) c.shield = Math.min(c.shield, Math.round(c.maxHp * RULES.shieldCap)); };
+// Passives at the start of a pulse (Spring, Steady Aim) and of a round (Omen, Bark).
+function psPulseStart(pops, notes) {
+  const newRound = G.psRound !== rkey(); G.psRound = rkey();
+  for (const c of alive()) { const p = psOf(c); if (!p || c.broken) continue;
+    if (p.kind === 'steady') { c.still = c.stillAt && same(c.stillAt, c.pos) ? Math.min(p.n, (c.still || 0) + 1) : 0; c.stillAt = c.pos; }
+    if (p.kind === 'spring') { const w = alive(c.team).filter(a => a !== c && !a.broken && dist(a.pos, c.pos) === 1 && a.hp < a.maxHp).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.id - b.id)[0];
+      if (w) { const g = Math.min(p.n, w.maxHp - w.hp); w.hp += g; pops.push({ hex: w.pos, text: '+' + g, cls: 'good' }); notes.push(`Spring: ${nm(w)} +${g}`); psCount('spring'); } }
+    if (!newRound) continue;
+    if (p.kind === 'omen') { const t = alive(other(c.team)).filter(x => !x.broken && dist(x.pos, c.pos) <= p.n).sort((a, b) => eff(b, links()).atk - eff(a, links()).atk || a.id - b.id)[0];
+      if (t) { t.blind = true; pops.push({ hex: t.pos, text: 'blinded', cls: 'info' }); notes.push(`<em>Omen</em>: ${nm(t)} is blinded`); psCount('omen'); } }
+    if (p.kind === 'grove') { const hs = alive(c.team).filter(a => a !== c && !a.broken && dist(a.pos, c.pos) === 1);
+      for (const a of hs) { a.shield += p.n; pops.push({ hex: a.pos, text: 'shield', cls: 'info' }); } if (hs.length) { notes.push(`Bark: ${hs.length} shielded`); psCount('grove'); } } }
+}
 // ═════════════ the pulse: everyone acts once, by initiative ═════════════
-function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, dead: c.dead, frozen: c.frozen, poison: c.poison, air: c.air, rooted: c.rooted, blind: c.blind, silenced: c.silenced, berserk: c.berserk, taunted: c.taunted, steadfast: c.steadfast, charge: c.charge })), nexus: { ...G.nexus } }; }
+function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, shield: c.shield, dead: c.dead, frozen: c.frozen, poison: c.poison, air: c.air, rooted: c.rooted, blind: c.blind, silenced: c.silenced, berserk: c.berserk, taunted: c.taunted, steadfast: c.steadfast, charge: c.charge, broken: c.broken })), nexus: { ...G.nexus } }; }
 function runPulse(mover) {
   const events = [];
   G.pulse++; G.cue = []; G.inPulse = true; G.pulseDeaths = { A: 0, B: 0 };
-  for (const c of G.champs) for (const k of ABK) if (c.ab[k].cdLeft > 0) c.ab[k].cdLeft--;   /* cooldowns tick at the start of a pulse */ G.pd = { A: 0, B: 0 }; G.pk = { A: [], B: [] };
-  const push = ev => { ev.cue = G.cue.splice(0); events.push(ev); };
+  for (const c of G.champs) for (const k of ABK) if (c.ab[k].cdLeft > 0) c.ab[k].cdLeft--;   /* cooldowns tick at the start of a pulse */ STATS.pulses++; G.pulseCasts = 0; G.pd = { A: 0, B: 0 }; G.pk = { A: [], B: [] };
+  G.flashes = [];
+  const push = ev => { ev.cue = G.cue.splice(0); ev.flash = G.flashes.splice(0); events.push(ev); };
   // start of pulse: regeneration, poison, towers
   { const pops = [], notes = [];
-    if (RULES.regen) for (const c of alive()) if (c.hp < c.maxHp && (c.hurt ?? -9) < G.pulse - 1 && !(RULES.homeRegen && inEnemyHalf(c) && !baronOn(c.team))) { const g = Math.min(RULES.regen, c.maxHp - c.hp); c.hp += g; pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); }
-    for (const c of alive()) if (c.poison > 0) { c.hp -= c.poison * RULES.poison; c.hurt = G.pulse; pops.push({ hex: c.pos, text: '−' + c.poison * RULES.poison, cls: 'bad' }); notes.push(`${nm(c)} −${c.poison * RULES.poison} poison`);
+    if (RULES.regen) for (const c of alive()) if (!c.broken && c.hp < c.maxHp && (c.hurt ?? -9) < G.pulse - 1 && !(RULES.homeRegen && inEnemyHalf(c) && !baronOn(c.team))) { const g = Math.min(RULES.regen, c.maxHp - c.hp); c.hp += g; pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); }
+    for (const c of alive()) if (c.poison > 0 && !c.broken) { c.hp -= c.poison * RULES.poison; c.hurt = G.pulse; pops.push({ hex: c.pos, text: '☠−' + c.poison * RULES.poison, cls: 'psn' }); G.flashes.push({ id: c.id, k: 'poison' }); notes.push(`${nm(c)} −${c.poison * RULES.poison} poison`);
       if (--c.poisonTurns <= 0) c.poison = 0; if (c.hp <= 0) kill(c, null, notes); }
     for (const T of G.towers) { const side = T.side, tw = T.pos; if (!side || !T.up) continue;
       const reach = T.kind === 'base' ? RULES.baseTowerRange : 1, dmg = T.kind === 'base' ? RULES.baseTowerDmg : RULES.tower;
-      const foes = alive(other(side)).filter(c => dist(c.pos, tw) <= reach).sort((a, b) => a.hp - b.hp);
+      const foes = alive(other(side)).filter(c => !c.broken && dist(c.pos, tw) <= reach).sort((a, b) => a.hp - b.hp);
       if (foes.length) { const v = foes[0]; v.hp -= dmg; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + dmg, cls: 'bad' }); notes.push(`a ${side} ${T.kind} tower hits ${nm(v)} −${dmg}`); if (v.hp <= 0) kill(v, null, notes); } }
     for (const m of (G.monsters || [])) { if (!m.alive) continue;
-      const near = alive().filter(c => dist(c.pos, m.pos) === 1).sort((a, b) => a.hp - b.hp);
+      const near = alive().filter(c => !c.broken && dist(c.pos, m.pos) === 1).sort((a, b) => a.hp - b.hp);
       if (near.length) { const v = near[0], dmg = m.kind === 'dragon' ? RULES.dragonDmg : RULES.baronDmg; v.hp -= dmg; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + dmg, cls: 'bad' }); notes.push(`the ${m.name} hits ${nm(v)} −${dmg}`); if (v.hp <= 0) kill(v, null, notes, true); } }
     if (structure() && RULES.nexusShoots) for (const side of ['A', 'B']) { const n = NEXUS[side][0];
-      const foes = alive(other(side)).filter(c => dist(c.pos, n) === 1).sort((a, b) => a.hp - b.hp);
+      const foes = alive(other(side)).filter(c => !c.broken && dist(c.pos, n) === 1).sort((a, b) => a.hp - b.hp);
       if (foes.length) { const v = foes[0]; v.hp -= RULES.tower; v.hurt = G.pulse; pops.push({ hex: v.pos, text: '−' + RULES.tower, cls: 'bad' }); notes.push(`nexus ${side} hits ${nm(v)} −${RULES.tower}`); if (v.hp <= 0) kill(v, null, notes); } }
+    if (RULES.passives) psPulseStart(pops, notes);
+    capShields();
     if (notes.length) { logLine('sys', 'Start of pulse: ' + notes.join(' · ')); push({ actor: null, init: 99, special: true, pops, lines: [], snap: snap() }); } }
   if (RULES.stance) { const ev = stanceStep(); if (ev) push(ev); }
   const L0 = links();
   const order = alive().sort((a, b) => (eff(b, L0).init - eff(a, L0).init) || ((b.team === mover) - (a.team === mover)) || (ROLES.indexOf(a.role) - ROLES.indexOf(b.role)));
   for (const c of order) {
     if (c.dead) continue;
-    const L = links(), pops = [], lines = [], notes = [], ch0 = c.charge;
-    if (c.frozen || c.air) { const why = c.frozen ? 'frozen' : 'airborne'; c.frozen = false; c.air = false; c.steadfast = true; STATS.skips++;
+    const L = links(), pops = [], lines = [], notes = [], ch0 = c.charge, pre = HEADLESS ? null : snap();
+    if (c.frozen || c.air) { const why = c.frozen ? 'frozen' : 'airborne'; G.flashes.push({ id: c.id, k: c.frozen ? 'frozen' : 'air' }); c.frozen = false; c.air = false; c.steadfast = true; STATS.skips++;
       logLine(c.team, `${nm(c)} [${eff(c, L).init}] is ${why} and skips its action (steadfast until it acts again)`); push({ actor: c.id, init: eff(c, L).init, special: false, pops: [{ hex: c.pos, text: why, cls: 'info' }], lines, snap: snap() }); continue; }   // a skipped turn is a quick beat
     // support chances roll on every action
     if (roll(pct(c, 'mend', L))) { const w = alive(c.team).filter(a => dist(a.pos, c.pos) <= 2 && a.hp < a.maxHp).sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp))[0];
@@ -1525,39 +1767,64 @@ function runPulse(mover) {
       else { const T = towerInRange(c, L); if (T) { hitTower(c, T, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); }
         else { const M = monsterInRange(c, L); if (M) { hitMonster(c, M, L, ctx); if (sp) c.charge = Math.min(sp.n, c.charge + 1); } } }
     }
+    if (RULES.deathPhase) mendBroken(notes);
+    capShields();
+    if (ctx.cast) G.pulseCasts++;
+    { const p = hasPs(c, 'elusive'); if (p && !c.dead && !c.broken && !c.rooted && alive(other(c.team)).some(x => !x.broken && dist(x.pos, c.pos) === 1)) { const to = stepDest(c, 'back'); if (to) { lines.push({ from: c.pos, to, cls: 'leap' }); c.pos = to; notes.push('Elusive: steps back'); psCount('elusive'); } } }
     c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false;   // one-action statuses are used up
     talkAfterAction(c, ch0, order);
     const head = `${nm(c)} [${eff(c, L).init}]`;
     logLine(c.team, `${head}${notes.length ? ': ' + notes.join(' · ') : ' has nobody in range'}`);
-    if (pops.length || lines.length) push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, fx: cast ? [{ id: c.id, fx: cast }] : [], snap: snap() });   // an idle champion gets no beat
+    if (pops.length || lines.length || ctx.castInfo) push({ actor: c.id, init: eff(c, L).init, special: notes.some(n => n.includes('<em>') || n.includes('kill')), pops, lines, fx: cast ? [{ id: c.id, fx: cast }] : [], snap: snap(), cast: ctx.castInfo ? { id: c.id, ...ctx.castInfo } : null, pre });   // an idle champion gets no beat
     if (G.nexus.A <= 0 || G.nexus.B <= 0) break;
   }
   if (G.cue.length && events.length) events[events.length - 1].cue.push(...G.cue.splice(0));
+  if (!G.pulseCasts) STATS.quiet++;
+  if (G.round === 1 && !G.final) STATS.r1dmg += G.pd.A + G.pd.B;
   G.inPulse = false; G.recap = { pulse: G.pulse, pd: { ...G.pd }, pk: { A: [...G.pk.A], B: [...G.pk.B] } };
   return events;
 }
+// Passive damage changes on one hit (bonuses of the attacker, reductions of the target).
+function psDamage(src, t, raw) {
+  const p = psOf(src);
+  if (p && p.kind === 'bonus') { const on = { wounded: t.hp <= t.maxHp / 2, frozen: t.frozen || t.rooted, poisoned: t.poison > 0, full: t.hp >= t.maxHp, alone: !alive(t.team).some(o => o !== t && dist(o.pos, t.pos) === 1) }[p.when];
+    if (on) { raw = p.mul ? raw * p.mul : raw + p.n; psCount(p.kind + ':' + p.when); } }
+  const q = psOf(t); let less = 0;
+  if (q && q.kind === 'shell' && src && dist(src.pos, t.pos) >= 2) less += q.n;
+  if (q && q.kind === 'hide' && G.casting === src) less += q.n;
+  return { raw, less };
+}
 function hit(src, t, raw, ctx, dodgeable) {
   if (t.dead) return 0;
+  if (t.broken) {   // a broken champion takes no more damage; only a finisher can end it before the death check
+    if (src && G.finisher === src && src.team !== t.team) { ctx.lines.push({ from: src.pos, to: t.pos, cls: 'strike' }); kill(t, src, ctx.notes); ctx.pops.push({ hex: t.pos, text: 'finished', cls: 'bad' }); return 1; }
+    return 0; }
   const L = links();
   if (dodgeable && roll(pct(t, 'dodge', L))) { ctx.pops.push({ hex: t.pos, text: 'dodge', cls: 'info' }); ctx.notes.push(`${nm(t)} <em>dodges</em>`); STATS.procs++; return -1; }
-  const d = Math.max(1, raw - eff(t, L).armor), ab = Math.min(t.shield, d);
+  let less = 0; if (src && src.team !== t.team && RULES.passives) { const m = psDamage(src, t, raw); raw = m.raw; less = m.less; }
+  const d = Math.max(1, raw - eff(t, L).armor - less), ab = Math.min(t.shield, d);
+  if (ab > 0 && G.flashes) G.flashes.push({ id: t.id, k: 'shield' });
   t.shield -= ab; t.hp -= d - ab; t.hurt = G.pulse; if (src && src.team !== t.team && G.pd) G.pd[src.team] += d;
   ctx.pops.push({ hex: t.pos, text: '−' + d, cls: 'bad' });
+  if (src && src.team !== t.team && !src.dead && !src.broken && dist(src.pos, t.pos) === 1) { const p = hasPs(t, 'burnback'); if (p && !t.broken) { src.poison += p.n; src.poisonTurns = RULES.poisonTurns; psCount('burnback'); } }
   if (t.hp <= 0) kill(t, src, ctx.notes);
   return d;
 }
 function attack(c, t, L, ctx, mayDouble) {
   const e = eff(c, L); let raw = e.atk; const tags = [];
-  if (c.blind) { ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' }); ctx.notes.push(`→ ${nm(t)}: misses (blinded)`); ctx.pops.push({ hex: t.pos, text: 'miss', cls: 'info' }); return; }
+  if (c.blind) { if (G.flashes) G.flashes.push({ id: c.id, k: 'blind' }); ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' }); ctx.notes.push(`→ ${nm(t)}: misses (blinded)`); ctx.pops.push({ hex: t.pos, text: 'miss', cls: 'info' }); return; }
   if (c.berserk) raw = Math.ceil(raw * 1.5);
   if (roll(pct(c, 'crit', L))) { raw *= 2; tags.push(`<em>Crit</em> (${pct(c, 'crit', L)}%)`); STATS.procs++; }
   ctx.lines.push({ from: c.pos, to: t.pos, cls: 'strike' });
-  const d = hit(c, t, raw, ctx, true);
-  ctx.notes.push(`→ ${nm(t)} ${d > 0 ? '−' + d : ''}${tags.length ? ' ' + tags.join(' ') : ''}`);
-  if (d < 0) return;
+  const wasBroken = t.broken, reap = t.broken && hasPs(c, 'reaper');
+  if (reap) { G.finisher = c; tags.push(`<em>${PASSIVE[c.def.id].name}</em>`); psCount('reaper'); }
+  let d; try { d = hit(c, t, raw, ctx, true); } finally { if (reap) G.finisher = null; }
+  ctx.notes.push(`→ ${nm(t)} ${d > 0 && !wasBroken ? '−' + d : ''}${tags.length ? ' ' + tags.join(' ') : ''}`);
+  if (d < 0 || wasBroken) return;
+  if (RULES.passives) psOnAttack(c, t, raw, ctx);
   const P = k => pct(c, k, L);
   if (dist(c.pos, t.pos) === 1 && !t.dead && roll(pct(t, 'thorns', L))) { ctx.notes.push(`${nm(t)}'s <em>Thorns</em>`); STATS.procs++; hit(t, c, RULES.thorns, ctx, false); }
-  if (!c.dead && roll(P('lifesteal'))) { const g = Math.min(d, c.maxHp - c.hp); c.hp += g; ctx.pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); ctx.notes.push(`<em>Lifesteal</em> +${g} (${P('lifesteal')}%)`); STATS.procs++; }
+  if (!c.dead && !c.broken && roll(P('lifesteal'))) { const g = Math.min(d, c.maxHp - c.hp); c.hp += g; ctx.pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); ctx.notes.push(`<em>Lifesteal</em> +${g} (${P('lifesteal')}%)`); STATS.procs++; }
   if (!t.dead && roll(P('poison'))) { t.poison++; t.poisonTurns = RULES.poisonTurns; ctx.notes.push(`<em>Poison</em> ×${t.poison} (${P('poison')}%)`); STATS.procs++; }
   if (RULES.cc && !t.dead) {
     if (!t.immune && !t.steadfast && roll(P('airborne'))) { t.air = true; ctx.pops.push({ hex: t.pos, text: 'airborne', cls: 'info' }); ctx.notes.push(`<em>Airborne</em> (${P('airborne')}%)`); STATS.procs++; }
@@ -1578,6 +1845,16 @@ function attack(c, t, L, ctx, mayDouble) {
     if (fs.length) { const f = fs[Math.floor(rng() * fs.length)]; ctx.lines.push({ from: c.pos, to: f.pos, cls: 'fire' }); ctx.notes.push(`<em>Fireball</em> → ${nm(f)} (${P('fireball')}%)`); STATS.procs++;
       const around = alive(f.team).filter(x => x !== f && dist(x.pos, f.pos) === 1); hit(c, f, RULES.fireball, ctx, false); for (const x of around) hit(c, x, 2, ctx, false); } }
   if (mayDouble && !c.dead && roll(P('double'))) { const L2 = links(); const t2 = pickTarget(c, L2); if (t2) { ctx.notes.push(`<em>Double strike</em> (${P('double')}%)`); STATS.procs++; attack(c, t2, L2, ctx, false); } }
+}
+// Passives that ride on a basic attack that landed.
+function psOnAttack(c, t, raw, ctx) {
+  const p = psOf(c); if (!p || c.broken) return;
+  if (p.kind === 'refract') { const j = alive(t.team).filter(x => x !== t && !x.broken && dist(x.pos, t.pos) === 1).sort((a, b) => a.hp - b.hp || a.id - b.id)[0];
+    if (j) { ctx.lines.push({ from: t.pos, to: j.pos, cls: 'chain' }); ctx.notes.push(`Refract → ${nm(j)}`); hit(c, j, Math.ceil(raw / 2), ctx, false); psCount('refract'); } }
+  if (t.dead || t.broken) return;
+  if (p.kind === 'frostbite' && !t.rooted) { t.rooted = true; psCount('frostbite'); }
+  if (p.kind === 'recoil' && dist(c.pos, t.pos) === 1 && !t.rooted) { const away = pushDest(c, t); if (away) { ctx.lines.push({ from: t.pos, to: away, cls: 'leap' }); t.pos = away; ctx.notes.push('Recoil'); psCount('recoil'); STATS.forced.push++; } }
+  if (p.kind === 'chill' && c.chillAt !== rkey()) { c.chillAt = rkey(); t.silenced = true; ctx.notes.push(`<em>Cold Snap</em>: ${nm(t)} silenced`); psCount('chill'); }
 }
 // ═════════════ charged specials ═════════════
 function hexLine(a, b, len) {   // the hexes on the straight line from a through b, up to len steps
@@ -1708,7 +1985,11 @@ function towerFall(T, c, team, notes) {
 }
 function kill(t, src, notes, neutral) {
   if (t.dead) return;
-  if (t.revive) { t.revive = false; t.hp = 8; notes.push(`${nm(t)} is saved by the <em>Phoenix Feather</em> (8 HP)`); talk.revive(t); return; }
+  if (t.revive) { t.revive = false; t.hp = 8; t.broken = false; notes.push(`${nm(t)} is saved by the <em>Phoenix Feather</em> (8 HP)`); talk.revive(t); return; }
+  const finished = !!(src && G.finisher === src && src.team !== t.team);
+  if (RULES.deathPhase && !G.reaping && !finished) { breakChamp(t, src, notes); return; }
+  if (finished) { STATS.finished++; notes.push(`<span class="kill">${nm(src)} FINISHES ${nm(t)}</span>`); cue(3, `${cn(src)} finishes ${cn(t)}!`, `No waiting for the end of the round: ${esc(nm(t))} is out now.`); }
+  t.broken = false;
   const bountyWas = t.bounty;
   if (RULES.gold && !neutral) { const g = RULES.killGold + t.bounty * RULES.shutdownGold; G.gold[other(t.team)] += g; G.earned[other(t.team)] += g; notes.push(`+${g} gold to ${other(t.team)}${t.bounty ? ' (shutdown)' : ''}`); }
   clearStatus(t); t.charge = 0;
@@ -1719,6 +2000,41 @@ function kill(t, src, notes, neutral) {
   const why = [structure() ? '' : `nexus ${t.team} −${RULES.killTax}`, src && src.team !== t.team && src.bounty ? `${nm(src)} bounty ★${src.bounty}` : ''].filter(Boolean).join(', ');
   notes.push(`<span class="kill">${nm(t)} is KILLED</span>${why ? ` (${why})` : ''}`);
   talk.kill(t, src, neutral, bountyWas);
+}
+// The death phase: a champion that drops to 0 HP is broken. It stays on its hex (still counting for its allies'
+// patterns), acts with half attack and casts nothing, takes no more damage, and dies at the end of the round
+// unless an ally heals it above 0 first. Thorn's Intervene and Oriel's Lifeline can stop the break itself.
+function breakChamp(t, src, notes) {
+  if (t.broken) return;
+  const g = alive(t.team).find(o => o !== t && !o.broken && dist(o.pos, t.pos) === 1 && hasPs(o, 'guard') && o.usedGuard !== rkey() && o.hp > hasPs(o, 'guard').n && !o.rooted && !t.rooted);
+  if (g) { const n = hasPs(g, 'guard').n, a = t.pos; t.pos = g.pos; g.pos = a; g.usedGuard = rkey(); t.hp = 1; g.hp -= n; g.hurt = G.pulse; psCount('guard');
+    notes.push(`<em>Intervene</em>: ${nm(g)} swaps in and takes the blow for ${nm(t)} (−${n})`); cue(3, `${cn(g)} steps in front of ${cn(t)}!`, `Intervene: ${esc(nm(t))} keeps 1 HP, ${esc(nm(g))} loses ${n}.`); return; }
+  const o = alive(t.team).find(x => x !== t && !x.broken && dist(x.pos, t.pos) <= 2 && hasPs(x, 'lifeline') && x.usedLife !== rkey());
+  if (o) { const n = hasPs(o, 'lifeline').n; o.usedLife = rkey(); t.hp = n; psCount('lifeline');
+    notes.push(`<em>Lifeline</em>: ${nm(o)} keeps ${nm(t)} standing (${n} HP)`); cue(3, `${cn(o)} throws ${cn(t)} a Lifeline!`, `${esc(nm(t))} would have been broken; it stands at ${n} HP instead.`); return; }
+  t.broken = true; t.hp = 0; t.shield = 0; t.poison = 0; clearStatus(t); t.brokenBy = src && src.team !== t.team ? src.id : null; STATS.broken++;
+  if (!G.firstBreak) G.firstBreak = G.round || 1;
+  notes.push(`<span class="kill">${nm(t)} is BROKEN</span> (dies at the end of the round unless an ally heals it)`);
+  cue(2, `${cn(t)} is broken!`, `Heal it before the round ends, or it falls.`);
+  if (src && src.team !== t.team) { const p = hasPs(src, 'spread'); if (p) { let n = 0; for (const x of alive(t.team)) if (x !== t && !x.broken && dist(x.pos, t.pos) === 1) { x.poison += p.n; x.poisonTurns = RULES.poisonTurns; n++; } if (n) { notes.push(`<em>Wildfire</em> spreads to ${n}`); psCount('spread'); } } }
+  for (const u of alive(other(t.team))) { const p = hasPs(u, 'harvest'); if (p && !u.broken && dist(u.pos, t.pos) <= 3 && (u.harvest || 0) < p.n) { u.harvest = (u.harvest || 0) + 1; notes.push(`Dark Harvest: ${nm(u)} +1 attack`); psCount('harvest'); } }
+}
+// A broken champion that an ally healed above 0 stands again.
+function mendBroken(notes) {
+  for (const c of alive()) if (c.broken && c.hp > 0) { c.broken = false; STATS.saved++; notes.push(`<span class="kill">${nm(c)} is SAVED</span>`); cue(3, `${cn(c)} is back on its feet!`, `Healed before the end of the round, so it does not fall.`); }
+}
+// The death check at the end of a round: every broken champion that is still at 0 HP dies.
+function reap() {
+  if (!RULES.deathPhase) return null;
+  const notes = [], pops = [], gone = alive().filter(c => c.broken && c.hp <= 0);
+  mendBroken(notes);
+  if (!gone.length && !notes.length) return null;
+  G.reaping = true;
+  try { for (const c of gone) { pops.push({ hex: c.pos, text: 'falls', cls: 'bad' }); STATS.reaped++; kill(c, c.brokenBy != null ? G.champs[c.brokenBy] : null, notes); } }
+  finally { G.reaping = false; }
+  if (gone.length) { logLine('round', `Death check: ${gone.map(nm).join(', ')} ${gone.length > 1 ? 'fall' : 'falls'}`); cue(3, `End of the round: ${gone.map(cn).join(', ')} ${gone.length > 1 ? 'fall' : 'falls'}.`); }
+  if (notes.length) logLine('sys', notes.join(' · '));
+  return { actor: null, init: 99, special: true, pops, lines: [], snap: snap(), cue: [] };
 }
 function checkWin() {
   if (G.winner) return true;
@@ -1845,7 +2161,7 @@ function dry(fn) {
 function material(team) {
   const foe = other(team); let v = 0;
   if (G.nexus[foe] <= 0) return 500; if (G.nexus[team] <= 0) return -500;
-  for (const c of G.champs) if (!c.dead) v += (c.team === team ? 1 : -1) * (6 + 10 * Math.max(0, c.hp) / c.maxHp + Math.min(6, c.shield) * .3 - c.poison);
+  for (const c of G.champs) if (!c.dead) v += (c.team === team ? 1 : -1) * (c.broken ? 1.5 : 6 + 10 * Math.max(0, c.hp) / c.maxHp + Math.min(6, c.shield) * .3 - c.poison);   // a broken champion is nearly lost
   for (const T of G.towers) if (T.up) v += (T.side === team ? 1 : -1) * (3 + 5 * T.hp / T.max);
   v += (G.nexus[team] - G.nexus[foe]) * .8;
   for (const m of G.monsters || []) { const worth = m.kind === 'baron' ? 12 : 6; if (m.alive) v += worth * .6 * (m.dmg[team] - m.dmg[foe]) / m.max; }
@@ -1895,8 +2211,8 @@ function aiChoose(team, planOv) {
 function toBeats(events) {
   const out = [];
   for (const e of events) { const last = out[out.length - 1];
-    if (last && e.actor != null && last.actors.length && last.init === e.init) { last.pops.push(...e.pops); last.lines.push(...e.lines); last.fx.push(...(e.fx || [])); last.snap = e.snap; last.actors.push(e.actor); last.special = last.special || e.special; }
-    else out.push({ ...e, pops: [...e.pops], lines: [...e.lines], fx: [...(e.fx || [])], actors: e.actor != null ? [e.actor] : [] }); }
+    if (last && e.actor != null && last.actors.length && last.init === e.init && !e.cast && !last.cast) { last.flash = [...(last.flash || []), ...(e.flash || [])]; last.pops.push(...e.pops); last.lines.push(...e.lines); last.fx.push(...(e.fx || [])); last.snap = e.snap; last.actors.push(e.actor); last.special = last.special || e.special; }
+    else out.push({ ...e, pops: [...e.pops], lines: [...e.lines], fx: [...(e.fx || [])], flash: [...(e.flash || [])], actors: e.actor != null ? [e.actor] : [] }); }
   return out;
 }
 function animate(events, done, replay) {
@@ -1905,13 +2221,25 @@ function animate(events, done, replay) {
   const step = () => {
     if (!UI.anim || UI.anim.events !== events) return;
     if (i >= beats.length) { UI.anim = null; if (!replay) UI.pulses.push({ s: (performance.now() - t0) / 1000, beats: beats.length }); showRecap(UI.lastPulse && UI.lastPulse.recap); done(); return; }
-    const e = beats[i++]; G.display = e.snap; G.actors = e.actors; G.ev = e; render();
-    const head = feed(e.cue || []);
-    UI.timer = setTimeout(step, head ? Math.max(delay(e.special), UI.speed === 'fast' ? 650 : 1150) : delay(e.special));   // a headline holds the board a moment
+    const e = beats[i++], fast = UI.speed === 'fast';
+    const play = () => { G.display = e.snap; G.actors = e.actors; G.ev = e; render();
+      const head = feed(e.cue || []), big = e.cast && e.cast.k !== 'q';
+      UI.timer = setTimeout(() => { G.castFx = null; zoomTo(null); step(); }, Math.max(head ? (fast ? 650 : 1150) : 0, e.cast ? (big ? (fast ? 700 : 1300) : (fast ? 450 : 800)) : delay(e.special))); };   // a headline holds the board a moment
+    if (e.cast && e.pre) {   // the wind-up: the board leans toward the caster, which grows and names its ability, before anything happens
+      G.castFx = e.cast; G.display = e.pre; G.actors = [e.cast.id]; G.ev = { ...e, pops: [], lines: [], fx: [], flash: [], windup: true }; zoomTo(e.cast.k === 'q' ? null : e.pre.champs[e.cast.id].pos); render();
+      UI.timer = setTimeout(play, e.cast.k === 'q' ? (fast ? 250 : 450) : (fast ? 450 : 850)); }
+    else play();
   };
   step();
 }
-function skipAnim() { if (!UI.anim) return; clearTimeout(UI.timer); const d = UI.anim.done; UI.anim = null; showRecap(UI.lastPulse && UI.lastPulse.recap); d(); }
+// Leans the board toward a hex (a W or R cast), or back to the whole board (null).
+function zoomTo(hex) {
+  const svg = document.getElementById('board'); if (!svg) return;
+  if (!hex || HEADLESS) { svg.style.transform = ''; return; }
+  const vb = svg.viewBox.baseVal, [x, y] = px(...hex); if (!vb || !vb.width) return;
+  svg.style.transformOrigin = `${(100 * (x - vb.x) / vb.width).toFixed(1)}% ${(100 * (y - vb.y) / vb.height).toFixed(1)}%`; svg.style.transform = 'scale(1.2)';
+}
+function skipAnim() { if (!UI.anim) return; clearTimeout(UI.timer); G.castFx = null; zoomTo(null); const d = UI.anim.done; UI.anim = null; showRecap(UI.lastPulse && UI.lastPulse.recap); d(); }
 function replayPulse() {   // on your own turn: watch the last pulse again, then come back to the board as it is
   if (!UI.lastPulse || UI.anim || (G.phase !== 'move' && G.phase !== 'over')) return;
   const phase = G.phase; G.phase = 'pulse'; UI.replaying = true;
@@ -2124,32 +2452,37 @@ function patSvg(pat, size = 22) {
   if (pat.lone > 1) o += `<circle cx="${m}" cy="${m}" r="${size * .47}" fill="none" stroke="#ff6b6b" stroke-width="1" stroke-dasharray="2 2"></circle>`;
   for (const [k, [x, y]] of Object.entries(CELL_XY)) { const a = mark[k];
     o += a ? `<circle cx="${m + x * u}" cy="${m + y * u}" r="${r}" fill="${a.ring ? a.col + '40' : a.col}" stroke="${a.col}" stroke-width="${a.ring ? 1.2 : 0}"></circle>` : `<circle cx="${m + x * u}" cy="${m + y * u}" r="${r * .7}" fill="#3a4458"></circle>`; }
+  if (pat.x) o += `<text x="${size * .98}" y="${size * .3}" text-anchor="end" style="font:800 ${size * .36}px sans-serif;fill:#ff9b7a">${X_ICON[pat.x.k]}</text>`;
   if (pat.count) return o + `<text x="${m}" y="${m + size * .16}" text-anchor="middle" style="font:800 ${size * .46}px sans-serif;fill:#f3f6fb">${pat.count}</text></svg>`;
   return o + `<circle cx="${m}" cy="${m}" r="${r}" fill="#f3f6fb"></circle></svg>`;
 }
+function psK(k) { return RULES.passives && !RULES.qCast && k === 'q'; }   // the Q slot shows the passive (when Q is not cast)
+const psChip = d => { const p = PASSIVE[d.id]; return `<span class="ab ps" title="${esc(`Passive · ${p.name}: ${p.t}.`)}"><i class="psi">✦</i></span>`; };
+const psBlock = (d, size = 30) => { const p = PASSIVE[d.id]; return `<div class="abl ps"><b class="k">${RULES.qCast ? '✦' : 'Q'}</b><span class="psbig" style="width:${size}px">✦</span><div><b>${esc(p.name)}</b> <span class="cd">passive</span><br>${esc(p.t)}</div></div>`; };
 function abChips(c) {
-  return ABK.map(k => { const ab = c.ab[k], ok = !c.dead && patOk(c, ab.pat), cd = c.dead ? 0 : abCool(c, k), st = ok ? (cd ? 'wait' : 'on') : 'off';
+  const firing = k => G.castFx && G.castFx.id === c.id && G.castFx.k === k ? ' fire' : '';
+  return (RULES.passives && RULES.qCast ? psChip(c.def) : '') + ABK.map(k => { if (psK(k)) return psChip(c.def); const ab = c.ab[k], ok = !c.dead && patOk(c, ab.pat), cd = c.dead ? 0 : abCool(c, k), st = ok ? (cd ? 'wait' : 'on') : 'off';
     const tip = `${k.toUpperCase()} ${ab.name} (cooldown ${ab.cd}): ${abText(ab)}. Needs ${patText(ab.pat)}.${ok ? (cd ? ` Pattern complete, ready in ${cd}.` : ' Lit: fires in the next pulse if it has a target.') : ''}`;
-    return `<span class="ab ${st}" title="${esc(tip)}"><b>${k.toUpperCase()}</b>${patSvg(ab.pat, 20)}${ok && cd ? `<i>${cd}</i>` : ''}</span>`; }).join('');
+    return `<span class="ab ${st}${firing(k)}" title="${esc(tip)}"><b>${k.toUpperCase()}</b>${patSvg(ab.pat, 20)}${ok && cd ? `<i>${cd}</i>` : ''}</span>`; }).join('');
 }
 // abs: a champion's own abilities (with upgrades) or a roster entry's; c: the champion, when its live state should show
 function abListShort(abs) {   // the draft screen: one short block per ability, the full pattern text on hover
   return `<div class="ablist short">${ABK.map(k => { const ab = abs[k]; return `<div class="abl" title="Needs ${esc(patText(ab.pat))}. Cooldown ${ab.cd}."><b class="k">${k.toUpperCase()}</b>${patSvg(ab.pat, 24)}<div><b>${esc(ab.name)}</b>: ${esc(abText(ab))}</div></div>`; }).join('')}</div>`;
 }
-function abList(abs, c) {
-  return `<div class="ablist">${ABK.map(k => { const ab = abs[k], ok = c && !c.dead && patOk(c, ab.pat), cd = c && !c.dead ? abCool(c, k) : 0;
+function abList(abs, c, d) {
+  return `<div class="ablist">${RULES.passives && RULES.qCast ? psBlock(c ? c.def : d) : ''}${ABK.map(k => { if (psK(k)) return psBlock(c ? c.def : d); const ab = abs[k], ok = c && !c.dead && patOk(c, ab.pat), cd = c && !c.dead ? abCool(c, k) : 0;
     return `<div class="abl ${c ? (ok ? (cd ? 'wait' : 'on') : 'off') : ''}"><b class="k">${k.toUpperCase()}</b>${patSvg(ab.pat, 30)}<div><b>${esc(ab.name)}</b> <span class="cd">cooldown ${ab.cd}${ok && cd ? ` · ready in ${cd}` : ok ? ' · lit' : ''}</span><br>${esc(abText(ab))}<br><i>Needs ${esc(patText(ab.pat))}.</i></div></div>`; }).join('')}</div>`;
 }
 function abPipsSvg(c, cx, y) {
   if (G.display || c.dead || !c.ab) return '';
-  return `${UI.art ? `<rect x="${cx - 19}" y="${y - 10}" width="38" height="13" rx="6.5" fill="#0b0f16c8" stroke="#ffffff22"></rect>` : ''}<text class="st" x="${cx}" y="${y}" style="font-size:11px;font-weight:800;letter-spacing:1px;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${ABK.map(k => { const ok = patOk(c, c.ab[k].pat), cd = abCool(c, k);
+  return `${UI.art ? `<rect x="${cx - 19}" y="${y - 10}" width="38" height="13" rx="6.5" fill="#0b0f16c8" stroke="#ffffff22"></rect>` : ''}<text class="st" x="${cx}" y="${y}" style="font-size:11px;font-weight:800;letter-spacing:1px;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${ABK.map(k => { if (psK(k)) return `<tspan style="fill:#c49bff">✦</tspan>`; if (c.broken) return `<tspan style="fill:#66708a">${k.toUpperCase()}</tspan>`; const ok = patOk(c, c.ab[k].pat), cd = abCool(c, k);
     return `<tspan style="fill:${ok ? (cd ? '#a8853a' : '#ffe07a') : '#66708a'}">${k.toUpperCase()}</tspan>`; }).join('<tspan> </tspan>')}</text>`;
 }
 // Around the selected champion: which hexes its patterns want an ally in (letters of the abilities, coloured by element).
 function patternGuide(svg, c) {
   if (!c || c.dead || G.display) return;
   const want = {};
-  for (const k of ABK) { const pat = c.ab[k].pat; if (pat.lone || pat.count) continue;
+  for (const k of ABK) { const pat = c.ab[k].pat; if (pat.lone || pat.count || psK(k)) continue;
     for (const [g, el] of pat.need) { const done = GROUP[g].some(cell => { const o = allyAt(c, cell); return o && (!el || o.def.els.includes(el)); });
       for (const cell of GROUP[g]) { const h = add(c.pos, frame(c.team, CELL[cell])); if (!onBoard(h) || SOLID.has(K(h))) continue;
         const w = want[K(h)] || (want[K(h)] = { h, items: [] }); w.items.push({ k, col: el ? ELS[el][1] : '#ffd66b', done, either: GROUP[g].length > 1 }); } } }
@@ -2180,7 +2513,7 @@ function spawnGhosts(svg) {
 // Icons for chances, stats and statuses on the compact cards (D-077). Emoji: crisp at any size, no extra files.
 const PICON = { poison: '🧪', frost: '❄️', crit: '💥', double: '⚔️', splash: '💦', cleave: '🪓', chain: '⚡', fireball: '🔥', push: '💨', lifesteal: '🩸',
   mend: '💚', shield: '🛡️', dodge: '🍃', thorns: '🌵', taunt: '📢', root: '🌿', blind: '🙈', silence: '🤐', airborne: '🌪️', berserk: '😡' };
-const SICON = { frozen: '🧊', air: '🌪️', rooted: '🌿', blind: '🙈', silenced: '🤐', berserk: '😡', taunted: '📢', steadfast: '💎' };
+const SICON = { frozen: '🧊', air: '🌪️', rooted: '🌿', blind: '🙈', silenced: '🤐', berserk: '😡', taunted: '📢', steadfast: '💎', broken: '💀' };
 // Compact team cards: everything needed during a fight in about 110 px; the rest is in the hover card.
 function renderRail(team) {
   const el = document.getElementById('rail-' + team); el.innerHTML = '';
@@ -2196,12 +2529,14 @@ function renderRail(team) {
     const stat = (ic, v, up, tip) => `<span class="ic ${up ? 'up' : ''}" title="${tip}">${ic}<b>${v}</b></span>`;
     const chances = Object.keys(PROCS).filter(k => (c0.procs[k] || 0) > 0).map(k => { const v = pct(c0, k, L);
       return `<span class="ic ${v > c0.procs[k] ? 'up' : ''}" title="${esc(PROCS[k].name)}: ${esc(PROCS[k].text)}">${PICON[k]}<b>${v}</b></span>`; }).join('');
-    const sts = [...statusList(c).map(k => `<span class="ic st" title="${esc(STATUS[k][1])}">${SICON[k]}</span>`),
-      c.poison ? `<span class="ic st" title="poisoned ×${c.poison}">☠️<b>${c.poison}</b></span>` : '', c.shield ? `<span class="ic st" title="shield ${c.shield}">🛡️<b>+${c.shield}</b></span>` : '',
+    const fl = (G.ev && G.ev.flash || []).filter(f => f.id === c0.id).map(f => f.k), fc = k => fl.includes(k) ? ' flash' : '';   // icons of statuses that just did something
+    const gone = fl.filter(k => (k === 'frozen' || k === 'air' || k === 'blind') && !c[k]).map(k => `<span class="ic st flash" title="${esc(STATUS[k][1])}">${SICON[k]}</span>`);
+    const sts = [...statusList(c).map(k => `<span class="ic st${fc(k)}" title="${esc(STATUS[k][1])}">${SICON[k]}</span>`), ...gone,
+      c.poison || fl.includes('poison') ? `<span class="ic st${fc('poison')}" title="poisoned ×${c.poison}">☠️<b>${c.poison}</b></span>` : '', c.shield || fl.includes('shield') ? `<span class="ic st${fc('shield')}" title="shield ${c.shield}">🛡️<b>+${c.shield}</b></span>` : '',
 c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more gold">⭐<b>${c0.bounty}</b></span>` : '',
       c0.items.length ? `<span class="ic st" title="${esc(c0.items.map(id => ITEMS.find(x => x.id === id).name).join(', '))}">🎒<b>${c0.items.length}</b></span>` : ''].join('');
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
-      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span><span class="role">${c0.role}</span><span class="lv">${c.dead ? (G.final ? '† out' : `† back R${c0.respawnAt}`) : `${c0.def.paths[c0.path].ic} Lv ${c0.level}`}</span></div>
+      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span><span class="role">${c0.role}</span><span class="lv">${c.dead ? (G.final ? '† out' : `† back R${c0.respawnAt}`) : c.broken ? '💀 broken' : `${c0.def.paths[c0.path].ic} Lv ${c0.level}`}</span></div>
         <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div></div></div>
       <div class="icons">${stat('🗡️', e.atk, e.atk > c0.atk, 'attack')}${stat('🎯', e.range, e.range > c0.range, 'range')}${stat('⏩', e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(e.home ? '🏠' : '🧱', e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat('🦘', c0.dive, false, 'leap') : ''}${chances}${sts}</div>
       <div class="abrow">${abChips(c0)}</div>
@@ -2251,7 +2586,7 @@ function renderHand() {
     for (const c of G.champs.filter(x => x.team === t)) { const ps = c.def.paths[c.path];
       const g = h(`<div class="hgroup ${c.dead ? 'dead' : ''}"><div class="who">${UI.art ? `<img src="art/${c.def.id}.png" alt="">` : ''}<b>${esc(nm(c))}</b><span class="pth" title="${ps.name}: ${Math.min(c.pstep, 4)} of 4 steps">Lv ${c.level} · ${ps.ic} ${Math.min(c.pstep, 4)}/4 · ${c.dead ? 'dead' : `${c.hp}/${c.maxHp} HP`}</span></div><div class="two"></div></div>`);
       levelOptions(c).forEach((o, k) => { const b = h(`<button class="lvopt ${UI.recLevel === c.id + ':' + k ? 'rec' : ''}" title="${esc(o.t)}">${optHtml(o)}</button>`);
-        b.addEventListener('click', () => { UI.recLevel = null; humanLevel(c, k); }); g.querySelector('.two').appendChild(b); });
+        b.addEventListener('click', () => { UI.recLevel = null; UI.tipFor = null; hideTip(); humanLevel(c, k); });   /* the hover card goes with the click (the rail would otherwise bring it back) */ g.querySelector('.two').appendChild(b); });
       g.addEventListener('mouseenter', () => { UI.tipFor = c.id; showTip(g, c, 'A'); }); g.addEventListener('mouseleave', () => { UI.tipFor = null; hideTip(); });
       row.appendChild(g); }
     const hb = el.querySelector('#lv-hint'); if (hb) hb.addEventListener('click', () => coachLevel(true));
@@ -2278,10 +2613,12 @@ function renderHand() {
   if (G.phase !== 'opening') { el.hidden = true; el.innerHTML = ''; return; }
   const t = G.openTurn, mine = G.humans.includes(t), left = G.champs.filter(c => c.team === t && !G.opened.has(c.id));
   el.hidden = false; el.className = `hand ${t}`;
-  el.innerHTML = `<div class="handhd"><b>Team ${t}</b><span>${mine ? 'your opening cards: hover to preview, click to play' : 'opening cards'}</span><span class="legend2">T top · J jungle · M mid · B bottom · S support</span></div><div class="handrow"></div>`;
+  el.innerHTML = `<div class="handhd"><b>Team ${t}</b><span>${mine ? 'your opening cards: hover to preview, click to play' : 'opening cards'}</span><span class="legend2">T top · J jungle · M mid · B bottom · S support</span>${mine ? '<button class="ocard" id="b-forms">📐 Formations</button>' : ''}</div><div class="handrow"></div>`;
+  { const fb = el.querySelector('#b-forms'); if (fb) fb.addEventListener('click', () => { UI.formsOpen = true; render(); }); }
+  const rec = mine && coaching() === 'auto' ? bestCard(t) : null;   /* Easy: the card that lights the most abilities right now */
   const row = el.querySelector('.handrow');
   for (const c of left) { const g = h(`<div class="hgroup"><div class="who">${UI.art ? `<img src="art/${c.def.id}.png" alt="">` : ''}<b>${esc(nm(c))}</b></div><div class="two"></div></div>`);
-    c.def.cards.forEach((_, i) => { const b = h(`<button class="ocard" ${mine ? '' : 'disabled'} title="${esc(nm(c))}, card ${i + 1}: ${esc(cardText(c, i))}">${shortCard(c, i)}</button>`);
+    c.def.cards.forEach((_, i) => { const b = h(`<button class="ocard ${rec === c.id + ':' + i ? 'rec' : ''}" ${mine ? '' : 'disabled'} title="${esc(nm(c))}, card ${i + 1}: ${esc(cardText(c, i))}">${shortCard(c, i)}</button>`);
       b.addEventListener('click', () => { hideTip(); openingPlay(c, i); });
       b.addEventListener('mouseenter', () => { UI.hover = { card: [c.id, i] }; renderBoard(); });
       b.addEventListener('mouseleave', () => { UI.hover = null; renderBoard(); });
@@ -2299,7 +2636,7 @@ function renderBoard() {
   const pts = [...HEXES, ...((G && G.towers) || []).filter(t => t.kind === 'base').map(t => t.pos)].map(x => px(...x)), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), pad = HEX * 1.2;
   const padTop = pad + (UI.art ? HEX * 1.3 : 0);   // sprites stand above their hex
   svg.setAttribute('viewBox', `${Math.min(...xs) - pad} ${Math.min(...ys) - padTop} ${Math.max(...xs) - Math.min(...xs) + 2 * pad} ${Math.max(...ys) - Math.min(...ys) + pad + padTop}`);
-  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker><marker id="mvA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5ab4ff"/></marker><marker id="mvB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a59"/></marker>${UI.art ? '<pattern id="grass" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/grass.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern>' : ''}</defs>`));
+  svg.appendChild(sv(`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfd6e6"/></marker><marker id="mvA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#5ab4ff"/></marker><marker id="mvB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff7a59"/></marker>${UI.art ? '<pattern id="grass" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/grass.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern><pattern id="river" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/river.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern><pattern id="hillt" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/hillt.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern><pattern id="pit" patternUnits="userSpaceOnUse" width="110" height="68"><image href="art/pit.jpg" width="110" height="68" preserveAspectRatio="none"/></pattern>' : ''}</defs>`));
   svg.classList.toggle('art', UI.art);
   const ART = UI.art, depth = [], plates = [];   // in the art view, sprites are collected and drawn back to front; plates go on top
   const put = (y, el) => ART ? depth.push({ y, el }) : svg.appendChild(el);
@@ -2318,7 +2655,8 @@ function renderBoard() {
   const L = after || links();
   for (const x of HEXES) {
     const k = K(x), [cx, cy] = px(...x), cls = ['hexp'];
-    if (onHill(x)) cls.push('hill'); if (SOLID.has(k)) cls.push('tower'); if (isNexus('A', x)) cls.push('nexA'); if (isNexus('B', x)) cls.push('nexB');
+    if (onHill(x)) cls.push('hill'); else if (pitHexes().some(h => same(h, x))) cls.push('pit'); else if (x[1] === 0) cls.push('river');   // the zones the rules name
+    cls.push(x[1] < 0 ? 'halfA' : x[1] > 0 ? 'halfB' : 'mid'); if (SOLID.has(k)) cls.push('tower'); if (isNexus('A', x)) cls.push('nexA'); if (isNexus('B', x)) cls.push('nexB');
     if (reachSet.has(k)) cls.push('reach'); if (hv && hv.hex && same(hv.hex, x) && reachSet.has(k)) cls.push('hover');
     const p = sv(`<polygon class="${cls.join(' ')}" points="${hexPts(cx, cy)}"></polygon>`);
     if (reachSet.has(k)) { p.addEventListener('click', () => hexClick(sel, x)); p.addEventListener('mouseenter', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) return; UI.hover = { hex: x }; renderBoard(); }); p.addEventListener('mouseleave', () => { if (UI.hover && UI.hover.hex && same(UI.hover.hex, x)) { UI.hover = null; renderBoard(); } }); }
@@ -2337,7 +2675,8 @@ function renderBoard() {
       svg.appendChild(sv(`<rect x="${cx - HEX * .6}" y="${cy + HEX * .42}" width="${HEX * 1.2}" height="5" rx="1" fill="#0b0f16"></rect>`));
       svg.appendChild(sv(`<rect x="${cx - HEX * .6}" y="${cy + HEX * .42}" width="${HEX * 1.2 * hp / RULES.nexusHp}" height="5" rx="1" fill="${side === 'A' ? 'var(--a)' : 'var(--b)'}"></rect>`)); }
     else if (isNexus('A', x) || isNexus('B', x)) svg.appendChild(sv(`<text class="lbl nx" x="${cx}" y="${cy + HEX * .62}">NEXUS</text>`));
-    if (onHill(x)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * (ART ? .3 : .6)}" style="fill:var(--gold)">▲ hill</text>`));
+    if (onHill(x)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy + HEX * (ART ? .5 : .6)}" style="fill:#ffe9b0;font-size:10px;paint-order:stroke;stroke:#3a2a10;stroke-width:3px">HILL</text>`));
+    if (x[1] === 0 && !onHill(x) && !SOLID.has(k) && (x[0] === -1 || x[0] === 1)) svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy + HEX * .55}" style="fill:#d8f4ff;font-size:10px;letter-spacing:.15em;paint-order:stroke;stroke:#0b2a3a;stroke-width:3px">RIVER</text>`));
   }
   // synergy links
   const drawn = new Set();
@@ -2411,6 +2750,9 @@ function renderBoard() {
     put(cy, g); }
   depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
   if (plates.length) svg.appendChild(sv(`<g>${plates.join('')}</g>`));
+  if (G.castFx && G.display) { const c0 = G.champs[G.castFx.id], c = view(c0), [cx, cy] = px(...c.pos), big = G.castFx.k !== 'q';   // the ability's name above its caster
+    const y = cy - HEX * (ART ? (big ? 2.75 : 2.2) : 1.05), txt = `${G.castFx.k.toUpperCase()} · ${G.castFx.name}`, w = txt.length * (big ? 10.5 : 8) + 18;
+    svg.appendChild(sv(`<g style="pointer-events:none"><rect x="${cx - w / 2}" y="${y - (big ? 19 : 15)}" width="${w}" height="${big ? 27 : 21}" rx="8" fill="#0b0f16e0" stroke="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}" stroke-width="2"></rect><text class="castlbl" x="${cx}" y="${y}" style="font-size:${big ? 18 : 14}px;fill:${big ? '#ffe07a' : '#f3f6fb'}">${esc(txt)}</text></g>`)); }
   deadMarks(svg); lastMoves(svg);
   if (UI.cardHi && (G.phase === 'regroup' || G.phase === 'move')) { for (const id of UI.cardHi.who) { const c = G.champs[id]; if (c.dead) continue; const [cx, cy] = px(...c.pos);
       svg.appendChild(sv(`<ellipse cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .78}" ry="${HEX * .78 * isoK()}" style="fill:none;stroke:#ffe07a;stroke-width:3;pointer-events:none"></ellipse>`)); }
@@ -2472,6 +2814,7 @@ function statusFx(c, cx, cy, foot, H) {
   let back = '', front = '', filters = [];
   if (c.poison) { filters.push('drop-shadow(0 0 4px #8fdc6e)'); front += [0, 1, 2].map(k => `<circle class="stv pbub" cx="${cx - 9 + k * 9}" cy="${foot - H * .35}" r="${2.5 + (k % 2)}" style="animation-delay:${-k * .4}s"></circle>`).join(''); }
   if (c.berserk) filters.push('drop-shadow(0 0 5px #ff4b4b) saturate(1.4)');
+  if (c.broken) { filters.push('grayscale(1) brightness(.55) drop-shadow(0 0 6px #ff4b4b)'); front += `<text x="${cx}" y="${foot - H * .45}" text-anchor="middle" style="font:900 15px sans-serif;fill:#ff6b6b;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">BROKEN</text>`; }
   if (c.frozen) { filters.push('saturate(.4) brightness(1.2)'); front += `<rect class="stv ice" x="${cx - H * .3}" y="${foot - H * .85}" width="${H * .6}" height="${H * .85}" rx="7"></rect>`; }
   if (c.shield) front += `<ellipse class="stv shieldb" cx="${cx}" cy="${foot - H * .42}" rx="${H * .36}" ry="${H * .5}"></ellipse>`;
   if (c.rooted) back += `<ellipse class="stv roots" cx="${cx}" cy="${cy + HEX * .16}" rx="${HEX * .62}" ry="${HEX * .28}"></ellipse>`;
@@ -2479,7 +2822,7 @@ function statusFx(c, cx, cy, foot, H) {
   return { back, front, filter: filters.join(' '), lift: c.air ? -14 : 0 };
 }
 function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a champion in the art view: sprite, foot ring, plate below
-  const foot = cy + HEX * .28, H = HEX * 1.85, ln = isActor && G.ev ? G.ev.lines.find(l => same(l.from, c.pos)) : null;
+  const foot = cy + HEX * .28, H = HEX * 1.85 * (G.castFx && G.castFx.id === c0.id && G.castFx.k !== 'q' ? 1.3 : 1), ln = isActor && G.ev ? G.ev.lines.find(l => same(l.from, c.pos)) : null;
   let dx = 0, dy = -6; if (ln) { const [x2, y2] = px(...ln.to); dx = (x2 - cx) * .35; dy = (y2 - cy) * .35; }
   const phase = ((performance.now() / 1000 + c0.id * .37) % 1.4).toFixed(2);
   const sts = statusList(c), sk = 'paint-order:stroke;stroke:#0b0f16;stroke-width:2px', sf = statusFx(c, cx, cy, foot, H);
@@ -2540,13 +2883,21 @@ function pulseText() { const P = UI.pulses; if (!P.length) return ''; const last
 const fmtClock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function renderOverlay() {
   const ov = document.getElementById('overlay');
+  if (UI.formsOpen && G && G.humans.length) { ov.hidden = false; ov.innerHTML = ''; const t = G.humans[0];
+    const box = h(`<div class="box help forms"><div class="row"><h2>Three shapes for your team</h2><button id="close-forms" class="primary" style="margin-left:auto">Got it</button></div>
+      <p>Abilities fire only when allies stand in the right hexes around a champion. These shapes light the most of your champions' abilities (gold letters). You will rarely hold one exactly, but aim for it: play the opening cards that bring your champions together like this, then move one champion at a time to complete the pattern.${coaching() === 'auto' ? ' The gold-bordered opening card is the one that lights the most right now.' : ''}</p>
+      <div class="formrow">${formHtml(t)}</div></div>`);
+    box.querySelector('#close-forms').addEventListener('click', () => { UI.formsOpen = false; render(); });
+    ov.appendChild(box); return; }
   if (UI.rules) { ov.hidden = false; ov.innerHTML = '';
     const box = h(`<div class="box help"><div class="row"><h2>How a skirmish works</h2><button id="close-rules" style="margin-left:auto">Close</button></div>
       <h3>Draft</h3><p>Bans first (switch on the draft screen; default: each team bans one champion before the picks and one more once both teams have two picks; a banned champion is out for both). Then a snake draft, one champion per role. Every champion has one or two elements and three abilities. Look for champions whose elements complete each other's patterns.</p>
-      <h3>Opening</h3><p>Every champion has two movement cards. Teams alternate, and each champion plays exactly one card. A card moves one or more of your roles one hex at a time, in your team's direction. A blocked step is skipped. A team levels up one champion of its choice after its ${RULES.openLevels.join(', ')} card.</p>
+      <h3>Opening</h3><p>${RULES.openCards < 5 ? `<b>Each team plays only ${RULES.openCards} cards</b> (one per champion); ${RULES.openBack ? 'the champions that played none start the fight beside their own nexus. ' : 'the others stay where they started. '}` : ''}Every champion has two movement cards. Teams alternate${RULES.openCards < 5 ? '' : ', and each champion plays exactly one card'}. A card moves one or more of your roles one hex at a time, in your team's direction. A blocked step is skipped. A team levels up one champion of its choice after its ${RULES.openLevels.join(', ')} card.</p>
       <h3>A turn</h3><p>The team on turn moves one champion up to ${RULES.spd} hexes, or holds. Then the pulse: every champion acts once, highest initiative first, ties to the team that just moved. Each round both teams take one turn; the first mover alternates.</p>
       <h3>Abilities and patterns</h3><p>Each champion has a basic attack and three abilities: Q (easy), W (harder), R (hardest). An ability can fire only while its <b>pattern</b> is complete: allies standing in the right hexes around the champion, sometimes of a given element. The small diagram shows the champion in the middle with its front (toward the enemy nexus) at the top: a filled dot must hold an ally, ringed dots mean "one of these", the colour is the element needed (gold = any ally), red rings must stay empty.</p>
       <p>When a champion acts it uses the hardest ability that is lit (pattern complete, off cooldown, with a target); otherwise it makes its basic attack by its own rule (nearest, lowest HP, highest HP, back line, highest attack, most crowded). After firing, an ability rests for its cooldown, counted in pulses. At the start of the match they come online one after another: Q in the first pulse, W from the second, R from the third. Some abilities move champions: push or pull an enemy, swap places with an ally, step aside after the hit, pull a wounded ally to safety. These moves are certain, never a chance, and dashed arrows on the board show them before they happen. The letters Q W R under each champion show the state: bright = fires next pulse, dull gold = pattern complete but cooling down, grey = pattern not complete. Hover a destination before you move to see them change.</p>
+      ${RULES.passives || RULES.rare || RULES.deathPhase ? `<h3>Passives, rare abilities, broken champions</h3><p>${RULES.passives ? (RULES.qCast ? `Every champion also has a <b>passive</b> (✦, before Q W R): it is never cast and works on its own (hover a champion to read it). Some change numbers, some move champions, a few save an ally or finish an enemy. Q needs one specific spot or an ally of one element beside it, and rests ${RULES.qCd} pulses. ` : 'The Q slot (✦) holds a <b>passive</b>: it is never cast and works on its own (hover a champion to read it). Some change numbers, some move champions, a few save an ally or finish an enemy. ') : ''}${RULES.moreEls ? 'Oriel, Brook, Ash, Moss, Shiver, Pyra and Umbra have a second element, so they complete more of their teammates&#39; patterns. ' : ''}${RULES.rare ? `W and R are <b>rare</b>: their patterns are harder, often with one extra condition shown as a badge on the diagram (⚔ enemies close, ≈ standing in the river, the middle row, ➚ standing in the enemy half, ♥ an ally at half HP or less). They hit, heal and shield ${RULES.rareMult}× as much and rest ${RULES.rareCd.w} and ${RULES.rareCd.r} pulses. A shield never grows past half the champion's max HP. ` : ''}${RULES.deathPhase ? `At 0 HP a champion is <b>broken</b> (greyed out, 💀), not dead: it stays on its hex and still counts for its allies' patterns, takes no more damage, acts with half attack and casts nothing. At the end of the round every broken champion still at 0 HP dies; an ally's heal before then saves it. <b>Finishers</b> (Ember W, Viper R, Gale W, Fang W, Wisp W, Flint W, Dusk R, and Viper's basic attack) go for a broken enemy in reach and end it on the spot.` : ''}</p>` : ''}
+      <h3>The board</h3><p>The <b>river</b> is the middle row (water). At its two ends stand the <b>hills</b> (rocky ground, +1 range while standing there), and one hex in from them the dark <b>pits</b> where the Dragon and the Baron appear. Each team's half is tinted in its colour; "the enemy half" in a pattern means the other tint. "Jungle" is only a role name, not a place.</p>
       <h3>Chances and statuses</h3><p>A champion has one general chance on its basic attack (the percentage on its card). Statuses come from abilities: frozen and airborne skip an action, rooted cannot be moved this round, blinded misses its next attack, silenced and enraged champions cannot use abilities on their next action (an enraged one hits the nearest champion of either team), taunted must attack the taunter. A champion that just skipped an action cannot be frozen or knocked up again until it has acted.</p>
       <h3>Growth</h3><p>After the draft you choose one of two growth paths for each champion (for example Power: abilities hit harder, or Tempo: they come back faster; a champion that both hits and heals chooses Striker or Warden). Your team gets one level-up at the end of every round from round ${RULES.levelRounds[0]}, after opening cards ${RULES.openLevels.join(', ')}, and for every Dragon. Each level-up grows ONE champion of your choice: the next step of its path, or a heal (+6 max HP and 8 HP now). A kill gives the killer +1 attack, up to ${RULES.bountyCap}.</p>
       <h3>Regroup</h3><p>When a pulse leaves one team ${RULES.rgLead} or more champions up, the walking is skipped. The winners place each of their champions up to ${RULES.rgBase} + the current death timer hexes away (at most ${RULES.rgMax}), so early regroups are short and late ones long; not beside an enemy and not at the enemy nexus. Then the losers move their survivors the same distance and choose, near their nexus, where their dead will return. ${RULES.rgCards ? `Instead of pressing Done, each side ends its placing by playing one card, and the card counts where the champions stand: Siege (the enemy building with most of your champions in range takes ${RULES.rgSiege} per champion in range, +${RULES.rgShape} for each whose pattern is complete), Dragon or Baron (the same, on the monster; if it dies the reward is yours), Rest (champions beside an ally heal ${Math.round(RULES.rgRest * 100)}% of max HP, ${Math.round((RULES.rgRest + RULES.rgRestShape) * 100)}% inside a complete pattern). Losers: Rush back (the dead return a round sooner) or Rest. Every card shows its current number while you place. ` : ''} ${RULES.rgCost ? `The walk takes time, so the dead return ${RULES.rgCost} round sooner.` : 'Death timers do not change: the winners use the time the losers are away.'} At most one regroup every ${RULES.rgGap} rounds.</p>
@@ -2611,7 +2962,7 @@ function defTipHtml(d, mine) {
   const fits = mine.length ? fitNotes(d, mine) : [];
   return `<div class="tiphd">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div><b>${esc(d.name)}</b><span>${d.role} · ${elIcons(d)} ${d.els.join(' + ')}</span><span>HP ${Math.round(d.hp * RULES.hpScale)} · 🗡️ ${d.atk} · 🎯 ${d.range} · ⏩ ${d.init}${d.dive ? ` · 🦘 ${d.dive}` : ''}</span></div></div>
     <div class="stats"><span class="chip rule">basic attack targets: ${RULE_TEXT[d.target]}</span>${Object.keys(d.procs).map(k => `<span class="chip">${PICON[k]} ${PROCS[k].name} ${d.procs[k]}%</span>`).join('')}</div>
-    ${abList(d.ab)}
+    ${abList(d.ab, null, d)}
     <p class="path">Paths: ${d.paths.map(ps => `<b>${ps.ic} ${esc(ps.name)}</b> (${ps.steps.map(o => o.ic).join(' ')})`).join(' or ')}</p>
     ${fits.length ? `<p class="next" style="color:var(--gold)">Fits your team: ${esc(fits.join('; '))}</p>` : ''}`;
 }

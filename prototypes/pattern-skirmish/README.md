@@ -10,7 +10,7 @@ clear choice: Baron, Dragon or tower. Owner's ideas, 2026-11-19, after a review 
 **How to run.** Open `index.html` (keep the `art/` folder next to it). No server, no libraries.
 `simulate(n, 'small', seed, rules)` in the browser console runs AI-vs-AI matches.
 
-**Status.** In progress. First playable 2026-11-19. Owner played it 2026-11-20; readability, paths, regroup cards and the coach added the same day.
+**Status.** In progress. First playable 2026-11-19. Owner played it 2026-11-20; readability, paths, regroup cards and the coach added the same day. 2026-11-21: a quieter pulse (passives in the Q slot, rare W/R, broken champions and a death check, 3 opening cards); see the section of that name.
 
 ## What changed from the auto skirmish
 
@@ -408,6 +408,146 @@ time, comeback 22%.
 - With the cheap first Rest the AI healed every other round and matches dragged (17.3 rounds).
 - Interface: watched AI matches through a timed final fight and scripted human matches: no page
   errors.
+
+## A quieter pulse: passives, rare abilities, a death phase (added 2026-11-21)
+
+Owner, after playing: Q fires every round for almost everyone (23 of 25 Q's needed only "an ally
+beside it", cooldown 2 pulses = once per round), so a pulse is a wall of casts and nothing stands
+out. Wanted: abilities that are harder to set up and hit harder, so a cast is an event; passives;
+dying at the end of the round with finishers that can end a broken champion early; less fighting
+in round 1. Every change has its own switch in `RULES`.
+
+- **Q becomes the passive** (`passives`). The Q slot holds one passive per champion (`PASSIVE`),
+  never cast. Quiet ones change numbers (Bedrock: allies beside take 1 less; Headshot: +3 on a
+  full-HP enemy; Ambush: +3 on an enemy with no ally beside it). Others move or decide things:
+  Tailwind (Gale moves 3), Recoil (Gunner's hit pushes an adjacent enemy), Elusive (Wisp steps back
+  after acting), Intervene (Thorn swaps in front of an ally about to break), Lifeline (Oriel heals an
+  ally about to break to 5 HP), Coup de Grâce (Viper's basic attack finishes broken enemies).
+  Growth paths lost their Q steps (replaced by +8 max HP).
+- **Rare W and R** (`rare`). New patterns in `RARE`: a formation plus, often, one extra condition:
+  ⚔ enemies close (`foes`), ≈ standing in the river (middle row), ➚ standing in the enemy half,
+  ♥ an ally at half HP or less. W and R deal, heal and shield twice as much (`rareMult`) and rest
+  4 and 6 pulses (`rareCd`; were 3 and 4). A rare cast is a headline in the caster feed and holds
+  the board while it plays.
+- **Death phase** (`deathPhase`). At 0 HP a champion is *broken*: it stays on its hex (still counts
+  for its allies' patterns), takes no more damage, acts with half attack and casts nothing. At the
+  end of the round (after the second pulse; in the final fight after every pulse) every broken
+  champion still at 0 HP dies. An ally's heal before then saves it. Seven abilities are
+  *finishers* (Ember W, Viper R, Gale W, Fang W, Wisp W, Flint W, Dusk R): they go for a broken
+  enemy in reach and kill it on the spot, and a finisher that breaks a champion kills it outright.
+- **Three opening cards** (`openCards`, `openBack`). Each team plays 3 cards; the two champions that
+  played none start the fight beside their own nexus.
+
+### Measured
+
+AI vs AI, Small board, 840 matches per row (12 browsers × 70), same harness and seeds for both rows.
+"Old" = all five switches off (the game as committed on 2026-11-21).
+
+| | old | new |
+|---|---|---|
+| ability casts per pulse | 3.03 | **0.81** |
+| pulses with no cast at all | 7% | **45%** |
+| casts / basic attacks per match | 101 / 52 | 23 / 108 |
+| rounds per match | 15.3 | 13.7 |
+| deaths per match | 15.7 | 13.8 |
+| damage in round 1 | 82 | **62** |
+| first kill (round) | 1.51 | 1.66 |
+| side A wins | 56%* | 49–50% |
+
+\* the old row's 56% is one 420-match run; other old runs were near 50%.
+
+- **Broken champions:** 13.5 per match. 1.5 are saved by a heal (about 1 in 9), 2.6 are finished
+  early by a finisher, 11.2 die at the death check.
+- **Each W fires 0.8–2.9 times per match, each R 0.6–1.5** (per champion that plays). No ability is
+  dead. Getting there took two easing passes: the first rare set fired only 0.62 casts per pulse,
+  and anything needing the enemy half fired under once per match because the AI seldom goes deep.
+  Divers' W now need a close enemy instead. Most frequent: Thorn W, Wisp W, Oriel W, Cinder W (2.2–2.9).
+- **Passives per match (all champions):** Spring 5.8, Omen 4.6, Refract 4.2, Bark 3.8, Cold Snap 3.4,
+  Frostbite 3.3, Burning Core 2.3, the damage bonuses 1.0–1.5 each, Elusive 1.4, Lifeline 1.0,
+  Dark Harvest 1.0, Intervene 0.6, Recoil 0.4, Coup de Grâce 0.3, Wildfire 0.2, Shatter 0.2.
+  Shatter was "double damage against frozen" and fired 0.0 times (a frozen champion skips its action
+  and the freeze clears right then); it is now "+2 against frozen or rooted".
+- **Opening:** 3 cards alone changed nothing (round-1 damage 80 → 79: on the Small board the start row
+  is two hexes from the middle anyway). Starting the champions with no card beside their nexus
+  (`openBack`) is what brought it to 62.
+- **Shields:** doubled W/R shields plus Bark stacked to +45 on one champion (seen in a scripted match).
+  `shieldCap` keeps a shield at half max HP or less.
+- **Balance:** four automatic passes on `TUNE` (840 matches each). Champion win rates 45–56%
+  (were 33–68% right after the change).
+- 12 scripted human matches (draft, 3-card opening, moves, regroup cards, level-ups, tactic cards),
+  animations on: no errors.
+
+**Not known yet.** Whether a broken champion reads clearly while the pulse runs, and whether a
+pulse with one or two casts now feels like events or like nothing happening. The AI does not plan
+around the death phase: it values a broken champion as nearly lost but does not move a healer in to
+save one. "Comeback" as counted by `simulate` (swingBack) is 1–3% in both rule sets, so it cannot show
+a change.
+
+## Second playtest: Q back, a cinematic pulse, terrain, formations (added 2026-11-21)
+
+Owner, after playing the quieter pulse: 0.8 casts per pulse sounded bad but plays well (teams group
+up and boost each other's shapes). Asked for: a bigger board (slimmer side panels, a shorter top
+bar), a fix for the level-up hover card that would not go away, Q back as a real ability (the
+passive stays), more help from the interface while a pulse plays, a second element for weaker
+champions, visible river / hills ("jungle" turned out to be only a role name), and an Easy-mode
+helper that shows formations. Choices the owner made: medium Q, second element for the supports
+plus the champions no pattern asked for, terrain for the zones that exist, formations computed for
+the drafted team.
+
+- **Layout.** The title is gone, the buttons share one short row with the meters, side panels are
+  220 px wide (were 300) with thin HP bars and smaller portraits, and the board may fill the
+  height of the window.
+- **Level-up hover card.** Clicking a choice now also clears the "hovered" mark; the side panel's
+  redraw used to bring the card back.
+- **Q is cast again** (`qCast`, `qCd: 3`, patterns in `QPAT`). Each Q needs one specific spot or one
+  ally of an element beside it, rests 3 pulses and keeps normal strength (W and R stay double). The
+  passive moved in front of Q W R (✦). About half the Q's ask for an element, two per element,
+  because the earlier easing had left only 8 element requirements in W and R.
+- **Second elements** (`moreEls`, `SECOND_EL`): Oriel +Storm, Brook +Light, Ash +Shadow,
+  Moss +Frost, Shiver +Storm, Pyra +Light, Umbra +Fire.
+- **A cast plays in two beats.** Wind-up: the board leans in toward the caster (W and R only), the
+  caster grows, its ability's name appears above it and the ability's chip glows in the side
+  panel. Then the effect and its numbers. Basic beats are a little slower too (380 ms, were 220).
+- **Status feedback.** Poison ticks are dark-green ☠ numbers; the side panel's poison, shield,
+  freeze, knock-up and blind icons flash when they act (a tick, an absorbed hit, a skipped action, a
+  miss).
+- **Terrain.** Three generated textures (`assets/data/art/pattern_terrain.json`): water on the river
+  row, rocky ground on the hills, a dark lair floor in the Dragon and Baron pits; each half is
+  tinted in its team's colour; labels RIVER and HILL. Rules panel: a short "The board" section.
+- **Formations (Easy).** After the draft the game searches shapes for your five champions
+  (formation only, extra conditions named) and opens "Three shapes for your team": diagrams with
+  portraits, lit letters, who stands in front / middle / behind. A 📐 Formations button in the
+  opening hand reopens it; in Easy the opening card that lights the most right now is gold-bordered.
+
+### Measured
+
+AI vs AI, Small board, 840 matches. "Quiet" = the version before this section.
+
+| | quiet | now |
+|---|---|---|
+| ability casts per pulse | 0.81 | **1.44** |
+| pulses with no cast | 45% | 24% |
+| casts / basic attacks per match | 23 / 108 | 42 / 84 |
+| rounds per match | 13.7 | 13.8 |
+| damage in round 1 | 62 | 67 |
+| side A wins | 49–50% | 51% |
+| champion win rates | 45–56% | **43–55%** |
+
+- **Q per champion per match: 1.0–2.8** (W 0.7–3.0, R 0.4–1.4). The first medium Q set gave 1.67 casts
+  per pulse with Q ranging 0.8–5.1: champions behind the line nearly always have someone in front,
+  front-line melee rarely has anyone behind or beside. Front-line melee went back to "any ally beside
+  it"; the back line got single hexes (front-left only, right only) or an element at a given side.
+- Broken champions 13.7 per match: 1.65 saved, 2.5 finished early, 11.2 die at the death check.
+- Six balance passes on `TUNE`. One pass was spoiled: a harness browser crashed (it printed an error
+  in a character set Windows could not write), the tuner ran again on the previous pass's numbers
+  and overshot (32–63%); the harness now stops a pass when any browser fails, and three clean passes
+  followed.
+- 6 scripted human matches (3 Easy with the formations panel, 3 Normal): no errors. The old rules
+  (every new switch off) still run.
+
+**Not known yet.** Whether the wind-up rhythm (≈0.85 s wind-up + 1.3 s effect for W/R) is too slow
+once you know the champions; Speed: fast halves it. Whether the formation shapes are reachable in a
+real match: they ignore the board edge, towers and the enemy.
 
 ## What the numbers cannot tell
 

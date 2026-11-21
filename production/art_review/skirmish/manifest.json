@@ -238,5 +238,29 @@
   "model": "gemini-3.1-flash-image",
   "styleReference": "anchor.png",
   "made": "2026-11-19T14:48:20"
+ },
+ {
+  "id": "river",
+  "file": "river.png",
+  "prompt": "A seamless tileable texture of a shallow cartoon river: clear turquoise-blue water with soft lighter ripples, a few small white foam streaks and tiny pebbles visible under the water. Seen straight from above, as for a mobile game board, stylised hand-painted cartoon look matching soft bright cartoon grass, no hard shadows, no objects, no characters, no edges, no border, no text. The texture must tile seamlessly on all four sides.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T15:52:36"
+ },
+ {
+  "id": "hillt",
+  "file": "hillt.png",
+  "prompt": "A seamless tileable texture of a raised rocky cartoon hilltop: warm ochre and sandy-brown earth with scattered flat grey stones and small tufts of dry yellow grass. Seen straight from above, as for a mobile game board, stylised hand-painted cartoon look matching soft bright cartoon grass, no hard shadows, no objects, no characters, no edges, no border, no text. The texture must tile seamlessly on all four sides.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T15:52:40"
+ },
+ {
+  "id": "pit",
+  "file": "pit.png",
+  "prompt": "A seamless tileable texture of a dark mysterious monster lair floor: deep purple-tinted mossy stone with faint glowing violet cracks and a few small bones. Seen straight from above, as for a mobile game board, stylised hand-painted cartoon look matching soft bright cartoon grass, no hard shadows, no objects, no characters, no edges, no border, no text. The texture must tile seamlessly on all four sides.",
+  "model": "gemini-3.1-flash-lite-image",
+  "styleReference": null,
+  "made": "2026-11-21T15:52:43"
  }
 ]
