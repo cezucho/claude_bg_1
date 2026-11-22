@@ -300,6 +300,18 @@ svg#board.art { max-height: calc(100vh - 110px); }
 .abl .k { font-family: var(--mono); color: var(--dim); width: 10px; }
 .abl i { color: var(--dim); } .abl .cd { color: var(--dim); font-size: 10.5px; }
 .ab.ps { border-color: #c49bff66; } .ab.ps .psi { color: #c49bff; font-style: normal; font-size: 13px; position: static; }
+.abx { display: flex; flex-direction: column; gap: 3px; padding: 5px 6px; border: 1px solid #ffffff14; border-radius: 8px; background: #0b0f1a99; font-size: 11.5px; line-height: 1.3; }
+.abx.off { opacity: .8; } .abx.on { border-color: var(--gold); } .abx.wait { border-color: #a8853a; }
+.abx .abh { display: flex; align-items: center; gap: 6px; } .abx .abh .k { font-family: var(--display); font-size: 14px; color: #cfd2df; } .abx .abh .cd { color: var(--dim); font-size: 10.5px; margin-left: auto; }
+.abx .abc { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6px; }
+.abx .col { display: flex; flex-direction: column; gap: 2px; background: #ffffff08; border-radius: 6px; padding: 3px 5px; }
+.abx .colh { font-size: 9px; letter-spacing: .14em; color: var(--dim); font-weight: 800; }
+.abx .colb { display: flex; align-items: center; gap: 5px; } .abx .colb i { color: #cfd6e6; font-size: 10.5px; font-style: normal; }
+.abx .abt { color: var(--dim); font-size: 10.5px; }
+.fxs { display: flex; flex-wrap: wrap; gap: 2px 3px; } .fx { display: inline-flex; align-items: center; gap: 1px; padding: 0 4px; border-radius: 7px; background: #ffffff10; font-size: 11px; white-space: nowrap; cursor: help; }
+.fx b { font-family: var(--mono, monospace); font-size: 10.5px; } .fx.dmg { background: #ff5a5a26; } .fx.dmg b { color: #ffb0a0; } .fx.good { background: #7ee08a22; } .fx.good b { color: #a8f0b0; } .fx.reach { background: #ffd66b1c; } .fx.reach b { color: #ffe08a; } .fx.foe { background: #ff5a5a18; }
+.ab .fxg { font-size: 9px; margin-left: -1px; color: #ff9b8a; } .ab .fxg.good { color: #8ef0a0; }
+.emb { flex: none; }
 .famc { display: inline-flex; vertical-align: middle; margin-left: 3px; } .famc svg { display: block; } .famline { display: flex; align-items: center; gap: 4px; color: #ffd66b; font-size: 11px; }
 .ab.rx { border-color: #3fc4b4aa; opacity: .95; gap: 1px; } .ab.rx .rxi { font-style: normal; font-size: 11px; color: #7fe8da; position: static; } .ab.rx.hot { opacity: 1; box-shadow: 0 0 8px #3fe0cc; border-color: #7fe8da; }
 .abl.rx .rxbig { display: inline-flex; width: 30px; justify-content: center; color: #7fe8da; font-size: 13px; line-height: 30px; white-space: nowrap; } .abl.rx .lz { color: #7fe8da; }
@@ -532,7 +544,7 @@ header.hud .tools button { font-size: 12px; padding: 3px 9px; border-radius: 8px
 .tile .elg { width: 18px; height: 18px; }
 
 /* ── Q W R chips ── */
-.ab { border-radius: 8px; border: 1.5px solid #353c58; background: linear-gradient(180deg, #151b30, #0b0f1d); padding: 0 5px 0 4px; opacity: .6; }
+.ab { border-radius: 8px; border: 1.5px solid #353c58; background: linear-gradient(180deg, #151b30, #0b0f1d); padding: 0 3px 0 3px; gap: 1px; opacity: .6; }
 .ab b { font-family: var(--display); font-weight: 400; font-size: 12px; color: #9aa0b8; }
 .ab.on { opacity: 1; border-color: var(--gold); background: linear-gradient(180deg, #5a4416, #2a1f0a); box-shadow: 0 0 6px #f7c54f88; } .ab.on b { color: #ffe08a; }
 .ab.wait { opacity: 1; border-color: #8a6a2c; } .ab.wait b { color: #d0a85a; }
@@ -2966,7 +2978,7 @@ function patSvg(pat, size = 22) {
 const rxLoosenText = p => { if (!RULES.rxLoosen) return ''; const a = [0, 1, 2].map(st => RX_T[p.on].text(p, st)); const out = [];
   if (a[1] !== a[0]) out.push(`from round ${RULES.wLoosenRounds[0]}: ${a[1]}`); if (a[2] !== a[1]) out.push(`from round ${RULES.wLoosenRounds[1]}: ${a[2]}`);
   if (RULES.rxPerPulse[2] > RULES.rxPerPulse[0]) out.push(`from round ${RULES.wLoosenRounds[1]} it can react ${RULES.rxPerPulse[2]} times a pulse`); return out.join('; '); };
-const rxIcons = p => `<i class="rxi">${RX_T[p.on].ic}</i><i class="rxi">›</i><i class="rxi">${RX_DO[p.do].ic}</i>`;
+const rxIcons = p => `<i class="rxi">${RX_T[p.on].ic}</i><i class="rxi">${RX_DO[p.do].ic}</i>`;
 const rxChip = (d, c) => { const p = RULES.reflex && REFLEX[d.id]; if (!p) return ''; const lz = rxLoosenText(p);
   return `<span class="ab rx${c && G.ev && G.ev.rxIds && G.ev.rxIds.includes(c.id) ? ' hot' : ''}" title="${esc(`Reflex · ${p.name}: ${rxText(p, G ? rxStage() : 0)}, by itself, in the middle of the pulse.${lz ? ' Loosens: ' + lz + '.' : ''}`)}">${rxIcons(p)}</span>`; };
 const rxBlock = d => { const p = RULES.reflex && REFLEX[d.id]; if (!p) return ''; const lz = rxLoosenText(p);
@@ -2977,8 +2989,8 @@ const psBlock = (d, size = 30) => { const p = PASSIVE[d.id]; return `<div class=
 function abChips(c) {
   const firing = k => G.castFx && G.castFx.id === c.id && G.castFx.k === k ? ' fire' : '';
   return (RULES.passives && RULES.qCast ? psChip(c.def) : '') + rxChip(c.def, c) + ABK.map(k => { if (psK(k)) return psChip(c.def); const ab = c.ab[k], ok = !c.dead && patOk(c, ab.pat), cd = c.dead ? 0 : abCool(c, k), st = ok ? (cd ? 'wait' : 'on') : 'off';
-    const tip = `${k.toUpperCase()} ${ab.name} (cooldown ${ab.cd}): ${abText(ab)}. Needs ${patText(ab.pat)}.${k === 'r' && RULES.spread && RULES.loosen && R_STAGES[c.def.id] && (c.rStage ?? 0) < 2 ? ` Loosens at level ${RULES.loosenAt[c.rStage ?? 0]}.` : ''}${ok ? (cd ? ` Pattern complete, ready in ${cd}.` : ' Lit: fires in the next pulse if it has a target.') : ''}`;
-    return `<span class="ab ${st}${firing(k)}" data-k="${k}" title="${esc(tip)}"><b>${k.toUpperCase()}</b>${patSvg(ab.pat, 20)}${ok && cd ? `<i>${cd}</i>` : ''}</span>`; }).join('');
+    const tip = `${k.toUpperCase()} ${ab.name} (cooldown ${ab.cd}): ${abText(ab)}. Reaches ${abReach(ab, eff(c, links()).range)} hexes${ab.mult ? `, ${Math.ceil(eff(c, links()).atk * ab.mult)} damage` : ''}. Needs ${patText(ab.pat)}. Hover to see it on the board.${k === 'r' && RULES.spread && RULES.loosen && R_STAGES[c.def.id] && (c.rStage ?? 0) < 2 ? ` Loosens at level ${RULES.loosenAt[c.rStage ?? 0]}.` : ''}${ok ? (cd ? ` Pattern complete, ready in ${cd}.` : ' Lit: fires in the next pulse if it has a target.') : ''}`;
+    return `<span class="ab ${st}${firing(k)}" data-k="${k}" title="${esc(tip)}"><b>${k.toUpperCase()}</b>${patSvg(ab.pat, 16)}<span class="fxg ${helpful(ab) ? 'good' : ''}">${SHAPE_FX[ab.shape][0]}</span>${ok && cd ? `<i>${cd}</i>` : ''}</span>`; }).join('');
 }
 // abs: a champion's own abilities (with upgrades) or a roster entry's; c: the champion, when its live state should show
 function abListShort(abs) {   // the draft screen: one short block per ability, the full pattern text on hover
@@ -2992,13 +3004,86 @@ function loosenNote(id, level) {
   return `<br><span style="color:var(--gold, #e7b75a)">At level ${at[st]} it loosens: needs ${esc(patText(R_STAGES[id][st + 1]))}.</span>`;
 }
 function abList(abs, c, d) {
-  return `<div class="ablist">${RULES.passives && RULES.qCast ? psBlock(c ? c.def : d) : ''}${rxBlock(c ? c.def : d)}${ABK.map(k => { if (psK(k)) return psBlock(c ? c.def : d); const ab = abs[k], ok = c && !c.dead && patOk(c, ab.pat), cd = c && !c.dead ? abCool(c, k) : 0;
-    return `<div class="abl ${c ? (ok ? (cd ? 'wait' : 'on') : 'off') : ''}"><b class="k">${k.toUpperCase()}</b>${patSvg(ab.pat, 30)}<div><b>${esc(ab.name)}</b> <span class="cd">cooldown ${ab.cd}${ok && cd ? ` · ready in ${cd}` : ok ? ' · lit' : ''}</span><br>${esc(abText(ab))}<br><i>Needs ${esc(patText(ab.pat))}.</i>${k === 'r' ? loosenNote((c ? c.def : d).id, c ? c.level : 0) : ''}</div></div>`; }).join('')}</div>`;
+  return `<div class="ablist">${RULES.passives && RULES.qCast ? psBlock(c ? c.def : d) : ''}${rxBlock(c ? c.def : d)}${ABK.map(k => psK(k) ? psBlock(c ? c.def : d) : abRow(k, abs[k], c ? c.def : d, c, k === 'r' ? loosenNote((c ? c.def : d).id, c ? c.level : 0) : '')).join('')}</div>`;
 }
 function abPipsSvg(c, cx, y) {
   if (G.display || c.dead || !c.ab) return '';
   return `${UI.art ? `<rect x="${cx - 19}" y="${y - 10}" width="38" height="13" rx="6.5" fill="#0b0f16c8" stroke="#ffffff22"></rect>` : ''}<text class="st" x="${cx}" y="${y}" style="font-size:11px;font-weight:800;letter-spacing:1px;paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${ABK.map(k => { if (psK(k)) return `<tspan style="fill:#c49bff">✦</tspan>`; if (c.broken) return `<tspan style="fill:#66708a">${k.toUpperCase()}</tspan>`; const ok = patOk(c, c.ab[k].pat), cd = abCool(c, k);
     return `<tspan style="fill:${ok ? (cd ? '#a8853a' : '#ffe07a') : '#66708a'}">${k.toUpperCase()}</tspan>`; }).join('<tspan> </tspan>')}</text>`;
+}
+// ── what an ability does, in icons and a diagram (2026-11-22) ──
+// Emblem: a placeholder picture per ability (its look: colour + glyph) until painted art exists.
+const LOOK_FX = { wildfire: ['#ff9b54', '#5a1e08', '🔥'], blizzard: ['#9fd8ff', '#0e3350', '❄'], lance: ['#c49bff', '#2a1350', '✦'], slam: ['#e0b07a', '#4a2a10', '✊'],
+  quake: ['#d09a5a', '#3a240c', '⛰'], execute: ['#ff6b6b', '#4a0c12', '🗡'], volley: ['#9be07a', '#163a10', '➶'], cannon: ['#ffb347', '#4a2a06', '💣'],
+  twist: ['#b07aff', '#24104a', '🌀'], sanctuary: ['#7ee08a', '#0e3a1c', '✚'] };
+function abEmblem(ab, size = 30) { const [hi, lo, g] = LOOK_FX[ab.look] || ['#ccc', '#333', '•'], id = 'em' + Math.random().toString(36).slice(2, 7);
+  return `<svg class="emb" width="${size}" height="${size}" viewBox="0 0 30 30" aria-hidden="true"><defs><radialGradient id="${id}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="${hi}"></stop><stop offset="1" stop-color="${lo}"></stop></radialGradient></defs><circle cx="15" cy="15" r="13.5" fill="url(#${id})" stroke="${hi}" stroke-width="1.5"></circle><text x="15" y="20" text-anchor="middle" style="font-size:14px">${g}</text></svg>`; }
+// Who it can reach: shape, how far (from the champion's range), how many.
+const SHAPE_FX = { target: ['🎯', 'one enemy'], splash: ['✸', 'one enemy and every enemy beside it'], around: ['◎', 'every enemy around it'], line: ['➶', 'a beam through the line of enemies'],
+  multi: ['⁂', 'several enemies'], weakest: ['⇉', 'dashes to an enemy and hits it'], hook: ['⤺', 'pulls an enemy in and hits it'], ally: ['✚', 'one ally'], allies: ['✚', 'every ally around it'], rescue: ['⤺', 'pulls a hurt ally to safety'] };
+const helpful = ab => ['ally', 'allies', 'rescue'].includes(ab.shape);
+function abReach(ab, range) { return { target: range, splash: range, line: Math.max(range, 4), multi: range, around: ab.r, weakest: range + (ab.leap || 0), hook: range + (ab.reach || 0), ally: 2, allies: ab.r, rescue: 3 }[ab.shape]; }
+const abCount = ab => ({ target: '1', splash: '1+', around: 'all', line: 'all', multi: 'up to ' + ab.n, weakest: '1', hook: '1', ally: '1', allies: 'all', rescue: '1' }[ab.shape]);
+const ST_IC = { frozen: '🧊', air: '🌪️', rooted: '🌿', blind: '🙈', silenced: '🤐', berserk: '😡', taunt: '📢' };
+// The icon strip: [shape · count] [reach] [damage] [heal] [shield] [statuses] [movement].
+function effIcons(ab, atk, range) {
+  const ic = (g, v, t, cls = '') => `<span class="fx ${cls}" title="${esc(t)}">${g}${v !== '' ? `<b>${v}</b>` : ''}</span>`, out = [];
+  const [sg, st] = SHAPE_FX[ab.shape], reach = abReach(ab, range), help = helpful(ab);
+  out.push(ic(sg, abCount(ab) === '1' ? '' : abCount(ab).replace('up to ', '≤'), `${st}${abCount(ab) !== '1' ? ` (${abCount(ab)})` : ''}`, help ? 'good' : 'foe'));
+  out.push(ic('↔', reach, ab.shape === 'around' || ab.shape === 'allies' ? `every ${help ? 'ally' : 'enemy'} within ${reach} hexes of it` : ab.shape === 'weakest' ? `reaches ${reach} hexes: its range ${range} + a dash of ${ab.leap}` : ab.shape === 'hook' ? `reaches ${reach} hexes: its range ${range} + a pull of ${ab.reach}` : ab.shape === 'line' ? `a beam ${reach} hexes long` : `reaches ${reach} hex${reach > 1 ? 'es' : ''} (its range)`, 'reach'));
+  if (ab.mult) out.push(ic('🗡️', Math.ceil(atk * ab.mult), `${Math.ceil(atk * ab.mult)} damage per enemy (${ab.mult}× its attack of ${atk})`, 'dmg'));
+  if (ab.heal) out.push(ic('✚', ab.heal, `heals ${ab.heal}`, 'good'));
+  if (ab.shield) out.push(ic('🛡', ab.shield, `shield ${ab.shield}`, 'good'));
+  if (ab.selfShield) out.push(ic('🛡', ab.selfShield, `shields itself for ${ab.selfShield}`, 'good'));
+  if (ab.steal) out.push(ic('🩸', '', 'heals itself for the damage it deals', 'good'));
+  for (const [s, p] of ab.status) out.push(ic(ST_IC[s] || '•', p < 100 ? p + '%' : '', `${STATUS_VERB[s]} ${p < 100 ? `(${p}% chance)` : ''}`));
+  if (ab.poison) out.push(ic('☠', '×' + ab.poison, `poisons ×${ab.poison}`));
+  if (ab.cleanse) out.push(ic('✨', '', 'clears statuses'));
+  if (ab.push) out.push(ic('💨', '', 'knocks the enemy one hex back'));
+  if (ab.swap) out.push(ic('⇄', '', `first swaps places with the ally ${GROUP_TEXT[ab.swap]}`));
+  if (ab.after) out.push(ic('👣', '', `then steps ${ab.after === 'back' ? 'back' : ab.after === 'fwd' ? 'forward' : 'aside'} one hex`));
+  if (ab.pullTo) out.push(ic('⇠', '', `then calls the nearest ally within 3 to the hex ${GROUP_TEXT[ab.pullTo]}`));
+  if (ab.finisher) out.push(ic('💀', '', 'finishes a broken enemy at once'));
+  return `<span class="fxs">${out.join('')}</span>`;
+}
+// The effect diagram: the champion (white) in the middle of a radius-3 hex field; tinted = hexes it reaches;
+// red = enemies hit (green = allies helped); arrows = a dash, a pull or a knock-back. Facing up = toward the enemy.
+function effSvg(ab, range, size = 58) {
+  const R = 3, u = size / 7.6, m = size / 2, P = ([q, r]) => [m + (q + r / 2) * u, m - r * u * .87], key = h => h.join(',');
+  const reach = Math.min(R, abReach(ab, range)), help = helpful(ab), hit = new Set(), alt = new Set(), arrows = [];
+  const fwd = n => [0, Math.min(R, n)];   // straight ahead (front right) n hexes
+  const ring = (c, n) => { const o = []; for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) { const h = [c[0] + q, c[1] + r]; if (dist(h, c) <= n && dist(h, [0, 0]) <= R) o.push(h); } return o; };
+  const t1 = fwd(Math.max(1, Math.min(range, R)));
+  switch (ab.shape) {
+    case 'target': hit.add(key(t1)); break;
+    case 'splash': hit.add(key(t1)); for (const h of ring(t1, 1)) if (key(h) !== key(t1) && key(h) !== '0,0') alt.add(key(h)); break;
+    case 'around': case 'allies': for (const h of ring([0, 0], ab.r)) if (key(h) !== '0,0') hit.add(key(h)); break;
+    case 'line': for (let i = 1; i <= R; i++) hit.add(key([0, i])); break;
+    case 'multi': { const c = ring([0, 0], Math.min(range, R)).filter(h => key(h) !== '0,0').sort((a, b) => dist(b, [0, 0]) - dist(a, [0, 0]) || a[0] - b[0] || a[1] - b[1]); const pick = [];
+      for (const h of c) if (pick.length < ab.n && pick.every(p => dist(p, h) >= 2)) pick.push(h); for (const h of c) if (pick.length < ab.n && !pick.some(p => key(p) === key(h))) pick.push(h); pick.forEach(h => hit.add(key(h))); break; }
+    case 'weakest': { const t = fwd(reach); hit.add(key(t)); arrows.push([[0, 0], [0, t[1] - 1], 'dash']); break; }
+    case 'hook': case 'rescue': { const t = fwd(reach); hit.add(key(t)); arrows.push([t, [0, 1], 'pull']); break; }
+    case 'ally': hit.add(key([-1, 2])); break;
+  }
+  if (ab.push && ab.shape !== 'around') { const t = [...hit][0]; if (t) { const p = t.split(',').map(Number); arrows.push([p, [p[0], p[1] + 1], 'push']); } }
+  let o = `<svg class="effd" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">`;
+  for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) { const h = [q, r]; if (dist(h, [0, 0]) > R) continue; const [x, y] = P(h), k = key(h), d = dist(h, [0, 0]);
+    const col = k === '0,0' ? '#f3f6fb' : hit.has(k) ? (help ? '#7ee08a' : '#ff5a5a') : alt.has(k) ? '#ff9b54' : d <= reach ? (help ? '#3f8a55' : '#a0563f') : '#3a4358';
+    o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(u * (hit.has(k) || k === '0,0' ? .44 : .36)).toFixed(1)}" fill="${col}"></circle>`; }
+  for (const [a, b, kind] of arrows) { const [x1, y1] = P(a), [x2, y2] = P(b);
+    o += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${kind === 'dash' ? '#ffd66b' : kind === 'push' ? '#cfe3ff' : '#c49bff'}" stroke-width="1.4" marker-end="url(#effar)"></line>`; }
+  if (abReach(ab, range) > R && ab.shape !== 'line') o += `<text x="${size - 1}" y="${size * .2}" text-anchor="end" style="font:800 ${size * .2}px sans-serif;fill:#ffd66b">${abReach(ab, range)}</text>`;
+  return o + `<defs><marker id="effar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#f3f6fb"></path></marker></defs></svg>`;
+}
+// One ability, in two columns: NEEDS (the pattern) and DOES (the diagram and icons); the full sentence below.
+function abRow(k, ab, who, c, extra = '') {
+  const atk = c ? eff(c, links()).atk : who.atk, range = c ? eff(c, links()).range : who.range;
+  const ok = c && !c.dead && patOk(c, ab.pat), cd = c && !c.dead ? abCool(c, k) : 0;
+  return `<div class="abx ${c ? (ok ? (cd ? 'wait' : 'on') : 'off') : ''}">
+    <div class="abh">${abEmblem(ab, 26)}<b class="k">${k.toUpperCase()}</b><b>${esc(ab.name)}</b><span class="cd">cooldown ${ab.cd}${ok && cd ? ` · ready in ${cd}` : ok ? ' · lit' : ''}</span></div>
+    <div class="abc"><div class="col"><span class="colh">NEEDS</span><div class="colb">${patSvg(ab.pat, 30)}<i>${esc(patText(ab.pat))}</i></div></div>
+      <div class="col"><span class="colh">DOES</span><div class="colb">${effSvg(ab, range)}${effIcons(ab, atk, range)}</div></div></div>
+    <div class="abt">${esc(abText(ab))}.${extra}</div></div>`;
 }
 // ── geometry icons (2026-11-22): the shape a champion's patterns want, at a glance ──
 const FAMILY = { cinder: 'line', shiver: 'line', flint: 'line', ash: 'line', ember: 'line', bulwark: 'line', gale: 'line',
@@ -3037,6 +3122,13 @@ function reachBadges(svg, gains) {
 // empty get a red ✕ when something is in the way. only = one ability (chip hover).
 function patternGuide(svg, c, only) {
   if (!c || c.dead || G.display) return;
+  if (only && !psK(only)) { const ab = c.ab[only], L = links(), reach = abReach(ab, eff(c, L).range), col = helpful(ab) ? '#7ee08a' : '#ff5a5a';   // what it reaches and who it would hit now
+    for (const h of HEXES) { const d = dist(h, c.pos); if (!d || d > reach || SOLID.has(K(h))) continue; const [cx, cy] = px(...h);
+      svg.appendChild(sv(`<polygon points="${hexPts(cx, cy)}" transform="translate(${cx} ${cy}) scale(.9) translate(${-cx} ${-cy})" style="fill:${col}40;stroke:${col};stroke-width:2;stroke-opacity:.8;pointer-events:none"></polygon>`)); }
+    const ts = abTargets(c, ab, L) || [];
+    if (!ts.length) { const [cx, cy] = px(...c.pos); svg.appendChild(sv(`<text x="${cx}" y="${cy - HEX * 1.45}" text-anchor="middle" style="font:800 11px sans-serif;fill:#ffd66b;paint-order:stroke;stroke:#0b0f16;stroke-width:3px;pointer-events:none">no target in reach now</text>`)); }
+    for (const t of ts) { const [cx, cy] = px(...t.pos);
+      svg.appendChild(sv(`<g style="pointer-events:none"><circle cx="${cx}" cy="${cy}" r="${HEX * .66}" style="fill:${col}22;stroke:${col};stroke-width:3;stroke-dasharray:7 4"></circle><text x="${cx}" y="${cy - HEX * .75}" text-anchor="middle" style="font:800 12px sans-serif;fill:${col};paint-order:stroke;stroke:#0b0f16;stroke-width:3px">${helpful(ab) ? '✚' : '🎯'}</text></g>`)); } }
   const want = {}, slot = h => want[K(h)] || (want[K(h)] = { h, items: [] });
   for (const k of ABK) { if (only && k !== only) continue; const pat = c.ab[k].pat; if (psK(k) || pat.count || pat.lone) continue;
     const lit = patOk(c, pat);
@@ -3113,9 +3205,9 @@ c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more
       <div class="icons">${stat(ico('atk'), e.atk, e.atk > c0.atk, 'attack')}${stat(ico('range'), e.range, e.range > c0.range, 'range')}${stat(ico('init'), e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(ico(e.home ? 'home' : 'armor'), e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat(ico('leap'), c0.dive, false, 'leap') : ''}${chances}${sts}</div>
       <div class="abrow">${abChips(c0)}</div>
     </div>`);
-    card.querySelectorAll('.ab[data-k]').forEach(sp => { sp.addEventListener('mouseenter', () => { UI.abHover = { id: c0.id, k: sp.dataset.k }; renderBoard(); }); sp.addEventListener('mouseleave', () => { UI.abHover = null; renderBoard(); }); });
+    card.querySelectorAll('.ab[data-k]').forEach(sp => { sp.addEventListener('mouseenter', () => { UI.abHover = { id: c0.id, k: sp.dataset.k }; UI.tipFor = null; hideTip(); renderBoard(); }); sp.addEventListener('mouseleave', () => { UI.abHover = null; renderBoard(); }); });
     if (canSel) card.addEventListener('click', ev => { if (ev.target.closest('button')) return; select(c0); });
-    card.addEventListener('mouseenter', () => { UI.tipFor = c0.id; showTip(card, c0, team); });
+    card.addEventListener('mouseenter', () => { if (UI.abHover) return; UI.tipFor = c0.id; showTip(card, c0, team); });
     card.addEventListener('mouseleave', () => { UI.tipFor = null; hideTip(); });
     card.querySelectorAll('button[data-card]').forEach(b => { const i = +b.dataset.card;
       b.addEventListener('click', () => openingPlay(c0, i));

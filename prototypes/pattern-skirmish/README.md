@@ -844,6 +844,35 @@ the pulse when it chooses a move, so it already counts the reflexes its move set
 - D (reflexes replacing the generic maneuver) gives slightly better comebacks (21%) but slower matches.
   The default keeps both, because the maneuver is the player's own choice and reflexes are automatic.
 
+## What an ability does, in icons and diagrams (added 2026-11-22)
+
+**Owner's note.** Most of the icons said what an ability *needs*; what it *does* was only in the text. The owner
+wants icons (attack shown as a sword), placeholder ability graphics for now, and to see at a glance whether an
+ability hits one enemy or several, and how far it reaches compared with the champion's range.
+
+**What is in.**
+- **Two columns per ability** on every hover card (team cards and draft): *NEEDS* (the pattern diagram and a
+  short sentence) and *DOES* (an effect diagram and an icon strip). The full sentence stays below, in small print.
+- **Icon strip:** who it hits (🎯 one enemy, ✸ one plus its neighbours, ◎ everyone around it, ➶ a beam,
+  ⁂ up to N, ⇉ a dash, ⤺ a pull, ✚ allies), ↔ reach in hexes, 🗡️ damage as a number (not "×attack"),
+  ✚ heal, 🛡 shield, status icons with chances, ☠ poison, 💨 knock-back, 👣 a step after, ⇠ calls an ally,
+  ⇄ a swap first, 💀 finishes broken enemies. Each icon has a hover text.
+- **Effect diagram:** the champion (white) in a radius-3 hex field facing the enemy; tinted hexes = what it can
+  reach; red = enemies hit (orange = splash, green = allies); a yellow arrow = a dash, a violet arrow = a pull.
+- **Ability emblems** (placeholders): a coloured disc with a glyph per kind of ability (fire, frost, lance, slam,
+  quake, execute, volley, cannon, twist, sanctuary). Painted art can replace them later.
+- **Chips** on the team cards add a small "who it hits" glyph after the pattern.
+- **Hovering a chip** on the board: the hexes it reaches are tinted, and the champions it would hit right now
+  get a dashed target ring (or "no target in reach now").
+
+**How reach works today** (for the owner's question):
+- A basic attack and a single-target ability hit within the champion's range only. A range-1 champion hits
+  only the hexes next to it.
+- Dashes (Ember W, Viper R, Fang W, Wisp W, Dusk R) reach range + 2–3. Hooks (Cinder W, Thorn W) pull an enemy
+  from range + 2. Areas (Bulwark R, Ember R, Cinder R, Shiver R) hit everyone within 2.
+- **Anchor, Gale and Moss cannot reach past the hexes next to them at all** (Gale's R hits "up to 4 in range",
+  which at range 1 means only neighbours).
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete
