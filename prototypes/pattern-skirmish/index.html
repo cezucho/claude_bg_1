@@ -767,6 +767,7 @@ function abText(ab) {
     hook: `pulls the nearest enemy within ${ab.reach} hexes past its range next to itself and hits it${dmg}`, rescue: `pulls the most wounded ally within 3 (at half HP or less) to its side${ab.shield ? `, shield ${ab.shield}` : ''}${ab.heal ? `, heals ${ab.heal}` : ''}`,
     ally: `heals the most wounded ally within 2 for ${ab.heal}`, allies: `every ally within ${ab.r}: ${[ab.heal ? `heals ${ab.heal}` : '', ab.shield ? `shield ${ab.shield}` : '', ab.cleanse ? 'clears statuses' : ''].filter(Boolean).join(', ')}` }[ab.shape];
   if (ab.swap) s = `swaps places with the ally ${GROUP_TEXT[ab.swap]}, then ` + s;
+  if (ab.lunge) s = `if no enemy is in reach, first charges up to ${ab.lunge} hex${ab.lunge > 1 ? 'es' : ''} toward one, then ` + s;
   const extra = [...ab.status.map(([k, p]) => `${STATUS_VERB[k]}${p < 100 ? ` (${p}%)` : ''}`), ab.poison ? `poisons ×${ab.poison}` : '', ab.push ? 'knocks back' : '', ab.after ? `then steps ${ab.after === 'back' ? 'back' : ab.after === 'fwd' ? 'forward' : 'aside'}` : '', ab.pullTo ? `then calls the nearest ally within 3 to the hex ${GROUP_TEXT[ab.pullTo]}` : '', ab.steal ? 'heals itself for the damage' : '', ab.selfShield ? `shields itself for ${ab.selfShield}` : ''].filter(Boolean);
   return s + (extra.length ? '; ' + extra.join(', ') : '');
 }
@@ -1220,13 +1221,17 @@ const QFAM = {
   quartz: need(['B']), anchor: need(['B']), ranger: need(['F']), seer: need(['F']),                                                             // column
   fang: need(['FL']), pyra: need(['FL']), lens: need(['FL']), rime: need(['FR']), oriel: need(['FL']), gunner: need(['BL']),                     // wedge
 };
+// Gap closers (2026-11-22, RULES.gapClose): melee champions that could not reach past their neighbours get one
+// ability that charges in first (lunge) or pulls an enemy in (hook).
+const GAP = { anchor: { q: { lunge: 1 } }, gale: { w: { lunge: 2 } }, bulwark: { w: { lunge: 1 } }, shiver: { w: { lunge: 1 } }, moss: { q: { shape: 'hook', reach: 1 } } };
+const GAP_ORIG = new Map(ROSTER.map(d => [d.id, Object.fromEntries(ABK.map(k => [k, { shape: d.ab[k].shape, reach: d.ab[k].reach, lunge: d.ab[k].lunge }]))]));
 const SECOND_EL = { oriel: 'Storm', brook: 'Light', ash: 'Shadow', moss: 'Frost', shiver: 'Storm', pyra: 'Light', umbra: 'Fire' };
 const ORIG_ELS = new Map(ROSTER.map(d => [d.id, [...d.els]]));
 const ORIG_AB = new Map(ROSTER.map(d => [d.id, Object.fromEntries(ABK.map(k => [k, { pat: d.ab[k].pat, cd: d.ab[k].cd }]))]));
 let RARE_ON = false, TUNE_NOW = null, RULESET = '';
 // Puts the roster in line with the switches (called at the start of every match, so headless runs can flip them).
 function syncRules() {
-  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls, RULES.spread, JSON.stringify(RULES.spreadCd), RULES.loosen, JSON.stringify(RULES.spreadTune || {}), RULES.qFamily].join();
+  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls, RULES.spread, JSON.stringify(RULES.spreadCd), RULES.loosen, JSON.stringify(RULES.spreadTune || {}), RULES.qFamily, RULES.gapClose].join();
   if (key === RULESET) return; RULESET = key; RARE_ON = !!RULES.rare;
   for (const d of ROSTER) { const o = ORIG_AB.get(d.id), x = RARE[d.id];
     for (const k of ['w', 'r']) { const a = d.ab[k];
@@ -1237,6 +1242,7 @@ function syncRules() {
       const sp = RULES.spread && SPREAD[d.id];
       if (sp) { a.pat = k === 'r' && RULES.loosen && R_STAGES[d.id] ? R_STAGES[d.id][0] : sp[k]; a.cd = RULES.spreadCd[k]; Object.assign(a, (sp.fx || {})[k] || {}); } }
     const q = d.ab.q, qm = RULES.passives && RULES.qCast; q.pat = qm ? (RULES.spread && RULES.qFamily ? QFAM[d.id] : QPAT[d.id]) : o.q.pat; q.cd = qm ? RULES.qCd : o.q.cd;
+    for (const k of ABK) Object.assign(d.ab[k], GAP_ORIG.get(d.id)[k], RULES.gapClose && GAP[d.id] ? GAP[d.id][k] || {} : {});
     d.els = RULES.moreEls && SECOND_EL[d.id] ? [...ORIG_ELS.get(d.id), SECOND_EL[d.id]] : [...ORIG_ELS.get(d.id)]; }
   setTune(RULES.spread && RULES.spreadTune ? { ...TUNE, ...RULES.spreadTune } : TUNE);
   for (const d of ROSTER) d.paths = buildPaths(d);
@@ -1327,6 +1333,7 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   aiProgress: 0,      // with spread patterns: how much the AI values a half-built W or R pattern
   loosen: true, loosenAt: [2, 4], loosenValue: 2.5,   // spread patterns: each R starts strict and loosens at these champion levels (R_STAGES); how much the AI's level choice values that
   spreadTune: { anchor: 1.089, ash: 0.859, brook: 0.793, bulwark: 1.267, cinder: 0.898, dusk: 0.926, ember: 1.006, fang: 0.916, flint: 1.041, gale: 1.343, gunner: 1.117, hail: 0.777, lens: 1.106, moss: 0.799, oriel: 0.891, pyra: 0.858, quartz: 1.313, ranger: 1.14, rime: 1.312, seer: 1.467, shiver: 1.109, thorn: 0.636, umbra: 0.599, viper: 1.365, wisp: 0.791 },   // all 25, with reflexes and Q shapes: balance factors (4 passes + averaging, 2026-11-22)
+  gapClose: true,     // melee champions without reach get a gap closer (GAP): Anchor Q, Gale W, Bulwark W, Shiver W charge in; Moss Q pulls
   reflex: true, rxLoosen: true, rxPerPulse: [1, 1, 2], rxMax: 16,   // reflexes (REFLEX): champions move by themselves mid-pulse when their trigger happens; looser at the W rounds; reactions per champion per pulse by stage; most reflexes per pulse
   movesPerTurn: 1,    // champions a team moves before each pulse (a hold ends the turn)
   maneuver: true,     // after a pulse in which a team fired a W or R, its next turn adds a maneuver: one champion steps 1 hex, or two allies side by side swap
@@ -1543,6 +1550,15 @@ function pullToWho(c, ab) {   // the ally a pullTo would move, and where
 }
 function fetchDest(c) { for (const cell of ['BL', 'BR', 'L', 'R', 'FL', 'FR']) { const h = cellHex(c, cell); if (freeHex(h)) return h; } return null; }
 function abTargets(c, ab, L, swapped) {
+  if (ab.lunge && !swapped) {   // a gap closer: with nobody in reach, it first charges up to ab.lunge hexes toward the enemy
+    const plain = abTargets(c, { ...ab, lunge: 0 }, L, false); if (plain || c.rooted) return plain;
+    const from = c.pos, seen = new Set([K(from)]); let fr = [from], best = null;
+    for (let st = 1; st <= ab.lunge && !best; st++) { const nx = [];
+      for (const at of fr) for (const d of DIRS) { const h = add(at, d); if (seen.has(K(h)) || !freeHex(h)) continue; seen.add(K(h)); nx.push(h); }
+      nx.sort((a, b) => nearFoe(c, a) - nearFoe(c, b) || a[0] - b[0] || a[1] - b[1]);
+      for (const h of nx) { c.pos = h; const ts = abTargets(c, { ...ab, lunge: 0 }, L, false); c.pos = from; if (ts) { ts.lunge = h; best = ts; break; } }
+      fr = nx; }
+    return best; }
   if (ab.swap && !swapped) {   // judged from where the champion will stand after the swap
     const o = swapMate(c, ab.swap); if (!o) return null;
     const a = c.pos, b = o.pos; c.pos = b; o.pos = a; const ts = abTargets(c, ab, L, true); c.pos = a; o.pos = b; return ts; }
@@ -1576,6 +1592,7 @@ function nextAbility(c, L) {
 // Where the champion's next ability would move anyone, judged on the board as it stands (for the preview arrows).
 function forcedMoves(c, L) {
   const act = nextAbility(c, L); if (!act) return []; const { ab, ts } = act, out = [];
+  if (ts.lunge) out.push({ from: c.pos, to: ts.lunge, team: c.team });
   if (ab.swap) { const o = swapMate(c, ab.swap); if (o) out.push({ from: c.pos, to: o.pos, team: c.team }, { from: o.pos, to: c.pos, team: c.team }); return out; }
   if (ab.shape === 'hook') { const d = pullDest(c, ts[0]); if (d) out.push({ from: ts[0].pos, to: d, team: c.team }); }
   if (ab.shape === 'rescue') out.push({ from: ts[0].pos, to: fetchDest(c), team: c.team });
@@ -1604,6 +1621,7 @@ function castAbility0(c, act, L, ctx) {
   const moved = (who, to, kind) => { ctx.lines.push({ from: who.pos, to, cls: 'leap' }); who.pos = to; STATS.forced[kind]++; };
   if (RULES.rare) cue(k === 'q' ? 2 : 3, `${cn(c)} fires <em>${esc(ab.name)}</em> (${k.toUpperCase()})!`, `${esc(nm(c))}: ${esc(abText(ab))}.`);   // W and R are headlines, Q a mention   // a rare cast is a headline: the board holds while it plays
   else if (k === 'r') cue(2, `${cn(c)} fires <em>${esc(ab.name)}</em>!`);
+  if (ts && ts.lunge && !c.rooted && freeHex(ts.lunge)) { moved(c, ts.lunge, 'leap'); STATS.lunges = (STATS.lunges || 0) + 1; ctx.notes.push('charges in'); }
   if (ab.swap) { const o = swapMate(c, ab.swap); if (o) { const a = c.pos, b = o.pos; ctx.lines.push({ from: a, to: b, cls: 'leap' }, { from: b, to: a, cls: 'leap' }); c.pos = b; o.pos = a; STATS.forced.swap++; ts = abTargets(c, ab, L, true) || []; } }
   if (ab.shape === 'rescue') { const x = ts[0], d = fetchDest(c); if (d) moved(x, d, 'fetch');
     if (ab.heal) { const g = Math.min(ab.heal, x.maxHp - x.hp); x.hp += g; if (g) ctx.pops.push({ hex: x.pos, text: '+' + g, cls: 'good' }); }
@@ -3022,7 +3040,7 @@ function abEmblem(ab, size = 30) { const [hi, lo, g] = LOOK_FX[ab.look] || ['#cc
 const SHAPE_FX = { target: ['🎯', 'one enemy'], splash: ['✸', 'one enemy and every enemy beside it'], around: ['◎', 'every enemy around it'], line: ['➶', 'a beam through the line of enemies'],
   multi: ['⁂', 'several enemies'], weakest: ['⇉', 'dashes to an enemy and hits it'], hook: ['⤺', 'pulls an enemy in and hits it'], ally: ['✚', 'one ally'], allies: ['✚', 'every ally around it'], rescue: ['⤺', 'pulls a hurt ally to safety'] };
 const helpful = ab => ['ally', 'allies', 'rescue'].includes(ab.shape);
-function abReach(ab, range) { return { target: range, splash: range, line: Math.max(range, 4), multi: range, around: ab.r, weakest: range + (ab.leap || 0), hook: range + (ab.reach || 0), ally: 2, allies: ab.r, rescue: 3 }[ab.shape]; }
+function abReach(ab, range) { return (ab.lunge || 0) + { target: range, splash: range, line: Math.max(range, 4), multi: range, around: ab.r, weakest: range + (ab.leap || 0), hook: range + (ab.reach || 0), ally: 2, allies: ab.r, rescue: 3 }[ab.shape]; }
 const abCount = ab => ({ target: '1', splash: '1+', around: 'all', line: 'all', multi: 'up to ' + ab.n, weakest: '1', hook: '1', ally: '1', allies: 'all', rescue: '1' }[ab.shape]);
 const ST_IC = { frozen: '🧊', air: '🌪️', rooted: '🌿', blind: '🙈', silenced: '🤐', berserk: '😡', taunt: '📢' };
 // The icon strip: [shape · count] [reach] [damage] [heal] [shield] [statuses] [movement].
@@ -3041,6 +3059,7 @@ function effIcons(ab, atk, range) {
   if (ab.cleanse) out.push(ic('✨', '', 'clears statuses'));
   if (ab.push) out.push(ic('💨', '', 'knocks the enemy one hex back'));
   if (ab.swap) out.push(ic('⇄', '', `first swaps places with the ally ${GROUP_TEXT[ab.swap]}`));
+  if (ab.lunge) out.push(ic('⇉', ab.lunge, `gap closer: if no enemy is in reach, it first charges up to ${ab.lunge} hex${ab.lunge > 1 ? 'es' : ''} toward one`, 'reach'));
   if (ab.after) out.push(ic('👣', '', `then steps ${ab.after === 'back' ? 'back' : ab.after === 'fwd' ? 'forward' : 'aside'} one hex`));
   if (ab.pullTo) out.push(ic('⇠', '', `then calls the nearest ally within 3 to the hex ${GROUP_TEXT[ab.pullTo]}`));
   if (ab.finisher) out.push(ic('💀', '', 'finishes a broken enemy at once'));
@@ -3053,11 +3072,12 @@ function effSvg(ab, range, size = 58) {
   const reach = Math.min(R, abReach(ab, range)), help = helpful(ab), hit = new Set(), alt = new Set(), arrows = [];
   const fwd = n => [0, Math.min(R, n)];   // straight ahead (front right) n hexes
   const ring = (c, n) => { const o = []; for (let q = -R; q <= R; q++) for (let r = -R; r <= R; r++) { const h = [c[0] + q, c[1] + r]; if (dist(h, c) <= n && dist(h, [0, 0]) <= R) o.push(h); } return o; };
-  const t1 = fwd(Math.max(1, Math.min(range, R)));
+  const lg = ab.lunge || 0, t1 = fwd(Math.max(1, Math.min(range + lg, R)));
+  if (lg && ['target', 'splash', 'around'].includes(ab.shape)) arrows.push([[0, 0], [0, Math.min(lg, R - 1)], 'dash']);
   switch (ab.shape) {
     case 'target': hit.add(key(t1)); break;
     case 'splash': hit.add(key(t1)); for (const h of ring(t1, 1)) if (key(h) !== key(t1) && key(h) !== '0,0') alt.add(key(h)); break;
-    case 'around': case 'allies': for (const h of ring([0, 0], ab.r)) if (key(h) !== '0,0') hit.add(key(h)); break;
+    case 'around': case 'allies': { const ctr = ab.shape === 'around' && lg ? [0, Math.min(lg, R - 1)] : [0, 0]; for (const h of ring(ctr, ab.r)) if (key(h) !== key(ctr) && key(h) !== '0,0') hit.add(key(h)); break; }
     case 'line': for (let i = 1; i <= R; i++) hit.add(key([0, i])); break;
     case 'multi': { const c = ring([0, 0], Math.min(range, R)).filter(h => key(h) !== '0,0').sort((a, b) => dist(b, [0, 0]) - dist(a, [0, 0]) || a[0] - b[0] || a[1] - b[1]); const pick = [];
       for (const h of c) if (pick.length < ab.n && pick.every(p => dist(p, h) >= 2)) pick.push(h); for (const h of c) if (pick.length < ab.n && !pick.some(p => key(p) === key(h))) pick.push(h); pick.forEach(h => hit.add(key(h))); break; }
@@ -3680,6 +3700,7 @@ function simulate(n, board, seed = 1, rules = {}) {
     fightWinThenWin: S.fw ? Math.round(100 * S.fwWin / S.fw) + '%' : '-', bigFightThenWin: S.big ? Math.round(100 * S.bigWin / S.big) + '%' : '-', bigFightShare: Math.round(100 * S.big / n) + '%', towersFallen: +(S.falls / n).toFixed(1),
     swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1), comeback: S.fw ? Math.round(100 - 100 * S.fwWin / S.fw) + '%' : '-', towerIn2: S.after ? Math.round(100 * S.conv2 / S.after) + '%' : '-', punished: S.after ? Math.round(100 * S.punished / S.after) + '%' : '-', stepsPerPulse: S.stancePulses ? +(S.steps / S.stancePulses).toFixed(2) : 0, dragons: +(S.dragons / n).toFixed(2), barons: +(S.barons / n).toFixed(2), baronTakerWins: S.barons ? Math.round(100 * S.baronWin / S.barons) + '%' : '-', baronWhenBehind: S.baronBehind ? `${S.baronBehind} taken, ${Math.round(100 * S.baronBehindWin / S.baronBehind)}% won` : '-', steals: S.barons + S.dragons ? Math.round(100 * S.steals / (S.barons + S.dragons)) + '%' : '-', regroups: +(S.regroups / n).toFixed(2), regroupGoals: JSON.stringify(S.rgGoal), tactics: JSON.stringify(Object.fromEntries(Object.entries(S.tac).map(([k, z]) => [k, `${z.n} (${z.early}/${z.mid}/${z.late})`]))), finals: `time ${S.final.time} · card ${S.final.card} (won ${S.final.cardWin})`, firstKillRound: +(S.fk / n).toFixed(2), rgCards: JSON.stringify(S.rgCard), litAfterRegroup: S.rgLit.n ? `${(S.rgLit.w / S.rgLit.n).toFixed(1)} winner · ${(S.rgLit.l / S.rgLit.n).toFixed(1)} loser` : '-', levelsPerMatch: +(S.levels / n).toFixed(1), healPicks: S.levels ? Math.round(100 * S.alts / S.levels) + '%' : '-', castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`, castsPerPulse: +((S.casts.q + S.casts.w + S.casts.r) / Math.max(1, S.shape.p)).toFixed(2),
     perPulse: `reflexes ${S.rx.byPhase.map((x, i) => (x / Math.max(1, S.rx.pp[i])).toFixed(2)).join(' / ')} · W+R casts ${S.rx.casts.map((x, i) => (x / Math.max(1, S.rx.pp[i])).toFixed(2)).join(' / ')} (early / mid / late)`,
+    lunges: +((S.lunges || 0) / n).toFixed(1),
     reflexes: `${(S.rx.n / n).toFixed(1)} per match (${S.rx.byPhase.map(x => (x / n).toFixed(1)).join(' / ')} by phase) · chains ${(S.rx.chains / n).toFixed(1)} · longest ${S.rx.longest}`, reflexBy: JSON.stringify(Object.fromEntries(Object.entries(S.rx.by).map(([k, v]) => [k, +(v / n).toFixed(1)]))), castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`,
     maneuvers: `${(S.manvOffered / n).toFixed(1)} offered · ${(S.manvUsed / n).toFixed(1)} used · ${(S.manvSwap / n).toFixed(1)} swaps`,
     wByPhase: S.byPhase.w.map(x => +(x / n).toFixed(1)).join(' / '), rByPhase: S.byPhase.r.map(x => +(x / n).toFixed(1)).join(' / '), loosenedPerMatch: `medium ${(S.loosened[1] / n).toFixed(1)} · loose ${(S.loosened[2] / n).toFixed(1)}`,
