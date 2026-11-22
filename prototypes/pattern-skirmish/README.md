@@ -630,6 +630,52 @@ abilities and passives that move champions make that rotation a series of decisi
 - The interface works with the new cells (draft switch, board guide, diagrams); one watched match
   through four rounds, no errors.
 
+## R patterns that loosen as champions level (added 2026-11-22)
+
+**Owner's idea.** A level-up can also loosen a requirement: an R that is nearly impossible at the start
+becomes easy at level 3 or 4, so a champion you invest in turns from unusable to devastating, and the
+growth shows in the geometry. Owner's answers to the previous round: a best position of about 8 lit
+abilities is fine (towers make the real board harder); keep two moves per turn for now (owner's
+intuition: one move was simpler and more rewarding, and movement passives could replace the second
+move later; some champions, like tops, could be slower); measure loosening first, then balance.
+
+**What is in** (spread mode, `RULES.loosen`, `loosenAt: [2, 4]`): each R has three stages in `R_STAGES`.
+Strict at the start (two allies, one of them two hexes out, the first spread draft), medium at
+champion level 2 (one exact ally two out and an empty hex, the version that played well), loose at
+level 4 (a plain ally two out). The AI's level choice values a level that loosens an R
+(`loosenValue`). The hover card says when the R loosens and what it will need; the draft card says
+"R loosens at levels 2 and 4"; the log announces each loosening. Balance factors for the ten in
+`RULES.spreadTune`.
+
+**Measured** (AI vs AI, small board, two moves per turn; audit over 32 teams):
+
+| | Best formation lights (of 15) | R casts early / mid / late, per match | W / R casts per match | Ended by nexus | Rounds | Champion win rates |
+|---|---|---|---|---|---|---|
+| R fixed at medium (previous) | 7.8 | 4.9 / 3.6 / 1.6 | 7.7 / 10.1 | 81% | 13.6 | 33–68% |
+| **Loosening at levels 2 and 4** | **7.0 strict · 7.8 medium · 9.0 loose** | **2.4 / 3.1 / 2.1** | **9.3 / 7.7** | **73%** | **14.3** | **42–58%** |
+| Loosening at levels 3 and 5 | | 0.8 / 1.5 / 1.6 | 11.9 / 3.9 | 65% | 15.3 | 41–60% |
+
+Early = rounds 1–6, mid = 7–12, late = 13 and later (fewer matches reach the late rounds, so the
+late figure understates the rate per round). About 8 of the 10 champions reach the medium stage in a
+match, about 1.4 the loose one.
+
+- The arc the owner wanted shows: R casts move from the start of the match toward the middle and end.
+- Loosening narrows balance on its own (33–68% to 42–58%): the champions whose R was too easy early
+  are held back until they grow.
+- The ceiling grows with the stages (7.0 → 7.8 → 9.0); fully loosened teams are rare.
+- Levels 3 and 5 are too slow: R becomes rare and matches stall.
+
+**Balance** (three passes of 450 matches, each champion's factor nudged toward 50%): 42–58% → 46–54%.
+
+| | Anchor | Bulwark | Ember | Viper | Lens | Rime | Ranger | Gunner | Oriel | Seer |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Factor before | 0.95 | 1.30 | 1.00 | 1.30 | 1.20 | 1.35 | 0.75 | 1.20 | 0.65 | 1.60 |
+| Factor after | 0.92 | 1.34 | 1.06 | 1.23 | 1.01 | 1.59 | 0.87 | 1.02 | 0.69 | 1.51 |
+| Win rate after | 48% | 52% | 54% | 46% | 50% | 50% | 46% | 54% | 50% | 50% |
+
+With two champions per role, every champion plays every match, so each pass measures all ten at once.
+Team A won 43–57% between seeds of 150 matches: noise at that size.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

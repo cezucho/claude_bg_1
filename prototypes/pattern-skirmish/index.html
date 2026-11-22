@@ -1127,7 +1127,7 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   spreadCd: { w: 4, r: 6 },   // W and R cooldowns in pulses with spread patterns
   aiProgress: 0,      // with spread patterns: how much the AI values a half-built W or R pattern
   loosen: true, loosenAt: [2, 4], loosenValue: 2.5,   // spread patterns: each R starts strict and loosens at these champion levels (R_STAGES); how much the AI's level choice values that
-  spreadTune: null,   // spread patterns: balance factors that override TUNE for the ten champions
+  spreadTune: { anchor: 0.922, bulwark: 1.34, ember: 1.056, gunner: 1.021, lens: 1.007, oriel: 0.688, ranger: 0.874, rime: 1.59, seer: 1.51, viper: 1.23 },   // spread patterns: balance factors for the ten (3 passes, 2026-11-22: win rates 46-54%)
   movesPerTurn: 1,    // champions a team moves before each pulse (a hold ends the turn)
   bans: '1+1', banPerRole: 2,   // bans in the draft (see draftPlan): each team bans one champion before the picks and one more once both have two picks
   regroup: true,      // after a pulse that leaves one team rgLead champions up, both teams re-place their champions (see "regroup")
