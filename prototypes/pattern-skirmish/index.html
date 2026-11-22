@@ -1013,6 +1013,13 @@ const R_STAGES = {
   oriel: [{ need: [['FL2'], ['R2', 'Storm']], free: ['FL', 'R'] }, { need: [['FL2']], free: ['FL'] }, need(['FL2'])],
   seer: [{ need: [['A2', 'Fire'], ['L2']], free: ['FL', 'FR'] }, { need: [['A2', 'Fire']], free: ['FL', 'FR'] }, { need: [['A2']], free: ['FL'] }],
 };
+const wStages = pat => [pat, { need: pat.need }, { need: pat.need.map(([g]) => [g]) }];
+const wStageNow = () => !RULES.spread || !RULES.wLoosen ? null : Math.min(2, (RULES.wStart || 0) + RULES.wLoosenRounds.filter(r => G.round >= r).length);
+function setWStages() {   // every W at the stage the round has reached (called at the start of each pulse)
+  const st = wStageNow(); if (st == null) return;
+  if (G.wStage !== st) { if (G.wStage != null && !HEADLESS) logLine('round', st === 1 ? 'The Ws loosen: no hex needs to stay empty any more.' : 'The Ws loosen again: any ally will do, no element needed.'); G.wStage = st; }
+  for (const c of G.champs) { const sp = SPREAD[c.def.id]; if (sp) c.ab.w.pat = wStages(sp.w)[st]; }
+}
 const rStage = c => !RULES.loosen || !R_STAGES[c.def.id] ? null : c.level >= RULES.loosenAt[1] ? 2 : c.level >= RULES.loosenAt[0] ? 1 : 0;
 function setRStage(c, quiet) {   // puts the champion's R pattern at the stage its level has reached
   const st = RULES.spread ? rStage(c) : null; if (st == null) return;
@@ -1129,6 +1136,8 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   loosen: true, loosenAt: [2, 4], loosenValue: 2.5,   // spread patterns: each R starts strict and loosens at these champion levels (R_STAGES); how much the AI's level choice values that
   spreadTune: { anchor: 0.922, bulwark: 1.34, ember: 1.056, gunner: 1.021, lens: 1.007, oriel: 0.688, ranger: 0.874, rime: 1.59, seer: 1.51, viper: 1.23 },   // spread patterns: balance factors for the ten (3 passes, 2026-11-22: win rates 46-54%)
   movesPerTurn: 1,    // champions a team moves before each pulse (a hold ends the turn)
+  maneuver: false,    // after a pulse in which a team fired a W or R, its next turn adds a maneuver: one champion steps 1 hex, or two allies side by side swap
+  wLoosen: false, wLoosenRounds: [5, 10], wStart: 0,   // spread patterns: every W loosens by itself at these rounds (strict → no empty hexes → any ally); wStart 1 = start at the middle stage
   bans: '1+1', banPerRole: 2,   // bans in the draft (see draftPlan): each team bans one champion before the picks and one more once both have two picks
   regroup: true,      // after a pulse that leaves one team rgLead champions up, both teams re-place their champions (see "regroup")
   rgLead: 2, rgBase: 1, rgMax: 5,   // how far the winners may move: rgBase + the current death timer in rounds, at most rgMax
@@ -1166,7 +1175,7 @@ const UI = { art: true, pulses: [], board: 'small', sel: null, hover: null, aims
 const DIFF = { easy: { name: 'Easy', plan: 1, beam: 5, samples: 2, coach: 'auto' }, normal: { name: 'Normal', plan: 2, beam: 5, samples: 2, coach: 'button' }, hard: { name: 'Hard', plan: 2, beam: 5, samples: 2, coach: 'none' } };   // Hard = Normal's AI without the coach: a deeper search (beam 8, 3 samples) measured no stronger (46% vs ~45%)
 function setDiff(d) { UI.diff = d; try { localStorage.setItem('augury-diff', d); } catch (e) {} }
 const coaching = () => G && G.mode === 'play' ? DIFF[UI.diff].coach : 'none';
-const freshStats = () => ({ loosened: [0, 0, 0], byPhase: { w: [0, 0, 0], r: [0, 0, 0] }, shape: { p: 0, n: 0, lit: 0, ready: 0, adj: 0, spread: 0 }, abFire: {}, matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, tac: {}, final: { time: 0, card: 0, cardWin: 0 }, fk: 0, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0,
+const freshStats = () => ({ manvOffered: 0, manvUsed: 0, manvSwap: 0, loosened: [0, 0, 0], byPhase: { w: [0, 0, 0], r: [0, 0, 0] }, shape: { p: 0, n: 0, lit: 0, ready: 0, adj: 0, spread: 0 }, abFire: {}, matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, tac: {}, final: { time: 0, card: 0, cardWin: 0 }, fk: 0, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0,
   pulses: 0, broken: 0, saved: 0, finished: 0, reaped: 0, ps: {}, abFire: {}, quiet: 0, r1dmg: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
@@ -1190,7 +1199,7 @@ function newMatch(mode, seed) {
         baronTakes: [], rgRound: -9, rg: null, pulseDeaths: { A: 0, B: 0 }, bonusLevels: [], stance: { A: 'hold', B: 'hold' }, stanceSteps: 0, stancePulses: 0, dragon: { A: 0, B: 0 }, baronUntil: { A: 0, B: 0 },
         monsters: RULES.monsters ? pitHexes().map(h => h[0] < 0
           ? { kind: 'dragon', name: 'Dragon', pos: h, hp: RULES.dragonHp, max: RULES.dragonHp, alive: true, respawnAt: 0, dmg: { A: 0, B: 0 } }
-          : { kind: 'baron', name: 'Baron', pos: h, hp: RULES.baronHp, max: RULES.baronHp, alive: false, respawnAt: RULES.baronFrom - 1, dmg: { A: 0, B: 0 } }) : [], pulse: 0, gold: { A: 0, B: 0 }, earned: { A: 0, B: 0 }, offers: { A: [], B: [] }, shopSel: null, cardsPlayed: { A: 0, B: 0 }, rk: { A: 0, B: 0 }, rkDeep: { A: 0, B: 0 }, fights: [], bigFight: null, falls: 0, byRound: [] };
+          : { kind: 'baron', name: 'Baron', pos: h, hp: RULES.baronHp, max: RULES.baronHp, alive: false, respawnAt: RULES.baronFrom - 1, dmg: { A: 0, B: 0 } }) : [], pulse: 0, gold: { A: 0, B: 0 }, earned: { A: 0, B: 0 }, offers: { A: [], B: [] }, shopSel: null, cardsPlayed: { A: 0, B: 0 }, manv: { A: false, B: false }, inManv: false, rk: { A: 0, B: 0 }, rkDeep: { A: 0, B: 0 }, fights: [], bigFight: null, falls: 0, byRound: [] };
   for (const m of G.monsters) if (m.alive) SOLID.add(K(m.pos));
   G.startSeed = G.seed;
   UI.sel = null; UI.hover = null;
@@ -1395,7 +1404,7 @@ function castAbility(c, act, L, ctx) {
 function castAbility0(c, act, L, ctx) {
   const { k, ab } = act, e = eff(c, L); let ts = act.ts;
   STATS.abFire[c.def.id + ':' + k] = (STATS.abFire[c.def.id + ':' + k] || 0) + 1; ctx.cast = true; ctx.castInfo = { k, name: ab.name };
-  ab.cdLeft = ab.cd; STATS.casts[k]++; if (k !== 'q') STATS.byPhase[k][G.round <= 6 ? 0 : G.round <= 12 ? 1 : 2]++; c.casts[k]++; { const z = STATS.ch[c.def.id] || (STATS.ch[c.def.id] = { g: 0, w: 0, q: 0, wc: 0, r: 0 }); z[k === 'w' ? 'wc' : k]++; }
+  ab.cdLeft = ab.cd; STATS.casts[k]++; if (RULES.maneuver && k !== 'q') G.manv[c.team] = true; if (k !== 'q') STATS.byPhase[k][G.round <= 6 ? 0 : G.round <= 12 ? 1 : 2]++; c.casts[k]++; { const z = STATS.ch[c.def.id] || (STATS.ch[c.def.id] = { g: 0, w: 0, q: 0, wc: 0, r: 0 }); z[k === 'w' ? 'wc' : k]++; }
   const tag = k === 'q' ? 'i' : 'em';   // Q is routine and plays as a quick beat; W and R get the full beat
   const moved = (who, to, kind) => { ctx.lines.push({ from: who.pos, to, cls: 'leap' }); who.pos = to; STATS.forced[kind]++; };
   if (RULES.rare) cue(k === 'q' ? 2 : 3, `${cn(c)} fires <em>${esc(ab.name)}</em> (${k.toUpperCase()})!`, `${esc(nm(c))}: ${esc(abText(ab))}.`);   // W and R are headlines, Q a mention   // a rare cast is a headline: the board holds while it plays
@@ -1615,8 +1624,12 @@ function beginTurn() {
   render();
   if (!G.humans.includes(G.turnTeam)) later(aiTurn, G.humans.length ? 650 : 200); else coachMove();
 }
+function placeAt(c, to) {
+  const o = G.inManv && champAt(to); if (o && o !== c && o.team === c.team) o.pos = c.pos; c.pos = to;
+}
 function moveTargets(c) {
   if (c.rooted) return [];
+  if (G.inManv) return DIRS.map(d => add(c.pos, d)).filter(h => freeHex(h) || (champAt(h) && champAt(h).team === c.team && !champAt(h).rooted && !champAt(h).broken));
   const out = [], seen = new Set([K(c.pos)]); let fr = [c.pos];
   for (let s = 0; s < RULES.spd + (hasPs(c, 'move') ? hasPs(c, 'move').n : 0); s++) { const nx = [];
     for (const at of fr) for (const d of DIRS) { const to = add(at, d), k = K(to);
@@ -1630,12 +1643,14 @@ function doMove(c, to) {
   if (G.phase !== 'move') return;
   if (c && (!to || c.dead || c.team !== G.turnTeam || !moveTargets(c).some(x => same(x, to)))) return;   // only legal moves
   const team = G.turnTeam, from = c && c.pos;
-  if (c && to) { logLine(team, `${team} moves ${nm(c)} to ${to[0]},${to[1]}`); c.pos = to; }
+  if (c && to) { const o = G.inManv && champAt(to); logLine(team, G.inManv ? (o ? `${team} maneuvers: ${nm(c)} and ${nm(o)} swap places` : `${team} maneuvers: ${nm(c)} steps to ${to[0]},${to[1]}`) : `${team} moves ${nm(c)} to ${to[0]},${to[1]}`); if (G.inManv) { STATS.manvUsed++; if (o && o !== c) STATS.manvSwap++; } placeAt(c, to); }
   else logLine(team, `${team} holds`);
   UI.sel = null; UI.hover = null;
   const go = () => {
     if (c && to && RULES.movesPerTurn > 1 && (G.movesMade = (G.movesMade || 0) + 1) < RULES.movesPerTurn) { beginTurn(); return; }   // more moves before the pulse
     G.movesMade = 0;
+    if (RULES.maneuver && !G.inManv && G.manv[team]) { G.manv[team] = false; G.inManv = true; STATS.manvOffered++; beginTurn(); return; }   // the maneuver, before the pulse
+    G.inManv = false; G.manv[team] = false;
     if (RULES.onePulse && G.turnNo === 0) { G.turnNo = 1; G.turnTeam = other(G.turnTeam); beginTurn(); return; }
     const events = runPulse(RULES.onePulse ? G.token : team);   // with one pulse, ties go to the team that moved first
     if (HEADLESS) afterPulse();
@@ -1987,6 +2002,7 @@ function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, sh
 function runPulse(mover) {
   const events = [];
   G.pulse++; G.cue = []; G.inPulse = true; G.pulseDeaths = { A: 0, B: 0 };
+  setWStages();
   { const up = alive().filter(c => !c.broken); STATS.shape.p++;
     for (const t of ['A', 'B']) { const cs = up.filter(c => c.team === t); if (cs.length < 3) continue; STATS.shape.n++;
       STATS.shape.lit += cs.reduce((v, c) => v + ABK.filter(k => patOk(c, c.ab[k].pat)).length, 0);
@@ -2453,7 +2469,7 @@ function material(team) {
 }
 function staticMoves(team) {
   const out = [{ c: null, to: null, v: evaluate(team) }];
-  for (const c of alive(team)) { const from = c.pos; for (const to of moveTargets(c)) { c.pos = to; out.push({ c, to, v: evaluate(team) }); c.pos = from; } }
+  for (const c of alive(team)) { const from = c.pos; for (const to of moveTargets(c)) { const o = G.inManv && champAt(to); placeAt(c, to); out.push({ c, to, v: evaluate(team) }); c.pos = from; if (o && o !== c) o.pos = to; } }
   return out;
 }
 function aiTurn() {
@@ -2477,7 +2493,7 @@ function aiChoose(team, planOv) {
   else {
     const seed0 = G.seed, K = RULES.aiShape;
     const after = (m, k, deep) => dry(() => {
-      if (m.c) m.c.pos = m.to; G.seed = (seed0 + 7919 * (k + 1)) | 0; runPulse(team);
+      if (m.c) placeAt(m.c, m.to); G.inManv = false; G.seed = (seed0 + 7919 * (k + 1)) | 0; runPulse(team);
       if (deep && G.nexus.A > 0 && G.nexus.B > 0) { const r = staticMoves(foe).sort((a, b) => b.v - a.v)[0]; if (r.c) r.c.pos = r.to; runPulse(foe); }
       return material(team) + K * evaluate(team); });
     for (const m of cands) m.s = after(m, 0, false) + m.v * .05;
@@ -3161,8 +3177,9 @@ function renderPrompt() {
     if (!G.humans.includes(G.turnTeam)) { p.textContent = `Team ${G.turnTeam} is choosing its move…`; return; }
     const sel = UI.sel != null ? G.champs[UI.sel] : null;
     const after = RULES.onePulse ? (G.turnNo === 0 ? 'Then the other team moves, and everyone acts once, fastest first.' : 'Then everyone acts once, fastest first.') : 'Then everyone acts once, fastest first.';
-    p.innerHTML = sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to see which abilities light up (Q W R under each champion) and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. ${after}`;
-    btn('Hold', () => doMove(null, null)); if (UI.lastPulse) btn('↺ Replay last pulse', replayPulse); if (coaching() === 'button') btn('💡 Hint', () => coachMove(true)); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
+    p.innerHTML = G.inManv ? (sel ? `Maneuver with <b>${esc(nm(sel))}</b>: click a free hex beside it to step there, or an ally beside it to swap places.` : 'Maneuver (your W or R fired last pulse): one champion steps one hex, or two allies side by side swap places. Or skip it.')
+      : sel ? `Move <b>${esc(nm(sel))}</b>: hover a green hex to see which abilities light up (Q W R under each champion) and who it would attack, then click it.` : `Your turn. Select one champion to move up to ${RULES.spd} hexes, or hold. ${after}`;
+    btn(G.inManv ? 'Skip the maneuver' : 'Hold', () => doMove(null, null)); if (UI.lastPulse) btn('↺ Replay last pulse', replayPulse); if (coaching() === 'button') btn('💡 Hint', () => coachMove(true)); if (sel) btn('Cancel', () => { UI.sel = null; UI.hover = null; render(); });
     if (RULES.stance) { const t = G.turnTeam; for (const k of Object.keys(STANCES)) btn(`Stance: ${STANCES[k]}`, () => setStance(t, k), G.stance[t] === k ? 'on' : ''); }
     return; }
   if (G.phase === 'regroup' && G.rg && G.rg.busy) { p.textContent = 'Regroup: the card takes effect…'; return; }
@@ -3318,6 +3335,7 @@ function simulate(n, board, seed = 1, rules = {}) {
   const out = { rounds: +(S.rounds / n).toFixed(1), byNexus: Math.round(100 * ends.nexus / n) + '%', endings: `nexus ${ends.nexus} · final at time ${ends.finalTime} · final by card ${ends.finalCard} · score ${ends.time}`, deaths: +(S.deaths / n).toFixed(1), winA: Math.round(100 * S.winsA / n) + '%', draws: Math.round(100 * S.draws / n) + '%',
     fightWinThenWin: S.fw ? Math.round(100 * S.fwWin / S.fw) + '%' : '-', bigFightThenWin: S.big ? Math.round(100 * S.bigWin / S.big) + '%' : '-', bigFightShare: Math.round(100 * S.big / n) + '%', towersFallen: +(S.falls / n).toFixed(1),
     swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1), comeback: S.fw ? Math.round(100 - 100 * S.fwWin / S.fw) + '%' : '-', towerIn2: S.after ? Math.round(100 * S.conv2 / S.after) + '%' : '-', punished: S.after ? Math.round(100 * S.punished / S.after) + '%' : '-', stepsPerPulse: S.stancePulses ? +(S.steps / S.stancePulses).toFixed(2) : 0, dragons: +(S.dragons / n).toFixed(2), barons: +(S.barons / n).toFixed(2), baronTakerWins: S.barons ? Math.round(100 * S.baronWin / S.barons) + '%' : '-', baronWhenBehind: S.baronBehind ? `${S.baronBehind} taken, ${Math.round(100 * S.baronBehindWin / S.baronBehind)}% won` : '-', steals: S.barons + S.dragons ? Math.round(100 * S.steals / (S.barons + S.dragons)) + '%' : '-', regroups: +(S.regroups / n).toFixed(2), regroupGoals: JSON.stringify(S.rgGoal), tactics: JSON.stringify(Object.fromEntries(Object.entries(S.tac).map(([k, z]) => [k, `${z.n} (${z.early}/${z.mid}/${z.late})`]))), finals: `time ${S.final.time} · card ${S.final.card} (won ${S.final.cardWin})`, firstKillRound: +(S.fk / n).toFixed(2), rgCards: JSON.stringify(S.rgCard), litAfterRegroup: S.rgLit.n ? `${(S.rgLit.w / S.rgLit.n).toFixed(1)} winner · ${(S.rgLit.l / S.rgLit.n).toFixed(1)} loser` : '-', levelsPerMatch: +(S.levels / n).toFixed(1), healPicks: S.levels ? Math.round(100 * S.alts / S.levels) + '%' : '-', castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`, castsPerPulse: +((S.casts.q + S.casts.w + S.casts.r) / Math.max(1, S.shape.p)).toFixed(2),
+    maneuvers: `${(S.manvOffered / n).toFixed(1)} offered · ${(S.manvUsed / n).toFixed(1)} used · ${(S.manvSwap / n).toFixed(1)} swaps`,
     wByPhase: S.byPhase.w.map(x => +(x / n).toFixed(1)).join(' / '), rByPhase: S.byPhase.r.map(x => +(x / n).toFixed(1)).join(' / '), loosenedPerMatch: `medium ${(S.loosened[1] / n).toFixed(1)} · loose ${(S.loosened[2] / n).toFixed(1)}`,
     patternsComplete: S.shape.n ? +(S.shape.lit / S.shape.n).toFixed(2) : '-', readyAtPulse: S.shape.n ? +(S.shape.ready / S.shape.n).toFixed(2) : '-', alliesBeside: S.shape.n ? +(S.shape.adj / S.shape.n).toFixed(2) : '-', meanAllyDistance: S.shape.n ? +(S.shape.spread / S.shape.n).toFixed(2) : '-', champWins: JSON.stringify(Object.fromEntries(Object.entries(S.ch).filter(([, z]) => z.g).map(([id, z]) => [id, Math.round(100 * z.w / z.g)]))), basicsPerMatch: +(S.basics / n).toFixed(1) };
   HEADLESS = false; UI.board = keepB; STATS = keepS; Object.assign(RULES, keepR); AIP.push = keepP; AIP.greedy = keepG; delete RULES.aiPush; delete RULES.greedy; newMatch('play');
