@@ -676,6 +676,41 @@ match, about 1.4 the loose one.
 With two champions per role, every champion plays every match, so each pass measures all ten at once.
 Team A won 43–57% between seeds of 150 matches: noise at that size.
 
+## W's that loosen with time, and maneuvers instead of a second move (added 2026-11-22)
+
+**Owner's ideas.** R loosens only through the level-ups a player chooses; W's could loosen by themselves
+as the match goes on. And instead of a second move per turn (too much elasticity: one move was
+simpler and more rewarding), a passive-like reward that lets an ally move or two champions swap.
+
+**What is in** (spread mode, switches in `RULES`):
+- `wLoosen`, `wLoosenRounds: [5, 10]`: every W loosens for both teams at round 5 (its empty hexes are
+  no longer needed) and round 10 (any ally will do, no element). `wStart: 1` would start at the middle
+  stage. The log announces each loosening.
+- `maneuver`: a team that fired a W or R in a pulse gets a maneuver on its next turn, after its move:
+  one champion steps one hex, or two allies side by side swap places ("Skip the maneuver" is allowed).
+  During a maneuver, clicking the ally beside the selected champion swaps them. The AI plans
+  maneuvers like moves.
+
+**Measured** (AI vs AI, small board, R loosening on, 200 matches each, same seeds):
+
+| | W casts early / mid / late | W / R casts per match | Patterns complete per pulse | Maneuvers per match | Ended by nexus | Rounds | Comeback | Win rates |
+|---|---|---|---|---|---|---|---|---|
+| A. Two moves per turn | 4.1 / 3.8 / 2.1 | 10.0 / 7.6 | 2.43 | – | 74% | 14.8 | 30% | 47–54% |
+| B. Two moves + W loosening | 5.3 / 7.8 / 4.3 | 17.4 / 6.8 | 2.86 | – | 77% | 14.5 | 22% | 37–64% |
+| C. One move + maneuver | 3.4 / 4.0 / 2.3 | 9.7 / 7.9 | 2.37 | 25 offered, 20 used, 4 swaps | 62% | 15.6 | 27% | 46–54% |
+| **D. One move + maneuver + W loosening** | **4.6 / 8.2 / 5.5** | **18.3 / 7.0** | **2.90** | **26 offered, 20 used, 4 swaps** | **70%** | **15.2** | **25%** | **47–53%** |
+
+- A maneuver gives about the same pattern building as a second move (patterns complete 2.37 against
+  2.43; W and R casts equal) with less raw movement: matches run about a round longer (62% end by
+  nexus against 74%). About four in five maneuvers are used, mostly as steps; swaps are about one in
+  five.
+- W loosening makes W the mid-game ability: W casts nearly double (10 → 17–18 per match), most of the
+  rise in rounds 7–12. It also raises the pace again (D: 70% by nexus).
+- D (one move, maneuvers, W loosening) keeps the balance (47–53%) and comebacks (25%); B threw the
+  balance off (Ember 64%, Viper 37%), so loosening W with two moves would need a new balancing pass.
+- Not yet measured: maneuvers from passives tied to specific champions (here every W or R earns one),
+  and slower tops.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

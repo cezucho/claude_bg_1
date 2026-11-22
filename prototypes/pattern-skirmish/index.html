@@ -3070,7 +3070,9 @@ function renderBoard() {
       ${c.poison ? `<text class="st" x="${cx + HEX * .55}" y="${cy + HEX * .2}" style="fill:var(--poison)">☠</text>` : ''}
       ${c0.level ? `<text class="st" x="${cx}" y="${cy + HEX * .95}" style="fill:var(--gold);font-size:9px">${'•'.repeat(c0.level)}</text>` : ''}
     </g>`);
-    if (mine) { g.addEventListener('click', () => select(c0)); g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') select(c0); }); }
+    if (mine) { const act = () => { const s0 = UI.sel != null ? G.champs[UI.sel] : null;   // on a maneuver, clicking the ally beside the selected champion swaps them
+        if (G.inManv && s0 && s0 !== c0 && moveTargets(s0).some(h => same(h, c0.pos))) doMove(s0, c0.pos); else select(c0); };
+      g.addEventListener('click', act); g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') act(); }); }
     else if (sel && reachSet.has(K(c.pos))) g.addEventListener('click', () => hexClick(sel, c.pos));
     put(cy, g); }
   depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
