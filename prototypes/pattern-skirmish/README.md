@@ -873,6 +873,24 @@ ability hits one enemy or several, and how far it reaches compared with the cham
 - **Anchor, Gale and Moss cannot reach past the hexes next to them at all** (Gale's R hits "up to 4 in range",
   which at range 1 means only neighbours).
 
+## Gap closers for melee champions (added 2026-11-22)
+
+**Owner's call.** Build gap closers so melee champions are not left outside the fight. Leave the ability art alone.
+
+**What is in** (`RULES.gapClose`, on; table `GAP`):
+- New ability property `lunge`: if no enemy is in reach, the champion first charges up to N hexes (to the spot
+  that brings an enemy into reach, nearest the enemy) and then the ability fires as usual. Rooted champions
+  cannot charge.
+- Anchor Q charges 1. Gale W charges 2. Bulwark W charges 1 (then its knock-back around it). Shiver W charges 1.
+  Moss Q became a pull: it hooks an enemy from one hex past its range next to itself and roots it.
+- The DOES column shows ⇉N with the reach grown by N and a dash arrow in the diagram. The board preview draws the
+  charge arrow before the pulse, like other forced moves.
+
+**Measured** (200 matches each, same seeds): without gap closers 76% end by nexus in 13.8 rounds; with them 86%
+in 13.3; comebacks 20% → 21%; 1.5 charges per match plus Moss's pulls. Moss jumped to 67% at first. After
+two balancing passes, averaged, a check of 1,000 matches on new seeds gives win rates of **44–59%** (Gunner
+lowest, Gale highest; Hail and Moss 57%), sides 50–51%, 84–88% by nexus, 13.2 rounds.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete
