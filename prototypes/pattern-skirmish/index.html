@@ -998,6 +998,23 @@ const SPREAD = {
   gunner: { w: { need: [['L', 'Shadow']], free: ['FR', 'R'] }, r: { need: [['BLL']], free: ['FR'] } },
   oriel: { w: { need: [['FR']], free: ['L'] }, r: { need: [['FL2']], free: ['FL'] } },
   seer: { w: { need: [['FL', 'Frost']], free: ['R', 'BR'] }, r: { need: [['A2', 'Fire']], free: ['FL', 'FR'] }, fx: { w: { pullTo: 'FL2' } } },
+  // the other fifteen (2026-11-22), in shape families so different drafts want different formations:
+  // line (side by side, with gaps) · tight (several allies touching) · spread (far allies, empty neighbours) · wedge / column
+  cinder: { w: { need: [['L', 'Fire']], free: ['R'] }, r: { need: [['R2']], free: ['R'] } },                         // line
+  gale: { w: { need: [['BRR']], free: ['L', 'R'] }, r: { need: [['L2', 'Storm']], free: ['L', 'BL'] } },             // spread line
+  thorn: { w: beside(2), r: beside(3) },                                                                               // tight
+  fang: { w: { need: [['FR', 'Earth']], free: ['FL'] }, r: { need: [['FLL']], free: ['L'] } },                        // wedge
+  wisp: { w: { need: [['BR', 'Light']], free: ['L', 'FL'] }, r: { need: [['BLL']], free: ['FR', 'A2'] } },           // spread, open lane ahead
+  shiver: { w: { need: [['L', 'Frost']], free: ['FR'] }, r: { need: [['R2', 'Frost']], free: ['R'] } },              // line
+  pyra: { w: { need: [['BL', 'Fire']], free: ['FR'] }, r: { need: [['FL2', 'Earth']], free: ['FL'] } },              // wedge
+  umbra: { w: { need: [['R', 'Shadow']], free: ['L', 'BL'] }, r: { need: [['BRR']], free: ['R', 'BR'] } },           // spread
+  quartz: { w: { need: [['FR']], free: ['BL'] }, r: { need: [['H2', 'Earth']], free: ['FR'] } },                      // column
+  flint: { w: { need: [['L', 'Earth']], free: ['FR'] }, r: { need: [['R2', 'Light']], free: ['FR'] } },               // line
+  hail: { w: { need: [['R', 'Frost']] }, r: need(['FL'], ['FR']) },                                                    // tight: a wall in front
+  dusk: { w: { need: [['BR', 'Shadow']], free: ['L', 'R'] }, r: lone(2) },                                             // spread: nobody within 2
+  brook: { w: beside(2), r: { need: [['FL'], ['FR']], free: ['BL', 'BR'] } },                                          // tight front pair
+  ash: { w: { need: [['L', 'Fire']], free: ['R'] }, r: { need: [['R2', 'Fire']], free: ['R'] } },                     // line
+  moss: { w: beside(2), r: need(['BL'], ['BR']) },                                                                     // tight column
 };
 // R that loosens as the champion grows (2026-11-22): strict at the start (two allies, one of them two out),
 // medium from RULES.loosenAt[0] (the version that played well), loose from RULES.loosenAt[1] (no element, or no empty hex).
@@ -1012,8 +1029,23 @@ const R_STAGES = {
   gunner: [{ need: [['FRR', 'Frost'], ['BLL']], free: ['L'] }, { need: [['BLL']], free: ['FR'] }, need(['BLL'])],
   oriel: [{ need: [['FL2'], ['R2', 'Storm']], free: ['FL', 'R'] }, { need: [['FL2']], free: ['FL'] }, need(['FL2'])],
   seer: [{ need: [['A2', 'Fire'], ['L2']], free: ['FL', 'FR'] }, { need: [['A2', 'Fire']], free: ['FL', 'FR'] }, { need: [['A2']], free: ['FL'] }],
+  cinder: [{ need: [['R2'], ['L2']], free: ['R'] }, { need: [['R2']], free: ['R'] }, need(['R2'])],
+  gale: [{ need: [['L2', 'Storm'], ['R2']], free: ['L', 'BL'] }, { need: [['L2', 'Storm']], free: ['L', 'BL'] }, need(['L2'])],
+  thorn: [beside(4), beside(3), beside(2)],
+  fang: [{ need: [['FLL'], ['FRR']], free: ['L'] }, { need: [['FLL']], free: ['L'] }, need(['FLL'])],
+  wisp: [{ need: [['BLL'], ['BRR']], free: ['FR', 'A2'] }, { need: [['BLL']], free: ['FR', 'A2'] }, { need: [['BLL']], free: ['A2'] }],
+  shiver: [{ need: [['R2', 'Frost'], ['L2']], free: ['R'] }, { need: [['R2', 'Frost']], free: ['R'] }, need(['R2'])],
+  pyra: [{ need: [['FL2', 'Earth'], ['FR2']], free: ['FL'] }, { need: [['FL2', 'Earth']], free: ['FL'] }, need(['FL2'])],
+  umbra: [{ need: [['BRR'], ['BLL']], free: ['R', 'BR'] }, { need: [['BRR']], free: ['R', 'BR'] }, need(['BRR'])],
+  quartz: [{ need: [['H2', 'Earth'], ['A2']], free: ['FR'] }, { need: [['H2', 'Earth']], free: ['FR'] }, need(['H2'])],
+  flint: [{ need: [['R2', 'Light'], ['L2']], free: ['FR'] }, { need: [['R2', 'Light']], free: ['FR'] }, need(['R2'])],
+  hail: [{ need: [['FL', 'Earth'], ['FR']] }, need(['FL'], ['FR']), need(['F'])],
+  dusk: [lone(3), lone(2), lone(1)],
+  brook: [{ need: [['FL', 'Frost'], ['FR']], free: ['BL', 'BR'] }, { need: [['FL'], ['FR']], free: ['BL', 'BR'] }, need(['F'])],
+  ash: [{ need: [['R2', 'Fire'], ['L2']], free: ['R'] }, { need: [['R2', 'Fire']], free: ['R'] }, need(['R2'])],
+  moss: [{ need: [['BL', 'Frost'], ['BR']], free: ['FL', 'FR'] }, need(['BL'], ['BR']), need(['B'])],
 };
-const wStages = pat => [pat, { need: pat.need }, { need: pat.need.map(([g]) => [g]) }];
+const wStages = pat => pat.count ? [pat, pat, beside(Math.max(1, pat.count - 1))] : [pat, { need: pat.need }, { need: pat.need.map(([g]) => [g]) }];
 const wStageNow = () => !RULES.spread || !RULES.wLoosen ? null : Math.min(2, (RULES.wStart || 0) + RULES.wLoosenRounds.filter(r => G.round >= r).length);
 function setWStages() {   // every W at the stage the round has reached (called at the start of each pulse)
   const st = wStageNow(); if (st == null) return;
@@ -1028,15 +1060,25 @@ function setRStage(c, quiet) {   // puts the champion's R pattern at the stage i
   if (!quiet) logLine(c.team, `${nm(c)}'s R ${esc(c.ab.r.name)} loosens: now ${esc(patText(now))}`);
 }
 const spreadOn = () => !!RULES.spread;
-const rosterNow = () => RULES.spread || RULES.roster10 ? ROSTER.filter(d => SPREAD[d.id]) : ROSTER;
+const TEN = ['anchor', 'bulwark', 'ember', 'viper', 'lens', 'rime', 'ranger', 'gunner', 'oriel', 'seer'];
+const rosterNow = () => RULES.roster10 || RULES.spread10 ? ROSTER.filter(d => TEN.includes(d.id)) : ROSTER;
 const ORIG_FX = new Map(ROSTER.map(d => [d.id, Object.fromEntries(['w', 'r'].map(k => [k, { swap: d.ab[k].swap, pullTo: d.ab[k].pullTo, after: d.ab[k].after }]))]));
+// Q by shape family (RULES.qFamily, measuring): still one easy condition, but it points the same way as the
+// champion's W and R, so a ball no longer lights every Q.
+const QFAM = {
+  cinder: need(['S']), shiver: need(['S']), flint: need(['S']), ash: need(['S']), ember: need(['S']), bulwark: need(['S']), gale: need(['S']),   // line
+  thorn: need(['N']), hail: need(['N']), brook: need(['N']), moss: need(['N']),                                                                 // tight
+  dusk: lone(1), umbra: lone(1), wisp: lone(1), viper: lone(1),                                                                                 // spread
+  quartz: need(['B']), anchor: need(['B']), ranger: need(['F']), seer: need(['F']),                                                             // column
+  fang: need(['FL']), pyra: need(['FL']), lens: need(['FL']), rime: need(['FR']), oriel: need(['FL']), gunner: need(['BL']),                     // wedge
+};
 const SECOND_EL = { oriel: 'Storm', brook: 'Light', ash: 'Shadow', moss: 'Frost', shiver: 'Storm', pyra: 'Light', umbra: 'Fire' };
 const ORIG_ELS = new Map(ROSTER.map(d => [d.id, [...d.els]]));
 const ORIG_AB = new Map(ROSTER.map(d => [d.id, Object.fromEntries(ABK.map(k => [k, { pat: d.ab[k].pat, cd: d.ab[k].cd }]))]));
 let RARE_ON = false, TUNE_NOW = null, RULESET = '';
 // Puts the roster in line with the switches (called at the start of every match, so headless runs can flip them).
 function syncRules() {
-  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls, RULES.spread, JSON.stringify(RULES.spreadCd), RULES.loosen, JSON.stringify(RULES.spreadTune || {})].join();
+  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls, RULES.spread, JSON.stringify(RULES.spreadCd), RULES.loosen, JSON.stringify(RULES.spreadTune || {}), RULES.qFamily].join();
   if (key === RULESET) return; RULESET = key; RARE_ON = !!RULES.rare;
   for (const d of ROSTER) { const o = ORIG_AB.get(d.id), x = RARE[d.id];
     for (const k of ['w', 'r']) { const a = d.ab[k];
@@ -1046,7 +1088,7 @@ function syncRules() {
       Object.assign(a, ORIG_FX.get(d.id)[k]);
       const sp = RULES.spread && SPREAD[d.id];
       if (sp) { a.pat = k === 'r' && RULES.loosen && R_STAGES[d.id] ? R_STAGES[d.id][0] : sp[k]; a.cd = RULES.spreadCd[k]; Object.assign(a, (sp.fx || {})[k] || {}); } }
-    const q = d.ab.q, qm = RULES.passives && RULES.qCast; q.pat = qm ? QPAT[d.id] : o.q.pat; q.cd = qm ? RULES.qCd : o.q.cd;
+    const q = d.ab.q, qm = RULES.passives && RULES.qCast; q.pat = qm ? (RULES.spread && RULES.qFamily ? QFAM[d.id] : QPAT[d.id]) : o.q.pat; q.cd = qm ? RULES.qCd : o.q.cd;
     d.els = RULES.moreEls && SECOND_EL[d.id] ? [...ORIG_ELS.get(d.id), SECOND_EL[d.id]] : [...ORIG_ELS.get(d.id)]; }
   setTune(RULES.spread && RULES.spreadTune ? { ...TUNE, ...RULES.spreadTune } : TUNE);
   for (const d of ROSTER) d.paths = buildPaths(d);
@@ -1129,15 +1171,17 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   openBack: true,
   shieldCap: 0.5,     // a shield never exceeds this share of max HP (shields last until used, and W/R shields doubled)     // with fewer cards: champions that played none start the fight beside their own nexus
   hpScale: 1.25,      // abilities hit harder than basic attacks did, so champions are tougher
-  spread: false,      // spread patterns (SPREAD): ten champions, two per role, whose W and R need exact hexes up to two away; bans off in this mode
-  roster10: false,    // (measuring) the same ten champions with their usual patterns
+  spread: true,       // spread patterns (default since 2026-11-22) (SPREAD): ten champions, two per role, whose W and R need exact hexes up to two away; bans off in this mode
+  roster10: false,    // (measuring) the ten first redone champions with their usual patterns
+  spread10: false,    // (measuring) spread patterns with only those ten
+  qFamily: false,     // spread patterns: each Q points the same way as its champion's W and R (QFAM) instead of mostly "an ally beside it"
   spreadCd: { w: 4, r: 6 },   // W and R cooldowns in pulses with spread patterns
   aiProgress: 0,      // with spread patterns: how much the AI values a half-built W or R pattern
   loosen: true, loosenAt: [2, 4], loosenValue: 2.5,   // spread patterns: each R starts strict and loosens at these champion levels (R_STAGES); how much the AI's level choice values that
   spreadTune: { anchor: 0.922, bulwark: 1.34, ember: 1.056, gunner: 1.021, lens: 1.007, oriel: 0.688, ranger: 0.874, rime: 1.59, seer: 1.51, viper: 1.23 },   // spread patterns: balance factors for the ten (3 passes, 2026-11-22: win rates 46-54%)
   movesPerTurn: 1,    // champions a team moves before each pulse (a hold ends the turn)
-  maneuver: false,    // after a pulse in which a team fired a W or R, its next turn adds a maneuver: one champion steps 1 hex, or two allies side by side swap
-  wLoosen: false, wLoosenRounds: [5, 10], wStart: 0,   // spread patterns: every W loosens by itself at these rounds (strict → no empty hexes → any ally); wStart 1 = start at the middle stage
+  maneuver: true,     // after a pulse in which a team fired a W or R, its next turn adds a maneuver: one champion steps 1 hex, or two allies side by side swap
+  wLoosen: true, wLoosenRounds: [5, 10], wStart: 0,   // spread patterns: every W loosens by itself at these rounds (strict → no empty hexes → any ally); wStart 1 = start at the middle stage
   bans: '1+1', banPerRole: 2,   // bans in the draft (see draftPlan): each team bans one champion before the picks and one more once both have two picks
   regroup: true,      // after a pulse that leaves one team rgLead champions up, both teams re-place their champions (see "regroup")
   rgLead: 2, rgBase: 1, rgMax: 5,   // how far the winners may move: rgBase + the current death timer in rounds, at most rgMax
@@ -1211,7 +1255,7 @@ function newMatch(mode, seed) {
 // The draft as a list of steps. RULES.bans: 'none', or how many bans each team makes before the picks, optionally
 // '+' how many more each makes once both teams have two picks: '1', '2', '1+1', '2+2'.
 function draftPlan() {
-  const [n1, n2] = RULES.bans === 'none' || !RULES.bans || RULES.spread || RULES.roster10 ? [0, 0] : String(RULES.bans).split('+').map(Number).concat(0), out = [];
+  const [n1, n2] = RULES.bans === 'none' || !RULES.bans || RULES.roster10 ? [0, 0] : String(RULES.bans).split('+').map(Number).concat(0), out = [];
   const picks = RULES.draftOrder || ['A', 'B', 'B', 'A', 'A', 'B', 'B', 'A', 'A', 'B'];
   for (let i = 0; i < n1; i++) out.push(['A', 'ban'], ['B', 'ban']);
   picks.forEach((t, i) => { if (i === 4) for (let j = 0; j < n2; j++) out.push(['B', 'ban'], ['A', 'ban']); out.push([t, 'pick']); });
@@ -3291,7 +3335,7 @@ function renderOverlay() {
       <div class="srow">${Array.from({ length: nb(t) }, (_, i) => { const d = G.banList[t][i]; return `<div class="slot ban ${i === nowBan ? 'now' : ''}" title="${d ? esc(d.name) + ' (banned)' : 'ban'}">${d ? `<img src="art/${d.id}.png" alt="">` : '<span class="sl">ban</span>'}</div>`; }).join('')}</div>
       <div class="srow">${ROLES.map((r, i) => { const d = G.picks[t][i]; return `<div class="slot pick ${d ? 'filled' : ''} ${nowPick && !d ? 'now' : ''}" title="${r}${d ? ': ' + esc(d.name) : ''}">${d ? `<img src="art/${d.id}.png" alt="">` : ''}<span class="sl">${d ? esc(d.name) : r}</span></div>`; }).join('')}</div></div>`; };
   const box = h(`<div class="box draft"><div class="row"><h2>Draft</h2><div class="row" style="margin-left:auto">
-      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="spread">Patterns: ${RULES.spread ? 'spread (10 champions)' : 'standard'} ⇄</button><button data-m="bans">Bans: ${RULES.spread ? 'off' : RULES.bans} ⇄</button><button data-m="diff">Difficulty: ${DIFF[UI.diff].name} ⇄</button><button data-m="rules">Rules</button></div></div>
+      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="spread">Patterns: ${RULES.spread ? 'spread' : 'standard'} ⇄</button><button data-m="bans">Bans: ${RULES.bans} ⇄</button><button data-m="diff">Difficulty: ${DIFF[UI.diff].name} ⇄</button><button data-m="rules">Rules</button></div></div>
     <div class="slots">${sideHtml('A')}<div class="banner ${kind} ${team}"><b>${kind === 'ban' ? 'BAN PHASE' : 'PICK PHASE'}</b><span>${tnm(team)} ${kind === 'ban' ? `ban${human ? '' : 's'} · ${banNo} of ${nb(team)}` : `pick${human ? '' : 's'} · ${G.picks[team].filter(Boolean).length + 1} of 5`}${human ? ' · your turn' : ''}</span></div>${sideHtml('B')}</div>
     ${tip.text ? `<div class="coachbox"><span class="who">MARLOW · TIP</span>${tip.text}</div>` : ''}
     <div class="dgrid"></div>
@@ -3348,17 +3392,23 @@ function simulate(n, board, seed = 1, rules = {}) {
 // For every team the current roster allows (one champion per role), on an empty board: the formation that lights
 // the most abilities (the ceiling), then, with those abilities spent, how many new ones single moves can light
 // (each move: one champion to any free hex within 2). Extra conditions of rare patterns are left out.
-function patternAudit(restarts = 40, beam = 30, stage = null) {
+function patternAudit(restarts = 40, beam = 30, stage = null, sample = 0, wStage = null) {
   syncRules();
   const keepG = G, keepSolid = SOLID; let seed = 777; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
   const byRole = ROLES.map(r => rosterNow().filter(d => d.role === r)), teams = [];
   const walk = (i, acc) => { if (i === 5) { teams.push(acc); return; } for (const d of byRole[i]) walk(i + 1, [...acc, d]); };
   walk(0, []);
+  if (sample && teams.length > sample) { teams.sort(() => rnd() - .5); teams.length = sample; }
   const keys = ABK.filter(k => !psK(k)), out = [];
+  // the shape of a formation: allies touching each champion, spread, width across and depth (rows)
+  const shapeOf = ps => { const adj = ps.reduce((v, a) => v + ps.filter(b => b !== a && dist(a, b) === 1).length, 0) / ps.length;
+    const xs = ps.map(([q, r]) => q + r / 2), rs = ps.map(([, r]) => r), width = Math.max(...xs) - Math.min(...xs), depth = Math.max(...rs) - Math.min(...rs);
+    const kind = adj >= 2 ? 'ball' : adj < 1 ? 'spread' : depth <= 1 && width >= 3 ? 'line' : 'mixed';
+    return { adj: +adj.toFixed(2), width, depth, kind }; };
   try {
     for (const team of teams) {
       G = { ...keepG, champs: [], monsters: [], towers: [], ignoreX: true }; SOLID = new Set(keepSolid);
-      const cs = team.map((d, i) => { const c = makeChampFor(d, 'A', i); c.id = i; if (stage != null && R_STAGES[d.id]) c.ab.r.pat = R_STAGES[d.id][stage]; return c; }); G.champs = cs;
+      const cs = team.map((d, i) => { const c = makeChampFor(d, 'A', i); c.id = i; if (stage != null && R_STAGES[d.id]) c.ab.r.pat = R_STAGES[d.id][stage]; if (wStage != null && SPREAD[d.id] && RULES.spread) c.ab.w.pat = wStages(SPREAD[d.id].w)[wStage]; return c; }); G.champs = cs;
       const patch = HEXES.filter(h => !SOLID.has(K(h)));
       const litSet = (skip) => cs.flatMap(c => keys.filter(k => !(skip && skip.has(c.id + k)) && patOk(c, c.ab[k].pat)).map(k => c.id + k));
       const score = () => litSet().length + .01 * cs.reduce((v, c) => v + (patOk(c, c.ab.r.pat) ? 1 : 0), 0);
@@ -3379,13 +3429,15 @@ function patternAudit(restarts = 40, beam = 30, stage = null) {
         for (const st of layer) for (let i = 0; i < cs.length; i++) { cs.forEach((c, j) => c.pos = st.pos[j]);
           for (const h of patch) { if (dist(h, st.pos[i]) > 2 || cs.some(o => same(o.pos, h))) continue; cs[i].pos = h; next.push({ pos: cs.map(c => c.pos), v: litSet(spent).length }); cs[i].pos = st.pos[i]; } }
         next.sort((a, b) => b.v - a.v); layer = next.slice(0, beam); after.push(layer.length ? layer[0].v : 0); }
-      out.push({ team: team.map(d => d.name).join(' '), ceiling: first.length, lit: first.map(x => cs[+x[0]].def.name + ' ' + x[1].toUpperCase()), after });
+      out.push({ team: team.map(d => d.name).join(' '), ceiling: first.length, lit: first.map(x => cs[+x[0]].def.name + ' ' + x[1].toUpperCase()), after, shape: shapeOf(bestPos) });
     }
   } finally { G = keepG; SOLID = keepSolid; }
   const n = out.length, mean = f => +(out.reduce((v, o) => v + f(o), 0) / n).toFixed(2);
   const dist_ = {}; for (const o of out) dist_[o.ceiling] = (dist_[o.ceiling] || 0) + 1;
   return { teams: n, ceilingMean: mean(o => o.ceiling), ceilingMin: Math.min(...out.map(o => o.ceiling)), ceilingMax: Math.max(...out.map(o => o.ceiling)), ceilingSpread: dist_,
     litQ: mean(o => o.lit.filter(x => x.endsWith('Q')).length), litW: mean(o => o.lit.filter(x => x.endsWith('W')).length), litR: mean(o => o.lit.filter(x => x.endsWith('R')).length),
+    shapes: Object.fromEntries(['ball', 'line', 'spread', 'mixed'].map(k => [k, out.filter(o => o.shape.kind === k).length])), adjacency: mean(o => o.shape.adj),
+    shapeExamples: Object.fromEntries(['ball', 'line', 'spread', 'mixed'].map(k => [k, out.filter(o => o.shape.kind === k).slice(0, 2).map(o => o.team)])),
     newLitAfter1Move: mean(o => o.after[1]), after2Moves: mean(o => o.after[2]), after3Moves: mean(o => o.after[3]), of: keys.length * 5, examples: out.slice(0, 3) };
 }
 
