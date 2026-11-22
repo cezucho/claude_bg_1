@@ -572,6 +572,64 @@ and ember red.
 - Checked by screenshots at 1500×900 and 1280×720; 4 scripted human matches with no errors; the
   rules are untouched (headless numbers unchanged).
 
+## Spread patterns: abilities that pull a team apart (added 2026-11-22)
+
+**Owner's diagnosis.** With a good draft the most profitable shape is a ball: nearly every pattern asks
+for an ally in one of the six touching hexes, so five champions standing together light most abilities
+and never need to move. Wanted: harder, more exact patterns (a specific hex, two out, of an element)
+so the best shape lights only 5–6 abilities, cooldowns force the team into a different shape, and
+abilities and passives that move champions make that rotation a series of decisions.
+
+**What is in** (switch on the draft screen, "Patterns: spread (10 champions)"; `RULES.spread`):
+- Twelve new named cells two hexes out (`A2` straight ahead, `FR2`, `FL2`, `FRR`, `FLL`, `R2`, `L2`,
+  `BRR`, `BLL`, `BR2`, `BL2`, `H2` straight behind), usable in any pattern, plus `free`: hexes that
+  must be empty. The board guide marks wanted hexes with ability letters and must-stay-empty hexes
+  with ✕; the small pattern diagrams grow a second ring when a pattern reaches two out.
+- Ten champions, two per role (Anchor, Bulwark, Ember, Viper, Lens, Rime, Ranger, Gunner, Oriel,
+  Seer) with new W and R patterns in `SPREAD`. Q keeps its medium pattern. W: one exact neighbour
+  (often of an element) and one or two neighbours left empty. R: one exact ally two hexes out (often
+  of an element) and one empty hex. Bans are off in this mode (two champions per role).
+- `pullTo`: a cast that calls the nearest ally within 3 into a named cell, to set up someone
+  else's pattern (Anchor W to the hex two behind it, Bulwark W two to its right, Seer W two front
+  left); some W/R also step after casting (Ember R forward, Lens W back, Ranger W aside).
+- Measuring tools: `patternAudit()` (for every team of the current roster, on an empty board: the
+  formation that lights the most abilities, then how many new ones one, two and three moves light
+  once those are spent); `simulate()` now reports patterns complete per team per pulse, abilities
+  ready, allies beside each champion and mean distance between teammates.
+- Two switches for measuring: `RULES.movesPerTurn` (champions moved before each pulse) and
+  `RULES.aiProgress` (the AI values a half-built W or R pattern).
+
+**Measured.** Audit: 32 teams each; matches: AI vs AI, small board, 120–200 per row.
+
+| | Best formation lights (of 15) | Q / W / R in it | Patterns complete per team, per pulse | Allies beside a champion | W and R casts per match | Ended by nexus | Rounds |
+|---|---|---|---|---|---|---|---|
+| Standard patterns, 25 champions | – | – | 3.2 | 1.30 | 23.4 | 72% | 14.0 |
+| Standard patterns, same 10 | 12.0 (10–14) | 4.0 / 3.7 / 4.3 | 3.3 | 1.27 | 25.0 | 70% | 14.2 |
+| Spread, first draft (two exact allies two out per R) | 6.9 (6–8) | 4.0 / 2.1 / 0.8 | 2.1 | 1.08 | 13.4 | 34% | 16.5 |
+| Same, two moves per turn | – | – | 2.2 | 1.06 | 14.3 | 71% | 14.4 |
+| **Spread, final (one exact ally two out per R), two moves** | **7.8 (7–9)** | **3.9 / 1.6 / 2.2** | **2.4** | **0.95** | **17.6** | **82%** | **13.5** |
+
+- The diagnosis holds on paper: with standard patterns the best shape lights 12 of 15 (up to 14).
+  In AI play, though, teams complete only about 3 patterns per pulse: the AI never builds the ball,
+  a human would.
+- The first spread draft met the 5–6 target almost (6.9) but six R's need two exact allies two out,
+  and those almost never came together in play (0.0–0.1 casts per match for Anchor, Bulwark, Ember,
+  Gunner, Oriel, Rime R; Oriel W never). W and R casts halved, damage fell, matches stalled (34% end
+  by nexus). Teaching the AI to value half-built patterns spread teams out further but completed
+  fewer (2.1 → 1.8 at the strongest weight): with one move per turn and enemies pushing and killing
+  in between, a pattern that needs two or three exact hexes rarely finishes.
+- Two moves per turn fixed the pace (71–82% by nexus) but not the patterns on its own.
+- The final draft (one exact ally two out per R) has no dead R (every R 0.5–2.1 casts per match;
+  R casts 10.0 per match against 9.5 standard), teams stand further apart (0.95 allies beside a
+  champion against 1.27), sides even (52%), comebacks 19%. The ceiling rose to 7.8 because R's got
+  easier, and W's are now the harder ability in practice (7.6 casts per match against 15 standard),
+  the wrong way round.
+- Rotation: once the best formation's abilities are spent, one move lights about 1.3 new ones, two
+  moves 2.3, three 2.8 (standard: 1.0 / 1.8 / 2.1).
+- Champion win rates in the final draft spread 31–69% (Gunner 69%, Ranger 31%): no balancing yet.
+- The interface works with the new cells (draft switch, board guide, diagrams); one watched match
+  through four rounds, no errors.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

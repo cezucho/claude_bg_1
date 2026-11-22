@@ -730,12 +730,17 @@ const P = (t, proc, add) => ({ t, proc, add }), S = (t, stat, add) => ({ t, stat
 // ── elements and patterns ──
 // A pattern is read in the team's own frame: "front" is toward the enemy nexus.
 const ELS = { Fire: ['🔥', '#ff9b54'], Frost: ['❄️', '#9fd8ff'], Earth: ['⛰️', '#d09a5a'], Storm: ['⚡', '#c49bff'], Light: ['✨', '#ffe08a'], Shadow: ['🌑', '#a79be0'] };
-const CELL = { FR: [0, 1], FL: [-1, 1], R: [1, 0], L: [-1, 0], BR: [1, -1], BL: [0, -1] };
-const GROUP = { F: ['FL', 'FR'], B: ['BL', 'BR'], S: ['L', 'R'], N: ['FL', 'FR', 'R', 'BR', 'BL', 'L'], FL: ['FL'], FR: ['FR'], L: ['L'], R: ['R'], BL: ['BL'], BR: ['BR'] };
-const GROUP_TEXT = { F: 'in front', B: 'behind', S: 'at its side', N: 'beside it', FL: 'front left', FR: 'front right', L: 'on its left', R: 'on its right', BL: 'behind left', BR: 'behind right' };
+const CELL = { FR: [0, 1], FL: [-1, 1], R: [1, 0], L: [-1, 0], BR: [1, -1], BL: [0, -1],
+  // two hexes away (spread patterns, 2026-11-22): the ring around the six neighbours
+  A2: [-1, 2], FR2: [0, 2], FL2: [-2, 2], FRR: [1, 1], FLL: [-2, 1], R2: [2, 0], L2: [-2, 0], BRR: [2, -1], BLL: [-1, -1], BR2: [2, -2], BL2: [0, -2], H2: [1, -2] };
+const GROUP = { F: ['FL', 'FR'], B: ['BL', 'BR'], S: ['L', 'R'], N: ['FL', 'FR', 'R', 'BR', 'BL', 'L'], FL: ['FL'], FR: ['FR'], L: ['L'], R: ['R'], BL: ['BL'], BR: ['BR'],
+  A2: ['A2'], FR2: ['FR2'], FL2: ['FL2'], FRR: ['FRR'], FLL: ['FLL'], R2: ['R2'], L2: ['L2'], BRR: ['BRR'], BLL: ['BLL'], BR2: ['BR2'], BL2: ['BL2'], H2: ['H2'] };
+const GROUP_TEXT = { F: 'in front', B: 'behind', S: 'at its side', N: 'beside it', FL: 'front left', FR: 'front right', L: 'on its left', R: 'on its right', BL: 'behind left', BR: 'behind right',
+  A2: 'two hexes straight ahead', FR2: 'two hexes front right', FL2: 'two hexes front left', FRR: 'two hexes out, front right and right', FLL: 'two hexes out, front left and left',
+  R2: 'two hexes to the right', L2: 'two hexes to the left', BRR: 'two hexes out, behind right and right', BLL: 'two hexes out, behind left and left', BR2: 'two hexes behind right', BL2: 'two hexes behind left', H2: 'two hexes straight behind' };
 const need = (...n) => ({ need: n }), lone = n => ({ lone: n }), beside = n => ({ count: n });
-const patText = pat => patText0(pat) + (pat.x ? `, and ${X_TEXT[pat.x.k](pat.x)}` : '');
-const patText0 = pat => pat.count ? `${['', 'one', 'two', 'three'][pat.count]} allies beside it` : pat.lone ? (pat.lone > 1 ? `no ally within ${pat.lone} hexes` : 'no ally beside it') : pat.need.map(([g, el]) => `${el ? `a ${el} ally` : 'an ally'} ${GROUP_TEXT[g]}`).join(' and ');
+const patText = pat => patText0(pat) + (pat.free ? `, with ${pat.free.map(g => 'the hex ' + GROUP_TEXT[g]).join(' and ')} empty` : '') + (pat.x ? `, and ${X_TEXT[pat.x.k](pat.x)}` : '');
+const patText0 = pat => pat.need && !pat.need.length ? 'nothing beside it needed' : pat.count ? `${['', 'one', 'two', 'three'][pat.count]} allies beside it` : pat.lone ? (pat.lone > 1 ? `no ally within ${pat.lone} hexes` : 'no ally beside it') : pat.need.map(([g, el]) => `${el ? `${/^[AEIOU]/.test(el) ? 'an' : 'a'} ${el} ally` : 'an ally'} ${GROUP_TEXT[g]}`).join(' and ');
 const ABK = ['q', 'w', 'r'], SHAPE_W = { q: .3, w: .7, r: 1.2 };
 const AB = (name, pat, cd, look, fx) => ({ name, pat, cd, look, status: [], ...fx });
 const U = (ab, t, up) => ({ t, ab, up });
@@ -747,7 +752,7 @@ function abText(ab) {
     hook: `pulls the nearest enemy within ${ab.reach} hexes past its range next to itself and hits it${dmg}`, rescue: `pulls the most wounded ally within 3 (at half HP or less) to its side${ab.shield ? `, shield ${ab.shield}` : ''}${ab.heal ? `, heals ${ab.heal}` : ''}`,
     ally: `heals the most wounded ally within 2 for ${ab.heal}`, allies: `every ally within ${ab.r}: ${[ab.heal ? `heals ${ab.heal}` : '', ab.shield ? `shield ${ab.shield}` : '', ab.cleanse ? 'clears statuses' : ''].filter(Boolean).join(', ')}` }[ab.shape];
   if (ab.swap) s = `swaps places with the ally ${GROUP_TEXT[ab.swap]}, then ` + s;
-  const extra = [...ab.status.map(([k, p]) => `${STATUS_VERB[k]}${p < 100 ? ` (${p}%)` : ''}`), ab.poison ? `poisons ×${ab.poison}` : '', ab.push ? 'knocks back' : '', ab.after ? `then steps ${ab.after === 'back' ? 'back' : 'aside'}` : '', ab.steal ? 'heals itself for the damage' : '', ab.selfShield ? `shields itself for ${ab.selfShield}` : ''].filter(Boolean);
+  const extra = [...ab.status.map(([k, p]) => `${STATUS_VERB[k]}${p < 100 ? ` (${p}%)` : ''}`), ab.poison ? `poisons ×${ab.poison}` : '', ab.push ? 'knocks back' : '', ab.after ? `then steps ${ab.after === 'back' ? 'back' : ab.after === 'fwd' ? 'forward' : 'aside'}` : '', ab.pullTo ? `then calls the nearest ally within 3 to the hex ${GROUP_TEXT[ab.pullTo]}` : '', ab.steal ? 'heals itself for the damage' : '', ab.selfShield ? `shields itself for ${ab.selfShield}` : ''].filter(Boolean);
   return s + (extra.length ? '; ' + extra.join(', ') : '');
 }
 const up = { mult: n => a => { a.mult += n; }, cd: a => { a.cd = Math.max(1, a.cd - 1); }, st: (k, p = 100) => a => { const s = a.status.find(x => x[0] === k); if (s) s[1] = p; else a.status.push([k, p]); } };
@@ -977,19 +982,42 @@ const QPAT = {
   ranger: need(['L']), gunner: need(['N', 'Earth']), flint: need(['R']), hail: need(['S', 'Light']), dusk: need(['N', 'Shadow']),
   oriel: need(['F'], ['S']), seer: need(['B', 'Storm']), brook: need(['F'], ['S']), ash: need(['B', 'Fire']), moss: need(['B']),
 };
+// ── Spread patterns (2026-11-22): W asks for one exact neighbour, R for exact hexes two out, some hexes must stay
+// empty. No single shape lights everything, so a team rotates between shapes as abilities cool down. fx = changes
+// to the ability's effect in this mode (a swap that no longer fits, a pull that sets up a teammate, a step).
+const SPREAD = {
+  // W: one exact neighbour (often of an element) and one or two neighbours left empty. R: one exact ally two hexes out
+  // (often of an element) and one empty hex. Two exact allies two out (the first draft) almost never came together in play.
+  anchor: { w: { need: [['BL', 'Storm']], free: ['FR', 'R'] }, r: { need: [['H2', 'Storm']], free: ['FL'] }, fx: { w: { pullTo: 'H2' }, r: { swap: null } } },
+  bulwark: { w: { need: [['R', 'Fire']], free: ['L'] }, r: { need: [['BL2', 'Light']], free: ['R'] }, fx: { w: { pullTo: 'R2' } } },
+  ember: { w: { need: [['BR', 'Earth']], free: ['FL', 'L'] }, r: { need: [['L2', 'Earth']], free: ['FR'] }, fx: { r: { after: 'fwd' } } },
+  viper: { w: { need: [['BLL', 'Storm']], free: ['BL', 'L'] }, r: { need: [['H2', 'Light']], free: ['BL', 'BR'] } },
+  lens: { w: { need: [['FL', 'Earth']], free: ['R', 'BR'] }, r: { need: [['FLL', 'Earth']], free: ['FR', 'FR2'] }, fx: { w: { after: 'back' } } },
+  rime: { w: { need: [['FR', 'Earth']], free: ['L', 'BL'] }, r: { need: [['FR2', 'Fire']], free: ['FR'] } },
+  ranger: { w: { need: [['BR', 'Light']], free: ['L', 'FL'] }, r: { need: [['A2', 'Earth']], free: ['FL'] }, fx: { w: { after: 'side' } } },
+  gunner: { w: { need: [['L', 'Shadow']], free: ['FR', 'R'] }, r: { need: [['BLL']], free: ['FR'] } },
+  oriel: { w: { need: [['FR']], free: ['L'] }, r: { need: [['FL2']], free: ['FL'] } },
+  seer: { w: { need: [['FL', 'Frost']], free: ['R', 'BR'] }, r: { need: [['A2', 'Fire']], free: ['FL', 'FR'] }, fx: { w: { pullTo: 'FL2' } } },
+};
+const spreadOn = () => !!RULES.spread;
+const rosterNow = () => RULES.spread || RULES.roster10 ? ROSTER.filter(d => SPREAD[d.id]) : ROSTER;
+const ORIG_FX = new Map(ROSTER.map(d => [d.id, Object.fromEntries(['w', 'r'].map(k => [k, { swap: d.ab[k].swap, pullTo: d.ab[k].pullTo, after: d.ab[k].after }]))]));
 const SECOND_EL = { oriel: 'Storm', brook: 'Light', ash: 'Shadow', moss: 'Frost', shiver: 'Storm', pyra: 'Light', umbra: 'Fire' };
 const ORIG_ELS = new Map(ROSTER.map(d => [d.id, [...d.els]]));
 const ORIG_AB = new Map(ROSTER.map(d => [d.id, Object.fromEntries(ABK.map(k => [k, { pat: d.ab[k].pat, cd: d.ab[k].cd }]))]));
 let RARE_ON = false, TUNE_NOW = null, RULESET = '';
 // Puts the roster in line with the switches (called at the start of every match, so headless runs can flip them).
 function syncRules() {
-  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls].join();
+  const key = [RULES.rare, RULES.passives, RULES.deathPhase, RULES.qCast, RULES.qCd, RULES.moreEls, RULES.spread, JSON.stringify(RULES.spreadCd)].join();
   if (key === RULESET) return; RULESET = key; RARE_ON = !!RULES.rare;
   for (const d of ROSTER) { const o = ORIG_AB.get(d.id), x = RARE[d.id];
     for (const k of ['w', 'r']) { const a = d.ab[k];
       a.pat = RARE_ON ? (x[k][1] ? { ...x[k][0], x: x[k][1] } : x[k][0]) : o[k].pat;
       a.cd = RARE_ON ? RULES.rareCd[k] : o[k].cd;
-      a.finisher = !!(RULES.deathPhase && RARE_ON && (x.fin || []).includes(k)); }
+      a.finisher = !!(RULES.deathPhase && RARE_ON && (x.fin || []).includes(k));
+      Object.assign(a, ORIG_FX.get(d.id)[k]);
+      const sp = RULES.spread && SPREAD[d.id];
+      if (sp) { a.pat = sp[k]; a.cd = RULES.spreadCd[k]; Object.assign(a, (sp.fx || {})[k] || {}); } }
     const q = d.ab.q, qm = RULES.passives && RULES.qCast; q.pat = qm ? QPAT[d.id] : o.q.pat; q.cd = qm ? RULES.qCd : o.q.cd;
     d.els = RULES.moreEls && SECOND_EL[d.id] ? [...ORIG_ELS.get(d.id), SECOND_EL[d.id]] : [...ORIG_ELS.get(d.id)]; }
   setTune(TUNE_NOW || TUNE);
@@ -1073,6 +1101,11 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   openBack: true,
   shieldCap: 0.5,     // a shield never exceeds this share of max HP (shields last until used, and W/R shields doubled)     // with fewer cards: champions that played none start the fight beside their own nexus
   hpScale: 1.25,      // abilities hit harder than basic attacks did, so champions are tougher
+  spread: false,      // spread patterns (SPREAD): ten champions, two per role, whose W and R need exact hexes up to two away; bans off in this mode
+  roster10: false,    // (measuring) the same ten champions with their usual patterns
+  spreadCd: { w: 4, r: 6 },   // W and R cooldowns in pulses with spread patterns
+  aiProgress: 0,      // with spread patterns: how much the AI values a half-built W or R pattern
+  movesPerTurn: 1,    // champions a team moves before each pulse (a hold ends the turn)
   bans: '1+1', banPerRole: 2,   // bans in the draft (see draftPlan): each team bans one champion before the picks and one more once both have two picks
   regroup: true,      // after a pulse that leaves one team rgLead champions up, both teams re-place their champions (see "regroup")
   rgLead: 2, rgBase: 1, rgMax: 5,   // how far the winners may move: rgBase + the current death timer in rounds, at most rgMax
@@ -1110,7 +1143,7 @@ const UI = { art: true, pulses: [], board: 'small', sel: null, hover: null, aims
 const DIFF = { easy: { name: 'Easy', plan: 1, beam: 5, samples: 2, coach: 'auto' }, normal: { name: 'Normal', plan: 2, beam: 5, samples: 2, coach: 'button' }, hard: { name: 'Hard', plan: 2, beam: 5, samples: 2, coach: 'none' } };   // Hard = Normal's AI without the coach: a deeper search (beam 8, 3 samples) measured no stronger (46% vs ~45%)
 function setDiff(d) { UI.diff = d; try { localStorage.setItem('augury-diff', d); } catch (e) {} }
 const coaching = () => G && G.mode === 'play' ? DIFF[UI.diff].coach : 'none';
-const freshStats = () => ({ matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, tac: {}, final: { time: 0, card: 0, cardWin: 0 }, fk: 0, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0,
+const freshStats = () => ({ shape: { p: 0, n: 0, lit: 0, ready: 0, adj: 0, spread: 0 }, abFire: {}, matches: 0, winsA: 0, rounds: 0, deaths: 0, procs: 0, kills: { A: 0, B: 0 }, draws: 0, nexusHits: 0, fw: 0, fwWin: 0, big: 0, bigWin: 0, falls: 0, after: 0, rev: 0, nkW: 0, nkL: 0, conv: 0, k2W: 0, k2L: 0, rev2: 0, gl: 0, glWin: 0, dragons: 0, barons: 0, steals: 0, baronWin: 0, baronBehind: 0, baronBehindWin: 0, conv2: 0, punished: 0, steps: 0, stancePulses: 0, items: 0, specials: 0, skips: 0, casts: { q: 0, w: 0, r: 0 }, basics: 0, ch: {}, frost: {}, elMax: {}, forced: { push: 0, pull: 0, swap: 0, step: 0, fetch: 0, leap: 0 }, regroups: 0, rgGoal: { baron: 0, dragon: 0, tower: 0, nexus: 0, rest: 0 }, rgCard: {}, tac: {}, final: { time: 0, card: 0, cardWin: 0 }, fk: 0, rgLit: { n: 0, w: 0, l: 0 }, path: {}, levels: 0, alts: 0,
   pulses: 0, broken: 0, saved: 0, finished: 0, reaped: 0, ps: {}, abFire: {}, quiet: 0, r1dmg: 0 });
 let STATS = freshStats();
 const later = (fn, ms) => { if (HEADLESS) fn(); else UI.timer = setTimeout(fn, ms); };
@@ -1146,7 +1179,7 @@ function newMatch(mode, seed) {
 // The draft as a list of steps. RULES.bans: 'none', or how many bans each team makes before the picks, optionally
 // '+' how many more each makes once both teams have two picks: '1', '2', '1+1', '2+2'.
 function draftPlan() {
-  const [n1, n2] = RULES.bans === 'none' || !RULES.bans ? [0, 0] : String(RULES.bans).split('+').map(Number).concat(0), out = [];
+  const [n1, n2] = RULES.bans === 'none' || !RULES.bans || RULES.spread || RULES.roster10 ? [0, 0] : String(RULES.bans).split('+').map(Number).concat(0), out = [];
   const picks = RULES.draftOrder || ['A', 'B', 'B', 'A', 'A', 'B', 'B', 'A', 'A', 'B'];
   for (let i = 0; i < n1; i++) out.push(['A', 'ban'], ['B', 'ban']);
   picks.forEach((t, i) => { if (i === 4) for (let j = 0; j < n2; j++) out.push(['B', 'ban'], ['A', 'ban']); out.push([t, 'pick']); });
@@ -1158,8 +1191,8 @@ const pairFit = (x, y) => x.role === y.role ? 0 : fitsOf(x, y) + fitsOf(y, x);
 // What may be chosen in the current step. A role keeps at least three champions unbanned (RULES.banPerRole bans at most).
 function draftOptions() {
   const team = G.order[G.di];
-  if (draftKind() === 'ban') return ROSTER.filter(d => !G.taken.has(d.id) && ROSTER.filter(x => x.role === d.role && G.banned.has(x.id)).length < RULES.banPerRole);
-  return ROSTER.filter(d => !G.taken.has(d.id) && !G.picks[team][ROLES.indexOf(d.role)]);
+  if (draftKind() === 'ban') return rosterNow().filter(d => !G.taken.has(d.id) && rosterNow().filter(x => x.role === d.role && G.banned.has(x.id)).length < RULES.banPerRole);
+  return rosterNow().filter(d => !G.taken.has(d.id) && !G.picks[team][ROLES.indexOf(d.role)]);
 }
 function draftPick(def) {
   if (G.phase !== 'draft' || !draftOptions().includes(def)) return;
@@ -1176,7 +1209,7 @@ function draftPick(def) {
 function draftAi() {
   if (G.phase !== 'draft' || G.humans.includes(G.order[G.di])) return;
   later(() => { const team = G.order[G.di], w = RULES.draftFitBy ? RULES.draftFitBy[team] : RULES.draftFit ?? 1.5;
-    const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = ROSTER.filter(d => !G.taken.has(d.id));
+    const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = rosterNow().filter(d => !G.taken.has(d.id));
     let best = null, bv = -1e9;
     for (const d of draftOptions()) { const v = rng() * 3 + draftScore(d, team, w);   // a little variety
       if (v > bv) { bv = v; best = d; } }
@@ -1184,7 +1217,7 @@ function draftAi() {
 }
 // How much a team wants to pick (or ban) a champion now: how many of its patterns the elements complete.
 function draftScore(d, team, w = 1.5) {
-  const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = ROSTER.filter(x => !G.taken.has(x.id)); let v = 0;
+  const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = rosterNow().filter(x => !G.taken.has(x.id)); let v = 0;
   if (draftKind() === 'ban') { const openForThem = !G.picks[other(team)][ROLES.indexOf(d.role)], openForMe = !G.picks[team][ROLES.indexOf(d.role)];
     if (openForThem) v += w * (theirs.reduce((s, m) => s + pairFit(d, m), 0) + .25 * free.reduce((s, o) => s + pairFit(d, o), 0) / 2);
     if (openForMe) v -= w * mine.reduce((s, m) => s + pairFit(d, m), 0); }
@@ -1250,6 +1283,7 @@ function allyAt(c, cell) { const o = champAt(add(c.pos, frame(c.team, CELL[cell]
 function patOk(c, pat) {
   if (RULES.dbgPat) return true;
   if (pat.x && !G.ignoreX && !xOk(c, pat.x)) return false;
+  if (pat.free && !pat.free.every(cell => freeHex(cellHex(c, cell)))) return false;   // spread patterns: these hexes must be empty
   if (pat.lone) return !alive(c.team).some(o => o !== c && dist(o.pos, c.pos) <= pat.lone);
   if (pat.count) return alive(c.team).filter(o => o !== c && dist(o.pos, c.pos) === 1).length >= pat.count;
   return pat.need.every(([g, el]) => GROUP[g].some(cell => { const o = allyAt(c, cell); return o && (!el || o.def.els.includes(el)); }));
@@ -1277,6 +1311,11 @@ function pushDest(c, x) { const cur = dist(x.pos, c.pos); return DIRS.map(d => a
 function pullDest(c, x) { if (dist(x.pos, c.pos) < 2) return null; return DIRS.map(d => add(c.pos, d)).filter(freeHex).sort((a, b) => dist(a, x.pos) - dist(b, x.pos))[0] || null; }
 function stepDest(c, dir) { for (const cell of STEP[dir]) { const h = cellHex(c, cell); if (freeHex(h)) return h; } return null; }
 function swapMate(c, grp) { if (c.rooted) return null; for (const cell of GROUP[grp]) { const o = allyAt(c, cell); if (o && !o.rooted) return o; } return null; }
+function pullToWho(c, ab) {   // the ally a pullTo would move, and where
+  if (!ab.pullTo) return null; const h = cellHex(c, ab.pullTo); if (!freeHex(h)) return null;
+  const o = alive(c.team).filter(a => a !== c && !a.rooted && !a.broken && dist(a.pos, c.pos) <= 3 && !same(a.pos, h)).sort((a, b) => dist(a.pos, h) - dist(b.pos, h) || a.id - b.id)[0];
+  return o ? { o, h } : null;
+}
 function fetchDest(c) { for (const cell of ['BL', 'BR', 'L', 'R', 'FL', 'FR']) { const h = cellHex(c, cell); if (freeHex(h)) return h; } return null; }
 function abTargets(c, ab, L, swapped) {
   if (ab.swap && !swapped) {   // judged from where the champion will stand after the swap
@@ -1318,6 +1357,7 @@ function forcedMoves(c, L) {
   if (ab.shape === 'weakest' && dist(ts[0].pos, c.pos) > eff(c, L).range) { const s = diveSpot(c, ts[0]); if (s) out.push({ from: c.pos, to: s, team: c.team }); }
   if (ab.push) for (const x of ts) { const d = pushDest(c, x); if (d) out.push({ from: x.pos, to: d, team: c.team }); }
   if (ab.after) { const d = stepDest(c, ab.after); if (d) out.push({ from: c.pos, to: d, team: c.team }); }
+  if (ab.pullTo) { const p = pullToWho(c, ab); if (p) out.push({ from: p.o.pos, to: p.h, team: c.team }); }
   return out;
 }
 function applyStatus(c, t, s, ctx) {
@@ -1346,6 +1386,7 @@ function castAbility0(c, act, L, ctx) {
     for (const x of ts) { if (ab.heal) { const g = Math.min(ab.heal, x.maxHp - x.hp); x.hp += g; if (g) ctx.pops.push({ hex: x.pos, text: '+' + g, cls: 'good' }); }
       if (ab.shield) { x.shield += ab.shield; ctx.pops.push({ hex: x.pos, text: 'shield', cls: 'info' }); }
       if (ab.cleanse) { clearStatus(x); x.poison = 0; } }
+    if (ab.pullTo) { const p = pullToWho(c, ab); if (p) moved(p.o, p.h, 'fetch'); }
     ctx.notes.unshift(`<${tag}>${ab.name}</${tag}> (${k.toUpperCase()}): ${ts.length} all${ts.length > 1 ? 'ies' : 'y'}`); return;
   }
   if (!ts.length) { ctx.notes.unshift(`<${tag}>${ab.name}</${tag}> (${k.toUpperCase()})`); return; }
@@ -1364,6 +1405,7 @@ function castAbility0(c, act, L, ctx) {
   if (ab.steal && total && !c.dead) { const g = Math.min(total, c.maxHp - c.hp); c.hp += g; if (g) ctx.pops.push({ hex: c.pos, text: '+' + g, cls: 'good' }); }
   if (ab.selfShield && !c.dead) { c.shield += ab.selfShield; ctx.pops.push({ hex: c.pos, text: 'shield', cls: 'info' }); }
   if (ab.after && !c.dead && !c.rooted) { const d = stepDest(c, ab.after); if (d) moved(c, d, 'step'); }
+  if (ab.pullTo && !c.dead) { const p = pullToWho(c, ab); if (p) { moved(p.o, p.h, 'fetch'); ctx.notes.push(`calls ${nm(p.o)} to its side`); } }
   ctx.notes.unshift(`<${tag}>${ab.name}</${tag}> (${k.toUpperCase()}): ${ts.length} hit`);
 }
 // What an ability is worth to the AI right now.
@@ -1569,6 +1611,8 @@ function doMove(c, to) {
   else logLine(team, `${team} holds`);
   UI.sel = null; UI.hover = null;
   const go = () => {
+    if (c && to && RULES.movesPerTurn > 1 && (G.movesMade = (G.movesMade || 0) + 1) < RULES.movesPerTurn) { beginTurn(); return; }   // more moves before the pulse
+    G.movesMade = 0;
     if (RULES.onePulse && G.turnNo === 0) { G.turnNo = 1; G.turnTeam = other(G.turnTeam); beginTurn(); return; }
     const events = runPulse(RULES.onePulse ? G.token : team);   // with one pulse, ties go to the team that moved first
     if (HEADLESS) afterPulse();
@@ -1920,6 +1964,12 @@ function snap() { return { champs: G.champs.map(c => ({ pos: c.pos, hp: c.hp, sh
 function runPulse(mover) {
   const events = [];
   G.pulse++; G.cue = []; G.inPulse = true; G.pulseDeaths = { A: 0, B: 0 };
+  { const up = alive().filter(c => !c.broken); STATS.shape.p++;
+    for (const t of ['A', 'B']) { const cs = up.filter(c => c.team === t); if (cs.length < 3) continue; STATS.shape.n++;
+      STATS.shape.lit += cs.reduce((v, c) => v + ABK.filter(k => patOk(c, c.ab[k].pat)).length, 0);
+      STATS.shape.ready += cs.reduce((v, c) => v + ABK.filter(k => abCool(c, k) === 0 && patOk(c, c.ab[k].pat)).length, 0);
+      STATS.shape.adj += cs.reduce((v, c) => v + cs.filter(o => o !== c && dist(o.pos, c.pos) === 1).length, 0) / cs.length;
+      let pd = 0, pn = 0; for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) { pd += dist(cs[i].pos, cs[j].pos); pn++; } STATS.shape.spread += pd / pn; } }
   for (const c of G.champs) for (const k of ABK) if (c.ab[k].cdLeft > 0) c.ab[k].cdLeft--;   /* cooldowns tick at the start of a pulse */ STATS.pulses++; G.pulseCasts = 0; G.pd = { A: 0, B: 0 }; G.pk = { A: [], B: [] };
   G.flashes = [];
   const push = ev => { ev.cue = G.cue.splice(0); ev.flash = G.flashes.splice(0); events.push(ev); };
@@ -2313,6 +2363,13 @@ function expDamage(c, t, L) {
   v += p('poison') * RULES.poison * RULES.poisonTurns + p('frost') * 3 + p('splash') * raw * 0.8 + p('chain') * raw * 0.5 + p('fireball') * 5 + p('cleave') * raw * 0.6;
   return v;
 }
+// The share of a pattern's requirements met right now (allies in their hexes, empty hexes empty): the AI's sense of "getting there".
+function patProgress(c, pat) {
+  if (!pat.need) return 0; let met = 0, tot = 0;
+  for (const [g, el] of pat.need) { tot++; if (GROUP[g].some(cell => { const o = allyAt(c, cell); return o && (!el || o.def.els.includes(el)); })) met++; }
+  for (const cell of pat.free || []) { tot++; if (freeHex(cellHex(c, cell))) met++; }
+  return tot ? met / tot : 0;
+}
 function evaluate(team) {
   const L = links(); let v = 0;
   for (const c of alive()) {
@@ -2329,6 +2386,7 @@ function evaluate(team) {
         const goals = [...alive(other(c.team)).map(x => x.pos), ...(ahead ? (G.monsters || []).filter(m => m.alive).map(m => m.pos) : []), ...(RULES.towerHp ? attackableTowers(other(c.team)).map(t => t.pos) : []), ...(structure() && nexusOpen(other(c.team)) ? [NEXUS[other(c.team)][0]] : [])];
         v -= s * 0.6 * Math.max(0, Math.min(...goals.map(g => dist(g, c.pos)), 6) - eff(c, L).range); } }
     for (const k of ABK) if (patOk(c, c.ab[k].pat)) v += s * SHAPE_W[k];   // a complete pattern is worth holding, even while it cools down
+      else if (RULES.spread && RULES.aiProgress && k !== 'q' && abCool(c, k) <= 2) v += s * SHAPE_W[k] * RULES.aiProgress * patProgress(c, c.ab[k].pat) ** 2;   // spread patterns take several moves: half a pattern is worth something
     if (AIP.push && c.team === team) v += AIP.push * (6 - Math.min(6, nexusDist(other(c.team), c.pos))) / 6;
     if (!structure() && nexusDist(other(c.team), c.pos) <= 1 && nexusOpen(other(c.team))) v += s * 3;
     v += s * (pct(c, 'mend', L) / 100) * 3 + s * (pct(c, 'shield', L) / 100) * 2;
@@ -2656,15 +2714,19 @@ const ICO_PATH = {
 const ico = k => `<svg class="si" viewBox="0 0 16 16" aria-hidden="true" style="color:${ICO_PATH[k][0]}" fill="currentColor">${ICO_PATH[k][1]}</svg>`;
 // A pattern as a small diagram: the champion in the middle, front at the top. A filled cell must hold an ally;
 // ringed cells mean "one of these"; the colour is the element the ally needs (gold = any ally); red rings = must be empty.
-const CELL_XY = { FL: [-.5, -.87], FR: [.5, -.87], R: [1, 0], BR: [.5, .87], BL: [-.5, .87], L: [-1, 0] };
+const CELL_XY = Object.fromEntries(Object.entries(CELL).map(([k, [q, r]]) => [k, [q + r / 2, -r * .87]]));   // front at the top
+const RING1 = ['FL', 'FR', 'R', 'BR', 'BL', 'L'];
+const patFar = pat => [...(pat.need || []).flatMap(([g]) => GROUP[g]), ...(pat.free || [])].some(k => !RING1.includes(k));
 function patSvg(pat, size = 22) {
-  const u = size * .31, m = size / 2, r = size * .115, mark = {};
+  const far = patFar(pat); if (far) size = Math.round(size * 1.35);
+  const u = size * (far ? .17 : .31), m = size / 2, r = size * (far ? .07 : .115), mark = {};
   if (pat.lone) for (const k of Object.keys(CELL_XY)) mark[k] = { col: '#ff6b6b', ring: true };
   else if (pat.count) for (const k of Object.keys(CELL_XY)) mark[k] = { col: '#ffd66b', ring: true };
   else for (const [g, el] of pat.need) for (const k of GROUP[g]) mark[k] = { col: el ? ELS[el][1] : '#ffd66b', ring: GROUP[g].length > 1 };
   let o = `<svg class="pat" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">`;
   if (pat.lone > 1) o += `<circle cx="${m}" cy="${m}" r="${size * .47}" fill="none" stroke="#ff6b6b" stroke-width="1" stroke-dasharray="2 2"></circle>`;
-  for (const [k, [x, y]] of Object.entries(CELL_XY)) { const a = mark[k];
+  for (const k of pat.free || []) mark[k] = { col: '#ff6b6b', ring: true, free: true };
+  for (const [k, [x, y]] of Object.entries(CELL_XY)) { const a = mark[k]; if (!far && !RING1.includes(k)) continue;
     o += a ? `<circle cx="${m + x * u}" cy="${m + y * u}" r="${r}" fill="${a.ring ? a.col + '40' : a.col}" stroke="${a.col}" stroke-width="${a.ring ? 1.2 : 0}"></circle>` : `<circle cx="${m + x * u}" cy="${m + y * u}" r="${r * .7}" fill="#3a4458"></circle>`; }
   if (pat.x) o += `<text x="${size * .98}" y="${size * .3}" text-anchor="end" style="font:800 ${size * .36}px sans-serif;fill:#ff9b7a">${X_ICON[pat.x.k]}</text>`;
   if (pat.count) return o + `<text x="${m}" y="${m + size * .16}" text-anchor="middle" style="font:800 ${size * .46}px sans-serif;fill:#f3f6fb">${pat.count}</text></svg>`;
@@ -2699,9 +2761,10 @@ function patternGuide(svg, c) {
   for (const k of ABK) { const pat = c.ab[k].pat; if (pat.lone || pat.count || psK(k)) continue;
     for (const [g, el] of pat.need) { const done = GROUP[g].some(cell => { const o = allyAt(c, cell); return o && (!el || o.def.els.includes(el)); });
       for (const cell of GROUP[g]) { const h = add(c.pos, frame(c.team, CELL[cell])); if (!onBoard(h) || SOLID.has(K(h))) continue;
-        const w = want[K(h)] || (want[K(h)] = { h, items: [] }); w.items.push({ k, col: el ? ELS[el][1] : '#ffd66b', done, either: GROUP[g].length > 1 }); } } }
+        const w = want[K(h)] || (want[K(h)] = { h, items: [] }); w.items.push({ k, col: el ? ELS[el][1] : '#ffd66b', done, either: GROUP[g].length > 1 }); } }
+    for (const cell of pat.free || []) { const h = cellHex(c, cell); if (!onBoard(h)) continue; const w = want[K(h)] || (want[K(h)] = { h, items: [] }); w.items.push({ k, col: '#ff6b6b', done: freeHex(h), either: false, free: true }); } }
   for (const { h, items } of Object.values(want)) { const [cx, cy] = px(...h);
-    svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * .05}" style="font-size:11px;font-weight:800;paint-order:stroke;stroke:#0b0f16;stroke-width:3px;pointer-events:none">${items.map(i => `<tspan style="fill:${i.col};opacity:${i.done ? .45 : 1}">${i.k.toUpperCase()}${i.either ? '?' : ''}</tspan>`).join('')}</text>`)); }
+    svg.appendChild(sv(`<text class="lbl" x="${cx}" y="${cy - HEX * .05}" style="font-size:11px;font-weight:800;paint-order:stroke;stroke:#0b0f16;stroke-width:3px;pointer-events:none">${items.map(i => `<tspan style="fill:${i.col};opacity:${i.done ? .45 : 1}">${i.free ? '✕' : ''}${i.k.toUpperCase()}${i.either ? '?' : ''}</tspan>`).join('')}</text>`)); }
 }
 // Every dead champion shows where it will return and when, so a deserted half reads at a glance.
 function deadMarks(svg) {
@@ -3177,14 +3240,14 @@ function renderOverlay() {
       <div class="srow">${Array.from({ length: nb(t) }, (_, i) => { const d = G.banList[t][i]; return `<div class="slot ban ${i === nowBan ? 'now' : ''}" title="${d ? esc(d.name) + ' (banned)' : 'ban'}">${d ? `<img src="art/${d.id}.png" alt="">` : '<span class="sl">ban</span>'}</div>`; }).join('')}</div>
       <div class="srow">${ROLES.map((r, i) => { const d = G.picks[t][i]; return `<div class="slot pick ${d ? 'filled' : ''} ${nowPick && !d ? 'now' : ''}" title="${r}${d ? ': ' + esc(d.name) : ''}">${d ? `<img src="art/${d.id}.png" alt="">` : ''}<span class="sl">${d ? esc(d.name) : r}</span></div>`; }).join('')}</div></div>`; };
   const box = h(`<div class="box draft"><div class="row"><h2>Draft</h2><div class="row" style="margin-left:auto">
-      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="bans">Bans: ${RULES.bans} ⇄</button><button data-m="diff">Difficulty: ${DIFF[UI.diff].name} ⇄</button><button data-m="rules">Rules</button></div></div>
+      <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="spread">Patterns: ${RULES.spread ? 'spread (10 champions)' : 'standard'} ⇄</button><button data-m="bans">Bans: ${RULES.spread ? 'off' : RULES.bans} ⇄</button><button data-m="diff">Difficulty: ${DIFF[UI.diff].name} ⇄</button><button data-m="rules">Rules</button></div></div>
     <div class="slots">${sideHtml('A')}<div class="banner ${kind} ${team}"><b>${kind === 'ban' ? 'BAN PHASE' : 'PICK PHASE'}</b><span>${tnm(team)} ${kind === 'ban' ? `ban${human ? '' : 's'} · ${banNo} of ${nb(team)}` : `pick${human ? '' : 's'} · ${G.picks[team].filter(Boolean).length + 1} of 5`}${human ? ' · your turn' : ''}</span></div>${sideHtml('B')}</div>
     ${tip.text ? `<div class="coachbox"><span class="who">MARLOW · TIP</span>${tip.text}</div>` : ''}
     <div class="dgrid"></div>
     <p>Hover a portrait for its abilities and patterns. ${kind === 'ban' ? 'A banned champion is out for both teams.' : 'One champion per role; picks go in snake order.'}</p></div>`);
   const grid = box.querySelector('.dgrid');
   for (const role of ROLES) { const row = h(`<div class="rrow"><span class="rlab">${role}</span></div>`);
-    for (const d of ROSTER.filter(x => x.role === role)) { const takenBy = ['A', 'B'].find(t => G.picks[t].includes(d)), isBanned = G.banned.has(d.id), can = human && opts.includes(d), fit = tip.fits.get(d.id);
+    for (const d of rosterNow().filter(x => x.role === role)) { const takenBy = ['A', 'B'].find(t => G.picks[t].includes(d)), isBanned = G.banned.has(d.id), can = human && opts.includes(d), fit = tip.fits.get(d.id);
       const t = h(`<div class="tile ${can ? 'can' : ''} ${takenBy ? 'taken ' + takenBy : ''} ${isBanned ? 'banned' : ''} ${can && fit ? 'fit' : ''} ${can && tip.threat === d.id ? 'threat' : ''}">${UI.art ? `<img src="art/${d.id}.png" alt="">` : ''}<div class="tn"><b>${esc(d.name)}</b><span>${elIcons(d)}</span></div>${can && fit ? `<span class="fitb">+${fit}</span>` : ''}</div>`);
       if (can) t.addEventListener('click', () => draftPick(d));
       t.addEventListener('mouseenter', () => showTipAt(t, defTipHtml(d, human ? G.picks[team].filter(Boolean) : [])));
@@ -3192,7 +3255,7 @@ function renderOverlay() {
       row.appendChild(t); }
     grid.appendChild(row); }
   box.querySelectorAll('button[data-m]').forEach(b => b.addEventListener('click', () => { const m = b.dataset.m;
-    if (m === 'bans') { const o = ['none', '1+1', '2', '2+2']; RULES.bans = o[(o.indexOf(RULES.bans) + 1) % o.length]; newMatch(G.mode); } else if (m === 'diff') { const o = ['easy', 'normal', 'hard']; setDiff(o[(o.indexOf(UI.diff) + 1) % 3]); render(); } else if (m === 'rules') { UI.rules = true; render(); } else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
+    if (m === 'spread') { RULES.spread = !RULES.spread; newMatch(G.mode); } else if (m === 'bans') { const o = ['none', '1+1', '2', '2+2']; RULES.bans = o[(o.indexOf(RULES.bans) + 1) % o.length]; newMatch(G.mode); } else if (m === 'diff') { const o = ['easy', 'normal', 'hard']; setDiff(o[(o.indexOf(UI.diff) + 1) % 3]); render(); } else if (m === 'rules') { UI.rules = true; render(); } else if (m === 'board') { UI.board = UI.board === 'field7' ? 'small' : 'field7'; newMatch(G.mode); } else newMatch(m); }));
   ov.appendChild(box);
 }
 // The draft hover card: everything about a roster entry.
@@ -3222,9 +3285,55 @@ function simulate(n, board, seed = 1, rules = {}) {
   const S = STATS; window.STATS_last = { ...STATS };
   const out = { rounds: +(S.rounds / n).toFixed(1), byNexus: Math.round(100 * ends.nexus / n) + '%', endings: `nexus ${ends.nexus} · final at time ${ends.finalTime} · final by card ${ends.finalCard} · score ${ends.time}`, deaths: +(S.deaths / n).toFixed(1), winA: Math.round(100 * S.winsA / n) + '%', draws: Math.round(100 * S.draws / n) + '%',
     fightWinThenWin: S.fw ? Math.round(100 * S.fwWin / S.fw) + '%' : '-', bigFightThenWin: S.big ? Math.round(100 * S.bigWin / S.big) + '%' : '-', bigFightShare: Math.round(100 * S.big / n) + '%', towersFallen: +(S.falls / n).toFixed(1),
-    swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1), comeback: S.fw ? Math.round(100 - 100 * S.fwWin / S.fw) + '%' : '-', towerIn2: S.after ? Math.round(100 * S.conv2 / S.after) + '%' : '-', punished: S.after ? Math.round(100 * S.punished / S.after) + '%' : '-', stepsPerPulse: S.stancePulses ? +(S.steps / S.stancePulses).toFixed(2) : 0, dragons: +(S.dragons / n).toFixed(2), barons: +(S.barons / n).toFixed(2), baronTakerWins: S.barons ? Math.round(100 * S.baronWin / S.barons) + '%' : '-', baronWhenBehind: S.baronBehind ? `${S.baronBehind} taken, ${Math.round(100 * S.baronBehindWin / S.baronBehind)}% won` : '-', steals: S.barons + S.dragons ? Math.round(100 * S.steals / (S.barons + S.dragons)) + '%' : '-', regroups: +(S.regroups / n).toFixed(2), regroupGoals: JSON.stringify(S.rgGoal), tactics: JSON.stringify(Object.fromEntries(Object.entries(S.tac).map(([k, z]) => [k, `${z.n} (${z.early}/${z.mid}/${z.late})`]))), finals: `time ${S.final.time} · card ${S.final.card} (won ${S.final.cardWin})`, firstKillRound: +(S.fk / n).toFixed(2), rgCards: JSON.stringify(S.rgCard), litAfterRegroup: S.rgLit.n ? `${(S.rgLit.w / S.rgLit.n).toFixed(1)} winner · ${(S.rgLit.l / S.rgLit.n).toFixed(1)} loser` : '-', levelsPerMatch: +(S.levels / n).toFixed(1), healPicks: S.levels ? Math.round(100 * S.alts / S.levels) + '%' : '-', castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`, basicsPerMatch: +(S.basics / n).toFixed(1) };
+    swingBack: S.after ? Math.round(100 * S.rev / S.after) + '%' : '-', nextKills: S.after ? `${(S.nkW / S.after).toFixed(2)} vs ${(S.nkL / S.after).toFixed(2)}` : '-', towerNextRound: S.after ? Math.round(100 * S.conv / S.after) + '%' : '-', kills2Rounds: S.after ? `${(S.k2W / S.after).toFixed(2)} vs ${(S.k2L / S.after).toFixed(2)}` : '-', swingBack2: S.after ? Math.round(100 * (S.rev + S.rev2) / S.after) + '%' : '-', goldLeadAt5Wins: S.gl ? Math.round(100 * S.glWin / S.gl) + '%' : '-', itemsPerMatch: +(S.items / n).toFixed(1), specialsPerMatch: +(S.specials / n).toFixed(1), skipsPerMatch: +(S.skips / n).toFixed(1), comeback: S.fw ? Math.round(100 - 100 * S.fwWin / S.fw) + '%' : '-', towerIn2: S.after ? Math.round(100 * S.conv2 / S.after) + '%' : '-', punished: S.after ? Math.round(100 * S.punished / S.after) + '%' : '-', stepsPerPulse: S.stancePulses ? +(S.steps / S.stancePulses).toFixed(2) : 0, dragons: +(S.dragons / n).toFixed(2), barons: +(S.barons / n).toFixed(2), baronTakerWins: S.barons ? Math.round(100 * S.baronWin / S.barons) + '%' : '-', baronWhenBehind: S.baronBehind ? `${S.baronBehind} taken, ${Math.round(100 * S.baronBehindWin / S.baronBehind)}% won` : '-', steals: S.barons + S.dragons ? Math.round(100 * S.steals / (S.barons + S.dragons)) + '%' : '-', regroups: +(S.regroups / n).toFixed(2), regroupGoals: JSON.stringify(S.rgGoal), tactics: JSON.stringify(Object.fromEntries(Object.entries(S.tac).map(([k, z]) => [k, `${z.n} (${z.early}/${z.mid}/${z.late})`]))), finals: `time ${S.final.time} · card ${S.final.card} (won ${S.final.cardWin})`, firstKillRound: +(S.fk / n).toFixed(2), rgCards: JSON.stringify(S.rgCard), litAfterRegroup: S.rgLit.n ? `${(S.rgLit.w / S.rgLit.n).toFixed(1)} winner · ${(S.rgLit.l / S.rgLit.n).toFixed(1)} loser` : '-', levelsPerMatch: +(S.levels / n).toFixed(1), healPicks: S.levels ? Math.round(100 * S.alts / S.levels) + '%' : '-', castsPerMatch: `Q ${(S.casts.q / n).toFixed(1)} · W ${(S.casts.w / n).toFixed(1)} · R ${(S.casts.r / n).toFixed(1)}`, castsPerPulse: +((S.casts.q + S.casts.w + S.casts.r) / Math.max(1, S.shape.p)).toFixed(2),
+    patternsComplete: S.shape.n ? +(S.shape.lit / S.shape.n).toFixed(2) : '-', readyAtPulse: S.shape.n ? +(S.shape.ready / S.shape.n).toFixed(2) : '-', alliesBeside: S.shape.n ? +(S.shape.adj / S.shape.n).toFixed(2) : '-', meanAllyDistance: S.shape.n ? +(S.shape.spread / S.shape.n).toFixed(2) : '-', champWins: JSON.stringify(Object.fromEntries(Object.entries(S.ch).filter(([, z]) => z.g).map(([id, z]) => [id, Math.round(100 * z.w / z.g)]))), basicsPerMatch: +(S.basics / n).toFixed(1) };
   HEADLESS = false; UI.board = keepB; STATS = keepS; Object.assign(RULES, keepR); AIP.push = keepP; AIP.greedy = keepG; delete RULES.aiPush; delete RULES.greedy; newMatch('play');
   return out;
+}
+
+// ═════════════ pattern audit (measuring, 2026-11-22) ═════════════
+// For every team the current roster allows (one champion per role), on an empty board: the formation that lights
+// the most abilities (the ceiling), then, with those abilities spent, how many new ones single moves can light
+// (each move: one champion to any free hex within 2). Extra conditions of rare patterns are left out.
+function patternAudit(restarts = 40, beam = 30) {
+  syncRules();
+  const keepG = G, keepSolid = SOLID; let seed = 777; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const byRole = ROLES.map(r => rosterNow().filter(d => d.role === r)), teams = [];
+  const walk = (i, acc) => { if (i === 5) { teams.push(acc); return; } for (const d of byRole[i]) walk(i + 1, [...acc, d]); };
+  walk(0, []);
+  const keys = ABK.filter(k => !psK(k)), out = [];
+  try {
+    for (const team of teams) {
+      G = { ...keepG, champs: [], monsters: [], towers: [], ignoreX: true }; SOLID = new Set(keepSolid);
+      const cs = team.map((d, i) => { const c = makeChampFor(d, 'A', i); c.id = i; return c; }); G.champs = cs;
+      const patch = HEXES.filter(h => !SOLID.has(K(h)));
+      const litSet = (skip) => cs.flatMap(c => keys.filter(k => !(skip && skip.has(c.id + k)) && patOk(c, c.ab[k].pat)).map(k => c.id + k));
+      const score = () => litSet().length + .01 * cs.reduce((v, c) => v + (patOk(c, c.ab.r.pat) ? 1 : 0), 0);
+      let best = -1, bestPos = null;
+      for (let run = 0; run < restarts; run++) {
+        const pool = [...patch].sort(() => rnd() - .5); cs.forEach((c, i) => c.pos = pool[i]);
+        let cur = score(), better = true;
+        while (better) { better = false;
+          for (const c of cs) { const from = c.pos;
+            for (const h of patch) { if (cs.some(o => same(o.pos, h))) continue; c.pos = h; const v = score(); if (v > cur + 1e-9) { cur = v; better = true; break; } c.pos = from; }
+            if (better) break; } }
+        if (cur > best) { best = cur; bestPos = cs.map(c => c.pos); } }
+      cs.forEach((c, i) => c.pos = bestPos[i]);
+      const first = litSet(), spent = new Set(first);
+      // rotation: beam search over single moves, counting abilities not yet spent
+      let layer = [{ pos: bestPos, v: 0 }]; const after = [0];
+      for (let d = 1; d <= 3; d++) { const next = [];
+        for (const st of layer) for (let i = 0; i < cs.length; i++) { cs.forEach((c, j) => c.pos = st.pos[j]);
+          for (const h of patch) { if (dist(h, st.pos[i]) > 2 || cs.some(o => same(o.pos, h))) continue; cs[i].pos = h; next.push({ pos: cs.map(c => c.pos), v: litSet(spent).length }); cs[i].pos = st.pos[i]; } }
+        next.sort((a, b) => b.v - a.v); layer = next.slice(0, beam); after.push(layer.length ? layer[0].v : 0); }
+      out.push({ team: team.map(d => d.name).join(' '), ceiling: first.length, lit: first.map(x => cs[+x[0]].def.name + ' ' + x[1].toUpperCase()), after });
+    }
+  } finally { G = keepG; SOLID = keepSolid; }
+  const n = out.length, mean = f => +(out.reduce((v, o) => v + f(o), 0) / n).toFixed(2);
+  const dist_ = {}; for (const o of out) dist_[o.ceiling] = (dist_[o.ceiling] || 0) + 1;
+  return { teams: n, ceilingMean: mean(o => o.ceiling), ceilingMin: Math.min(...out.map(o => o.ceiling)), ceilingMax: Math.max(...out.map(o => o.ceiling)), ceilingSpread: dist_,
+    litQ: mean(o => o.lit.filter(x => x.endsWith('Q')).length), litW: mean(o => o.lit.filter(x => x.endsWith('W')).length), litR: mean(o => o.lit.filter(x => x.endsWith('R')).length),
+    newLitAfter1Move: mean(o => o.after[1]), after2Moves: mean(o => o.after[2]), after3Moves: mean(o => o.after[3]), of: keys.length * 5, examples: out.slice(0, 3) };
 }
 
 // ═════════════ wiring ═════════════
