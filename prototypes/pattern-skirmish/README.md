@@ -711,6 +711,44 @@ simpler and more rewarding), a passive-like reward that lets an ally move or two
 - Not yet measured: maneuvers from passives tied to specific champions (here every W or R earns one),
   and slower tops.
 
+## The new default: spread patterns for all 25 champions (added 2026-11-22)
+
+**Owner's call.** Make spread patterns, one move per turn, maneuvers, W loosening (rounds 5/10) and
+R loosening (levels 2/4) the default, and give the other fifteen champions spread abilities too.
+
+**What changed.**
+- All 25 champions have spread W/R patterns in the `SPREAD` table, and their R's have three stages in
+  `R_STAGES`. Each champion's patterns lean toward one shape family, so different drafts want different
+  geometry: line (Cinder, Shiver, Flint, Ash), spread or lane (Gale, Wisp, Umbra), tight (Thorn, Hail,
+  Brook, Moss), wedge (Fang, Pyra), column (Quartz), alone (Dusk).
+- `RULES` defaults: `spread`, `movesPerTurn: 1`, `maneuver`, `wLoosen`, `loosen` are all on. The full
+  25-champion roster and bans are back (`spread10` keeps the old ten-champion pool).
+- The draft button "Patterns: spread/standard" still switches back to the old patterns.
+
+**Do drafts want different shapes?** I searched for the best formation in 200 random drafts
+(`patternAudit`), at each loosening stage, and classified it. Ball means most champions touch two
+allies, spread means almost none touch one, line means one row three or more wide:
+
+| Best formation is a… | Standard patterns | Spread, early | Spread, mid | Spread, late | Spread + Q family switch |
+|---|---|---|---|---|---|
+| ball | 96% | 61% | 59% | 48% | 49 / 42 / 49% |
+| line | – | 11% | 5% | 6% | |
+| spread | – | 7% | 10% | 7% | |
+| mixed | 4% | 21% | 25% | 39% | |
+
+So the answer is yes, partly. A ball is still the most common best formation, but four drafts in ten
+want a line, an open spread or a mixed shape, and the share grows as patterns loosen. Q's are still
+"ally beside", and that is the main thing pulling teams back into a ball. `RULES.qFamily` gives each
+Q its champion's family shape. It cuts the ball share by about ten points, but it is off for now.
+
+**Balance.** I ran five balancing passes (600 matches each) that nudge a per-champion factor
+(`spreadTune`), then averaged the last three passes to cancel out noise. A check run of 1,000 matches
+on new seeds:
+- Win rates are 41–56%, and 24 of 25 champions fall between 45% and 56%. Seer is the outlier at 41%,
+  even with the largest factor (1.95). Its spread patterns need a redesign; more stats will not fix it.
+- Sides are 48–53%. 69–79% of matches end by nexus, in 13.7–14.6 rounds.
+- Per match: 25.6 W and 8.0 R casts, and 28 maneuvers offered, 21 used and 6 of them swaps (30-match smoke test).
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

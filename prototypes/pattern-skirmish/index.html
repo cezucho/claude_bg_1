@@ -1178,7 +1178,7 @@ const RULES = { nexus: 30, rounds: 10, spd: 2, killTax: 4, siege: 2, tower: 3, p
   spreadCd: { w: 4, r: 6 },   // W and R cooldowns in pulses with spread patterns
   aiProgress: 0,      // with spread patterns: how much the AI values a half-built W or R pattern
   loosen: true, loosenAt: [2, 4], loosenValue: 2.5,   // spread patterns: each R starts strict and loosens at these champion levels (R_STAGES); how much the AI's level choice values that
-  spreadTune: { anchor: 0.922, bulwark: 1.34, ember: 1.056, gunner: 1.021, lens: 1.007, oriel: 0.688, ranger: 0.874, rime: 1.59, seer: 1.51, viper: 1.23 },   // spread patterns: balance factors for the ten (3 passes, 2026-11-22: win rates 46-54%)
+  spreadTune: { anchor: 1.05, ash: 0.858, brook: 0.825, bulwark: 1.256, cinder: 0.883, dusk: 0.931, ember: 1.036, fang: 0.898, flint: 1.107, gale: 1.323, gunner: 1.04, hail: 0.882, lens: 1.176, moss: 0.912, oriel: 0.805, pyra: 0.874, quartz: 1.263, ranger: 1.03, rime: 1.311, seer: 1.95, shiver: 1.15, thorn: 0.668, umbra: 0.567, viper: 1.337, wisp: 0.75 },   // spread patterns, all 25: balance factors (5 passes + smoothing, 2026-11-22)
   movesPerTurn: 1,    // champions a team moves before each pulse (a hold ends the turn)
   maneuver: true,     // after a pulse in which a team fired a W or R, its next turn adds a maneuver: one champion steps 1 hex, or two allies side by side swap
   wLoosen: true, wLoosenRounds: [5, 10], wStart: 0,   // spread patterns: every W loosens by itself at these rounds (strict → no empty hexes → any ally); wStart 1 = start at the middle stage

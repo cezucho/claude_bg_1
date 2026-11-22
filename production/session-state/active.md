@@ -1,8 +1,10 @@
 # Active Session State
 
-*Last updated: 2026-11-21*
+*Last updated: 2026-11-22*
 
 ## Current Task
+
+**PATTERN SKIRMISH — 25-CHAMPION SPREAD DEFAULT + BALANCE — 2026-11-22.** Owner: make spread + 1 move + maneuvers + W loosening (r5/10) + R loosening (lvl 2/4) the default; redo the other 15 champions' abilities; balance; asked whether drafts want different geometries; asked for thoughts on condition-triggered maneuver passives. Done (D-083): all 25 in SPREAD/R_STAGES with shape families; defaults on; spreadTune for 25 (5 passes + average). Measured: best formation ball 96% → 61/59/48%; qFamily switch 49/42/49% (off); 1,000-match check gives win rates 41–56% (Seer 41%), sides 48–53%, ~14 rounds. Next: owner plays; Seer redesign; condition-triggered maneuver passives (proposal given in chat, not built); slower tops.
 
 **PATTERN SKIRMISH — W LOOSENING + MANEUVERS — 2026-11-22.** Owner: W's loosen with time (R by chosen levels); measure movement passives instead of a 2nd move. Built (D-082): `wLoosen` (rounds 5/10), `maneuver` (W/R cast → step or swap next turn; AI plans it; click ally to swap). Measured 4×200: maneuver ≈ second move for patterns (2.37 vs 2.43) but slower (62% vs 74% by nexus); W loosening doubles W casts mid-game; one move + maneuver + W loosening = 70% by nexus, 15.2 rounds, comeback 25%, 47–53%. Defaults unchanged. Next: owner decides defaults; champion-specific movement passives; slower tops.
 
