@@ -749,6 +749,101 @@ on new seeds:
 - Sides are 48–53%. 69–79% of matches end by nexus, in 13.7–14.6 rounds.
 - Per match: 25.6 W and 8.0 R casts, and 28 maneuvers offered, 21 used and 6 of them swaps (30-match smoke test).
 
+## Reflexes, Q shapes and geometry icons (added 2026-11-22)
+
+**Owner's direction.** Q requirements stay easy but not all the same, so the Q-shape switch is now on. Build
+maneuvers that fire on conditions, and invent many more triggers than the examples given. Show each player
+the geometry their abilities want, with icons, highlighted numbers and ghosts. Slower tops are left for later.
+
+**Q by shape family** (`RULES.qFamily`, now on). Every Q is still one easy condition, but it points the
+same way as its champion's W and R:
+- Line champions want an ally at the side.
+- Tight champions want any ally beside them.
+- Spread champions want nobody beside them.
+- Column champions want an ally in front or behind.
+- Wedge champions want one exact corner.
+
+**Seer redesigned.** Its W and R needed a Frost and a Fire ally, which few drafts had, and it won 41% at the
+largest balance factor. It is now a back-line column champion:
+- W needs an ally in front and both back hexes empty. It calls an ally two hexes ahead.
+- R needs an ally two hexes ahead (strict: also one at front right; loose: nothing else).
+
+**Reflexes** (`RULES.reflex`, `REFLEX`). Each champion has one reflex: when its trigger happens, it moves
+by itself in the middle of the pulse, as soon as the action that set it off is over. A reflex move can set off
+other reflexes, which makes chains: Gale's Slipstream reacts to any reflex beside it. Reflexes loosen with the
+W's. At round 5 the radii grow by one and the HP thresholds rise. At round 10 "fires a W" becomes "fires any
+ability", and a champion can react twice per pulse. Each reflex move plays as its own beat: the board zooms,
+the reflex name shows large, and the champion's reflex chip glows.
+
+Trigger types built (19), with the champion that has each:
+
+| Trigger | Champions |
+|---|---|
+| an ally nearby fires a given ability (or an ability of an element) | Lens (any R, anywhere), Seer (a W beside it), Cinder (a Q beside it), Pyra (a Fire ability) |
+| an enemy nearby fires W/R | Quartz, Dusk |
+| it breaks an enemy · an ally nearby breaks one · an enemy nearby is broken | Ember · Flint · Viper |
+| an ally nearby is broken | Oriel (goes to it), Thorn (goes for whoever broke it) |
+| an enemy ability hits it · it loses 6+ HP in one hit · it drops under 30% HP | Wisp · Gunner · Umbra |
+| an enemy ability hits an ally nearby · an ally nearby drops under half HP | Bulwark · Anchor, Brook |
+| an enemy nearby drops under half HP | Fang |
+| it freezes/roots an enemy · an ally nearby does | Rime · Shiver |
+| an ally heals or shields it | Ash |
+| an ally nearby makes a reflex move | Gale |
+| a pulse starts with an enemy beside it · with 2+ enemies within 2 · with no ally beside it | Ranger · Hail · Moss |
+
+Responses (6): step to the hex where the team lights the most, swap with that ally, step toward it, dash two
+hexes toward it, step away from the enemies, call the ally whose step lights the most. Where the response
+picks a hex, it picks the one that lights the most for the team, so reflexes build patterns. The AI plays out
+the pulse when it chooses a move, so it already counts the reflexes its move sets up.
+
+**More triggers for later** (not built; the design space is much larger than 19):
+- *Abilities:* an ally's ability hits 3+ enemies; an ally's R finds no target; two allies fire at the same
+  enemy; its own R fires; its W comes off cooldown; an ally's pattern becomes complete; two abilities of one
+  element fire in the same pulse; an enemy is silenced.
+- *HP and damage:* it took no damage for a whole pulse; it starts a pulse at full HP; an ally's shield breaks;
+  it dodges; it crits; it misses (blinded); poison ticks on it; it is the lowest-HP champion on the board.
+- *Kills:* first blood; a shutdown (a bounty champion falls); two breaks in one pulse; an ally is saved from
+  broken; a tower falls; the nexus is hit; the Dragon or Baron is hit or slain.
+- *Statuses:* it thaws; its root ends; an enemy beside it is frozen; an ally is knocked airborne.
+- *Position:* an enemy enters its range; an enemy steps behind it; it starts a pulse on the river or a hill;
+  it is left alone after a death; an enemy makes a reflex move (counter-reflexes); it is pushed or pulled.
+- *Timing:* it acts first or last in the pulse; a pulse with no cast; the last pulse of a round; it levels
+  up; its team is two champions down; its team lights 6+ abilities.
+- *More responses:* push or pull an enemy, rotate the allies around it, shield the ally that set it off,
+  shave a cooldown, fire its Q out of turn, leap over a champion.
+
+**Geometry icons.**
+- *Shape family badge* next to every champion's name on the draft tiles, team cards and hover cards (line,
+  tight, spread, column, wedge), with the sentence "Wants: …".
+- *Numbers on reachable hexes:* with a champion selected, each hex it can move to shows how many abilities the
+  team would light there: +2 green, +1★ gold (a ready W or R lights), −1 red (fainter).
+- *Ghosts:* every pattern the champion has not lit yet marks its needed hex with a dashed outline in the
+  element's colour and the ability letter (W⚡ = a W that needs a Storm ally). If an ally of the right element can
+  reach that hex this turn, its ghost stands there with a dashed arrow from where it is now. A hex that must be
+  empty and is not gets a red ✕. Hovering a destination shows the ghosts as they would be from there.
+- *Hovering an ability chip* on any team card shows that one ability's ghosts, for any champion.
+- *Reflex chip* (trigger icon › response icon) on each card. Its hover text gives the rule as it stands now and
+  how it loosens.
+
+**Measured** (AI vs AI, small board, 200 matches per row, same seeds):
+
+| | Ended by nexus | Rounds | Comeback | W / R per match | Reflexes per pulse (early / mid / late) | Chains per match |
+|---|---|---|---|---|---|---|
+| A. Before (Q mostly "ally beside", no reflexes) | 75% | 13.9 | 19% | 22.3 / 6.7 | – | – |
+| B. Q by shape family | 77% | 14.3 | 17% | 24.2 / 7.5 | – | – |
+| **C. Q shapes + reflexes (default)** | **85%** | **13.7** | **17%** | **22.6 / 7.6** | **0.62 / 0.93 / 0.99** | **2.8 (longest 4)** |
+| D. Q shapes + reflexes, no generic maneuver | 73% | 14.7 | 21% | 23.6 / 7.6 | 0.53 / 0.89 / 1.00 | 3.1 |
+
+- About 22 reflexes per match. They grow toward the end, as intended: 0.6 per pulse early, about 1 late.
+  Two or three chains per match, the longest 4.
+- Reflexes speed matches up (85% end by nexus, against 77% without), because they finish what a move started.
+- Q shapes changed the balance: the spread champions (Umbra, Dusk) and the old Seer fell to 26–34%. After the
+  Seer redesign and four balancing passes (gain lowered to 0.6 to cut the swinging), averaged, a check run of
+  1,000 matches on new seeds gives win rates of **42–57%** (Bulwark lowest, Dusk and Moss highest), Seer 48%,
+  sides 47–57% per 250-match seed, 80–84% by nexus, about 13.6 rounds.
+- D (reflexes replacing the generic maneuver) gives slightly better comebacks (21%) but slower matches.
+  The default keeps both, because the maneuver is the player's own choice and reflexes are automatic.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete
