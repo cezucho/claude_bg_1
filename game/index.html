@@ -408,6 +408,47 @@ svg.pat { flex: none; }
 .sprw.animd, .tok.actor .sprw.animd { animation: none; }
 .corpse { pointer-events: none; animation: corpsefade 3.4s ease-in forwards; }
 @keyframes corpsefade { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+/* combat VFX (2026-11-23, second take): every shape is drawn around (0,0) of its own group, so the SVG default
+   transform origin (0 0) is the effect's centre */
+.cfx { pointer-events: none; }
+.vreveal { stroke-dasharray: 100 100; animation: vreveal var(--d) ease-out both; }
+@keyframes vreveal { 0% { stroke-dashoffset: 100; } 20% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
+.vflame { animation: vflame var(--d) ease-out both; }
+@keyframes vflame { 0% { transform: translateX(0) scale(.2, .5); opacity: 1; } 30% { transform: translateX(calc(var(--L) * .5)) scale(1, 1); opacity: 1; } 100% { transform: translateX(var(--L)) scale(.7, .3); opacity: 0; } }
+.vember { animation: vspark var(--d) cubic-bezier(.1, .7, .3, 1) both; }
+.vtrail { animation: vtrail var(--d) ease-in both; }
+@keyframes vtrail { 0%, 30% { opacity: 1; transform: scale(1, 1); } 100% { opacity: 0; transform: scale(1.12, .55); } }
+.vspark { animation: vspark var(--d) cubic-bezier(.15, .8, .3, 1) both; }
+@keyframes vspark { 0% { transform: translateX(0) scale(.3, 1); opacity: 1; } 30% { opacity: 1; } 100% { transform: translateX(var(--L)) scale(1.1, .15); opacity: 0; } }
+.vshard { animation: vshard var(--d) cubic-bezier(.1, .9, .3, 1) both; }
+@keyframes vshard { 0% { transform: translateX(0) scale(.2, .6); opacity: 1; } 30% { transform: translateX(calc(var(--L) * .5)) scale(1, 1); opacity: 1; } 75% { opacity: 1; } 100% { transform: translateX(calc(var(--L) * .55)) scale(1, 1); opacity: 0; } }
+.vflash { animation: vflash var(--d) ease-out both; }
+@keyframes vflash { 0% { transform: scale(.2); opacity: 1; } 22% { transform: scale(1.15); opacity: .95; } 100% { transform: scale(1.4); opacity: 0; } }
+.vring { animation: vring var(--d) ease-out both; }
+@keyframes vring { 0% { transform: scale(.25); opacity: 1; } 100% { transform: scale(2.3); opacity: 0; } }
+.vpuff { animation: vpuff var(--d) ease-out both; }
+@keyframes vpuff { 0% { transform: translateX(0) scale(.3); opacity: 1; } 55% { opacity: .85; } 100% { transform: translateX(var(--L)) scale(1.35); opacity: 0; } }
+.vzap { animation: vflicker var(--d) linear both; }
+.vbeam { animation: vflicker var(--d) linear both; }
+@keyframes vflicker { 0% { opacity: 0; } 8% { opacity: 1; } 18% { opacity: .35; } 28% { opacity: 1; } 70% { opacity: .85; } 100% { opacity: 0; } }
+.vswirl { animation: vswirl var(--d) ease-out both; }
+@keyframes vswirl { 0% { transform: rotate(0) scale(.4); opacity: 1; } 100% { transform: rotate(220deg) scale(1.3); opacity: 0; } }
+.vfly { animation: vfly var(--d) linear both; }
+@keyframes vfly { 0% { transform: translate(var(--sx), var(--sy)); opacity: 1; } 96% { opacity: 1; } 100% { transform: translate(0, 0); opacity: 0; } }
+.vstreak { stroke-dasharray: 100 100; animation: vdraw var(--fly) linear both, vfade var(--d) ease-in both; }
+@keyframes vdraw { 0% { stroke-dashoffset: 100; } 100% { stroke-dashoffset: 0; } }
+@keyframes vfade { 0%, 45% { opacity: .75; } 100% { opacity: 0; } }
+.vrune { animation: vrune var(--d) ease-out both; }
+@keyframes vrune { 0% { opacity: 0; transform: scale(.55); } 20% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: scale(1.06); } }
+.vspin { animation: vspin var(--d) linear both; }
+@keyframes vspin { 0% { transform: rotate(0); } 100% { transform: rotate(140deg); } }
+.vcrack { stroke-dasharray: 100 100; animation: vcrack var(--d) ease-out both; }
+@keyframes vcrack { 0% { stroke-dashoffset: 100; opacity: 1; } 30% { stroke-dashoffset: 0; } 75% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+.vwave { animation: vring var(--d) ease-out both; }
+.vpillar { animation: vpillar var(--d) ease-out both; }
+@keyframes vpillar { 0% { transform: scale(.3, 0); opacity: 0; } 25% { transform: scale(1, 1); opacity: 1; } 70% { opacity: 1; } 100% { transform: scale(.6, 1.1); opacity: 0; } }
+.vmote { animation: vmote var(--d) ease-out both; }
+@keyframes vmote { 0% { transform: translateY(8px); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-30px); opacity: 0; } }
 
 @keyframes slide { from { transform: translate(var(--sx), var(--sy)); } to { transform: translate(0, 0); } }
 .lastmv { fill: none; stroke-width: 3.5; stroke-dasharray: 7 4; opacity: 1; pointer-events: none; filter: drop-shadow(0 0 2px #000); }
@@ -1404,7 +1445,7 @@ const roll = pct => pct > 0 && rng() * 100 < pct;
 function newMatch(mode, seed) {
   syncRules(); UI.overSeen = false;
   if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); hideTip(); }
-  UI.moves = []; UI.moveTag = ''; UI.slides = {}; UI.lastPos = {}; UI.dying = {};
+  UI.moves = []; UI.moveTag = ''; UI.slides = {}; UI.lastPos = {}; UI.dying = {}; UI.cfx = [];
   clearTimeout(UI.timer); UI.anim = null;
   setBoard(UI.board);
   G = { mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
@@ -2772,7 +2813,7 @@ function animate(events, done, replay) {
     if (!UI.anim || UI.anim.events !== events) return;
     if (i >= beats.length) { UI.anim = null; if (!replay) UI.pulses.push({ s: (performance.now() - t0) / 1000, beats: beats.length }); showRecap(UI.lastPulse && UI.lastPulse.recap); done(); return; }
     const e = beats[i++], fast = UI.speed === 'fast';
-    const play = () => { G.display = e.snap; G.actors = e.actors; G.ev = e; render();
+    const play = () => { G.display = e.snap; G.actors = e.actors; G.ev = e; vfxSpawn(e); render();
       const head = feed(e.cue || []), big = e.cast && e.cast.k !== 'q';
       const slid = UI.slideAt && performance.now() - UI.slideAt < 60 ? SLIDE_MS + 150 : 0;   // a beat that moved someone waits for the walk
       UI.timer = setTimeout(() => { G.castFx = null; zoomTo(null); step(); }, Math.max(slid, head ? (fast ? 650 : 1150) : 0, e.cast ? (big ? (fast ? 700 : 1300) : (fast ? 550 : 950)) : delay(e.special))); };   // a headline holds the board a moment
@@ -3474,6 +3515,7 @@ function renderBoard() {
     put(cy, g); }
   depth.sort((a, b) => a.y - b.y).forEach(d => svg.appendChild(d.el));
   if (plates.length) svg.appendChild(sv(`<g>${plates.join('')}</g>`));
+  if (ART) { const cf = vfxSvg(); if (cf) svg.appendChild(sv(`<g class="cfx">${VFX_DEFS}${cf}</g>`)); }
   if (G.castFx && G.display) { const c0 = G.champs[G.castFx.id], c = view(c0), [cx, cy] = px(...c.pos), big = G.castFx.k !== 'q';   // the ability's name above its caster
     const y = cy - HEX * (ART ? (big ? 2.75 : 2.2) : 1.05), txt = `${G.castFx.k.toUpperCase()} · ${G.castFx.name}`, w = txt.length * (big ? 10.5 : 8) + 18;
     svg.appendChild(sv(`<g style="pointer-events:none"><rect x="${cx - w / 2}" y="${y - (big ? 19 : 15)}" width="${w}" height="${big ? 27 : 21}" rx="8" fill="#0b0f16e0" stroke="${c0.team === 'A' ? 'var(--a)' : 'var(--b)'}" stroke-width="2"></rect><text class="castlbl" x="${cx}" y="${y}" style="font-size:${big ? 18 : 14}px;fill:${big ? '#ffe07a' : '#f3f6fb'}">${esc(txt)}</text></g>`)); }
@@ -3507,6 +3549,7 @@ function effects(ev) {
   let out = '';
   const at = h => { const [x, y] = px(...h); return [x, y - BODY()]; };
   ev.lines.forEach((ln, i) => {
+    if (VFX_ON && ln.cls !== 'leap') return;   // drawn by the combat VFX instead
     const [x1, y1] = at(ln.from), [x2, y2] = at(ln.to), dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
     if (ln.cls === 'leap') { out += `<path class="fx bolt" style="color:var(--gold);stroke:var(--gold);stroke-dasharray:4 4" d="M${x1} ${y1 + BODY()} Q${(x1 + x2) / 2} ${Math.min(y1, y2) - HEX} ${x2} ${y2 + BODY()}"></path>`; return; }
     if (ln.cls === 'chain') { let d = `M${x1} ${y1}`; const n = 6; for (let k = 1; k < n; k++) { const t = k / n, j = (k % 2 ? 1 : -1) * 6; d += ` L${x1 + dx * t - uy * j} ${y1 + dy * t + ux * j}`; } d += ` L${x2} ${y2}`;
@@ -3567,6 +3610,164 @@ function artToken(c0, c, cx, cy, e, iniCls, mine, isActor, hitHexes) {   // a ch
     ${c0.level ? `<text class="st" x="${cx + HEX * .66}" y="${cy + HEX * .55}" style="fill:var(--gold);font-size:9px;${sk}">${c0.level}</text>` : ''}`)}</g>`;
   return { body, plate };
 }
+// ── combat VFX (2026-11-23, second take): fighting-game / MOBA style effects drawn as clean 2D vector shapes with a
+// soft glow and a white-hot core. Blades leave a glowing crescent trail that draws itself along the swing and then
+// thins away; hits throw sharp spark streaks, a flash and a shockwave ring; projectiles are a glowing head with a comet
+// tail that leaves a fading light streak along their path; abilities add a rune circle under the caster and an effect
+// by their look. Each beat becomes a list of effects with start times; render() draws the running ones with negative
+// animation delays, so a redraw never restarts them. No images: everything is SVG built here.
+const VFX_ON = true;
+const VCOL = { Fire: ['#ff7a2e', '#ffe3b0'], Frost: ['#6fcfff', '#f0fbff'], Storm: ['#a77bff', '#fff6a8'], Light: ['#ffcf4a', '#fffbe6'],
+  Shadow: ['#8a5cff', '#e9ddff'], Earth: ['#e3a24f', '#fff1d6'], steel: ['#9fc4ff', '#ffffff'], gold: ['#ffd27a', '#fffaf0'] };
+const RANGED_STYLE = { ranger: 'arrow', dusk: 'arrow', gunner: 'shell', flint: 'shell' };
+const HIT_KIND = { Fire: 'fire', Frost: 'frost', Storm: 'shock', Light: 'holy', Shadow: 'shadow', Earth: 'earth' };
+const LOOK_VFX = {   // ability looks: how it travels, what the hit looks like, the element colour it uses
+  wildfire: { travel: 'orb', hit: 'fire', el: 'Fire', big: true }, cannon: { travel: 'shell', hit: 'fire', el: 'Fire', big: true },
+  blizzard: { travel: 'orb', hit: 'frost', el: 'Frost' }, lance: { travel: 'beam', hit: 'shock', el: 'Storm' },
+  slam: { hit: 'earth', ground: true, el: 'Earth', slash: true }, quake: { hit: 'earth', ground: true, el: 'Earth' },
+  execute: { hit: 'hit', cross: true, el: 'Shadow' }, volley: { travel: 'arrow', hit: 'hit', el: 'gold', many: true },
+  sanctuary: { hit: 'holy', el: 'Light', pillar: true }, twist: { travel: 'orb', hit: 'shadow', el: 'Shadow' },
+};
+let vfxN = 0;
+const vAt = h => { const [x, y] = px(...h); return [x, y - BODY()]; };
+const vr = (seed, i) => ((Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453) % 1 + 1) % 1;   // repeatable jitter
+function vfxSpawn(e) {
+  if (!VFX_ON || HEADLESS || !UI.art) return;
+  const now = performance.now(), snap = e.snap, pre = e.pre || snap, out = [], seed = ++vfxN;
+  const posOf = (s, id) => s && s.champs[id] && s.champs[id].pos;
+  const who = h => { for (const id of e.actors || []) if (same(posOf(snap, id) || [], h) || same(posOf(pre, id) || [], h)) return G.champs[id]; return null; };
+  const castC = e.cast ? G.champs[e.cast.id] : null, castAb = castC ? castC.def.ab[e.cast.k] : null, look = castAb ? LOOK_VFX[castAb.look] : null;
+  const bigCast = !!(castAb && e.cast.k !== 'q');
+  const hitAt = new Map();
+  const add = (o, delay = 0) => out.push({ ...o, t0: now + delay, seed: seed * 31 + out.length });
+  if (castC && bigCast) { const el = (look && look.el) || castC.def.els[0]; const [x, y] = px(...(posOf(pre, castC.id) || posOf(snap, castC.id)));
+    add({ type: 'rune', x, y: y + HEX * .2, col: VCOL[el] || VCOL.gold, dur: 1100, r: HEX * 1.05 }); }
+  for (const ln of e.lines) {
+    if (ln.cls === 'leap') continue;
+    const a = who(ln.from), isCast = !!(castC && a === castC), d = dist(ln.from, ln.to);
+    const [x1, y1] = vAt(ln.from), [x2, y2] = vAt(ln.to), side = x2 >= x1 ? 1 : -1;
+    let travel, hit, col, big = false, el;
+    if (isCast && look) { el = look.el; col = VCOL[el] || VCOL.gold; travel = d > 1 ? look.travel : null; hit = look.hit; big = bigCast;
+      if (look.slash || look.cross || (!travel && d <= 1)) add({ type: 'slash', x: x2, y: y2, side, col, big: true, dur: 480 });
+      if (look.cross) add({ type: 'slash', x: x2, y: y2, side: -side, col, big: true, dur: 480 }, 70); }
+    else if (a) { el = a.def.els[0]; col = VCOL[el] || VCOL.steel;
+      if (d <= 1 && a.def.range <= 1) { travel = null; add({ type: 'slash', x: x2, y: y2, side, col, dur: 420, claw: a.def.id === 'fang' }); hit = 'hit'; }
+      else { travel = RANGED_STYLE[a.def.id] || 'orb'; hit = travel === 'arrow' ? 'hit' : travel === 'shell' ? 'fire' : HIT_KIND[el] || 'hit';
+        if (travel === 'arrow' || travel === 'shell') col = travel === 'shell' ? VCOL.Fire : VCOL.gold;
+        if (el === 'Storm' && travel === 'orb') travel = 'beam'; } }
+    else { col = VCOL.gold; travel = d > 1 ? 'orb' : null; hit = 'hit'; }   // a tower or the nexus
+    if (ln.cls === 'chain') { travel = 'beam'; hit = 'shock'; col = VCOL.Storm; }
+    const flight = travel === 'beam' ? 90 : travel ? Math.min(380, 150 + 60 * d) : 0;
+    if (travel === 'beam') add({ type: 'beam', x1, y1, x2, y2, col, dur: 520, big });
+    else if (travel) { add({ type: 'proj', style: travel, x1, y1, x2, y2, col, dur: flight, big });
+      add({ type: 'streak', x1, y1, x2, y2, col, dur: flight + 420, fly: flight, thin: travel === 'arrow' });
+      if (look && look.many) for (const k of [1, 2]) { const o = (k === 1 ? -1 : 1) * HEX * .35;
+        add({ type: 'proj', style: travel, x1: x1 + o, y1: y1 - HEX * .2 * k, x2: x2 + o * .5, y2, col, dur: flight, big }, 60 * k); } }
+    add({ type: 'hit', kind: hit, x: x2, y: y2, col, big, dur: hit === 'fire' && big ? 750 : 560 }, flight + (travel ? 0 : 60));
+    hitAt.set(K(ln.to), flight);
+  }
+  if (look) {   // area abilities: every other enemy hit gets the impact; ground looks shake the floor; light raises a pillar
+    const delay = Math.max(0, ...hitAt.values()), col = VCOL[look.el] || VCOL.gold;
+    for (const p of e.pops) if (p.cls === 'bad' && /^[−-]\d/.test(p.text) && !hitAt.has(K(p.hex))) { const [x, y] = vAt(p.hex); hitAt.set(K(p.hex), delay);
+      add({ type: 'hit', kind: look.hit, x, y, col, big: bigCast, dur: 620 }, delay + 50); }
+    if (look.ground && castC) { const [x, y] = px(...posOf(snap, castC.id)); add({ type: 'quake', x, y: y + HEX * .2, col, dur: 900, r: HEX * (bigCast ? 2.2 : 1.4) }, 40); }
+    if (look.pillar && castC) { const [x, y] = px(...posOf(snap, castC.id)); add({ type: 'pillar', x, y: y + HEX * .2, col, dur: 900 }, 60); }
+  }
+  for (const p of e.pops) if (p.cls === 'good' && p.text[0] === '+') { const [x, y] = px(...p.hex); add({ type: 'heal', x, y: y + HEX * .2, col: ['#5fe08a', '#eafff0'], dur: 950 }, 80); }
+  UI.cfx = (UI.cfx || []).filter(f => now - f.t0 < f.dur).concat(out);
+}
+// ── drawing ──
+const f1 = v => v.toFixed(1);
+function crescent(R, t, a0, a1, n = 18) {   // a tapered crescent along an arc (angles in degrees, y squashed a little)
+  const o = [], i2 = [];
+  for (let i = 0; i <= n; i++) { const u = i / n, a = (a0 + (a1 - a0) * u) * Math.PI / 180, w = t * Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.15)), .7);
+    o.push(`${f1((R + w / 2) * Math.cos(a))},${f1((R + w / 2) * Math.sin(a) * .78)}`); i2.push(`${f1((R - w / 2) * Math.cos(a))},${f1((R - w / 2) * Math.sin(a) * .78)}`); }
+  return o.concat(i2.reverse()).join(' ');
+}
+function arcPath(R, a0, a1) { const p = a => [R * Math.cos(a * Math.PI / 180), R * Math.sin(a * Math.PI / 180) * .78];
+  const [ax, ay] = p(a0), [bx, by] = p(a1); return `M${f1(ax)} ${f1(ay)} A${f1(R)} ${f1(R * .78)} 0 0 ${a1 > a0 ? 1 : 0} ${f1(bx)} ${f1(by)}`; }
+function sparks(n, len, w, col, seed, dl, cls = 'vspark') {
+  let s = ''; for (let i = 0; i < n; i++) { const a = 360 * i / n + vr(seed, i) * 30, L = len * (.6 + .6 * vr(seed, i + 9)), ww = w * (.7 + .5 * vr(seed, i + 3));
+    s += `<g transform="rotate(${f1(a)}) scale(1 .8)"><g class="${cls}" style="${dl};--L:${f1(L)}px"><polygon points="${f1(L * .15)},${f1(-ww)} ${f1(L * .9)},0 ${f1(L * .15)},${f1(ww)} 0,0" fill="${col[1]}" stroke="${col[0]}" stroke-width="1.2"></polygon></g></g>`; }
+  return s;
+}
+function vfxSvg() {
+  if (!VFX_ON || !UI.cfx || !UI.cfx.length) return '';
+  const now = performance.now(); UI.cfx = UI.cfx.filter(f => now - f.t0 < f.dur + 30);
+  let s = '';
+  for (const f of UI.cfx) {
+    const el = now - f.t0, dl = `animation-delay:${(-el).toFixed(0)}ms;--d:${f.dur}ms`, [c0, c1] = f.col || VCOL.gold, id = 'vm' + f.seed;
+    if (f.type === 'slash') {   // a glowing crescent that draws itself along the swing, then thins and fades
+      const R = HEX * (f.big ? 1.45 : 1.12), t = HEX * (f.big ? .62 : .46), a0 = -165, a1 = 25, tilt = -34;   // the arc cuts diagonally across the body, not over its head
+      const tr = `translate(${f1(f.x)} ${f1(f.y + R * .2)}) scale(${f.side} 1) rotate(${tilt}) translate(0 ${f1(R * .55)})`;
+      // each arc: [radius factor, thickness factor, delay ms, opacity]; a blade leaves a main arc and a fainter echo, claws three parallel arcs
+      const arcs = f.claw ? [[.78, .5, 0, 1], [.96, .55, 35, 1], [1.14, .5, 70, 1]] : [[1, 1, 0, 1], [.74, .42, 45, .55]];
+      const one = ([rf, tf, , op], k) => `<g mask="url(#${id}${k})" opacity="${op}">
+        <polygon points="${crescent(R * rf, t * tf, a0, a1)}" fill="${c0}" filter="url(#vglow)"></polygon>
+        <polygon points="${crescent(R * rf * .985, t * tf * .45, a0 + 10, a1 - 3)}" fill="${c1}"></polygon></g>`;
+      const masks = arcs.map(([rf, tf, dms], k) => `<mask id="${id}${k}" maskUnits="userSpaceOnUse" x="${f1(-R * 2)}" y="${f1(-R * 2)}" width="${f1(R * 4)}" height="${f1(R * 4)}"><path class="vreveal" style="animation-delay:${(-el + dms).toFixed(0)}ms;--d:${f.dur}ms" d="${arcPath(R * rf, a0, a1)}" pathLength="100" stroke="#fff" stroke-width="${f1(t * tf * 2.6)}" fill="none" stroke-linecap="round"></path></mask>`).join('');
+      const lines = arcs.map(one).join('');
+      s += `<g transform="${tr}"><defs>${masks}</defs><g class="vtrail" style="${dl}">${lines}</g></g>`;
+    } else if (f.type === 'hit') {   // flash, spark streaks, a shockwave ring; element extras
+      const big = f.big ? 1.6 : 1.25, k = f.kind;
+      let extra = '';
+      if (k === 'fire') extra = `<circle class="vflash" style="${dl}" r="${f1(HEX * .6 * big)}" fill="#ff9a3c" opacity=".75" filter="url(#vglow)"></circle>`
+        + [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * 45 + vr(f.seed, i) * 30, L = HEX * (.75 + .45 * vr(f.seed, i + 20)) * big, w = HEX * .2 * big;
+          const tongue = (l, ww) => `M0 ${f1(-ww)} Q${f1(l * .55)} ${f1(-ww * 1.2)} ${f1(l)} 0 Q${f1(l * .55)} ${f1(ww * 1.2)} 0 ${f1(ww)} Z`;
+          return `<g transform="rotate(${f1(a)})"><g class="vflame" style="${dl};--L:${f1(L * .35)}px"><path d="${tongue(L, w)}" fill="#ff6a1e" filter="url(#vglow)"></path><path d="${tongue(L * .7, w * .5)}" fill="#ffe08a"></path></g></g>`; }).join('')
+        + sparks(6, HEX * 1.4 * big, HEX * .05, ['#ff8a3d', '#fff3c4'], f.seed + 40, dl, 'vember');
+      if (k === 'frost') extra = sparks(7, HEX * .95 * big, HEX * .12, ['#6fcfff', '#ffffff'], f.seed + 5, dl, 'vshard');
+      if (k === 'shock') extra = [0, 1, 2, 3, 4].map(i => { const a = i * 72 + vr(f.seed, i) * 30, L = HEX * .9 * big; let d = 'M0 0'; for (let j = 1; j <= 4; j++) d += ` L${f1(L * j / 4)} ${f1((j % 2 ? 1 : -1) * 5 * vr(f.seed, i * 7 + j))}`;
+        return `<g transform="rotate(${f1(a)})"><path class="vzap" style="${dl}" d="${d}" stroke="${c1}" stroke-width="2" fill="none" filter="url(#vglow)"></path></g>`; }).join('');
+      if (k === 'shadow') extra = `<g class="vswirl" style="${dl}"><polygon points="${crescent(HEX * .55 * big, HEX * .16, 0, 200)}" fill="${c0}" filter="url(#vglow)"></polygon><polygon points="${crescent(HEX * .4 * big, HEX * .12, 180, 380)}" fill="#3a1f6b"></polygon></g>`;
+      if (k === 'holy') extra = `<g class="vflash" style="${dl}">${[0, 45, 90, 135].map(a => `<g transform="rotate(${a})"><polygon points="0,${f1(-HEX * 1.1 * big)} ${f1(HEX * .07)},0 0,${f1(HEX * 1.1 * big)} ${f1(-HEX * .07)},0" fill="${c1}" filter="url(#vglow)"></polygon></g>`).join('')}</g>`;
+      if (k === 'earth') extra = [0, 1, 2, 3, 4].map(i => { const a = 200 + i * 35, r = HEX * .5; return `<g transform="rotate(${f1(a)})"><circle class="vpuff" style="${dl};--L:${f1(r)}px" r="${f1(HEX * .16)}" fill="#c99a5c" opacity=".85"></circle></g>`; }).join('');
+      s += `<g transform="translate(${f1(f.x)} ${f1(f.y)})">
+        <ellipse class="vring" style="${dl}" rx="${f1(HEX * .5 * big)}" ry="${f1(HEX * .5 * big * .55)}" fill="none" stroke="${c0}" stroke-width="2.5" filter="url(#vglow)"></ellipse>
+        ${extra}
+        ${sparks(k === 'frost' ? 5 : 8, HEX * .85 * big, HEX * .085, [c0, c1], f.seed, dl)}
+        <circle class="vflash" style="${dl}" r="${f1(HEX * .32 * big)}" fill="#ffffff" filter="url(#vglow)"></circle></g>`;
+    } else if (f.type === 'proj') {   // glowing head + comet tail, flying along the line
+      const dx = f.x2 - f.x1, dy = f.y2 - f.y1, ang = Math.atan2(dy, dx) * 180 / Math.PI, L = HEX * 1.5 * (f.big ? 1.35 : 1);
+      const head = f.style === 'arrow' ? `<polygon points="4,0 -8,-2.6 -6,0 -8,2.6" fill="${c1}" stroke="${c0}" stroke-width="1"></polygon>`
+        : f.style === 'shell' ? `<circle r="${f.big ? 6 : 4.5}" fill="#3a3330" stroke="${c0}" stroke-width="2" filter="url(#vglow)"></circle>`
+        : `<circle r="${f1(HEX * (f.big ? .45 : .32))}" fill="${c0}" filter="url(#vglow)"></circle><circle r="${f1(HEX * (f.big ? .24 : .17))}" fill="${c1}"></circle>`;
+      const w = f.style === 'arrow' ? 2.6 : HEX * (f.big ? .36 : .25);
+      s += `<g class="vfly" style="${dl};--sx:${f1(-dx)}px;--sy:${f1(-dy)}px"><g transform="translate(${f1(f.x2)} ${f1(f.y2)}) rotate(${f1(ang)})">
+        <polygon points="0,${f1(-w)} ${f1(-L)},0 0,${f1(w)}" fill="${c0}" opacity=".85" filter="url(#vglow)"></polygon>
+        <polygon points="0,${f1(-w * .45)} ${f1(-L * .7)},0 0,${f1(w * .45)}" fill="${c1}"></polygon>${head}</g></g>`;
+    } else if (f.type === 'streak') {   // the light the projectile leaves behind: drawn as it flies, then thins away
+      s += `<path class="vstreak" style="${dl};--fly:${f.fly}ms" d="M${f1(f.x1)} ${f1(f.y1)} L${f1(f.x2)} ${f1(f.y2)}" pathLength="100" stroke="${c0}" stroke-width="${f.thin ? 2 : 4}" fill="none" stroke-linecap="round" filter="url(#vglow)" opacity=".75"></path>`;
+    } else if (f.type === 'beam') {   // lightning: a jagged bolt with a white core, flickering
+      let d = `M${f1(f.x1)} ${f1(f.y1)}`; const n = 7, dx = f.x2 - f.x1, dy = f.y2 - f.y1, len = Math.hypot(dx, dy) || 1, ux = -dy / len, uy = dx / len;
+      for (let j = 1; j < n; j++) { const o = (vr(f.seed, j) - .5) * HEX * .55; d += ` L${f1(f.x1 + dx * j / n + ux * o)} ${f1(f.y1 + dy * j / n + uy * o)}`; }
+      d += ` L${f1(f.x2)} ${f1(f.y2)}`;
+      let br = ''; for (const j of [2, 5]) { const bx = f.x1 + dx * j / n, by = f.y1 + dy * j / n, o = (vr(f.seed, j + 30) > .5 ? 1 : -1) * HEX * .5;
+        br += ` M${f1(bx)} ${f1(by)} L${f1(bx + dx * .06 + ux * o * .6)} ${f1(by + dy * .06 + uy * o * .6)} L${f1(bx + dx * .1 + ux * o)} ${f1(by + dy * .1 + uy * o)}`; }
+      s += `<g class="vbeam" style="${dl}"><path d="${d}${br}" stroke="${c0}" stroke-width="${f.big ? 10 : 7}" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#vglow)"></path><path d="${d}${br}" stroke="${c1}" stroke-width="${f.big ? 3.4 : 2.4}" fill="none" stroke-linejoin="round" stroke-linecap="round"></path></g>`;
+    } else if (f.type === 'rune') {   // a glowing circle under the caster: two rings, a star, slowly turning
+      const R = f.r, star = [0, 1, 2, 3, 4, 5].map(i => { const a = (i * 60 - 90) * Math.PI / 180; return `${f1(R * .78 * Math.cos(a))},${f1(R * .78 * Math.sin(a))}`; });
+      s += `<g transform="translate(${f1(f.x)} ${f1(f.y)}) scale(1 ${isoK().toFixed(2)})"><g class="vrune" style="${dl}"><g class="vspin" style="${dl}">
+        <circle r="${f1(R)}" fill="${c0}22" stroke="${c0}" stroke-width="2.2" filter="url(#vglow)"></circle>
+        <circle r="${f1(R * .86)}" fill="none" stroke="${c1}" stroke-width="1.2" stroke-dasharray="6 5"></circle>
+        <polygon points="${[0, 2, 4].map(i => star[i]).join(' ')}" fill="none" stroke="${c0}" stroke-width="1.4"></polygon>
+        <polygon points="${[1, 3, 5].map(i => star[i]).join(' ')}" fill="none" stroke="${c0}" stroke-width="1.4"></polygon></g></g></g>`;
+    } else if (f.type === 'quake') {   // ground shockwaves and cracks
+      let cracks = ''; for (let i = 0; i < 6; i++) { const a = i * 60 + vr(f.seed, i) * 30; let d = 'M0 0'; for (let j = 1; j <= 4; j++) d += ` L${f1(f.r * .8 * j / 4)} ${f1((vr(f.seed, i * 5 + j) - .5) * 10)}`;
+        cracks += `<g transform="rotate(${f1(a)})"><path class="vcrack" style="${dl}" d="${d}" pathLength="100" stroke="#3b2412" stroke-width="2.4" fill="none"></path><path class="vcrack" style="${dl}" d="${d}" pathLength="100" stroke="${c0}" stroke-width="1" fill="none" filter="url(#vglow)"></path></g>`; }
+      s += `<g transform="translate(${f1(f.x)} ${f1(f.y)}) scale(1 ${isoK().toFixed(2)})">${cracks}
+        ${[0, 1].map(k => `<circle class="vwave" style="animation-delay:${(-el + k * 130).toFixed(0)}ms;--d:${f.dur}ms" r="${f1(f.r)}" fill="none" stroke="${c0}" stroke-width="${k ? 2 : 3.5}" filter="url(#vglow)"></circle>`).join('')}</g>`;
+    } else if (f.type === 'pillar') {   // a column of light rising from the caster
+      s += `<g transform="translate(${f1(f.x)} ${f1(f.y)})"><g class="vpillar" style="${dl}"><rect x="${f1(-HEX * .45)}" y="${f1(-HEX * 3)}" width="${f1(HEX * .9)}" height="${f1(HEX * 3)}" rx="${f1(HEX * .45)}" fill="${c0}" opacity=".45" filter="url(#vglow)"></rect><rect x="${f1(-HEX * .14)}" y="${f1(-HEX * 3)}" width="${f1(HEX * .28)}" height="${f1(HEX * 3)}" rx="${f1(HEX * .14)}" fill="${c1}" opacity=".9"></rect></g></g>`;
+    } else if (f.type === 'heal') {   // green motes rising around the healed champion, a soft ring at its feet
+      let motes = ''; for (let i = 0; i < 11; i++) { const x = (vr(f.seed, i) - .5) * HEX * 1.4, y0 = -vr(f.seed, i + 4) * HEX * .9, r = 3 + 3.5 * vr(f.seed, i + 8);
+        motes += `<circle class="vmote" style="animation-delay:${(-el + i * 60).toFixed(0)}ms;--d:${f.dur}ms" cx="${f1(x)}" cy="${f1(y0)}" r="${f1(r)}" fill="${c1}" stroke="${c0}" stroke-width="1.2" filter="url(#vglow)"></circle>`; }
+      s += `<g transform="translate(${f1(f.x)} ${f1(f.y)})"><ellipse class="vring" style="${dl}" rx="${f1(HEX * .7)}" ry="${f1(HEX * .7 * isoK())}" fill="none" stroke="${c0}" stroke-width="3" filter="url(#vglow)"></ellipse><g transform="translate(0 ${f1(-HEX * .4)})">${motes}</g></g>`;
+    }
+  }
+  return s;
+}
+const VFX_DEFS = `<defs><filter id="vglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs>`;
 // ── animated sprites (2026-11-23): champions with frame animations (art/<id>/anim.js, written by
 // tools/asset_gen/sprite_pack.py) play idle / move / attack / cast / hit / death instead of the still image.
 // The state comes from what the board shows: sliding = move, acting = attack (cast when the beat is its ability),

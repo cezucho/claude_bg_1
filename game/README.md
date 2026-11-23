@@ -928,6 +928,29 @@ with it; every move and attack of the Reaper animated; pulses a little longer so
   required). Downloaded from craftpix.net it is under the CraftPix freebie licence (no credit required; never
   redistribute the source files). The raw pack sits in `assets/third_party/` (git-ignored).
 
+## Combat VFX; heroic chibi Pyra and Fang (added 2026-11-23)
+
+Owner: shots, arrows and blades were barely visible. First try (comic sprites from Nano Banana + sound-effect words
+like POW!) was rejected: the owner meant fighting-game / MOBA effects (Street Fighter 4, Tekken, Final Fantasy, League
+of Legends): a blade leaves a glowing trail that lingers, hits throw light, all stylised as 2D drawing that fits the
+heroic chibi art. The rejected sprites' raw images stay in `production/art_review/fx/` as a record.
+
+- **Art**: `art/pyra.png`, `art/fang.png` are the heroic chibi versions from `production/art_review/style_test/`.
+- **VFX are drawn in code** (`vfxSpawn` turns a beat into effects, `vfxSvg` draws them; one shared glow filter
+  `#vglow`), clean vector shapes with a coloured glow and a white-hot core, coloured by element:
+  - blade: a tapered crescent that draws itself along the swing in ~80 ms, cuts diagonally across the target, then
+    thins and fades; a fainter echo arc follows; Fang leaves three parallel claw arcs; abilities draw bigger arcs and
+    Execute crosses two;
+  - hit: white flash, spark streaks flying out, an iso shockwave ring; fire adds flame tongues and embers, frost ice
+    shards that hang a moment, storm crackling zaps, light a four-way star, shadow a dark swirl, earth dust;
+  - projectile: a glowing orb (or arrow, or shell for Gunner and Flint) with a comet tail; it leaves a light streak
+    along its path that fades after the hit; Storm champions and Lance abilities strike with a jagged lightning beam;
+  - casting W or R: a turning rune circle under the caster; Slam / Quake add ground cracks and two shockwaves;
+    Sanctuary a pillar of light; heals raise green motes with a ring at the feet. Area abilities hit every target.
+- Effects keep running across redraws (negative animation delays); the old thin lines and dots are off (leap arcs stay).
+- Check: `vfx_gallery` (each effect frozen at 0/60/130/220/330/480 ms) and frozen frames from live matches; 4 min of
+  AI play without errors.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

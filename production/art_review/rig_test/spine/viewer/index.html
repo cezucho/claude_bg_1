@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Pyra rig</title>
+<link rel="stylesheet" href="spine-player.css">
+<style>body{margin:0;background:#2e3440;color:#eee;font:14px sans-serif}#bar{padding:8px}button{margin-right:6px}#p{width:800px;height:700px}</style>
+</head><body>
+<div id="bar">Pyra (official Spine runtime 4.2): <button onclick="play('idle')">idle</button><button onclick="play('cast')">cast</button><button onclick="play('hit')">hit</button><span id="st"></span></div>
+<div id="p"></div>
+<script src="spine-player.js"></script><script>var _se=spine.SpinePlayer.prototype.showError;spine.SpinePlayer.prototype.showError=function(m,e){window.spineStack=e&&e.stack;return _se.call(this,m,e)};</script>
+<script>
+var player = new spine.SpinePlayer("p", {
+  jsonUrl: "../pyra.json", atlasUrl: "../pyra.atlas", animation: "idle", backgroundColor: "#2e3440ff",
+  showControls: true, premultipliedAlpha: false,
+  success: function (p) { window.spineReady = true; document.getElementById("st").textContent = " loaded: " + p.skeleton.data.animations.map(a => a.name + " " + a.duration.toFixed(2) + "s").join(", "); },
+  error: function (p, msg) { window.spineError = msg; document.getElementById("st").textContent = " ERROR " + msg; }
+});
+function play(a) { player.setAnimation(a, true); }
+</script></body></html>
