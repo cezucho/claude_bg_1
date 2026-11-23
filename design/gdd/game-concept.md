@@ -1,5 +1,7 @@
 # Game Concept: AUGURY (working title)
 
+> **Partly superseded (2026-11-23, D-086).** The vision and audience still frame the game, but its mechanics (initiative ladder, sigils, programmed rounds) are not the current game. The main game is **Pattern Skirmish** in `game/` (rules in `game/README.md`).
+
 *Created: 2026-08-14*
 *Status: Draft*
 

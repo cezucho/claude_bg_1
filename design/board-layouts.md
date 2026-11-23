@@ -1,5 +1,7 @@
 # Board Layouts — v2 Board-Size Experiment
 
+> **Superseded (2026-11-23, D-086).** This describes the earlier v2 game (C# simulation, now in `archive/v2-simulation/`). The main game is **Pattern Skirmish** in `game/`; its rules live in `game/README.md` and `game/index.html`. Kept for reference.
+
 > **Date**: 2026-10-04 · **Status**: Candidates measured; owner to choose
 > **Why**: the owner's playtests found the board "one dimension too large" — the depth,
 > front to back (`design/v2-direction.md`). Three shallower boards were built as data and

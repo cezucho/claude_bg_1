@@ -1,4 +1,10 @@
-# Prototype: pattern skirmish
+# AUGURY — Pattern Skirmish (the main game)
+
+> **Main game since 2026-11-23 (D-086).** This started as a prototype (`prototypes/pattern-skirmish/`); it was
+> promoted because it plays well. Open `index.html` (keep `art/` beside it). The sections below are its history,
+> oldest first, starting with the prototype's original hypothesis.
+
+## Origin: the prototype's hypothesis
 
 **Hypothesis.** The auto skirmish flows better if (1) where your five champions stand relative
 to each other decides *which abilities fire*, so there is a shape to search for and a reason to
@@ -84,7 +90,7 @@ Hail, Dusk (Bottom); Brook, Ash, Moss (Support). Each has elements, a general ch
 patterns, two opening cards, and a standard growth path built by `autoTree` (the first ten keep
 their hand-written paths). Elements across the pool: Earth 7, Fire 6, Frost 5, Storm 5, Shadow 5,
 Light 4. Art: one image each from `tools/asset_gen/gen_sprites.py --spec pattern_sprites.json
---out prototypes/pattern-skirmish/art` (briefs in `assets/data/art/pattern_sprites.json`), all
+--out game/art` (briefs in `assets/data/art/pattern_sprites.json`), all
 kept first try. The draft screen now scrolls.
 
 AI vs AI, small board, 400 matches per row. The AI drafter prefers champions whose elements
@@ -890,6 +896,37 @@ ability hits one enemy or several, and how far it reaches compared with the cham
 in 13.3; comebacks 20% → 21%; 1.5 charges per match plus Moss's pulls. Moss jumped to 67% at first. After
 two balancing passes, averaged, a check of 1,000 matches on new seeds gives win rates of **44–59%** (Gunner
 lowest, Gale highest; Hail and Moss 57%), sides 50–51%, 84–88% by nexus, 13.2 rounds.
+
+## Reaper, the 26th champion, and animated sprites (added 2026-11-23)
+
+Owner: try free animated chibi packs (CraftPix) as prototype art; make a converter on Reaper Man; add a 26th champion
+with it; every move and attack of the Reaper animated; pulses a little longer so each move can be watched.
+
+- **Converter** `tools/asset_gen/sprite_pack.py`: one folder of PNG frames per animation -> one strip per game state
+  (`idle move attack cast hit death`), cropped to one shared box so the feet never jump, scaled to a set body height;
+  writes `anim.json`, `anim.js` (loads from disk), a Godot 4 `SpriteFrames` `.tres`, and `preview.gif`.
+  Reaper: `--map idle=Idle move=Running attack=Slashing cast="Slashing in The Air" hit=Hurt death=Dying --height 160`
+  (output in `art/reaper/`, ~2 MB; the source pack is 61 MB of 900 px frames).
+- **Reaper** (Top, Shadow, melee; HP 30, attack 4, initiative 3, nearest, lifesteal 20%):
+  Q Scythe (side ally: hit for 1.5x and heal the damage) · W Reap (ally of Shadow at its side: hits every enemy
+  around it for 1.5x, roots 50%, lunges 1 hex) · R Final Harvest (allies at its side and behind: leaps to the weakest
+  enemy, 2.5x, a finisher). Passive Last Rites (basic attack finishes a broken enemy, like Viper). Reflex Death's Door
+  (an enemy within 2 drops to 30% HP: steps toward it). Shape family: line. Entries in every per-champion table.
+- **Animation in the board**: champions with an `ANIM_SETS` entry draw from their strips; the state follows the board:
+  walking while it slides, swing when it acts (the jumping swing when the beat is its ability, kept while a lunge
+  moves it), flinch when the beat hits it, and when it dies a corpse plays the fall where it stood and fades (3.4 s).
+  Every other champion keeps its still image.
+- **Seeing it**: draft Reaper (Top), or open `index.html#feature=reaper` and Watch AI vs AI: Blue takes Reaper and
+  nobody bans it (works for any champion id).
+- **Every move slides now**: moves inside a pulse (reflexes, pushes, pulls, lunges, swaps) slide like turn moves;
+  `SLIDE_MS` 500 -> 750 ms; a beat that moved someone waits for the walk.
+- **Pacing**: plain beats 380 -> 650 ms, special 850 -> 1100 ms, Q casts 800 -> 950 ms, pause before the pulse after
+  a move 900/350 -> 1250/850 ms (AI/human). Fast speed scales all of it as before.
+- **Test only** (owner, 2026-11-23): CraftPix art will not be used beyond this test; the game's art direction stays
+  heroic chibi (see `production/art_review/style_test/`). The converter and the animation code are kept for our own art.
+- **Licence**: the pack came from OpenGameArt ("Reaper Man Chibi Sprites", CraftPix.net, OGA-BY 3.0: credit
+  required). Downloaded from craftpix.net it is under the CraftPix freebie licence (no credit required; never
+  redistribute the source files). The raw pack sits in `assets/third_party/` (git-ignored).
 
 ## What the numbers cannot tell
 

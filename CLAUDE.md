@@ -9,6 +9,8 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 - **Language**: C# (.NET 8+, primary), C++ via GDExtension (native plugins only)
 - **Version Control**: Git with trunk-based development
 - **Build System**: .NET SDK + Godot Export Templates
+- **Current main game**: `game/` (Pattern Skirmish), a single-page HTML/JS build that is played and measured today and is the
+  reference for the planned Godot 4.6 + C# port (D-086). The earlier C# simulation is archived in `archive/v2-simulation/`.
 - **Asset Pipeline**: Godot Import System + custom resource pipeline
 
 > **Note**: Engine-specialist agents exist for Godot, Unity, and Unreal with

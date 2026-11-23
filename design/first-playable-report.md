@@ -1,5 +1,7 @@
 # First Playable — Report
 
+> **Superseded (2026-11-23, D-086).** This describes the earlier v2 game (C# simulation, now in `archive/v2-simulation/`). The main game is **Pattern Skirmish** in `game/`; its rules live in `game/README.md` and `game/index.html`. Kept for reference.
+
 > **Date**: 2026-09-27 · **Build**: terminal client over the full simulation
 > **Scope**: what was built, what 500 self-play matches say, and what only a human can
 > answer. Decisions made without the project owner are in `claude-decisions.md`.

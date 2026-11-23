@@ -14,7 +14,7 @@ Usage (from the project folder):
     python tools/asset_gen/gen_sprites.py                  # every asset not yet made
     python tools/asset_gen/gen_sprites.py --only ember,rime --force
     python tools/asset_gen/gen_sprites.py --cut-only       # redo the cut-outs from the raw images
-    python tools/asset_gen/gen_sprites.py --spec pattern_sprites.json --out prototypes/pattern-skirmish/art
+    python tools/asset_gen/gen_sprites.py --spec pattern_sprites.json --out game/art
 Needs Pillow and numpy.
 """
 import argparse

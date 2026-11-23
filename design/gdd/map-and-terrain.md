@@ -1,5 +1,7 @@
 # Map & Terrain
 
+> **Superseded (2026-11-23, D-086).** This describes the earlier v2 game (C# simulation, now in `archive/v2-simulation/`). The main game is **Pattern Skirmish** in `game/`; its rules live in `game/README.md` and `game/index.html`. Kept for reference.
+
 > **Status**: Designed (pending review)
 > **System**: #12 Map & Terrain — first in the Core layer design order
 > **Depends on**: ADR-0005 (hex coordinates and patterns)

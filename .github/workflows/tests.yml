@@ -1,10 +1,9 @@
 name: Automated Tests
 
+# Switched off 2026-11-23 (D-086): the C# simulation these jobs build is archived in archive/v2-simulation/
+# and the main game is game/ (HTML/JS, no automated suite yet). Run by hand from the Actions tab if needed.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
 
@@ -24,13 +23,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore Augury.sln
+        run: dotnet restore archive/v2-simulation/Augury.sln
 
       - name: Build
-        run: dotnet build Augury.sln --no-restore --configuration Release
+        run: dotnet build archive/v2-simulation/Augury.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Augury.sln --no-build --configuration Release --logger "trx;LogFileName=results.trx" --results-directory TestResults
+        run: dotnet test archive/v2-simulation/Augury.sln --no-build --configuration Release --logger "trx;LogFileName=results.trx" --results-directory TestResults
 
       - name: Upload results
         if: always()
@@ -51,11 +50,11 @@ jobs:
 
       - name: ADR-0001 — no Godot reference in the simulation
         run: |
-          if grep -rn --include='*.cs' -E '^\s*(global\s+)?using\s+Godot' src/Augury.Sim/; then
+          if grep -rn --include='*.cs' -E '^\s*(global\s+)?using\s+Godot' archive/v2-simulation/src/Augury.Sim/; then
             echo "::error::ADR-0001 breached — 'using Godot' found in Augury.Sim."
             exit 1
           fi
-          if grep -rn -iE '<(Package|Project)Reference[^>]*Godot' src/Augury.Sim/; then
+          if grep -rn -iE '<(Package|Project)Reference[^>]*Godot' archive/v2-simulation/src/Augury.Sim/; then
             echo "::error::ADR-0001 breached — a Godot reference is declared in Augury.Sim.csproj."
             exit 1
           fi
@@ -63,7 +62,7 @@ jobs:
 
       - name: ADR-0002 — no floating point in the simulation
         run: |
-          if grep -rn --include='*.cs' -E '(^|[^A-Za-z0-9_])(float|double|decimal)([^A-Za-z0-9_]|$)' src/Augury.Sim/ \
+          if grep -rn --include='*.cs' -E '(^|[^A-Za-z0-9_])(float|double|decimal)([^A-Za-z0-9_]|$)' archive/v2-simulation/src/Augury.Sim/ \
                | grep -v '^\s*//' | grep -vE '///'; then
             echo "::error::ADR-0002 breached — floating-point type found in Augury.Sim. Use permille integers via Arith.ScalePermille."
             exit 1
@@ -74,7 +73,7 @@ jobs:
         run: |
           # Checks real references only. Citing the prototype report in a doc
           # comment is encouraged — several rules exist because of what it found.
-          if grep -rn --include='*.csproj' -iE '<(Project|Package)Reference[^>]*prototypes' src/ tests/ 2>/dev/null; then
+          if grep -rn --include='*.csproj' -iE '<(Project|Package)Reference[^>]*prototypes' archive/v2-simulation/src/ archive/v2-simulation/tests/ 2>/dev/null; then
             echo "::error::.claude/rules/prototype-code.md breached — a project references prototypes/."
             exit 1
           fi

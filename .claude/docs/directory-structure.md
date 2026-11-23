@@ -4,7 +4,9 @@
 /
 ├── CLAUDE.md                    # Master configuration
 ├── .claude/                     # Agent definitions, skills, hooks, rules, docs
-├── src/                         # Game source code (core, gameplay, ai, networking, ui, tools)
+├── game/                        # The main game today: Pattern Skirmish (HTML/JS, open index.html)
+├── src/                         # Game source code (core, gameplay, ai, networking, ui, tools) — empty until the Godot port
+├── archive/                     # Retired builds kept for reference (v2-simulation: the old C# sim, clients, tests)
 ├── assets/                      # Game assets (art, audio, vfx, shaders, data)
 ├── design/                      # Game design documents (gdd, narrative, levels, balance)
 ├── docs/                        # Technical documentation (architecture, api, postmortems)

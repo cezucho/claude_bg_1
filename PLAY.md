@@ -1,9 +1,16 @@
-# Main line: the auto skirmish
+# The main game: Pattern Skirmish
 
-Since 2026-11-18 (D-075) the game's main line is the **auto skirmish**: open
-`prototypes/auto-skirmish/index.html` in a browser (no server, no install; keep the `art/` folder
-beside it). Draft, a short opening, then one move per turn and an automatic pulse; chibi sprites
-on an isometric board. Everything below describes the earlier v2 clients, kept as reference.
+Since 2026-11-23 (D-086) the main game is **Pattern Skirmish**: open **`game/index.html`** in a browser
+(no server, no install; keep the `art/` folder beside it). Draft five champions by role, a short opening,
+then one move per turn and an automatic pulse in which abilities fire when your champions stand in the right
+shapes. 26 champions, regroup and tactic cards, Dragon and Baron. Rules and the history of every change:
+`game/README.md`. Watch AI vs AI from the title screen; `game/index.html#feature=reaper` makes Blue draft the
+Reaper (the animated-sprite test champion).
+
+Earlier lines, kept for reference:
+- **Auto skirmish** (main line 2026-11-18 to 2026-11-23, D-075): `prototypes/auto-skirmish/index.html`.
+- **v2 clients** (below): the C# simulation with a browser and a terminal client, archived in
+  `archive/v2-simulation/` (D-086). The commands below still work from the repository root.
 
 # Playing AUGURY — v2 (three abilities + summoner spells, Field 7)
 
@@ -16,8 +23,8 @@ You need the **.NET 8 SDK**.
 ## Browser client (recommended)
 
 ```bash
-dotnet run --project src/Augury.Web                 # then open http://localhost:5080
-dotnet run --project src/Augury.Web -- --port 8080   # another port
+dotnet run --project archive/v2-simulation/src/Augury.Web                 # then open http://localhost:5080
+dotnet run --project archive/v2-simulation/src/Augury.Web -- --port 8080   # another port
 ```
 
 Pick a mode on the draft screen (or from the toolbar at any time): **vs AI as A**
@@ -87,11 +94,11 @@ measurements are in `design/board-layouts.md`.
 From the repository root:
 
 ```bash
-dotnet run --project src/Augury.Cli                  # menu
-dotnet run --project src/Augury.Cli -- --vs-ai A     # you are team A (bottom) vs the AI
-dotnet run --project src/Augury.Cli -- --vs-ai B     # you are team B (top)
-dotnet run --project src/Augury.Cli -- --hotseat     # two players, one keyboard
-dotnet run --project src/Augury.Cli -- --watch       # the AI plays itself
+dotnet run --project archive/v2-simulation/src/Augury.Cli                  # menu
+dotnet run --project archive/v2-simulation/src/Augury.Cli -- --vs-ai A     # you are team A (bottom) vs the AI
+dotnet run --project archive/v2-simulation/src/Augury.Cli -- --vs-ai B     # you are team B (top)
+dotnet run --project archive/v2-simulation/src/Augury.Cli -- --hotseat     # two players, one keyboard
+dotnet run --project archive/v2-simulation/src/Augury.Cli -- --watch       # the AI plays itself
 ```
 
 Add `--no-color` if your terminal shows escape codes. Run it from inside the repository,

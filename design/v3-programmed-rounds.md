@@ -1,5 +1,7 @@
 # v3 Idea — Programmed Rounds
 
+> **Superseded (2026-11-23, D-086).** This describes the earlier v2 game (C# simulation, now in `archive/v2-simulation/`). The main game is **Pattern Skirmish** in `game/`; its rules live in `game/README.md` and `game/index.html`. Kept for reference.
+
 > **Date**: 2026-10-21 · **Status**: brainstorm, not a decision; nothing built. The v2 game is
 > untouched. A prototype, if the owner wants one, is built *beside* v2.
 > **Sources**: the owner's idea (below), three specialist reports commissioned for it — a core-loop

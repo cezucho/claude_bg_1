@@ -148,3 +148,6 @@ TestResults/
 !*.csproj
 !*.sln
 !Augury.sln
+
+# === Third-party asset packs (downloaded raw; licences forbid redistributing the source files) ===
+assets/third_party/

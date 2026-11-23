@@ -1,5 +1,7 @@
 # ADR-0001: Simulation / Presentation Assembly Boundary
 
+> **Superseded as a record of the current code (2026-11-23, D-086)**: the code it governed is archived in `archive/v2-simulation/`, and the main game is now **Pattern Skirmish** in `game/` (HTML/JS). **Still relevant**: apply it again when the game is ported to Godot 4.6 + C#.
+
 ## Status
 
 Accepted (2026-08-14)
