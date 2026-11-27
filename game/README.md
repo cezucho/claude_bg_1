@@ -951,6 +951,71 @@ heroic chibi art. The rejected sprites' raw images stay in `production/art_revie
 - Check: `vfx_gallery` (each effect frozen at 0/60/130/220/330/480 ms) and frozen frames from live matches; 4 min of
   AI play without errors.
 
+## Career mode (added 2026-11-27)
+
+**Owner's idea.** Besides single matches, a career: you are a team's manager. You still control every
+champion, but it should feel like a team. Leagues, tournaments, a ladder to climb, better leagues with harder
+opponents. Statistics: every team has favourite champions and champions it does not like, so you can scout an
+opponent, find the right draft and ban so that only the champions they dislike are left. Everything is saved
+to a profile.
+
+**How to play.** Title screen → **Career** → pick a slot, name the manager, the team and a tag → Start. The
+code is in `career.js` (loaded after the main script). Matches use the normal game; career only sets them up
+and records them.
+
+**The world.**
+- 32 teams in four leagues of 8: Rookie → Challenger → Pro → Masters. You start in the Rookie League.
+- Every team has five named players, one per role. An AI player has two or three favourite champions in their
+  role (weights 5 / 3 / 1.5). Each team also has three or four champions it **never picks** (at most two per
+  role). Some teams change a favourite between seasons.
+- **Uncomfortable:** a team forced onto a champion it never picks plays it at −1 attack and −10% HP (😣 on
+  its card). So banning a player's favourites and taking their last liked champion yourself can leave them
+  on a champion they never play.
+
+**A season.**
+- 7 league matches (a round robin), then playoffs for the top 4: semi-finals 1 v 4 and 2 v 3, then a final.
+- The top 2 are promoted and the bottom 2 relegated (all four leagues move together).
+- Trophies: league champions, cup winners and promotions. Hall of fame per season for every league.
+- For your match you can **play it**, **let the AI play it** (you watch), or **simulate the result** (decided by
+  ratings). Matches you do not play, and the other leagues, are decided by ratings, with drafts drawn from each
+  team's preferences, so their pick and ban statistics keep growing.
+- A match started but not finished is replayed (the overview warns you).
+
+**The ladder.** Every team has a rating (Elo, K 32 for played matches, 24 otherwise). The ladder ranks all 32
+teams. Ratings drift 15% toward the new league's base between seasons.
+
+**Scouting** (any team): rating, ladder place, record, the shapes it plays most, each player's champion pool
+with pick shares and win rates, "never" picks greyed out, what it bans most, your head-to-head, and draft advice
+("Ban Rime and Lens: their mid is left with Pyra or Quartz, which they never play"). The first scouting
+numbers come from two seasons of pre-history drafted at career start. Teams from the Challenger League up
+scout you too: they ban your most-played champions (Masters most of all).
+
+**Your team.** Five generated players. Statistics: matches, win rate, kills, per player (games, wins, kills,
+most-played champions), per champion, head-to-head per team, the last 150 matches with both drafts, seasons
+and trophies. In matches the team cards and scoreboard show the teams' names and each champion's player.
+
+**Saving.** Saved in the browser (localStorage) after every match and every change of season, in three
+slots (about 40 KB each). **Export** downloads the career as a JSON file; **Import** puts a file back in a slot.
+
+**Difficulty by league.** Measured first (AI vs AI, 150–200 matches each): AI search depth and mistakes barely
+change results here (the weakest AI settings won 48% against the strongest), while champion HP does (×0.85 →
+32%, ×0.92 → 38%, ×1.08 → 61% against an even team). So each league combines AI settings, draft quality and
+a **team power** (champion HP: better players), adjusted ±3% by the team's rating within its league:
+
+| League | AI | Draft fit | Power (HP) | Scouts you | Wins against the default AI |
+|---|---|---|---|---|---|
+| Rookie | one step ahead, many mistakes | 0.6 | ×0.88 | no | 32% |
+| Challenger | one step ahead, some mistakes | 1.2 | ×0.97 | a little | 39% |
+| Pro | full plan, few mistakes | 1.6 | ×1.03 | yes | 51% |
+| Masters | full plan, wider search | 2.0 | ×1.10 | most | 63% |
+
+Your own team always plays at ×1.00, so climbing is about how you play and draft. The quick match's
+Easy/Normal/Hard setting only decides the coach in career matches.
+
+**Not in yet (candidates):** best-of-three finals; player development (players improving or ageing);
+transfers; a budget; a calendar with several cups; scouting reports that reveal "never picks" only after you
+have faced a team.
+
 ## What the numbers cannot tell
 
 - Whether finding shapes is fun or fiddly. The AI looks one move ahead and values a complete

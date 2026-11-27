@@ -4,7 +4,7 @@ Since 2026-11-23 (D-086) the main game is **Pattern Skirmish**: open **`game/ind
 (no server, no install; keep the `art/` folder beside it). Draft five champions by role, a short opening,
 then one move per turn and an automatic pulse in which abilities fire when your champions stand in the right
 shapes. 26 champions, regroup and tactic cards, Dragon and Baron. Rules and the history of every change:
-`game/README.md`. Watch AI vs AI from the title screen; `game/index.html#feature=reaper` makes Blue draft the
+`game/README.md`. **Career** on the title screen: manage a team through four leagues with a ladder, scouting and saved statistics (`game/career.js`, README "Career mode"). Watch AI vs AI from the title screen; `game/index.html#feature=reaper` makes Blue draft the
 Reaper (the animated-sprite test champion).
 
 Earlier lines, kept for reference:

@@ -58,7 +58,7 @@ header.top .tools button { padding: 4px 8px; font-size: 12.5px; }
 .rail .card .hd { align-items: center; gap: 8px; }
 .rail .card .pt { width: 30px; height: 30px; }
 .rail .icons { gap: 0 6px; font-size: 11.5px; } .rail .ic b { font-size: 11px; } .rail .ic.st { font-size: 10.5px; padding: 0 3px; }
-.rail .card .row1 b { font-size: 13px; } .rail .card .row1 .role { display: none; }
+.rail .card .row1 b { font-size: 13px; } .rail .card .row1 .role { display: none; } .rail .card .row1 .plr { font-size: 10px; color: var(--dim); margin-left: 3px; max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rail .hp { height: 6px; } .rail .hp em { font-size: 9px; top: -3px; right: 2px; }
 .rail .card .nm { gap: 2px; }
 .card .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -656,10 +656,10 @@ header.hud .tools button { font-size: 12px; padding: 3px 9px; border-radius: 8px
 <header class="top hud">
   <img class="crest" src="art/crest.png" alt="Augury">
   <div class="score">
-    <div class="steam A"><div class="srow1"><span class="tl">Blue</span><span class="tp" id="tp-meter-A" title="tactic points"><span id="m-tpA"></span></span></div>
+    <div class="steam A"><div class="srow1"><span class="tl" id="tl-A">Blue</span><span class="tp" id="tp-meter-A" title="tactic points"><span id="m-tpA"></span></span></div>
       <div class="nbar A" title="Blue nexus"><i id="nbar-A"></i><b id="m-nexA" class="num">30</b></div></div>
     <div class="medal"><span>Round</span><b id="m-round" class="num">–</b><em id="m-phase">Draft</em></div>
-    <div class="steam B"><div class="srow1"><span class="tp" id="tp-meter-B" title="tactic points"><span id="m-tpB"></span></span><span class="tl">Red</span></div>
+    <div class="steam B"><div class="srow1"><span class="tp" id="tp-meter-B" title="tactic points"><span id="m-tpB"></span></span><span class="tl" id="tl-B">Red</span></div>
       <div class="nbar B" title="Red nexus"><i id="nbar-B"></i><b id="m-nexB" class="num">30</b></div></div>
     <span hidden><b id="m-goldA"></b><b id="m-goldB"></b></span>
   </div>
@@ -1442,13 +1442,16 @@ const delay = special => (special ? 1100 : 650) * (UI.speed === 'fast' ? 0.45 : 
 function rng() { G.seed = (G.seed + 0x6D2B79F5) | 0; let t = G.seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 const roll = pct => pct > 0 && rng() * 100 < pct;
 
+let NEXT_CAREER = null;   // career mode hands its match setup to the next newMatch
 function newMatch(mode, seed) {
   syncRules(); UI.overSeen = false;
   if (!HEADLESS) { UI.lastPulse = null; const f = document.getElementById('feed'); if (f) f.innerHTML = ''; showRecap(null); hideTip(); }
   UI.moves = []; UI.moveTag = ''; UI.slides = {}; UI.lastPos = {}; UI.dying = {}; UI.cfx = [];
   clearTimeout(UI.timer); UI.anim = null;
   setBoard(UI.board);
-  G = { mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
+  const career = NEXT_CAREER; NEXT_CAREER = null; TEAMN.A = career ? career.names.A : 'Blue'; TEAMN.B = career ? career.names.B : 'Red';
+  for (const t of ['A', 'B']) { const el = typeof document !== 'undefined' && document.getElementById('tl-' + t); if (el) el.textContent = TEAMN[t]; }
+  G = { career, mode, humans: mode === 'play' ? ['A'] : [], seed: seed ?? (Date.now() & 0x7fffffff), startSeed: 0, phase: 'draft',
         picks: { A: Array(5).fill(null), B: Array(5).fill(null) }, order: draftPlan().map(s => s[0]), kind: draftPlan().map(s => s[1]), tp: { A: 0, B: 0 }, tpUsed: null, final: null, firstKill: 0, banned: new Set(), banList: { A: [], B: [] }, paths: { A: Array(5).fill(0), B: Array(5).fill(0) }, di: 0, taken: new Set(),
         champs: [], nexus: structure() ? { A: RULES.nexusHp, B: RULES.nexusHp } : { A: RULES.nexus, B: RULES.nexus }, round: 0, token: RULES.firstToken || 'B', turnTeam: null, turnNo: 0,
         log: [], winner: null, display: null, opened: new Set(), openTurn: 'A', levelQueue: null,
@@ -1499,11 +1502,11 @@ function draftPick(def) {
 const FEATURE = typeof location !== 'undefined' ? (location.hash.match(/feature=(\w+)/) || [])[1] : null;
 function draftAi() {
   if (G.phase !== 'draft' || G.humans.includes(G.order[G.di])) return;
-  later(() => { const team = G.order[G.di], w = RULES.draftFitBy ? RULES.draftFitBy[team] : RULES.draftFit ?? 1.5;
+  later(() => { const team = G.order[G.di], w = aiCareer(team) ? aiCareer(team).fit : RULES.draftFitBy ? RULES.draftFitBy[team] : RULES.draftFit ?? 1.5;
     const mine = G.picks[team].filter(Boolean), theirs = G.picks[other(team)].filter(Boolean), free = rosterNow().filter(d => !G.taken.has(d.id));
     let best = null, bv = -1e9;
     for (const d of draftOptions()) { if (d.id === FEATURE && G.kind[G.di] === 'ban') continue;   // index.html#feature=<id>: nobody bans it, Blue takes it
-      const v = rng() * 3 + draftScore(d, team, w) + (d.id === FEATURE && team === 'A' ? 1e6 : 0);   // a little variety
+      const v = rng() * 3 + draftScore(d, team, w) + (d.id === FEATURE && team === 'A' ? 1e6 : 0) + (G.career && typeof careerDraftBias === 'function' ? careerDraftBias(d, team, G.kind[G.di]) : 0);   // a little variety; career teams pick favourites
       if (v > bv) { bv = v; best = d; } }
     draftPick(best); }, 260);
 }
@@ -1541,6 +1544,9 @@ function makeChamp(def, team, i) {
 function makeChampFor(def, team, i) {   // drops control chances when that switch is off
   const c = makeChamp(def, team, i);
   if (!RULES.cc) for (const k of CC_KEYS) delete c.procs[k];
+  if (G.career && typeof careerComfort === 'function') careerComfort(c);
+  { const pw = (G.career && G.career.power && G.career.power[team]) || (RULES.powerBy && RULES.powerBy[team]) || 1;   // team power (career): how good its players are, as champion HP
+    if (pw !== 1) { c.maxHp = Math.round(c.maxHp * pw); c.hp = c.maxHp; } }
   return c;
 }
 const clearStatus = c => { c.frozen = false; c.air = false; c.rooted = false; c.blind = false; c.silenced = false; c.berserk = false; c.taunted = null; c.steadfast = false; };
@@ -2649,6 +2655,7 @@ function finish() {
     if (nx.deep[w] + (n2 ? n2.deep[w] : 0) >= 2) STATS.punished++; }
   STATS.steps += G.stanceSteps; STATS.stancePulses += G.stancePulses;
   for (const b of (G.baronTakes || [])) { if (b.team === G.winner) STATS.baronWin++; if (b.behind) { STATS.baronBehind++; if (b.team === G.winner) STATS.baronBehindWin++; } }
+  if (G.career && !HEADLESS && !G.career.done && typeof careerAfterMatch === 'function') { G.career.done = true; careerAfterMatch(); }
   render();
 }
 
@@ -2734,7 +2741,8 @@ function evaluate(team) {
 //   3. it keeps the move that leaves it best off: champions alive and healthy, buildings, monsters, and how many of its
 //      patterns are complete at the end (so a move that sets up next turn's abilities counts).
 // RULES.aiPlan: 0 = the old one-move judgement, 1 = step 1 only, 2 = all three. RULES.aiPlanBy = { A: 2, B: 0 } sets it per team.
-const aiPlan = team => RULES.aiPlanBy ? RULES.aiPlanBy[team] : G && G.mode === 'play' ? DIFF[UI.diff].plan : RULES.aiPlan;
+const aiCareer = team => G && G.career && G.career.ai && G.career.ai[team];   // career: this team's AI strength
+const aiPlan = team => aiCareer(team) ? aiCareer(team).plan : RULES.aiPlanBy ? RULES.aiPlanBy[team] : G && G.mode === 'play' ? DIFF[UI.diff].plan : RULES.aiPlan;
 // Run fn on the live match, then put everything back exactly as it was (state, dice, counters, nothing on screen).
 function dry(fn) {
   const hs = HEADLESS, st = STATS, solid = SOLID; HEADLESS = true; STATS = freshStats(); SOLID = new Set(solid);
@@ -2778,10 +2786,11 @@ function aiMove() {
 }
 // The move the AI would make for a team (also used by the coach, inside dry() so the dice are untouched).
 function aiChoose(team, planOv) {
-  const foe = other(team), plan = planOv ?? aiPlan(team), dif = G.mode === 'play' && planOv == null ? DIFF[UI.diff] : null;
-  const beam = dif ? dif.beam : RULES.aiBeamBy ? RULES.aiBeamBy[team] : RULES.aiBeam, samples = dif ? dif.samples : RULES.aiSamplesBy ? RULES.aiSamplesBy[team] : RULES.aiSamples;   // *By: per team, for measuring
+  const ca = planOv == null ? aiCareer(team) : null, foe = other(team), plan = planOv ?? aiPlan(team), dif = G.mode === 'play' && planOv == null && !ca ? DIFF[UI.diff] : null;
+  const beam = ca ? ca.beam : dif ? dif.beam : RULES.aiBeamBy ? RULES.aiBeamBy[team] : RULES.aiBeam, samples = ca ? ca.samples : dif ? dif.samples : RULES.aiSamplesBy ? RULES.aiSamplesBy[team] : RULES.aiSamples;
+  const noise = planOv != null ? 0 : ca ? ca.noise : RULES.aiNoiseBy ? RULES.aiNoiseBy[team] || 0 : 0;   // mistakes: weaker teams misjudge moves   // *By: per team, for measuring
   const cands = staticMoves(team); let pick;
-  if (!plan) { for (const m of cands) m.s = m.v + rng() * 0.3; pick = cands.sort((a, b) => b.s - a.s)[0]; }
+  if (!plan) { for (const m of cands) m.s = m.v + rng() * (0.3 + noise); pick = cands.sort((a, b) => b.s - a.s)[0]; }
   else {
     const seed0 = G.seed, K = RULES.aiShape;
     const after = (m, k, deep) => dry(() => {
@@ -2791,9 +2800,9 @@ function aiChoose(team, planOv) {
     for (const m of cands) m.s = after(m, 0, false) + m.v * .05;
     cands.sort((a, b) => b.s - a.s);
     if (plan >= 2) { const top = cands.slice(0, beam);
-      for (const m of top) { let t = 0; for (let k = 0; k < samples; k++) t += after(m, k, true); m.s = t / samples + m.s * .25; }
+      for (const m of top) { let t = 0; for (let k = 0; k < samples; k++) t += after(m, k, true); m.s = t / samples + m.s * .25 + (noise ? rng() * noise : 0); }
       pick = top.sort((a, b) => b.s - a.s)[0]; }
-    else pick = cands[0];
+    else { if (noise) { for (const m of cands) m.s += rng() * noise; cands.sort((a, b) => b.s - a.s); } pick = cands[0]; }
   }
   return pick;
 }
@@ -3276,7 +3285,7 @@ const SICON = { frozen: '🧊', air: '🌪️', rooted: '🌿', blind: '🙈', s
 function renderRail(team) {
   const el = document.getElementById('rail-' + team); el.innerHTML = '';
   const human = G.humans.includes(team);
-  el.appendChild(h(`<h2 class="${team}"><span>Team ${team}</span><span>${human ? 'you' : 'AI'}</span></h2>`));
+  el.appendChild(h(`<h2 class="${team}"><span>${G.career ? esc(TEAMN[team]) : 'Team ' + team}</span><span>${human ? 'you' : 'AI'}</span></h2>`));
   if (G.dragon && (G.dragon[team] || baronOn(team))) el.appendChild(h(`<div class="buffs">${G.dragon[team] ? `<span class="chip syn" style="color:var(--arcane)" title="Dragons taken: each one gave a champion a level">🐉 Dragon ×${G.dragon[team]}</span>` : ''}${baronOn(team) ? `<span class="chip syn" style="color:var(--arcane)" title="double damage to buildings, regenerates anywhere">👑 Baron until R${G.baronUntil[team]}</span>` : ''}</div>`));
   if (G.phase === 'draft') { el.appendChild(h(`<div class="card ${team}"><div class="stats">${G.picks[team].map((d, i) => `${ROLES[i]}: <b>${d ? esc(d.name) : '—'}</b>`).join(' ')}</div></div>`)); return; }
   const L = links();
@@ -3294,7 +3303,7 @@ function renderRail(team) {
 c0.bounty ? `<span class="ic st" title="bounty: +${c0.bounty} attack, worth more gold">⭐<b>${c0.bounty}</b></span>` : '',
       c0.items.length ? `<span class="ic st" title="${esc(c0.items.map(id => ITEMS.find(x => x.id === id).name).join(', '))}">🎒<b>${c0.items.length}</b></span>` : ''].join('');
     const card = h(`<div class="card ${team} ${UI.sel === c0.id ? 'sel' : ''} ${c.dead ? 'dead' : ''} ${canSel ? 'can' : ''}">
-      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span>${famChip(c0.def.id)}<span class="role">${c0.role}</span><span class="lv">${c.dead ? (G.final ? '† out' : `† back R${c0.respawnAt}`) : c.broken ? '💀 broken' : `${c0.def.paths[c0.path].ic} Lv ${c0.level}`}</span></div>
+      <div class="hd">${UI.art ? `<img class="pt" src="art/${c0.def.id}.png" alt="">` : ''}<div class="nm"><div class="row1"><b>${esc(c0.def.name)}</b><span class="els">${elIcons(c0.def)}</span>${famChip(c0.def.id)}${c0.uncomfy ? `<span title="${esc(TEAMN[team])} dislikes playing ${esc(c0.def.name)}: −1 attack, −10% HP" style="margin-left:2px">😣</span>` : ''}<span class="role">${c0.role}</span>${G.career && G.career.players ? `<span class="plr" title="${esc(G.career.players[team][ROLES.indexOf(c0.role)])} plays ${c0.role}">${esc(G.career.players[team][ROLES.indexOf(c0.role)])}</span>` : ''}<span class="lv">${c.dead ? (G.final ? '† out' : `† back R${c0.respawnAt}`) : c.broken ? '💀 broken' : `${c0.def.paths[c0.path].ic} Lv ${c0.level}`}</span></div>
         <div class="hp"><i style="width:${Math.max(0, 100 * c.hp / c0.maxHp)}%"></i><span class="sh" style="left:${Math.max(0, 100 * c.hp / c0.maxHp)}%;width:${Math.min(100, 100 * c.shield / c0.maxHp)}%"></span><em>${Math.max(0, c.hp)}/${c0.maxHp}</em></div></div></div>
       <div class="icons">${stat(ico('atk'), e.atk, e.atk > c0.atk, 'attack')}${stat(ico('range'), e.range, e.range > c0.range, 'range')}${stat(ico('init'), e.init, e.init > c0.init, 'initiative')}${e.armor ? stat(ico(e.home ? 'home' : 'armor'), e.armor, true, e.home ? 'armour, including 1 for standing in its home zone' : 'armour: less damage per hit') : ''}${c0.dive ? stat(ico('leap'), c0.dive, false, 'leap') : ''}${chances}${sts}</div>
       <div class="abrow">${abChips(c0)}</div>
@@ -3881,10 +3890,13 @@ function pulseText() { const P = UI.pulses; if (!P.length) return ''; const last
 const fmtClock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function renderOverlay() {
   const ov = document.getElementById('overlay');
+  if (UI.career && typeof careerView === 'function') { ov.hidden = false; ov.innerHTML = ''; ov.classList.remove('titleov', 'overov'); ov.classList.add('careerov'); ov.appendChild(careerView()); return; }
+  ov.classList.remove('careerov');
   if (UI.title) { ov.hidden = false; ov.innerHTML = ''; ov.classList.add('titleov');
     const box = h(`<div class="title"><img class="tcrest" src="art/crest.png" alt=""><h1>Augury</h1><div class="tsub">Pattern Skirmish</div>
-      <div class="tmenu"><button class="primary big" id="t-play">Play vs AI</button><button class="big" id="t-watch">Watch AI vs AI</button><button id="t-rules">How to play</button></div>
+      <div class="tmenu"><button class="primary big" id="t-career">Career</button><button class="big" id="t-play">Quick match vs AI</button><button class="big" id="t-watch">Watch AI vs AI</button><button id="t-rules">How to play</button></div>
       <div class="tfoot">Difficulty: <b>${esc(DIFF[UI.diff].name)}</b> <button id="t-diff">Change</button></div></div>`);
+    box.querySelector('#t-career').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); careerOpen(); });
     box.querySelector('#t-play').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); newMatch('play'); });
     box.querySelector('#t-watch').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); newMatch('watch'); });
     box.querySelector('#t-rules').addEventListener('click', () => { UI.title = false; ov.classList.remove('titleov'); UI.rules = true; render(); });
@@ -3898,9 +3910,10 @@ function renderOverlay() {
     const why = w === 'draw' ? 'Both nexuses fell together.' : G.final ? `${TEAMN[w]} won the final fight after round ${G.round}.` : `The ${TEAMN[other(w)]} nexus fell in round ${G.round}.`;
     const k = t => STATS_k(t);
     const box = h(`<div class="result ${w === 'draw' ? '' : won === false ? 'lose' : ''} ${w}"><img class="tcrest" src="art/crest.png" alt=""><h1>${esc(head)}</h1><div class="tsub">${esc(why)}</div>
-      <div class="rstats"><span class="A"><b>${k('A')}</b> Blue kills</span><span class="B"><b>${k('B')}</b> Red kills</span></div>
-      <div class="tmenu row2"><button class="primary big" id="r-again">${G.mode === 'watch' ? 'Watch another' : 'Play again'}</button><button id="r-board">See the board</button><button id="r-menu">Main menu</button></div></div>`);
-    box.querySelector('#r-again').addEventListener('click', () => { ov.classList.remove('overov'); newMatch(G.mode === 'watch' ? 'watch' : 'play'); });
+      <div class="rstats"><span class="A"><b>${k('A')}</b> ${esc(TEAMN.A)} kills</span><span class="B"><b>${k('B')}</b> ${esc(TEAMN.B)} kills</span></div>
+      ${G.career && G.career.note ? `<div class="tsub" style="margin-top:6px">${G.career.note}</div>` : ''}<div class="tmenu row2">${G.career ? '<button class="primary big" id="r-career">Continue career</button>' : `<button class="primary big" id="r-again">${G.mode === 'watch' ? 'Watch another' : 'Play again'}</button>`}<button id="r-board">See the board</button><button id="r-menu">Main menu</button></div></div>`);
+    if (G.career) box.querySelector('#r-career').addEventListener('click', () => { ov.classList.remove('overov'); careerOpen(); });
+    else box.querySelector('#r-again').addEventListener('click', () => { ov.classList.remove('overov'); newMatch(G.mode === 'watch' ? 'watch' : 'play'); });
     box.querySelector('#r-board').addEventListener('click', () => { UI.overSeen = true; ov.classList.remove('overov'); render(); });
     box.querySelector('#r-menu').addEventListener('click', () => { ov.classList.remove('overov'); UI.title = true; render(); });
     ov.appendChild(box); return; }
@@ -3959,7 +3972,7 @@ function renderOverlay() {
   const sideHtml = t => { const nowBan = kind === 'ban' && team === t ? G.banList[t].length : -1, nowPick = kind === 'pick' && team === t;
     return `<div class="side ${t}"><span class="lab">TEAM ${t} · ${TEAMN[t].toUpperCase()}${G.humans.includes(t) ? ' · YOU' : ' · AI'}</span>
       <div class="srow">${Array.from({ length: nb(t) }, (_, i) => { const d = G.banList[t][i]; return `<div class="slot ban ${i === nowBan ? 'now' : ''}" title="${d ? esc(d.name) + ' (banned)' : 'ban'}">${d ? `<img src="art/${d.id}.png" alt="">` : '<span class="sl">ban</span>'}</div>`; }).join('')}</div>
-      <div class="srow">${ROLES.map((r, i) => { const d = G.picks[t][i]; return `<div class="slot pick ${d ? 'filled' : ''} ${nowPick && !d ? 'now' : ''}" title="${r}${d ? ': ' + esc(d.name) : ''}">${d ? `<img src="art/${d.id}.png" alt="">` : ''}<span class="sl">${d ? esc(d.name) : r}</span></div>`; }).join('')}</div></div>`; };
+      <div class="srow">${ROLES.map((r, i) => { const d = G.picks[t][i]; return `<div class="slot pick ${d ? 'filled' : ''} ${nowPick && !d ? 'now' : ''}" title="${r}${d ? ': ' + esc(d.name) : ''}">${d ? `<img src="art/${d.id}.png" alt="">` : ''}<span class="sl">${d ? esc(d.name) : G.career && G.career.players ? esc(G.career.players[t][i]) : r}</span></div>`; }).join('')}</div></div>`; };
   const box = h(`<div class="box draft"><div class="row"><h2>Draft</h2><div class="row" style="margin-left:auto">
       <button data-m="play">Play A vs AI</button><button data-m="watch">Watch AI vs AI</button><button data-m="board">Board: ${BOARDS[UI.board].name} ⇄</button><button data-m="spread">Patterns: ${RULES.spread ? 'spread' : 'standard'} ⇄</button><button data-m="bans">Bans: ${RULES.bans} ⇄</button><button data-m="diff">Difficulty: ${DIFF[UI.diff].name} ⇄</button><button data-m="rules">Rules</button></div></div>
     <div class="slots">${sideHtml('A')}<div class="banner ${kind} ${team}"><b>${kind === 'ban' ? 'BAN PHASE' : 'PICK PHASE'}</b><span>${tnm(team)} ${kind === 'ban' ? `ban${human ? '' : 's'} · ${banNo} of ${nb(team)}` : `pick${human ? '' : 's'} · ${G.picks[team].filter(Boolean).length + 1} of 5`}${human ? ' · your turn' : ''}</span></div>${sideHtml('B')}</div>
@@ -4087,3 +4100,4 @@ try { const s = localStorage.getItem('augury-diff'); if (DIFF[s]) UI.diff = s; }
 UI.title = true;   /* the title screen first; Play starts a fresh match */
 newMatch('play');
 </script>
+<script src="career.js"></script>
